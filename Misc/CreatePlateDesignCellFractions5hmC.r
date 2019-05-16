@@ -3,7 +3,7 @@
 ## 1 ID per chip 
 ## randomise the order of sample type but keep OXBS and BS next to each other
 
-setwd("U:/Projects/Schizophrenia/Brain/PlateDesigns")
+setwd("")
 sampleSheet<-read.table("BSOxBSFACSsort_Chip loc_.txt", stringsAsFactors = FALSE, sep = "\t", header = TRUE)
 chip.positions<-paste("R0", 1:8, "C01", sep = "")
 
@@ -23,5 +23,12 @@ for(each in IDs){
 sampleSheet<-sampleSheet[outOrder,]
 sampleSheet$Chip.Location<-chip.positions
 
-write.table(sampleSheet, "SCZHydroxymethFACsSortedPlateDesign14052019.txt")
+
+## check all samples included
+if(length(which(!1:nrow(sampleSheet) %in% outOrder)) > 0){
+  print("ERROR: Some samples not included")
+}
+
+
+write.table(sampleSheet, "SCZHydroxymethFACsSortedPlateDesign14052019.txt", row.names = FALSE)
 
