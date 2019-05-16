@@ -7,7 +7,7 @@ cd ${WD}
 ## NB uses reference genome downloaded for alignment
 
 for chr in {1..22}; do
-
+   
 	## need to add chr to chromosome notation
 	gunzip -f ALL.chr${chr}_GRCh38.genotypes.20170504.vcf.gz
 	
@@ -15,6 +15,7 @@ for chr in {1..22}; do
 	
 	bgzip -c ALL.chr${chr}_GRCh38.genotypes.20170504_with_chr.vcf > ALL.chr${chr}_GRCh38.genotypes.20170504.vcf.gz
 	tabix -p vcf ALL.chr${chr}_GRCh38.genotypes.20170504.vcf.gz
+	rm ALL.chr${chr}_GRCh38.genotypes.20170504_with_chr.vcf
 
 	# Ensure that multi-allelic calls are split and that indels are left-aligned compared to reference genome (1st pipe)
 	# Sets the ID field to a unique value: CHROM:POS:REF:ALT (2nd pipe)
