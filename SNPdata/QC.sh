@@ -34,8 +34,7 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_1 --update-ids ID_sentrix_ID.txt --make-
 
 ## update sex in fam file
 ${PLINK}/plink --bfile SCZ2_gr38_update_2 --update-sex MRC2_UpdateSex.txt --make-bed --out SCZ2_gr38_update_3 
-rm SCZ2_gr38_update_1.* 
-rm SCZ2_gr38_update_2.* 
+ 
 
 ## perform sex check on samples with enough data
 ## there are a couple of mismatches, and 1 which does not have a sex predicted. 
@@ -56,5 +55,9 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_4 --remove excessHet.txt --make-bed --ou
 
 ## filter sample and variant missingness, HWE, rare variants
 ${PLINK}/plink --bfile SCZ2_gr38_update_5 --maf 0.001 --hwe 0.00001 --mind 0.02 --geno 0.05 --make-bed --out SCZ2_QCd
+
+## clean up intermediate files
+rm SCZ2_gr38_update_*.* 
+
 
 
