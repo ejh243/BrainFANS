@@ -47,6 +47,8 @@ mkdir PennCNVOutput
 cd PennCNVInput/
 ${PENNCNVPATH}/detect_cnv.pl --test -hmm ${PENNCNVPATH}/lib/hh550.hmm -pfb ${PENNCNVPATH}/pfb/gsa.gr38.pfb --listfile ../Samples.txt -log ../PennCNVOutput/SCZ2.log -out ../PennCNVOutput/SCZ_GCModel.rawcnv -gcmodel ${PENNCNVPATH}/lib/GSA.gcmodel;
 
+## generate sample QC report 
+${PENNCNVPATH}/filter_cnv.pl --qcsumout PennCNVOutput/SampleQC.txt --qclogfile PennCNVOutput/SCZ2.log PennCNVOutput/SCZ_GCModel.rawcnv
 
 
 
