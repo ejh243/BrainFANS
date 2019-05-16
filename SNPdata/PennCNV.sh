@@ -3,8 +3,6 @@
 ## generally following user guide: https://github.com/WGLab/PennCNV/blob/master/docs/user-guide/input.md
 
 ## assumes executed from script directory
-pwd
-
 cd ${DATADIR}/
 cd SNPdata/
 
@@ -28,8 +26,8 @@ rm ${PENNCNVPATH}/lib/gsa.gr38.snpposfile.tmp
 cd ${PENNCNVPATH}
 mkdir -p ./pfb
 cd ${DATADIR}/SNPdata/CNV/PennCNVInput/
-rm -f ../Samples.txt;
-ls | grep -v *.txt  > ../Samples.txt
+
+## instead use list of file 
 ${PENNCNVPATH}/compile_pfb.pl -listfile ../Samples.txt --snpposfile ${PENNCNVPATH}/lib/gsa.gr38.snpposfile -output ${PENNCNVPATH}/pfb/gsa.gr38.pfb
 
 
@@ -46,8 +44,8 @@ cd ${DATADIR}/SNPdata/CNV/
 mkdir PennCNVOutput
 
 ## only run CNVs on samples that pass SNP QC
-
-${PENNCNVPATH}/detect_cnv.pl --test -hmm ${PENNCNVPATH}/lib/hh550.hmm -pfb ${PENNCNVPATH}/pfb/gsa.gr38.pfb PennCNVInput/* -log PennCNVOutput/SCZ2.log -out PennCNVOutput/SCZ_GCModel.rawcnv -gcmodel ${PENNCNVPATH}/lib/GSA.gcmodel;
+cd PennCNVInput/
+${PENNCNVPATH}/detect_cnv.pl --test -hmm ${PENNCNVPATH}/lib/hh550.hmm -pfb ${PENNCNVPATH}/pfb/gsa.gr38.pfb --listfile ../Samples.txt -log ../PennCNVOutput/SCZ2.log -out ../PennCNVOutput/SCZ_GCModel.rawcnv -gcmodel ${PENNCNVPATH}/lib/GSA.gcmodel;
 
 
 

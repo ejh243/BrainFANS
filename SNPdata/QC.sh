@@ -57,7 +57,7 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_4 --remove excessHet.txt --make-bed --ou
 ${PLINK}/plink --bfile SCZ2_gr38_update_5 --maf 0.001 --hwe 0.00001 --mind 0.02 --geno 0.05 --make-bed --out SCZ2_QCd
 
 ## write list of samples that passed QC for CNV calling
-cut -f 1 SCZ2_QCd.fam > CNV/Samples.txt
+cut -f 1 --delimiter=" " SCZ2_QCd.fam > CNV/Samples.txt
 
 ## clean up intermediate files
 rm SCZ2_gr38_update_*.* 
