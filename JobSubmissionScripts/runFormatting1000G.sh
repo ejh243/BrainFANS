@@ -31,7 +31,7 @@ module load BCFtools/1.9-foss-2018b
 source ./Misc/config.txt
 
 
-# sh Misc/Download1000GData.sh
+sh Misc/Download1000GData.sh
 sh Misc/Format1000GPlinkgr38.sh
 
 ## print finish date and time
