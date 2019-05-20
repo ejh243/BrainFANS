@@ -20,13 +20,18 @@ do
   mkdir -p ${foldername}
   bowtie2 -x ${REFGENOME}/genome -U ${f} -S ${foldername}/${basename}.sam &> ${foldername}/${basename}.bowtie.log
  
- ## convert to sam files
- samtools view -bSo ${foldername}/${basename}.bam ${foldername}/${basename}.sam
- rm ${foldername}/${basename}.sam
-done
+  ## convert to sam files
+  samtools view -bSo ${foldername}/${basename}.bam ${foldername}/${basename}.sam
+  samtools sort ${foldername}/${basename}.bam > ${foldername}/${basename}_sorted.bam
+  rm ${foldername}/${basename}.sam
 
-## remove duplicates
-java -jar ${PICARD}/picard.jar MarkDuplicates I=${foldername}/${basename}.bam O=${foldername}/${basename}_depDuplicated.bam M=${foldername}/${basename}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
+  ## remove duplicates
+  java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${foldername}/${basename}_sorted.bam O=${foldername}/${basename}_depDuplicated.bam M=${foldername}/${basename}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
+  
+  ## remove reads with q< 30
+  samtools view -q 30 ${foldername}/${basename}_depDuplicated.bam > ${foldername}/${basename}_depDup_q30.bam
+   
+done
 
 
 
