@@ -5,8 +5,8 @@
 #PBS -A Research_Project-MRC190311 # research project to submit under. 
 #PBS -l procs=1 # specify number of processors.
 #PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e ChipAlignment.err # error file
-#PBS -o ChipAlignment.log # output file
+#PBS -e JobSubmissionScripts/ChipAlignment.err # error file
+#PBS -o JobSubmissionScripts/ChipAlignment.log # output file
 
 ## Output some useful job information
 
@@ -41,7 +41,8 @@ module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
 sh $PBS_O_WORKDIR/ChipSeq/alignment.sh
 
-#module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
+module purge
+module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 
 ## print finish date and time
 echo Job finished on:
