@@ -39,20 +39,23 @@ done
 
 # Convert the BCF files to PLINK format
 for chr in {1..22}; do
-    ${PLINK}/plink --bcf ALL.chr"${chr}"_GRCh38.genotypes.20170504.genotypes.bcf  --biallelic-only --vcf-idspace-to _ --const-fid --allow-extra-chr 0 --split-x b38 no-fail --make-bed --out ALL.chr"${chr}"_GRCh38.20170504.biallelic ;
+    ${PLINK}/plink --bcf ALL.chr"${chr}"_GRCh38.genotypes.20170504.genotypes.bcf  --vcf-idspace-to _ --const-fid --allow-extra-chr 0 --split-x b38 no-fail --make-bed --out ALL.chr"${chr}"_GRCh38.20170504 ;
+	cut -f 2 ALL.chr"${chr}"_GRCh38.20170504.bim | uniq -d > dupVariants.txt
+	${PLINK}/plink --bfile ALL.chr"${chr}"_GRCh38.20170504 --exclude dupVariants.txt --make-bed --out ALL.chr"${chr}"_GRCh38.20170504.biallelic;
+	
 done
 
 
 #Get a list of all PLINK files
-find . -name "ALL.chr*.bim" > ForMerge.list ;
+find . -name "ALL.chr*.biallelic.bim" > ForMerge.list ;
 
 sed -i 's/.bim//g' ForMerge.list ;
 
 # Merge all projects into a single PLINK file
-${PLINK}/plink --merge-list ForMerge.list --out 1000G_gr38;
+${PLINK}/plink --merge-list ForMerge.list --make-bed --out 1000G_gr38;
 
 ## remove variants that are at the same position (i.e. triallelic) 
-cut -f 2 1000G_gr38_2.bim | uniq -d > dupVariants.txt
+cut -f 2 1000G_gr38.bim | uniq -d > dupVariants.txt
 ${PLINK}/plink --bfile 1000G_gr38 --exclude dupVariants.txt --make-bed --out 1000G_gr38_biallelic;
 
 
