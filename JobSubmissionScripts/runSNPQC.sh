@@ -5,8 +5,8 @@
 #PBS -A Research_Project-MRC190311 # research project to submit under. 
 #PBS -l procs=1 # specify number of processors.
 #PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e QCSNPdata.err # error file
-#PBS -o QCSNPdata.log # output file
+#PBS -e LogFiles/QCSNPdata.err # error file
+#PBS -o LogFiles/QCSNPdata.log # output file
 
 
 ## Output some useful job information
@@ -37,6 +37,12 @@ source ./SNPdata/config.txt
 #module load PLINK/1.07-x86_64
 module load R/3.5.1-foss-2018b-Python-2.7.15
 
+sh SNPdata/QC.sh
+sh SNPdata/CheckEthnicity.sh
+# plot PCs
+Rscript SNPdata/plotEthnicity.r ${DATADIR}/SNPdata/
+sh SNPdata/CheckRelatedness.sh
+Rscript SNPdata/plotKinshipCoeff.r ${DATADIR}/SNPdata/
 
 ## print finish date and time
 echo Job finished on:
