@@ -56,7 +56,7 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_4 --remove sexErrors.txt --make-bed --ou
 ## check for runs of homozygosity
 awk '{if ($1 >= 1 && $1 <= 22) print $2}' SCZ2_gr38_update_5.bim > autosomalVariants.txt
 ${PLINK}/plink --bfile SCZ2_gr38_update_5 --extract autosomalVariants.txt --maf 0.01 --hwe 0.00001 --mind 0.02 --geno 0.05 --indep-pairwise 5000 1000 0.2 --out ld.auto
-${PLINK}/plink --bfile SCZ2_gr38_update_5 --extract lad.auto.prune.in --het --out roh
+${PLINK}/plink --bfile SCZ2_gr38_update_5 --extract ld.auto.prune.in --het --out roh
 ## exclude anyone with |Fhet| > 0.2
 awk '{if ($6 > 0.2 || $6 < -0.2) print $1,$2}' roh.het > excessHet.txt
 ${PLINK}/plink --bfile SCZ2_gr38_update_5 --remove excessHet.txt --make-bed --out SCZ2_gr38_update_6
