@@ -39,6 +39,8 @@ awk --delimiter=":"'{print $1,$2}' dupLocs.txt
 awk -F ":" '{print $1,$2-1,$2,"set1", "set2"}' dupLocs.txt > positionsExclude.txt
 
 ${PLINK}/plink --bfile SCZ2_gr38_update_2 --exclude range positionsExclude.txt --make-bed --out SCZ2_gr38_update_3;
+rm pos.tmp
+rm dupLocs.txt
 
 ## update sex in fam file
 ${PLINK}/plink --bfile SCZ2_gr38_update_3 --update-sex MRC2_UpdateSex.txt --make-bed --out SCZ2_gr38_update_4 
@@ -60,6 +62,8 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_5 --extract ld.auto.prune.in --het --out
 ## exclude anyone with |Fhet| > 0.2
 awk '{if ($6 > 0.2 || $6 < -0.2) print $1,$2}' roh.het > excessHet.txt
 ${PLINK}/plink --bfile SCZ2_gr38_update_5 --remove excessHet.txt --make-bed --out SCZ2_gr38_update_6
+rm autosomalVariants.txt
+
 
 ## filter sample and variant missingness, HWE, rare variants
 ${PLINK}/plink --bfile SCZ2_gr38_update_6 --maf 0.001 --hwe 0.00001 --mind 0.02 --geno 0.05 --make-bed --out SCZ2_QCd
@@ -77,4 +81,6 @@ ${PLINK}/plink --bfile SCZ2_QCd --extract SCZ2_QCd.ld.prune.in --make-bed --out 
 
 ${GCTA}/gcta64 --bfile SCZ2_QCd.ld.prune --make-grm-bin --autosome --out SCZ2_QCd
 ${GCTA}/gcta64 --grm SCZ2_QCd --pca --out SCZ2_QCd.pca
+
+rm SCZ2_QCd.ld.prune*
 

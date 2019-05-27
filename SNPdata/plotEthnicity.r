@@ -75,8 +75,10 @@ for(nPCs in 2:20){
 	compTrue<-table(predPop, KGped$SuperPopulation)
 	nMatches[nPCs]<-sum(diag(compTrue))
 }
+pdf("SelectOptimalnPCsForPopulationPrediction.pdf")
+plot(2:20,nMatches/sum(!is.na(KGped$SuperPopulation))*100, xlab = "nPCs", ylab = "Percentage Correct")
+dev.off()
 
-plot(1:20,nMatches)
 nPCs<-which.max(nMatches)
 pop.medians<-apply(pcas[,-c(1:2)][,1:nPCs], 2,aggregate, by = list(KGped$SuperPopulation), median)
 pop.medians<-cbind.data.frame(pop.medians)
