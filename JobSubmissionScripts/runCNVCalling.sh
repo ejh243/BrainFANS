@@ -5,8 +5,8 @@
 #PBS -A Research_Project-MRC190311 # research project to submit under. 
 #PBS -l procs=1 # specify number of processors.
 #PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e QCSNPdata.err # error file
-#PBS -o QCSNPdata.log # output file
+#PBS -e LogFiles/CNVcalling.err # error file
+#PBS -o LogFiles/CNVcalling.log # output file
 
 ## Output some useful job information
 
@@ -29,10 +29,16 @@ cd $PBS_O_WORKDIR
 source ./SNPdata/config.txt
 
 module load Perl/5.26.1-foss-2018a
+module load R
 
 cd ${DATADIR}/scripts ## all scripts are written to be executed from the scripts folder
 
 sh SNPdata/PennCNV.sh
+echo CNVs called on full sample
+
+cd ${DATADIR}/scripts
+sh SNPdata/FilterCNVCalls.sh
+
 
 ## print finish date and time
 echo Job finished on:
