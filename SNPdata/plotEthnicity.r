@@ -1,4 +1,19 @@
 ## script to plot PCA output and colour by 1000G ethnicity
+
+calcPopDist<-function(dat.pca, ref){
+# dat.pca is test individual's data across pcs
+# ref is matrix with 1 row per population and 1 column per pca
+	popDist<-rep(NA, nrow(ref))
+	names(popDist)<-rownames(ref)
+	for(i in 1:nrow(ref)){
+		diffs<-dat.pca - ref[i,]
+		sqdiffs<-diffs^2
+		popDist[i]<-sqrt(sum(sqdiffs))
+	}
+	return(popDist)
+}
+
+
 args<-commandArgs(TRUE)
 
 setwd(args[1])
@@ -43,18 +58,6 @@ legend("center", pch = 16, col = rainbow(nSuperPops), levels(as.factor(KGped$Sup
 dev.off()
 
 
-calcPopDist<-function(dat.pca, ref){
-# dat.pca is test individual's data across pcs
-# ref is matrix with 1 row per population and 1 column per pca
-	popDist<-rep(NA, nrow(ref))
-	names(popDist)<-rownames(ref)
-	for(i in 1:nrow(ref)){
-		diffs<-dat.pca - ref[i,]
-		sqdiffs<-diffs^2
-		popDist[i]<-sqrt(sum(sqdiffs))
-	}
-	return(popDist)
-}
 
 ## for each super population calculate cluster medians
 
@@ -90,6 +93,21 @@ popDistsAll<-apply(pcas[,-c(1:2)][,1:nPCs], 1, calcPopDist, pop.medians)
 popDistsAll<-t(popDistsAll)
 predPop<-colnames(popDistsAll)[apply(popDistsAll, 1, which.min)]
 
+## calculate a quality score for prediction
+## ideally want one population much closer than the others
+rangeDist<-t(diff(apply(popDistsAll,1,range)))
+qsPred<-(apply(popDistsAll,1,quantile, 0.25)-apply(popDistsAll,1,min))/rangeDist
+pdf("BoxplotPrePopQCScores.pdf", width = 12, height = 6)
+par(mfrow = c(1,2))
+boxplot(qsPred ~ KGped$SuperPopulation, col = rainbow(5), xlab = "Known populations")
+boxplot(qsPred ~ predPop, col = rainbow(5), xlab = "Predicted populations")
+dev.off()
+## can define thresholds for each population based on 1000 genomes samples
+#pop99<-aggregate(popDistsAll, by = list(KGped$SuperPopulation), quantile, 0.95)
+#pop99Thres<-diag(as.matrix(pop99[,-1]))
+#names(pop99Thres)<-colnames(popDistsAll)
+#table(apply(popDistsAll, 1, min) < pop99Thres[predPop],as.factor(predPop))
+
 
 ptCol<-rainbow(nSuperPops)[as.factor(predPop)]
 pdf("PCAplotwith1KGpredictedPopulations.pdf", width = 10, height = 10)
@@ -105,9 +123,9 @@ plot(pcas[,3], pcas[,4], xlab = "PC1", ylab = "PC2", type = "n")
 points(pcas[which(ptType == 3),3], pcas[which(ptType == 3),4], pch = 3, col = ptCol[which(ptType == 3)])
 dev.off()
 
-## look at predications of our sample
 
-outPred<-cbind(pcas[,1:2], predPop)
+## look at predications of our sample
+outPred<-cbind(pcas[,1:2], predPop, qsPred, popDistsAll)
 outPred<-outPred[which(ptType == 3),]
 write.csv(table(outPred$predPop), "TablePredictedPopulations.csv")
 write.csv(outPred, "PredictedPopulations.csv", quote = FALSE, row.names = FALSE)
