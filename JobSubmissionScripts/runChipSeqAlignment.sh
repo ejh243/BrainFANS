@@ -1,12 +1,12 @@
 #!/bin/sh
 #PBS -V # export all environment variables to the batch job.
 #PBS -q sq # submit to the serial queue
-#PBS -l walltime=12:00:00 # Maximum wall time for the job.
+#PBS -l walltime=24:00:00 # Maximum wall time for the job.
 #PBS -A Research_Project-MRC190311 # research project to submit under. 
 #PBS -l procs=1 # specify number of processors.
 #PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e JobSubmissionScripts/ChipAlignment.err # error file
-#PBS -o JobSubmissionScripts/ChipAlignment.log # output file
+#PBS -e LogFiles/ChipAlignment.err # error file
+#PBS -o LogFiles/ChipAlignment.log # output file
 
 ## Output some useful job information
 
@@ -41,8 +41,12 @@ module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
 sh $PBS_O_WORKDIR/ChipSeq/alignment.sh
 
+echo Starting peak calling at:
+date -u
 module purge
 module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
+sh $PBS_O_WORKDIR/ChipSeq/peakCalling.sh
+
 
 ## print finish date and time
 echo Job finished on:
