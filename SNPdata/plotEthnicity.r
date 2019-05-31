@@ -76,7 +76,7 @@ for(nPCs in 2:20){
 	nMatches[nPCs]<-sum(diag(compTrue))
 }
 pdf("SelectOptimalnPCsForPopulationPrediction.pdf")
-plot(2:20,nMatches/sum(!is.na(KGped$SuperPopulation))*100, xlab = "nPCs", ylab = "Percentage Correct")
+plot(1:20,nMatches/sum(!is.na(KGped$SuperPopulation))*100, xlab = "nPCs", ylab = "Percentage Correct")
 dev.off()
 
 nPCs<-which.max(nMatches)
@@ -110,5 +110,5 @@ dev.off()
 outPred<-cbind(pcas[,1:2], predPop)
 outPred<-outPred[which(ptType == 3),]
 write.csv(table(outPred$predPop), "TablePredictedPopulations.csv")
-write.csv(outPred, "PredictedPopulations.csv")
+write.csv(outPred, "PredictedPopulations.csv", quote = FALSE, row.names = FALSE)
 
