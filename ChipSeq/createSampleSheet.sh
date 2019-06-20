@@ -11,5 +11,5 @@ do
   foldername=${basename//11_trimmed/alignedData}
   foldername=${foldername%/*}
   basename=${basename##*/}
-  echo ${basename},${foldername}/${basename}.bam","${foldername}/MACS2/${basename}.bed >> ${DATADIR}/SampleSheet.csv
+  echo ${basename},${foldername}/${basename}_sorted.bam","${foldername//alignedData/MACS2/}${basename}_depDup_q30_peaks.narrowPeak >> ${DATADIR}/SampleSheet.csv
 done

@@ -5,7 +5,7 @@
 
 FQFILES=$(ls ${DATADIR}/*/11_trimmed/*.fq.gz)
 
-echo "Number of .fq.gz files found for alignment:" "${#distro[@]}"
+echo "Number of .fq.gz files found for alignment:" "${#FQFILES[@]}"
 
 for f in ${FQFILES};
 do
@@ -20,9 +20,12 @@ do
   mkdir -p ${foldername}
   bowtie2 -x ${REFGENOME}/genome -U ${f} -S ${foldername}/${basename}.sam &> ${foldername}/${basename}.bowtie.log
  
+
   ## convert to sam files
   samtools view -bSo ${foldername}/${basename}.bam ${foldername}/${basename}.sam
   samtools sort ${foldername}/${basename}.bam > ${foldername}/${basename}_sorted.bam
+  ## index bam files for QC package
+  samtools index ${foldername}/${basename}_sorted.bam
   rm ${foldername}/${basename}.sam
 
   ## remove duplicates
