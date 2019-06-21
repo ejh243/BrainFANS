@@ -1,0 +1,124 @@
+---
+title: "DNA methylation Illumina Arrays Quality Control Report"
+author: "E Hannon"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(bigmelon)
+source("rmdConfig.run1") ## change the content of this file to to run QC on different set of data
+## prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
+setwd(dataDir) 
+load(qcData)
+
+```
+
+```{r definPlotParams, include = FALSE}
+## define plotting parameters to automate which factors output is to be coloured by
+
+
+nLocation<-length(levels(QCmetrics$Plate.Location))
+colLocation<-rainbow(nLocation)[QCmetrics$Plate.Location]
+nExtraction<-length(levels(QCmetrics$Extraction.Plate))
+colExtraction<-rainbow(nExtraction)[QCmetrics$Extraction.Plate]
+nSortDate<-length(levels(QCmetrics$Sort.Date))
+colSortDate<-rainbow(nSortDate)[QCmetrics$Sort.Date]
+nIndividual<-length(levels(QCmetrics$Individual))
+colIndividual<-rainbow(nIndividual)[QCmetrics$Individual]
+nCelltype<-length(levels(QCmetrics$Cell.type))
+colCellType<-rainbow(nCelltype)[QCmetrics$Cell.type]
+QCmetrics$Chip.ID<-as.factor(QCmetrics$Chip.ID)
+nChips<-length(levels(QCmetrics$Chip.ID))
+colChip<-rainbow(nChips)[QCmetrics$Chip.ID]
+nPosition<-length(levels(QCmetrics$Chip.Location))
+colPosition<-rainbow(nPosition)[QCmetrics$Chip.Location]
+nPheno<-length(levels(QCmetrics$Phenotype))
+colPheno<-rainbow(nPheno)[QCmetrics$Phenotype]
+nSex<-length(levels(QCmetrics$Sex))
+colSex<-rainbow(nSex)[QCmetrics$Sex]
+
+plotCols<-data.frame("Plate Location" = colLocation, "Extraction Plate" = colExtraction, "Sort Date" = colSortDate, "Chip ID" = colChip, "Chip Position" = colPosition, "Individual" = colIndividual, "Cell type" = colCellType, "Schizophrenia Status" = colPheno, "Sex" = colSex, stringsAsFactors = FALSE)
+
+legendParams<-list("Plate Location" = cbind(levels(QCmetrics$Plate.Location),rainbow(nLocation)),
+"Extraction Plate" = cbind(levels(QCmetrics$Extraction.Plate),rainbow(nExtraction)), 
+"Sort Date" = cbind(levels(QCmetrics$Sort.Date),rainbow(nSortDate)), 
+"Chip ID" = cbind(levels(QCmetrics$Chip.ID),rainbow(nChips)), 
+"Chip Position" = cbind(levels(QCmetrics$Chip.Location),rainbow(nPosition)), 
+"Individual" = cbind(levels(QCmetrics$Individual),rainbow(nIndividual)), 
+"Cell type" = cbind(levels(QCmetrics$Cell.type),rainbow(nCelltype)), 
+"Schizophrenia Status" = cbind(levels(QCmetrics$Phenotype),rainbow(nPheno)), 
+"Sex" = cbind(levels(QCmetrics$Sex),rainbow(nSex))
+)
+
+
+```
+
+
+This report documents the interal quality control (QC) process of DNA methylation data generated at the Univeristy of Exeter Medical School for the following study:
+
+### Study Information
+**Study:** `r print(projectTitle)`
+**Description:** `r print(projectDescription)` 
+**Arrays ran by:** `r print(processedBy)`
+**Array used:** `r print(arrayVersion)`
+**QC done by:** `r print(qcID)`
+**Date of QC:** `r format(Sys.Date(), format="%d %B %Y")`
+**Sample sheet:** `r print(sampleFile)`
+**Sample tissue:** `r print(tissueType)` 
+
+ 
+### Summary of quality control
+
+
+Data was loaded for `r nrow(QCmetrics)` samples. 
+
+## Step 1: Check signal intensities
+Previous experience has shown that intensity level indicates sample quality. This is summarised for each sample by calculating the median of the methylated signal intensity and unmethylated signal intensity.
+
+```{r intensitiesPlot}
+par(mfrow = c(1,2))
+for(i in 1:ncol(plotCols)){
+	plot(QCmetrics$M.median, QCmetrics$U.median, pch = 16, xlab = "Median M intensity", ylab = "Median U intensity", main=paste("Coloured by", colnames(plotCols)[i]), col = plotCols[,i])
+	par(xpd=TRUE)
+	legendDat<-legendParams[[i]]
+	if(nrow(legendDat) > 10){
+		nCols=floor(nrow(legendDat)/10)
+	} else {
+		nCols<-1
+	}
+	legend("topleft", legendDat[,1], col = legendDat[,2], pch = 16, cex=0.75, ncol = nCols)
+}
+```
+
+```{r}
+par(mfrow = c(2,2))
+for(i in 2:5){
+
+plot(QCmetrics$PC1_cp, QCmetrics[,paste("PC", i, "_cp", sep = "")], pch = 16)
+}
+
+plot(QCmetrics$PC1_cp, QCmetrics$M.median)
+```
+
+
+```{r}
+	# pull out samples that are genetically identical
+	predictedduplicates<-vector(length = ncol(snpCor))
+	for(i in 1:ncol(snpCor)){
+	  predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
+	} 
+	
+	predictedduplicates<-unique(predictedduplicates)
+	for(element in predictedduplicates){
+		index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
+		paste(sort(QCmetrics$Individual[index]), sep = "|", collapse = "|")
+	}
+	
+```
+
+Built with
+`r getRversion()`
+
+Session Information
+`r sessionInfo()`
