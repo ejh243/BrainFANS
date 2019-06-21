@@ -59,12 +59,19 @@ This report documents the interal quality control (QC) process of DNA methylatio
 
 ### Study Information
 **Study:** `r print(projectTitle)`
+
 **Description:** `r print(projectDescription)` 
+
 **Arrays ran by:** `r print(processedBy)`
+
 **Array used:** `r print(arrayVersion)`
+
 **QC done by:** `r print(qcID)`
+
 **Date of QC:** `r format(Sys.Date(), format="%d %B %Y")`
+
 **Sample sheet:** `r print(sampleFile)`
+
 **Sample tissue:** `r print(tissueType)` 
 
  
@@ -73,10 +80,10 @@ This report documents the interal quality control (QC) process of DNA methylatio
 
 Data was loaded for `r nrow(QCmetrics)` samples. 
 
-## Step 1: Check signal intensities
+#### Step 1: Check signal intensities
 Previous experience has shown that intensity level indicates sample quality. This is summarised for each sample by calculating the median of the methylated signal intensity and unmethylated signal intensity.
 
-```{r intensitiesPlot}
+```{r intensitiesPlot, fig.width = 10, fig.height = 10, echo = FALSE}
 par(mfrow = c(1,2))
 for(i in 1:ncol(plotCols)){
 	plot(QCmetrics$M.median, QCmetrics$U.median, pch = 16, xlab = "Median M intensity", ylab = "Median U intensity", main=paste("Coloured by", colnames(plotCols)[i]), col = plotCols[,i])
@@ -91,34 +98,47 @@ for(i in 1:ncol(plotCols)){
 }
 ```
 
-```{r}
-par(mfrow = c(2,2))
+#### Step 2: Check control probes
+
+```{r, controlProbePlot, fig.width = 10, fig.height = 10, echo = FALSE}
+par(mfrow = c(1,2))
 for(i in 2:5){
 
-plot(QCmetrics$PC1_cp, QCmetrics[,paste("PC", i, "_cp", sep = "")], pch = 16)
+	plot(QCmetrics$PC1_cp, QCmetrics[,paste("PC", i, "_cp", sep = "")], pch = 16, xlab = "PC1", ylab = paste("PC", i, sep = ""))
 }
 
 plot(QCmetrics$PC1_cp, QCmetrics$M.median)
 ```
 
+#### Step 3: Check for duplicate samples
 
-```{r}
+```{r, duplicateSamples, echo = FALSE}
 	# pull out samples that are genetically identical
-	predictedduplicates<-vector(length = ncol(snpCor))
-	for(i in 1:ncol(snpCor)){
-	  predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
-	} 
+	#predictedduplicates<-vector(length = ncol(snpCor))
+	#for(i in 1:ncol(snpCor)){
+	  #predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
+	#} 
 	
-	predictedduplicates<-unique(predictedduplicates)
-	for(element in predictedduplicates){
-		index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
-		paste(sort(QCmetrics$Individual[index]), sep = "|", collapse = "|")
-	}
+	#predictedduplicates<-unique(predictedduplicates)
+	#for(element in predictedduplicates){
+		#index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
+		#paste(sort(QCmetrics$Individual[index]), sep = "|", collapse = "|")
+	#}
 	
 ```
 
-Built with
+#### Step 4: Check sex prediction
+
+#### Step 5: Principal component analysis
+
+#### Step 6: Age prediction
+
+#### Step 7: Check effect of normalisation
+
+Built with R version
 `r getRversion()`
 
 Session Information
-`r sessionInfo()`
+```{r}
+ sessionInfo()
+```
