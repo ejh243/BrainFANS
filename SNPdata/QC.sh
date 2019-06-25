@@ -65,22 +65,26 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_5 --remove excessHet.txt --make-bed --ou
 rm autosomalVariants.txt
 
 
-## filter sample and variant missingness, HWE, rare variants
-${PLINK}/plink --bfile SCZ2_gr38_update_6 --maf 0.001 --hwe 0.00001 --mind 0.02 --geno 0.05 --make-bed --out SCZ2_QCd
+## filter sample and variant missingness, HWE, rare variants and exclude variants with no position
+awk '{if ($1 == 0) print $2}' SCZ2_gr38_update_6.bim > noLocPos.tmp
+${PLINK}/plink --bfile SCZ2_gr38_update_6 --exclude noLocPos.tmp --maf 0.001 --hwe 0.00001 --mind 0.02 --geno 0.05 --make-bed --out SCZ2_QCd
+
 
 ## write list of samples that passed QC for CNV calling
 cut -f 1 --delimiter=" " SCZ2_QCd.fam > CNV/Samples.txt
 
-## clean up intermediate files
-rm SCZ2_gr38_update_*.* 
+## clean up intermediate files but keep log files
+rm SCZ2_gr38_update_*.b*
+rm SCZ2_gr38_update_*.fam
+ 
 
 ## calc PCS within sample only
 # LD prune
 ${PLINK}/plink --bfile SCZ2_QCd --indep 50 5 1.5 --out SCZ2_QCd.ld
 ${PLINK}/plink --bfile SCZ2_QCd --extract SCZ2_QCd.ld.prune.in --make-bed --out SCZ2_QCd.ld.prune
 
-${GCTA}/gcta64 --bfile SCZ2_QCd.ld.prune --make-grm-bin --autosome --out SCZ2_QCd
-${GCTA}/gcta64 --grm SCZ2_QCd --pca --out SCZ2_QCd.pca
+${GCTA}/gcta64 --bfile SCZ2_QCd.ld.prune --make-grm-bin --autosome --out SCZ2_QCd_GCTA
+${GCTA}/gcta64 --grm SCZ2_QCd_GCTA --pca --out SCZ2_QCd.pca
 
 rm SCZ2_QCd.ld.prune*
 
