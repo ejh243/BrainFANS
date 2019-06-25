@@ -3,11 +3,12 @@
 
 setwd(dataDir)
 
-gfile<-openfn.gds(gdsFile, readonly = FALSE)
+gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
 
 ## see if any QC data already exists
 if(file.exists(qcData)){
 	load(qcData)
+	print("QC file loaded")
 } else{
 	QCmetrics<-sampleSheet
 }
@@ -72,7 +73,7 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 #}
 
 ## detection p value filtering
-pfilter.gds(gfile)
+pfilter.gds(gfile, pn = pvals(gfile), bc = index.gdsn(gfile, 'NBeads'))
 
 
 

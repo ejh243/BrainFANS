@@ -4,6 +4,17 @@
 ## script to load DNAm data from idat files listed in a sample sheet into gds file using bigmelon
 ## NB if gds file already exists it is deleted and recreated
 
+iadd <- function (bar, gds, n=T, ...){
+    ifile <- basename(bar)
+    pieces <- strsplit(ifile, "[_.]")
+    slide <- sapply(pieces, '[', 1)
+    pos <- sapply(pieces, '[', 2)
+    bar <- paste(slide, pos, sep = "_")
+    mlu <- methylumIDATepic(barcodes = bar, n=n, ...)
+    app2gds(mlu, gds)
+}
+
+
 
 library(bigmelon)
 library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)

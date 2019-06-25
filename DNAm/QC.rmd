@@ -254,8 +254,14 @@ Checking if genetically identical samples have the sample Individual ID...
 	  }
 	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Individual[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Extraction.Loc.[errorIndexes], margin = c(10,10))
 	
-	write.csv(QCmetrics[errorIndexes,], "GeneticMismatches.csv", row.names = FALSE)
+	write.csv(QCmetrics[errorIndexes,], "QCMetrics/GeneticMismatches.csv", row.names = FALSE)
 	}
+
+```
+
+```{r, echo = FALSE}
+
+## check if samples with same Individual ID are genetically identical.
 
 ```
 
@@ -271,7 +277,7 @@ abline(h = 1, pch = 16)
 
 plot(QCmetrics$x.cp, QCmetrics$M.median, pch = 16, xlab = "X chromosome FC", ylab = "median M intenisty")
 
-write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex)),], "SexMismatches.csv", row.names = FALSE)
+write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex)),], "QCMetrics/SexMismatches.csv", row.names = FALSE)
 ```
 
 `r sum(!is.na(QCmetrics$Sex))` samples have sex provided in the phoentype file for comparision with predicted sex. 
