@@ -1,5 +1,7 @@
 ## run this script to calculate QC metrics
+## first it excludes samples with really low intensities values
 ## requires gdsfile to already be generated and sample sheet to be loaded
+##
 
 setwd(dataDir)
 
@@ -25,9 +27,15 @@ if(!"M.median" %in% colnames(QCmetrics)){
 	u_intensities<-unmethylated(gfile)
 	M.median<-unlist(apply.gdsn(m_intensities, 2, median))
 	U.median<-unlist(apply.gdsn(u_intensities, 2, median))
-	QCmetrics<-cbind(QCmetrics,M.median, U.median)
-	
+	intens.ratio<-M.median/U.median
+	## exclude really poor intensity samples from beginning so rest of QC is not dominated by them
+	intensPASS<-M.median > 500
+	QCmetrics<-cbind(QCmetrics,M.median, U.median, intens.ratio, intensPASS)
+
 }
+
+
+ 
 
 # calculate bisulfite conversion statistic
 if(!"bisulfCon" %in% colnames(QCmetrics)){	
@@ -37,8 +45,9 @@ if(!"bisulfCon" %in% colnames(QCmetrics)){
 
 ## PCA of control-probe intensities
 if(!"PC1_cp" %in% colnames(QCmetrics)){	
-	qc.meth<-QCmethylated(gfile)
-	qc.unmeth<-QCunmethylated(gfile)
+	## exclude really poor intensity samples
+	qc.meth<-QCmethylated(gfile)[,QCmetrics$intensPASS]
+	qc.unmeth<-QCunmethylated(gfile)[,QCmetrics$intensPASS]
 	# remove negative controls
 	qc.meth<-qc.meth[grep("Negative", rownames(qc.meth), invert=TRUE),]
 	qc.unmeth<-qc.unmeth[grep("Negative", rownames(qc.unmeth), invert=TRUE),]
@@ -48,6 +57,8 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 	ctrlprobes.scores = pca$x
 	colnames(ctrlprobes.scores) = paste(colnames(ctrlprobes.scores), '_cp', sep='')
 	ctrl.pca<-pca$sdev^2/sum(pca$sdev^2)
+	ctrlprobes.scores<-ctrlprobes.scores[match(QCmetrics$Basename, QCmetrics$Basename[QCmetrics$intensPASS]),]
+	rownames(ctrlprobes.scores)<-QCmetrics$Basename	
 	## only save PCs which explain > 1% of the variance
 	QCmetrics<-cbind(QCmetrics,ctrlprobes.scores[,which(ctrl.pca > 0.01)])
 }
@@ -57,12 +68,15 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 	## filter to autosomal only
 	auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 
-	pca <- prcomp(t(na.omit(rawbetas[auto.probes,])))
+	pca <- prcomp(t(na.omit(rawbetas[auto.probes,QCmetrics$intensPASS])))
 	betas.scores = pca$x
 	colnames(betas.scores) = paste(colnames(betas.scores), '_betas', sep='')
 	betas.pca<-pca$sdev^2/sum(pca$sdev^2)
+	betas.scores<-betas.scores[match(QCmetrics$Basename, QCmetrics$Basename[QCmetrics$intensPASS]),]
+	rownames(betas.scores)<-QCmetrics$Basename	
 	## only save PCs which explain > 1% of the variance
-	QCmetrics<-cbind(QCmetrics,betas.scores[,which(ctrl.pca > 0.01)])
+	QCmetrics<-cbind(QCmetrics,betas.scores[,which(betas.pca > 0.01)])
+
 }
 
 ## Identify outlier samples 
@@ -72,9 +86,12 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 	#QCmetrics<-cbind(QCmetrics,outlierDetect)
 #}
 
-## detection p value filtering
-pfilter.gds(gfile, pn = pvals(gfile), bc = index.gdsn(gfile, 'NBeads'))
+## detection p value filtering at this stage only interested in sample filtering, will repeat later for probe filtering
+if(!"pFilter" %in% colnames(QCmetrics)){	
 
+	pFOut<-pfilter.gds(gfile, pn = pvals(gfile), bc = index.gdsn(gfile, "NBeads"))
+	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut$samples)
+}
 
 
 ## calc Horvaths epigenetic age
@@ -130,4 +147,4 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 closefn.gds(gfile)
 
 # save QC metrics and SNP correlations to generate QC report
-save(QCmetrics, snpCor, betas.pca, ctrl.pca, file = qcData)
+save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, file = qcData)

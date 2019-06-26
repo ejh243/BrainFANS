@@ -2,6 +2,7 @@
 ## the script to load the DNAm data from idats into a gds file
 ## the script that generates QC metrics
 ## it is written to minimise the need to reload/re perform data QC 
+## open and close the gds file within each script
 
 args<-commandArgs(trailingOnly = TRUE)
 
@@ -29,14 +30,18 @@ print(paste(nrow(sampleSheet), "samples identified from sample sheet to be loade
 
 if(file.exists(gdsFile)){
 	gfile <- openfn.gds(gdsFile)
+	print(paste("Loading gds file:", gdsFile))
+
 
 	## does it contain all the samples we are interested in?
 	if(sum(sampleSheet$Basename %in% pData(gfile)$barcode) < nrow(sampleSheet)){
 		source(paste(scriptFolder, "/loadDataGDS.r", sep = "")) ## reload data if some samples are missing
 	}
-	
+	## close gds file
+	closefn.gds(gfile)	
 } else { ## otherwise create
 	source(paste(scriptFolder, "/loadDataGDS.r", sep = ""))
+	print(paste("Creating gds file:", gdsFile))
 }
 
 
@@ -48,5 +53,4 @@ if(file.exists(qcData)){
 }
 
 
-## close gds file
- closefn.gds(gfile)
+
