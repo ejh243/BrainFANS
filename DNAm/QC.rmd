@@ -55,7 +55,7 @@ legendParams<-list("Plate Location" = cbind(levels(QCmetrics$Plate.Location),rai
 ```
 
 
-This report documents the interal quality control (QC) process of DNA methylation data generated at the University of Exeter Medical School for the following study:
+This report documents the internal quality control (QC) process of DNA methylation data generated at the University of Exeter Medical School for the following study:
 
 ## Study Information
 **Study:** `r projectTitle`
