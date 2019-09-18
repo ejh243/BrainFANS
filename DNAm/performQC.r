@@ -7,13 +7,13 @@
 args<-commandArgs(trailingOnly = TRUE)
 
 library(bigmelon)
-source(args[1])
-
 if (length(args)==0) {
   stop("Config file missing on command line", call.=FALSE)
 } else {
   print(paste("Using the following config file:", args[1]))
 }
+
+source(args[1])
 
 setwd(dataDir) 
 
