@@ -3,6 +3,7 @@
 ## requires a sample sheet with Basename or Chip.ID and Chip.Location to identify which samples to load
 ## script to load DNAm data from idat files listed in a sample sheet into gds file using bigmelon
 ## NB if gds file already exists it is deleted and recreated
+args<-commandArgs(trailingOnly = TRUE)
 
 iadd <- function (bar, gds, n=T, ...){
     ifile <- basename(bar)
@@ -14,8 +15,6 @@ iadd <- function (bar, gds, n=T, ...){
     app2gds(mlu, gds)
 }
 
-
-
 library(bigmelon)
 library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
@@ -24,14 +23,22 @@ library(IlluminaHumanMethylationEPICmanifest)
 setwd(dataDir)
 
 ## load data
-## check if gds file exists; if it does it will be deleted and recreated
-if(file.exists(gdsFile)){
+## check if gds file exists; if it does it will be deleted and recreated 
+if(file.exists(gdsFile) & recreate == TRUE){
 	file.remove(gdsFile)
+	## create list of samples that need to be loaded
+	sampToLoad<-sampleSheet$Basename
+} else {
+	if(file.exists(gdsFile) & recreate == FALSE){ ## alternatively update existing gfile
+		gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
+		sampToLoad<-sampleSheet$Basename[!sampleSheet$Basename %in% read.gdsn(index.gdsn(gfile, "pData/Basename"))]
+		closefn.gds(gfile)
+	}
 }
 
 setwd("iDats")
 ## load each file from sampleSheet and add to gds file
-for(each in sampleSheet$Basename){
+for(each in sampToLoad){
 	gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = "")) 
 }
 

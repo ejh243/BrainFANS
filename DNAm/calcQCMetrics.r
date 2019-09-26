@@ -4,21 +4,28 @@
 ##
 
 setwd(dataDir)
+library(e1071)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
 
 ## see if any QC data already exists
 if(file.exists(qcData)){
 	load(qcData)
-	print("QC file loaded")
+	if(nrow(QCmetrics) == nrow(sampleSheet)){
+		print("QC file loaded")
+	} else {
+		QCmetrics<-sampleSheet
+	}
 } else{
 	QCmetrics<-sampleSheet
 }
 
-QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
+#QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
 
 ## extract a few useful matrices
 rawbetas<-betas(gfile)[,]
+
+
 
 # calculate median M & U intensity
 if(!"M.median" %in% colnames(QCmetrics)){
@@ -27,15 +34,18 @@ if(!"M.median" %in% colnames(QCmetrics)){
 	u_intensities<-unmethylated(gfile)
 	M.median<-unlist(apply.gdsn(m_intensities, 2, median))
 	U.median<-unlist(apply.gdsn(u_intensities, 2, median))
+	#M.quant<-matrix(unlist(apply.gdsn(m_intensities, 2, quantile)), ncol = 5, byrow = TRUE)
+	#U.quant<-matrix(unlist(apply.gdsn(u_intensities, 2, quantile)), ncol = 5, byrow = TRUE)
+	#M.skew<-unlist(apply.gdsn(m_intensities, 2, skewness))
+	#U.skew<-unlist(apply.gdsn(u_intensities, 2, skewness))
+	#M.sigma<-unlist(apply.gdsn(m_intensities, 2, sd))
+	#U.sigma<-unlist(apply.gdsn(u_intensities, 2, sd))	
 	intens.ratio<-M.median/U.median
 	## exclude really poor intensity samples from beginning so rest of QC is not dominated by them
 	intensPASS<-M.median > 500
 	QCmetrics<-cbind(QCmetrics,M.median, U.median, intens.ratio, intensPASS)
 
 }
-
-
- 
 
 # calculate bisulfite conversion statistic
 if(!"bisulfCon" %in% colnames(QCmetrics)){	
