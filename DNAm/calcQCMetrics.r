@@ -147,7 +147,7 @@ if(!exists("snpCor")){
 
 ## compare to SNP data
 
-if(!exists("genoCheck")){
+if(!"genoCheck"%in% colnames(QCmetrics)){
 	geno<-read.table("../SNPdata/SCZ_59DNAmSNPs.raw", stringsAsFactors = FALSE, header = TRUE)
 	geno<-geno[match(gsub("-", "_", QCmetrics$Indidivual.ID), geno$FID),]
 	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
@@ -182,16 +182,13 @@ if(!exists("genoCheck")){
 				corVals[j]<-cor(geno.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
 			}
 		}
+		if(max(corVals, na.rm = TRUE) > 0.95){
+			genoMatch[i]<-as.character(QCmetrics$Indidivual.ID)[which(corVals > 0.95)]
+		}
 	}
-	
-pdf("450K/QC/Plots/Raw_450K_Pilot_CompareMethylationwithGenotypeData_Ordered.pdf", height = 10, width = 20)
-par(mfrow = c(2, 4))
-for(i in order(cors)){
-
-	plot(as.numeric(geno[i,-c(1:6)]), meth.sub[,i], main = paste(colnames(meth.sub)[i], " cor = ", signif(cors[i], 2)), xlab = "Genotype", ylab = "Methylation", xlim = c(0,2), ylim = c(0,1), pch = 16, cex = 0.8)
-	}
-dev.off()
+	QCmetrics<-cbind(QCmetrics,genoCheck, genoMatch)
 }
+	
 
 # check effect of normalisation
 if(!"rmsd" %in% colnames(QCmetrics)){
@@ -205,4 +202,4 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 closefn.gds(gfile)
 
 # save QC metrics and SNP correlations to generate QC report
-save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, file = qcData)
+save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, file = qcData)
