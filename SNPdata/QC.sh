@@ -88,3 +88,5 @@ ${GCTA}/gcta64 --grm SCZ2_QCd_GCTA --pca --out SCZ2_QCd.pca
 
 rm SCZ2_QCd.ld.prune*
 
+## extract SNP probes for comparision with DNAm data
+${PLINK}/plink --bfile SCZ2_QCd --extract ../References/EPICArray/RSprobes.txt --recodeA --out SCZ_59DNAmSNPs
