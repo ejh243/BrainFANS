@@ -145,6 +145,54 @@ if(!exists("snpCor")){
 	snpCor<-cor(rsbetas, use = "pairwise.complete.obs")
 }
 
+## compare to SNP data
+
+if(!exists("genoCheck")){
+	geno<-read.table("../SNPdata/SCZ_59DNAmSNPs.raw", stringsAsFactors = FALSE, header = TRUE)
+	geno<-geno[match(gsub("-", "_", QCmetrics$Indidivual.ID), geno$FID),]
+	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
+	betas.rs<-rawbetas[rsIDs,]
+	### first check direction of minor alleles
+
+	cors<-vector(length = length(rsIDs))
+	for(i in 1:length(rsIDs)){
+		cors[i]<-cor(geno[,i+6], betas.rs[i,], use = "pairwise.complete.obs")
+	}
+	### change minor allele in genotype data if negative correlation
+	for(each in which(cors < 0)){
+		geno[,each+6]<-(2-geno[,each+6])
+	}
+	geno.mat<-as.matrix(geno[,-c(1:6)])
+
+	genoCheck<-rep(NA, nrow(QCmetrics))
+	for(i in 1:ncol(betas.rs)){
+		if(!is.na(geno[i,1])){
+			genoCheck[i]<-cor(geno.mat[i,], betas.rs[,i], use = "pairwise.complete.obs")
+		}
+	}
+	
+	## if any incongruent perform search for best
+	## filter so only one observation of each indivudal in geno data
+	genoToSearch<-match(unique(QCmetrics$Indidivual.ID),QCmetrics$Indidivual.ID)
+	genoMatch<-rep(NA, nrow(QCmetrics))
+	for(i in 1:ncol(betas.rs)){
+		corVals<-rep(NA, length(genoToSearch))
+		for(j in genoToSearch){
+			if(!is.na(geno.mat[j,1])){
+				corVals[j]<-cor(geno.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
+			}
+		}
+	}
+	
+pdf("450K/QC/Plots/Raw_450K_Pilot_CompareMethylationwithGenotypeData_Ordered.pdf", height = 10, width = 20)
+par(mfrow = c(2, 4))
+for(i in order(cors)){
+
+	plot(as.numeric(geno[i,-c(1:6)]), meth.sub[,i], main = paste(colnames(meth.sub)[i], " cor = ", signif(cors[i], 2)), xlab = "Genotype", ylab = "Methylation", xlim = c(0,2), ylim = c(0,1), pch = 16, cex = 0.8)
+	}
+dev.off()
+}
+
 # check effect of normalisation
 if(!"rmsd" %in% colnames(QCmetrics)){
 	dasen(gfile, node="normbeta")
