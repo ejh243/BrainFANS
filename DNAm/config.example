@@ -1,0 +1,33 @@
+
+## use this file to store variables for rmarkdown QC run
+
+## to execute rmarkdown script from command line use 
+# Rscript -e "rmarkdown::render('QC.rmd')"
+
+## Study parameters
+projectTitle<-""
+projectDescription<-""
+processedBy<-""
+arrayVersion<-""
+qcDate<-format(Sys.Date(), format="%d %B %Y")
+qcID<-""
+tissueType<-""
+
+
+
+## Data locations and filenames
+
+dataDir<-""
+sampleFile<-"SampleSheets/All.csv"
+gdsFile <-"gdsFiles/run1.gds"
+qcData <- "QCmetrics/QCmetricsRun1.rdata"
+scriptFolder<-""
+
+## technical variables
+techVar<-c("Extraction.Plate")
+
+## biological variables
+bioVar<-c("Sex")
+
+## parameters for scripts
+recreate<-FALSE ## option to delete existing data and start from scratch or append to exitsing gfile
