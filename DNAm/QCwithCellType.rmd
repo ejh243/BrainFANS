@@ -54,12 +54,14 @@ for(each in unique(studyInd)){
 
 ```
 
-Next we will use principal component analysis within each cell-type to identify outlier samples.
+Next we will use principal component analysis within each cell-type to identify outlier samples. Within each cell-type we take all the PCs that explain > 1% of the variance. In the histograms below the dashed red lines indicate 2 or 3 SD from the mean.
 
 ```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
 
 for(study in unique(studyInd)){
 	for(each in cellTypes){
+		sampleInd<-which(sampleSheet$Cell.type == each & sampleSheet$Study == study)
+		if(length(sampleInd) > 5){
 		pca<-cellPCA[[study]][[each]]
 		varExp<-pca$sdev^2/sum(pca$sdev^2)
 		plot(1:30, varExp[1:30]*100, type = "b", ylab = "% variance explained", xlab = "Beta PC", lty = 1, main = paste(study, each, sep = " : "))
@@ -78,11 +80,11 @@ for(study in unique(studyInd)){
 		}	
 		
 		par(mfrow = c(1,2))
-		for(j in which(betas.pca> 0.01[-1])){
+		for(j in which(varExp[-1] > 0.01)){
 			j<-j+1
 			plot(pca$x[,1], pca$x[,j], pch = 16, xlab = "Betas:PC1", ylab = paste("Betas:PC", j, sep = ""), main="")
 		}
-
+		}
 	}
 }
 
