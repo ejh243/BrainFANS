@@ -10,6 +10,7 @@ knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache 
 library(bigmelon)
 library(gplots)
 library(diptest)
+library(knitr)
 source("rmdConfig.run1") ## change the content of this file to to run QC on different set of data
 ## prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 setwd(dataDir) 
@@ -127,7 +128,7 @@ These are only included if they are categorical. For this study the following te
 ```{r techVarSpecification, echo = FALSE, results = "asis"}
 
 for(item in techVar){
-	knitr::kable(as.matrix(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
+	knitr::kable(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
 }
 if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% techVar]){
@@ -148,7 +149,7 @@ These are only included if they are categorical. For this study the following bi
 ```{r bioVarSpecification, echo = FALSE, results = "asis"}
 
 for(item in bioVar){
-	knitr::kable(as.matrix(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
+	knitr::kable(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
 }
 if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% bioVar]){
@@ -190,7 +191,12 @@ for(i in 2:ncol(plotCols)){
 
 ### Step 2: Check for batch effects in ratio of M and U intensities
 
-Differences in the ratio of the M and U values will lead to differences in the distribution of beta values. In the histogram below we are interested in whether there is evidence of multiple distributions or a non-unimodal distribution. Hartigans dip test for unimodality / multimodality, indicates we can `r if(dip.test(QCmetrics$intens.ratio)$p.value < 0.05){print("accept")} else {print("reject")} ` the alternative hypothesis of multiple modes (P = `r dip.test(QCmetrics$intens.ratio)$p.value` ).
+```{r, bimodalTest, echo = FALSE}
+library(diptest)
+bimodP<-dip.test(QCmetrics$intens.ratio)$p.value
+```
+
+Differences in the ratio of the M and U values will lead to differences in the distribution of beta values. In the histogram below we are interested in whether there is evidence of multiple distributions or a non-unimodal distribution. Hartigans dip test for unimodality / multimodality, indicates we can `r if(bimodP < 0.05){print("accept")} else {print("reject")} ` the alternative hypothesis of multiple modes (P = `r signif(bimodP,3)` ).
 
 
 ```{r, intensRatio, fig.width = 12, fig.height = 6, echo = FALSE}
@@ -241,8 +247,7 @@ In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean.
 
 ```{r, controlProbePlot, fig.width = 15, fig.height = 6, echo = FALSE}
 par(mfrow = c(1,4))
-for(j in which(ctrl.pca > 0.01[-1])){
-  j<-j+1
+for(j in which(ctrl.pca > 0.01)){
   pcDat<-QCmetrics[,paste("PC", j, "_cp", sep = "")]
   mu<-mean(pcDat, na.rm = TRUE)
   sigma<-sd(pcDat, na.rm = TRUE)
@@ -316,7 +321,7 @@ We identified `r length(unique(predictedduplicates))` genetically unique individ
 
 ```{r,echo = FALSE}
 
-kable(as.matrix(table(table(predictedduplicates))))
+knitr::kable(as.data.frame(table(table(predictedduplicates))))
 
 ```
 
@@ -325,8 +330,8 @@ These correlations can be visualised in the following heatmap, where the colours
 
 ```{r,dupHeatmap, echo = FALSE, fig.width = 15, fig.height = 15}
 	## heatmap of snp cor
-	if("Individual.ID" %in% colnames(plotCols)){
-		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Individual.ID, RowSideColors = plotCols$Individual.ID, labCol = "", labRow = "", margins = c(1,1))
+	if("Indidivual.ID" %in% colnames(plotCols)){
+		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID, RowSideColors = plotCols$Indidivual.ID, labCol = "", labRow = "", margins = c(1,1))
 	} else {
 		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1))
 	}
@@ -394,9 +399,9 @@ write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetr
 
 Note that predictions are likely to be incorrect if intensities are low. 
 
-```{r tableSexMismatches}
+```{r tableSexMismatches, results = "asis"}
 
-kable(as.matrix(table(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex), QCmetrics$intensPASS)
+knitr::kable(as.data.frame(table(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex), QCmetrics$intensPASS)))
 
 ```
 
@@ -421,8 +426,7 @@ In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean.
 
 ## are there any outliers?
 par(mfrow = c(1,4))
-for(j in which(betas.pca[-1] > 0.01)){
-  j<-j+1
+for(j in which(betas.pca > 0.01)){
   pcDat<-QCmetrics[,paste("PC", j, "_betas", sep = "")]
   mu<-mean(pcDat, na.rm = TRUE)
   sigma<-sd(pcDat, na.rm = TRUE)
@@ -452,9 +456,13 @@ for(i in 2:ncol(plotCols)){
 }
 ```
 
-### Step 8: Detection p values
+### Step 8: Detection P values
 
-### Step 9: Age prediction
+Detection p values provide a measure on the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal isnot detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r sum(QCmetrics$pFilter)` samples are recommended for removal. 
+
+
+
+### Step 9: Age Prediction
 
 The age of samples can be predicted from the methylation data using the Epigenetic Clock algorithm developed by Steve Horvath. These predicted values are compared to the samples' reported ages. As on a sample level this estimaion can be inaccurate it is used as a quality check of the overall data set and not as a reason to exclude individual samples. The overall correlation was `r signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = "pairwise.complete.obs"),3)` and the root mean square error was `r signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3)` years.
 
@@ -468,9 +476,9 @@ abline(a = 0, b = 1)
 ```
 
 
-### Step 10: Check effect of normalisation
+### Step 10: Measure influence of normalisation
 
-To identify samples that are dramatically altered as a result of normalization the quantified the difference between the normalized and raw data at each probe for each sample calculating the root mean square. Previously we have applied a threshold of 0.05 to exclude samples. 
+The goal of normalisation is to convert data for each sample onto a common distribution and minimise effects of technical variation. Outlier samples will need a high level of manipulation to transform them to look more similar to the rest of the sample. To identify samples that are dramatically altered as a result of normalization the quantified the difference between the normalized and raw data at each probe for each sample calculating the root mean square. Previously we have applied a threshold of 0.05 to exclude samples. 
 
 ```{r, echo = FALSE, fig.width = 15}
 par(mfrow = c(1,2))
