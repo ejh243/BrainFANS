@@ -1,0 +1,89 @@
+---
+title: "Brain FANS Project Quality Control within Cell Type"
+author: "E Hannon"
+output: html_document
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = TRUE)
+```
+```{r setup, include=FALSE}
+library(bigmelon)
+library(pheatmap)
+source("rmdConfig.run1") ## change the content of this file to to run QC on different set of data
+## prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
+setwd(dataDir) 
+load(qcData)
+thresBS<-80
+passQC<-QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
+load("QCmetrics/CellTypePCA.rdata")
+
+gfile<-openfn.gds(gdsFile, readonly = FALSE)
+sampleSheet<-pData(gfile)[passQC,]
+studyInd<-sampleSheet$Study
+rawbetas<-betas(gfile)[,passQC]
+auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
+rawbetas<-rawbetas[auto.probes,]
+## exclude rs probes
+rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
+
+```
+
+After performing quality control across all samples excluding samples that failed our primary qualtiy control metrics relating to data quality we will perform a secondary QC stage within each cell-type to identify outliers or potentially mislabelled samples. 
+
+First we will produce a heatmap and hierarchical cluster of the samples to gauge how cleanly the cell-types are clustering. 
+ 
+
+```{r hclustBefore, fig.width = 15, fig.height = 8, echo = FALSE}
+
+cellTypes<-unique(sampleSheet$Cell.type)
+cellCols<-rainbow(length(cellTypes))[as.factor(sampleSheet$Cell.type)]
+
+
+## first do heatmap to check how things look intially
+sample_anno<-sampleSheet[,c("Cell.type", "Age","Sex")]
+sample_anno$Age<-as.numeric(sample_anno$Age)
+rownames(sample_anno)<-sampleSheet$Basename
+sigma<-list()
+
+for(each in unique(studyInd)){
+	sigma[[each]]<-apply(rawbetas[,which(studyInd == each)],1, sd)
+	
+	pheatmap(rawbetas[order(sigma[[each]], decreasing = TRUE)[1:1000],which(studyInd == each)], annotation_col = sample_anno[which(studyInd == each),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = each)
+}
+
+
+```
+
+Next we will use principal component analysis within each cell-type to identify outlier samples.
+
+```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
+
+for(study in unique(studyInd)){
+	for(each in cellTypes){
+		pca<-cellPCA[[study]][[each]]
+		varExp<-pca$sdev^2/sum(pca$sdev^2)
+		plot(1:30, varExp[1:30]*100, type = "b", ylab = "% variance explained", xlab = "Beta PC", lty = 1, main = paste(study, each, sep = " : "))
+		abline(h=1, col = "red")
+		par(mfrow = c(2,2))
+		for(j in which(varExp > 0.01)){
+			pcDat<-pca$x[,j]
+			mu<-mean(pcDat, na.rm = TRUE)
+			sigma<-sd(pcDat, na.rm = TRUE)
+			x_lim<-range(c(mu-3*sigma, mu+3*sigma, pcDat), na.rm = TRUE)
+			hist(pcDat, xlim = x_lim, xlab = paste("Betas:PC", j, sep = ""), breaks = 15, main = "", col = "gray", cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
+			for(i in 2:3){
+				abline(v = mu+i*sigma, col = "red", lty = 2)
+				abline(v = mu-i*sigma, col = "red", lty = 2)
+			}
+		}	
+		
+		par(mfrow = c(1,2))
+		for(j in which(betas.pca> 0.01[-1])){
+			j<-j+1
+			plot(pca$x[,1], pca$x[,j], pch = 16, xlab = "Betas:PC1", ylab = paste("Betas:PC", j, sep = ""), main="")
+		}
+
+	}
+}
+
+```
