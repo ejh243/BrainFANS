@@ -10,17 +10,19 @@ knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache 
 library(bigmelon)
 library(gplots)
 library(diptest)
-library(knitr)
-source("rmdConfig.run1") ## change the content of this file to to run QC on different set of data
-## prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
+library(pander)
+source("rmdConfig.run1") ### change the content of this file to to run QC on different set of data
+### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 setwd(dataDir) 
 load(qcData)
+
+par(mar = c(4,4,1,1))
 
 ```
 
 ```{r definPlotParams, include = FALSE}
-## define plotting parameters to automate which factors output is to be coloured by
-## These variables are provided in config file
+### define plotting parameters to automate which factors output is to be coloured by
+### These variables are provided in config file
 
 plotCols<-data.frame("Basename" = QCmetrics$Basename)
 legendParams<-list()
@@ -30,7 +32,7 @@ missingVar<-c()
 
 if(length(techVar) > 0){
   for(item in techVar){
-    ## check if exists in QC metircs
+    ### check if exists in QC metircs
       if(item %in% colnames(QCmetrics)){
         if(class(QCmetrics[,item]) != "factor"){
           print(paste("Converting techinical variable", item, "to factor."))
@@ -45,25 +47,25 @@ if(length(techVar) > 0){
 			if(sum(is.na(tmpVar)) == length(tmpVar)){
 				missingVar<-c(missingVar,item)
 			} else {
-				colVar<-rainbow(numVar)[tmpVar] ## convert to colours for plotting purposes
+				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
 				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
 				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
 			}
 		}
       } else {
-        print(paste("Column", item, "not found. Please check config file.")) ## change to hard stop
+        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
         #quit(save = "no")
       }
     
   }
 }
 
-## remove from techVar 
+### remove from techVar 
 techVar<-techVar[!techVar %in% c(uniqueVar, missingVar)]
 
 if(length(bioVar) > 0){
   for(item in bioVar){
-    ## check if exists in QC metircs
+    ### check if exists in QC metircs
       if(item %in% colnames(QCmetrics)){
         if(class(QCmetrics[,item]) != "factor"){
           print(paste("Converting techinical variable", item, "to factor."))
@@ -78,20 +80,20 @@ if(length(bioVar) > 0){
 			if(sum(is.na(tmpVar)) == length(tmpVar)){
 				missingVar<-c(missingVar,item)
 			} else {
-				colVar<-rainbow(numVar)[tmpVar] ## convert to colours for plotting purposes
+				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
 				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
 				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
 			}
 		}
       } else {
-        print(paste("Column", item, "not found. Please check config file.")) ## change to hard stop
+        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
         #quit(save = "no")
       }
     
   }
 }
 
-## remove from bioVar 
+### remove from bioVar 
 bioVar<-bioVar[!bioVar %in% c(uniqueVar, missingVar)]
 if(ncol(plotCols) > 1){
 	colnames(plotCols)<-c("Basename", techVar, bioVar)
@@ -99,7 +101,7 @@ if(ncol(plotCols) > 1){
 
 ```
 
-## Study Information
+### Study Information
 
 This report documents the internal quality control (QC) process of DNA methylation data generated at the University of Exeter Medical School for the following study:
 
@@ -121,14 +123,14 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Study))` studies. 
 
-## Summary of Technical Variables
+#### Summary of Technical Variables
 
 These are only included if they are categorical. For this study the following technical variables were included:
 
 ```{r techVarSpecification, echo = FALSE, results = "asis"}
 
 for(item in techVar){
-	knitr::kable(as.data.frame(table(QCmetrics[,item])), format = "html", caption = paste("Summary of samples categorised by", item))
+	pander(table(QCmetrics[,item]), format = "html", caption = paste("Summary of samples categorised by", item))
 }
 if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% techVar]){
@@ -142,14 +144,14 @@ if(length(missingVar[missingVar %in% techVar]) > 0){
 }
 ```
 
-## Summary of Biological Variables
+#### Summary of Biological Variables
 
 These are only included if they are categorical. For this study the following biological variables were included:
 
 ```{r bioVarSpecification, echo = FALSE, results = "asis"}
 
 for(item in bioVar){
-	knitr::kable(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
+	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
 }
 if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% bioVar]){
@@ -163,20 +165,20 @@ if(length(missingVar[missingVar %in% bioVar]) > 0){
 }
 ```
 
-## Summary of Quality Control
+### Summary of Quality Control
 
 A series of quality control (QC) metrics have been calculated for all samples and are reported below. After reviewing this report, exclusion thresholds to identify poorly performing samples can be provided to the normalisation script. For some QC metrics we use the provided technical and biological variables to identify any patterns or reasons behind sample failures. 
 
 
-### Step 1: Signal Intensities
-Previous experience has shown that intensity level indicates sample quality and likelihood of passing the QC process. This is summarised for each sample by calculating the median of the methylated signal intensity and unmethylated signal intensity. Really low intensity values (< 500) will be dropped at this stage. 
+#### Step 1: Signal Intensities
+Previous experience has shown that intensity level indicates sample quality and likelihood of passing the QC process. This is summarised for each sample by calculating the median of the methylated signal intensity and unmethylated signal intensity. `r sum(QCmetrics$intensPASS == FALSE)` samples with really low intensity values (< 500) will be dropped at this stage.
 
 ```{r intensitiesPlot, fig.width = 15, fig.height = 7, echo = FALSE}
 par(mfrow = c(1,2))
 
-hist(QCmetrics$M.median, col = "gray", breaks = 25, main = "Median M intensity")
+hist(QCmetrics$M.median, col = "gray", breaks = 25, xlab = "Median M intensity", main = "")
 abline(v = 500, col = "red", lty = 2)
-hist(QCmetrics$U.median, col = "gray", breaks = 25, main = "Median U intensity")
+hist(QCmetrics$U.median, col = "gray", breaks = 25, xlab = "Median U intensity", main = "")
 abline(v = 500, col = "red", lty = 2)
 
 y_lim<-range(QCmetrics$U.median, na.rm = TRUE)
@@ -198,14 +200,14 @@ for(i in 2:ncol(plotCols)){
 
 ```
 
-### Step 2: Ratio of M and U Intensities
+#### Step 2: Ratio of M and U Intensities
 
 ```{r, bimodalTest, echo = FALSE}
 library(diptest)
 bimodP<-dip.test(QCmetrics$intens.ratio)$p.value
 ```
 
-Differences in the ratio between M and U values will lead to differences in the distribution of beta values. In the histogram below we are looking for evidence of multiple distributions or a non-unimodal distribution. Hartigans dip test for unimodality / multimodality, indicates we can `r if(bimodP < 0.05){print("accept")} else {print("reject")} ` the alternative hypothesis of multiple modes (P = `r signif(bimodP,3)` ).
+Differences in the ratio between M and U values will lead to differences in the distribution of beta values. In the histogram below we are looking for evidence of multiple distributions or a non-unimodal distribution. Hartigans dip test for unimodality / multimodality, indicates we can `r if(bimodP < 0.05){I(print("accept"))} else {I(print("reject"))} ` the alternative hypothesis of multiple modes (P = `r signif(bimodP,3)`).
 
 
 ```{r, intensRatio, fig.width = 12, fig.height = 6, echo = FALSE}
@@ -226,11 +228,11 @@ for(i in 2:ncol(plotCols)){
 ```
 
 
-### Step 3: Bisulfite Conversion Efficiency
+#### Step 3: Bisulfite Conversion Efficiency
 
 For each sample a bisulfite conversion statistic is calculated as the median value across 8? fully methylated control probes. We apply a threshold of 80% excluding samples below this threshold. In this dataset `r sum(QCmetrics$bisulfCon<80)` samples fall below this metric.
 
-```{r, bisulfiteControl, fig.width = 10, fig.height = 6, echo = FALSE}
+```{r, bisulfiteControl, fig.width = 5, fig.height = 5, echo = FALSE}
 
 par(mfrow = c(1,1))
 hist(QCmetrics$bisulfCon, xlab = "Bisulfite conversion (%)", breaks = 25, main = "", col = "gray")
@@ -241,7 +243,7 @@ abline(v = 80, col = "red")
 
 ```
 
-### Step 4: Control Probes
+#### Step 4: Control Probes
 
 As recommended by Lehne et al. we performed principal component (PC) analysis of the control probes to identify batch effects and poorly performing samples. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
 
@@ -261,6 +263,7 @@ for(j in which(ctrl.pca > 0.01)){
   mu<-mean(pcDat, na.rm = TRUE)
   sigma<-sd(pcDat, na.rm = TRUE)
   x_lim<-range(c(mu-3*sigma, mu+3*sigma, pcDat), na.rm = TRUE)
+  x_lim<-range(c(mu-3*sigma, mu+3*sigma, pcDat), na.rm = TRUE)
   hist(pcDat, xlim = x_lim, xlab = paste("Control probes:PC", j, sep = ""), breaks = 15, main = paste(signif(ctrl.pca[j],3)*100, "% variance explained", sep = ""), col = "gray", cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
   for(i in 2:3){
     abline(v = mu+i*sigma, col = "red", lty = 2)
@@ -271,7 +274,7 @@ par(mfrow = c(1,2))
 for(i in 2:ncol(plotCols)){
   for(j in which(ctrl.pca[-1] > 0.01)){
     j<-j+1
-	y_lim<-range(QCmetrics[,paste("PC", j, "_betas", sep = "")], na.rm = TRUE)
+	y_lim<-range(QCmetrics[,paste("PC", j, "_cp", sep = "")], na.rm = TRUE)
 	y_lim[2]<-y_lim[2]+0.2*diff(y_lim)	
   	plot(QCmetrics$PC1_cp, QCmetrics[,paste("PC", j, "_cp", sep = "")], pch = 16, xlab = "Control probes:PC1", ylab = paste("Control probes:PC", j, sep = ""), main=paste("Coloured by", colnames(plotCols)[i]), col = plotCols[,i], ylim = y_lim)
   }
@@ -284,7 +287,7 @@ for(i in 2:ncol(plotCols)){
 	legend("topleft", legendDat[,1], col = legendDat[,2], pch = 16, cex=0.75, ncol = nCols)
 }
 ```
-### Step 5: Genetically Identical Samples
+#### Step 5: Genetically Identical Samples
 
 This step uses the 59 SNP probes on the array to identify genetically identical samples. For all pairs of samples a correlation statistic across these probes is calculated. If there are correlations greater than 0.8 (highlighted by the red vertical line), this suggests the presence of genetically identical samples.
 
@@ -318,7 +321,7 @@ We identified `r length(unique(predictedduplicates))` genetically unique individ
 
 ```{r,echo = FALSE}
 
-knitr::kable(as.data.frame(table(table(predictedduplicates))), col.names = c("Number of individuals", "Number of samples"),table.attr = "style='width:50%'")
+pander(as.data.frame(table(table(predictedduplicates))), col.names = c("Number of Individuals", "Number of Samples"),table.attr = "style='width:50%'")
 
 ```
 
@@ -326,7 +329,7 @@ These correlations can be visualised in the following heatmap, where the colours
 
 
 ```{r,dupHeatmap, echo = FALSE, fig.width = 15, fig.height = 15}
-	## heatmap of snp cor
+	### heatmap of snp cor
 	if("Indidivual.ID" %in% colnames(plotCols)){
 		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID, RowSideColors = plotCols$Indidivual.ID, labCol = "", labRow = "", margins = c(1,1))
 	} else {
@@ -362,7 +365,7 @@ Checking if genetically identical samples have the sample Individual ID.
 	    index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
 	    errorIndexes<-c(index,errorIndexes)
 	  }
-	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Extraction.Loc.[errorIndexes], margin = c(10,10))
+	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Indidivual.ID[errorIndexes], margin = c(10,10))
 	
 	write.csv(QCmetrics[errorIndexes,], "GeneticMismatches.csv", row.names = FALSE)
 	}
@@ -371,7 +374,7 @@ Checking if genetically identical samples have the sample Individual ID.
 
 ```{r checkGenoSampleswithSameID, echo = FALSE}
 
-## check if samples with same Individual ID are genetically identical.
+### check if samples with same Individual ID are genetically identical.
 
 for(each in unique(QCmetrics$Indidivual.ID)){
 	ind<-which(QCmetrics$Indidivual.ID == each)
@@ -380,9 +383,7 @@ for(each in unique(QCmetrics$Indidivual.ID)){
 }
 
 ```
-
-
-### Step 6: Sex Prediction
+#### Step 6: Sex Prediction
 
 Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. Based on these assumptions we can predict male or female from each sex chromosome. 
 
@@ -402,9 +403,9 @@ write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetr
 
 Note that predictions are likely to be incorrect if intensities are low. 
 
-```{r tableSexMismatches, results = "asis"}
+```{r tableSexMismatches, results = "asis", echo = FALSE}
 
-knitr::kable(table(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex), QCmetrics$intensPASS))
+pander(table(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex), QCmetrics$intensPASS))
 
 ```
 
@@ -412,7 +413,7 @@ Samples with incorrect predicted sex are written to the file SexMismatches.csv.
 
 
 
-### Step 7: Principal Component Analysis
+#### Step 7: Principal Component Analysis
 
 To identify and visually inspect potential outliers we performed principal component analysis on the autosomal probes. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
 
@@ -425,10 +426,10 @@ abline(h=1, col = "red")
 
 In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
 
-```{r, betasPCA, fig.width = 15, fig.height = 4, echo = FALSE}
+```{r, betasPCA, fig.width = 15, fig.height = 8, echo = FALSE}
 
-## are there any outliers?
-par(mfrow = c(1,4))
+### are there any outliers?
+par(mfrow = c(2,4))
 for(j in which(betas.pca > 0.01)){
   pcDat<-QCmetrics[,paste("PC", j, "_betas", sep = "")]
   mu<-mean(pcDat, na.rm = TRUE)
@@ -461,13 +462,13 @@ for(i in 2:ncol(plotCols)){
 }
 ```
 
-### Step 8: Detection P values
+#### Step 8: Detection P values
 
-Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r sum(QCmetrics$pFilter)` samples are recommended for removal. 
+Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter)` samples are recommended for removal. 
 
 
 
-### Step 9: Age Prediction
+#### Step 9: Age Prediction
 
 The age of samples can be predicted from the DNAm data using the Epigenetic Clock algorithm developed by Steve Horvath. These predicted values are compared to the samples' reported ages. As on a sample level this estimaion can be inaccurate it is used as a quality check of the overall data set and not as a reason to exclude individual samples. The overall correlation was `r signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = "pairwise.complete.obs"),3)` and the root mean square error was `r signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3)` years.
 
@@ -481,7 +482,7 @@ abline(a = 0, b = 1)
 ```
 
 
-### Step 10: Influence of Normalisation
+#### Step 10: Influence of Normalisation
 
 The goal of normalisation is to convert data for each sample onto a common distribution and minimise effects of technical variation. Outlier samples will need a high level of manipulation to transform them to look more similar to the rest of the sample. To identify samples that are dramatically altered as a result of normalization the quantified the difference between the normalized and raw data at each probe for each sample calculating the root mean square. Previously we have applied a threshold of 0.05 to exclude samples. 
 
@@ -511,7 +512,7 @@ plot(QCmetrics[,"sadd"], QCmetrics$M.median, xlab = "sd difference",ylab = "medi
 abline(v = 0.05, col = "red")
 ```
 
-### Session Information
+#### Session Information
 
 Built with R version
 `r getRversion()`
