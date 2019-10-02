@@ -8,6 +8,7 @@ thresBS<-80
 
 library(bigmelon)
 library(pheatmap)
+library(glmnet)
 
 setwd(dataDir)
 
@@ -50,4 +51,17 @@ save(cellPCA, file = "QCmetrics/CellTypePCA.rdata")
 ## need to close gds file in order to open in another R session
 closefn.gds(gfile)
 
+## predict cell type
+
+## glmnet
+
+## just within adults
+sampleKeep<-which(sampleSheet$Study == "SCZ")
+## need to refactor cell type to reomve unused levels
+rawbetas.sub<-na.omit(rawbetas[,sampleKeep])
+
+cellType<-as.factor(as.character(sampleSheet$Cell.type[sampleKeep]))
+
+fit = glmnet(rawbetas.sub, cellType, family = "multinomial")
+predictCellType<-predict(fit, newx = rawbetas.sub, type = "class")
 

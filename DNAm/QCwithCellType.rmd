@@ -31,7 +31,7 @@ rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
 
 After performing quality control across all samples excluding samples that failed our primary qualtiy control metrics relating to data quality we will perform a secondary QC stage within each cell-type to identify outliers or potentially mislabelled samples. 
 
-First we will produce a heatmap and hierarchical cluster of the samples to gauge how cleanly the cell-types are clustering. 
+First we will produce a heatmap and hierarchical cluster of the samples to gauge how cleanly the cell-types are clustering. The following heatmaps are based on autosomal probes across the top 500 most variable probes in that subset of the data.
  
 
 ```{r hclustBefore, fig.width = 15, fig.height = 8, echo = FALSE}
@@ -41,17 +41,38 @@ cellCols<-rainbow(length(cellTypes))[as.factor(sampleSheet$Cell.type)]
 
 
 ## first do heatmap to check how things look intially
-sample_anno<-sampleSheet[,c("Cell.type", "Age","Sex", "Brain.Region", "Indidivual.ID")]
+sample_anno<-sampleSheet[,c("Age","Sex", "Brain.Region", "Indidivual.ID","Cell.type")]
 sample_anno$Age<-as.numeric(sample_anno$Age)
 rownames(sample_anno)<-sampleSheet$Basename
 sigma<-list()
 
-for(each in unique(paste(studyInd, tissueInd)){
-	eachStudy<-strsplit(each ," ")[1]
-	eachBR<-strsplit(each ," ")[2]
-	sigma[[each]]<-apply(rawbetas[,which(studyInd == eachStudy & tissueInd == eachBR)],1, sd)
+### across everything
+
+sigma[["all"]]<-apply(rawbetas,1, sd)
+pheatmap(rawbetas[order(sigma[["all"]], decreasing = TRUE)[1:500],], annotation_col = sample_anno,  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = "All")
+
+### split by study, tissue etc.
+
+for(eachStudy in unique(studyInd)){
+  sigma[[eachStudy]]<-apply(rawbetas[,which(studyInd == eachStudy)],1, sd)
+  pheatmap(rawbetas[order(sigma[[eachStudy]], decreasing = TRUE)[1:500],which(studyInd == eachStudy)], annotation_col = sample_anno[which(studyInd == eachStudy),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = eachStudy)
+}
+
+for(eachBR in unique(tissueInd)){
+  sampleKeep<-which(tissueInd == eachBR)
+  sigma[[eachBR]]<-apply(rawbetas[,sampleKeep],1, sd)
+  pheatmap(rawbetas[order(sigma[[eachBR]], decreasing = TRUE)[1:500],sampleKeep], annotation_col = sample_anno[sampleKeep,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = eachBR)
+}
+
+for(eachStudy in unique(studyInd)){
+  for(eachBR in unique(tissueInd)){
+    sampleKeep<-which(studyInd == eachStudy & tissueInd == eachBR)
+    if(length(sampleKeep) > 2){
+      sigma[[paste(eachStudy, eachBR, sep = "_")]]<-apply(rawbetas[,sampleKeep],1, sd)
 	
-	pheatmap(rawbetas[order(sigma[[each]], decreasing = TRUE)[1:1000],which(studyInd == each)], annotation_col = sample_anno[which(studyInd == each),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = paste(eachStudy, ":", eachBR))
+	    pheatmap(rawbetas[order(sigma[[paste(eachStudy, eachBR, sep = "_")]], decreasing = TRUE)[1:1000],sampleKeep], annotation_col = sample_anno[sampleKeep,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = paste(eachStudy, ":", eachBR))
+    }
+  }
 }
 
 
@@ -59,25 +80,8 @@ for(each in unique(paste(studyInd, tissueInd)){
 
 Next we will do PCA across all samples and use Mahalanobis distance to ascertain if each sample looks like the rest of it's cell type.
 
-```{r mahalanobisDist, }
-mahDist<-rep(NA, nrow(sampleSheet))
-pca<-prcomp(t(na.omit(rawbetas)))
-varExp<-pca$sdev^2/sum(pca$sdev^2)*100
-pcaUse<-which(varExp > 1)
-cellInd<-sampleSheet$Cell.type
-for(each in unique(paste(studyInd, tissueInd))){
-	eachStudy<-unlist(strsplit(each ," "))[1]
-	eachBR<-unlist(strsplit(each ," "))[2]
-	sampleKeep<-which(studyInd == eachStudy & tissueInd == eachBR)
-	cellCenter<-aggregate(pca$x[sampleKeep,pcaUse], by = list(cellInd), mean)
-	for(eachCT in unique(cellInd[sampleKeep])){
-		cellVar[[eachCT]]<-var(pca$x[sampleKeep[which(cellInd[sampleKeep] == eachCT)],pcaUse])
-	}
-	for(i in sampleKeep){
-		rowN<-match(cellInd[i], cellCenter[,1])
-		mahDist[i]<-mahalanobis(pca$x[i,pcaUse], as.numeric(cellCenter[rowN,-1]), cellVar[[cellInd[i]]])
-	}
-}
+```{r mahalanobisDist, eval = FALSE}
+
 
 ```
 

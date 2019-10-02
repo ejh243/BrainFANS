@@ -123,6 +123,13 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Study))` studies. 
 
+```{r studyTable, results = "as.is"}
+
+pander(as.data.frame(table(QCmetrics$Study)),table.attr = "style='width:50%'")
+
+
+```
+
 #### Summary of Technical Variables
 
 These are only included if they are categorical. For this study the following technical variables were included:
@@ -130,7 +137,7 @@ These are only included if they are categorical. For this study the following te
 ```{r techVarSpecification, echo = FALSE, results = "asis"}
 
 for(item in techVar){
-	pander(table(QCmetrics[,item]), format = "html", caption = paste("Summary of samples categorised by", item))
+	pander(as.data.frame(table(QCmetrics[,item])), format = "html", caption = paste("Summary of samples categorised by", item))
 }
 if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% techVar]){
@@ -376,13 +383,24 @@ Checking if genetically identical samples have the sample Individual ID.
 
 ### check if samples with same Individual ID are genetically identical.
 
+errorIndex<-NULL
 for(each in unique(QCmetrics$Indidivual.ID)){
 	ind<-which(QCmetrics$Indidivual.ID == each)
-	
+	snpCor.tmp<-snpCor[ind,ind]
+	if(min(snpCor.tmp, na.rm = TRUE)< 0.8){
+	  ## count number of samples with which each sample looks identical to
+	    nSamples<-apply(snpCor.tmp > 0.8,1,sum)
+	    ## if any samples that don't look like any others 
+	    errorIndexes<-c(ind[which(nSamples == 0)],errorIndexes)
+	}
 
 }
 
+write.csv(QCmetrics[errorIndexes,], "GeneticErrors.csv", row.names = FALSE)
+
 ```
+
+
 #### Step 6: Sex Prediction
 
 Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. Based on these assumptions we can predict male or female from each sex chromosome. 
