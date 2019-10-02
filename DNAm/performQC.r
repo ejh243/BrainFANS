@@ -15,6 +15,8 @@ if (length(args)==0) {
 
 source(args[1])
 
+
+
 setwd(dataDir) 
 
 ## load sample sheet
@@ -35,6 +37,7 @@ if(file.exists(gdsFile)){
 
 	## does it contain all the samples we are interested in?
 	if(sum(sampleSheet$Basename %in% pData(gfile)$barcode) < nrow(sampleSheet)){
+		#closefn.gds(gfile)
 		source(paste(scriptFolder, "/loadDataGDS.r", sep = "")) ## reload data if some samples are missing
 	}
 	## close gds file
@@ -48,6 +51,12 @@ if(file.exists(gdsFile)){
 ## check if QC metrics have been generated
 if(file.exists(qcData)){
 	load(qcData)
+	
+	## check if QC metrics present for all samples
+	if(nrow(QCmetrics) != nrow(sampleSheet)){
+		file.remove(qcData)
+		source(paste(scriptFolder, "/calcQCMetrics.r", sep = ""))
+	}
 } else {
 	source(paste(scriptFolder, "/calcQCMetrics.r", sep = ""))
 }
