@@ -50,6 +50,7 @@ if(!"M.median" %in% colnames(QCmetrics)){
 # calculate bisulfite conversion statistic
 if(!"bisulfCon" %in% colnames(QCmetrics)){	
 	bisulfCon<-bscon(gfile)
+	bisulfCon[which(intensPASS == FALSE]<-NA
 	QCmetrics<-cbind(QCmetrics,bisulfCon)
 }
 
@@ -100,6 +101,7 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 if(!"pFilter" %in% colnames(QCmetrics)){	
 
 	pFOut<-pfilter.gds(gfile, pn = pvals(gfile), bc = index.gdsn(gfile, "NBeads"))
+	pFOut[QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut$samples)
 }
 
@@ -108,6 +110,7 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 if(!"DNAmAge" %in% colnames(QCmetrics)){	
 	data(coef)
 	DNAmAge<-agep(gfile, coef=coef)
+	DNAmAge[QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,DNAmAge)
 }
 
@@ -125,13 +128,13 @@ if(!"predSex" %in% colnames(QCmetrics)){
 	
 	## base prediction on y chromosome
 	predSex.y<-rep(NA, length(y.cp))
-	predSex.y[which(y.cp > 1)]<-"M"
-	predSex.y[which(y.cp < 1)]<-"F"
+	predSex.y[which(y.cp > 1 & intensPASS == TRUE)]<-"M"
+	predSex.y[which(y.cp < 1 & intensPASS == TRUE)]<-"F"
 	
 	## base prediction on x chromosome
 	predSex.x<-rep(NA, length(x.cp))
-	predSex.x[which(x.cp < 1)]<-"M"
-	predSex.x[which(x.cp > 1)]<-"F"
+	predSex.x[which(x.cp < 1 & intensPASS == TRUE)]<-"M"
+	predSex.x[which(x.cp > 1 & intensPASS == TRUE)]<-"F"
 	
 	## check for consistent prediction
 	predSex<-rep(NA, length(x.cp))
@@ -166,7 +169,7 @@ if(!"genoCheck"%in% colnames(QCmetrics)){
 
 	genoCheck<-rep(NA, nrow(QCmetrics))
 	for(i in 1:ncol(betas.rs)){
-		if(!is.na(geno[i,1])){
+		if(!is.na(geno[i,1]) & intensPASS[i] == TRUE){
 			genoCheck[i]<-cor(geno.mat[i,], betas.rs[,i], use = "pairwise.complete.obs")
 		}
 	}
@@ -176,14 +179,16 @@ if(!"genoCheck"%in% colnames(QCmetrics)){
 	genoToSearch<-match(unique(QCmetrics$Indidivual.ID),QCmetrics$Indidivual.ID)
 	genoMatch<-rep(NA, nrow(QCmetrics))
 	for(i in 1:ncol(betas.rs)){
-		corVals<-rep(NA, length(genoToSearch))
-		for(j in genoToSearch){
-			if(!is.na(geno.mat[j,1])){
-				corVals[j]<-cor(geno.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
+		if(intensPASS[i] == TRUE){
+			corVals<-rep(NA, length(genoToSearch))
+			for(j in genoToSearch){
+				if(!is.na(geno.mat[j,1])){
+					corVals[j]<-cor(geno.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
+				}
 			}
-		}
-		if(max(corVals, na.rm = TRUE) > 0.95){
-			genoMatch[i]<-as.character(QCmetrics$Indidivual.ID)[which(corVals > 0.95)]
+			if(max(corVals, na.rm = TRUE) > 0.95){
+				genoMatch[i]<-as.character(QCmetrics$Indidivual.ID)[which(corVals > 0.95)]
+			}
 		}
 	}
 	QCmetrics<-cbind(QCmetrics,genoCheck, genoMatch)
@@ -195,6 +200,7 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 	dasen(gfile, node="normbeta")
 	normbetas<-index.gdsn(gfile, "normbeta")[,]
 	qualDat<-qual(rawbetas, normbetas)
+	qualDat[which(intensPASS[i] == FALSE)]<-NA
 	QCmetrics<-cbind(QCmetrics,qualDat)
 }
 
