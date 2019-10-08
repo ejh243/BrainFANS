@@ -3,7 +3,7 @@
 ## requires a sample sheet with Basename or Chip.ID and Chip.Location to identify which samples to load
 ## script to load DNAm data from idat files listed in a sample sheet into gds file using bigmelon
 ## NB if gds file already exists option to delete and recreate
-args<-commandArgs(trailingOnly = TRUE)
+#args<-commandArgs(trailingOnly = TRUE)
 
 library(bigmelon)
 library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
@@ -24,8 +24,8 @@ if(file.exists(gdsFile) & recreate == TRUE){
 		sampToLoad<-sampleSheet$Basename[!sampleSheet$Basename %in% read.gdsn(index.gdsn(gfile, "pData/Basename"))]
 		closefn.gds(gfile)
 	}else {
-		if(file.exists(gdsFile)){
-		sampToLoad<-sampleSheet$Basename
+		if(!file.exists(gdsFile)){
+			sampToLoad<-sampleSheet$Basename
 		}
 	}
 }
@@ -54,7 +54,7 @@ add.gdsn(gfile, 'fData', val = data.frame(lapply(as.data.frame(newfData), as.cha
 
 ## update pData need to check all in the sample order, should be as loaded from sample sheet
 ## format sampleSheet to match order of gds file
-sampleOrder<-names(gfile[1, node = 'betas', name = TRUE])
+sampleOrder<-colnames(gfile)
 sampleSheet<-sampleSheet[match(sampleOrder, sampleSheet$Basename),]
 
 sampleSheet<-cbind(sampleSheet$Basename, sampleSheet)

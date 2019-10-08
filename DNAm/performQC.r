@@ -20,7 +20,7 @@ source(args[1])
 setwd(dataDir) 
 
 ## load sample sheet
-sampleSheet<-read.csv(sampleFile)
+sampleSheet<-read.csv(sampleFile, na.strings = "")
 ## if no column Basename, creates from columns Chip.ID and Chip.Location
 if(!"Basename" %in% colnames(sampleSheet)){
 	sampleSheet$Basename<-paste(sampleSheet$Chip.ID, sampleSheet$Chip.Location, sep = "_")

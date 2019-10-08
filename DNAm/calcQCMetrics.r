@@ -25,8 +25,6 @@ if(file.exists(qcData)){
 ## extract a few useful matrices
 rawbetas<-betas(gfile)[,]
 
-
-
 # calculate median M & U intensity
 if(!"M.median" %in% colnames(QCmetrics)){
 	
@@ -50,7 +48,7 @@ if(!"M.median" %in% colnames(QCmetrics)){
 # calculate bisulfite conversion statistic
 if(!"bisulfCon" %in% colnames(QCmetrics)){	
 	bisulfCon<-bscon(gfile)
-	bisulfCon[which(intensPASS == FALSE]<-NA
+	bisulfCon[which(intensPASS == FALSE)]<-NA
 	QCmetrics<-cbind(QCmetrics,bisulfCon)
 }
 
@@ -101,7 +99,7 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 if(!"pFilter" %in% colnames(QCmetrics)){	
 
 	pFOut<-pfilter.gds(gfile, pn = pvals(gfile), bc = index.gdsn(gfile, "NBeads"))
-	pFOut[QCmetrics$intensPASS]<-NA
+	pFOut[!QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut$samples)
 }
 
@@ -110,7 +108,7 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 if(!"DNAmAge" %in% colnames(QCmetrics)){	
 	data(coef)
 	DNAmAge<-agep(gfile, coef=coef)
-	DNAmAge[QCmetrics$intensPASS]<-NA
+	DNAmAge[!QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,DNAmAge)
 }
 
@@ -151,7 +149,7 @@ if(!exists("snpCor")){
 ## compare to SNP data
 
 if(!"genoCheck"%in% colnames(QCmetrics)){
-	geno<-read.table("../SNPdata/SCZ_59DNAmSNPs.raw", stringsAsFactors = FALSE, header = TRUE)
+	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno<-geno[match(gsub("-", "_", QCmetrics$Indidivual.ID), geno$FID),]
 	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
 	betas.rs<-rawbetas[rsIDs,]
@@ -173,7 +171,7 @@ if(!"genoCheck"%in% colnames(QCmetrics)){
 			genoCheck[i]<-cor(geno.mat[i,], betas.rs[,i], use = "pairwise.complete.obs")
 		}
 	}
-	
+
 	## if any incongruent perform search for best
 	## filter so only one observation of each indivudal in geno data
 	genoToSearch<-match(unique(QCmetrics$Indidivual.ID),QCmetrics$Indidivual.ID)
