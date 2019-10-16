@@ -4,7 +4,7 @@ author: "E Hannon"
 output: html_document
 ---
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = FALSE)
+knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = TRUE)
 ```
 ```{r setup, include=FALSE}
 library(bigmelon)
@@ -129,7 +129,7 @@ Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$
 
 ```{r studyTable, results = "as.is", echo = FALSE}
 
-pander(as.data.frame(table(QCmetrics$Project)),table.attr = "style='width:50%'", colnames = c("Project", "Nsamples"))
+pander(as.data.frame(table(QCmetrics$Project)),table.attr = "style='width:50%'", col.names = c("Project", "Nsamples"))
 
 
 ```
@@ -141,7 +141,7 @@ These are only included if they are categorical. For this study the following te
 ```{r techVarSpecification, results = "as.is", echo = FALSE}
 panderOptions('knitr.auto.asis', FALSE)
 for(item in techVar){
-	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
+	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
 }
 if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% techVar]){
@@ -162,7 +162,7 @@ These are only included if they are categorical. For this study the following bi
 ```{r bioVarSpecification, echo = FALSE, results = "as.is", echo = FALSE}
 
 for(item in bioVar){
-	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item))
+	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
 }
 if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% bioVar]){
@@ -288,7 +288,7 @@ for(j in which(ctrl.pca > 0.01)){
 
 Here we will compare each of these PC against other techical variables to see if they are picking up similar issues. 
 
-```{r corPCControl}
+```{r corPCControl, echo = FALSE}
 
 corMat<-matrix(data = NA, ncol = length(which(ctrl.pca > 0.01)), nrow = 3)
 for(j in which(ctrl.pca > 0.01)){
@@ -369,8 +369,8 @@ abline(v = 0.8, col = "red")
   	}
   } else {
 	  predictedduplicates<-colnames(snpCor)
-    
 	} 
+	predictedduplicates[!QCmetrics$intensPASS]<-NA ## exclude things not with minimum intensity threshold
 ```
 
 We identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
@@ -388,9 +388,9 @@ These correlations can be visualised in the following heatmap, where the colours
 ```{r,dupHeatmap, echo = FALSE, fig.width = 15, fig.height = 15}
 	### heatmap of snp cor
 	if("Indidivual.ID" %in% colnames(plotCols)){
-		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID, RowSideColors = plotCols$Indidivual.ID, labCol = "", labRow = "", margins = c(1,1))
+		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID, RowSideColors = plotCols$Indidivual.ID, labCol = "", labRow = "", margins = c(1,1), main = "All")
 	} else {
-		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1))
+		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1), main = "All")
 	}
 
 ## separate by study
@@ -398,9 +398,9 @@ if(length(unique(QCmetrics$Project)) > 1){
   for(each in unique(QCmetrics$Project)){
     if("Indidivual.ID" %in% colnames(plotCols)){
       index<-which(QCmetrics$Project == each)
-  		heatmap.2(snpCor[index,index], trace = "none", key = TRUE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[index], RowSideColors = plotCols$Indidivual.ID[index], labCol = QCmetrics$Indidivual.ID[index], labRow = "", margins = c(6,6))
+  		heatmap.2(snpCor[index,index], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[index], RowSideColors = plotCols$Indidivual.ID[index], labCol = QCmetrics$Indidivual.ID[index], labRow = "", margins = c(6,6), main = each)
   	} else {
-  		heatmap.2(snpCor[index,index], trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1))
+  		heatmap.2(snpCor[index,index], trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1), main = each)
   	}
     
   }
@@ -436,8 +436,9 @@ Checking if genetically identical samples have the sample Individual ID.
 	    errorIndexes<-c(index,errorIndexes)
 	  }
 	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Indidivual.ID[errorIndexes], margin = c(10,10))
-	
-	write.csv(QCmetrics[errorIndexes,], "../../DNAm/QCmetrics/WithinDNAmGeneticMismatches.csv", row.names = FALSE)
+	if(length(errorIndexes) > 0){	
+		write.csv(QCmetrics[errorIndexes,], "../../DNAm/QCmetrics/WithinDNAmGeneticMismatches.csv", row.names = FALSE)
+		}
 	}
 
 ```
@@ -446,7 +447,7 @@ Checking if genetically identical samples have the sample Individual ID.
 
 ### check if samples with same Individual ID are genetically identical.
 
-errorIndex<-NULL
+errorIndexes<-NULL
 for(each in unique(QCmetrics$Indidivual.ID)){
 	ind<-which(QCmetrics$Indidivual.ID == each)
 	snpCor.tmp<-snpCor[ind,ind]
@@ -459,8 +460,9 @@ for(each in unique(QCmetrics$Indidivual.ID)){
 
 }
 
-write.csv(QCmetrics[errorIndexes,], "../../DNAm/QCmetrics/WithinDNAmGeneticErrors.csv", row.names = FALSE)
-
+if(length(errorIndexes) > 0){
+	write.csv(QCmetrics[errorIndexes,], "../../DNAm/QCmetrics/WithinDNAmGeneticErrors.csv", row.names = FALSE)
+}
 ```
 
 
@@ -480,36 +482,46 @@ write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetr
 
 `r sum(!is.na(QCmetrics$Sex))` (`r sum(!is.na(QCmetrics$Sex))/nrow(QCmetrics)*100`%) samples have sex provided in the phenotype file for comparision with predicted sex. 
 
-`r sum(!is.na(QCmetrics$predSex))` samples had the same sex predicted on both the X and Y chromosome.
+First we will compare the sex predictions from the X and Y chromosomes.
 
 
-`r length(which(as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)))` samples were predicted the same sex as reported in the phenotype file and `r length(which(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex)))` samples were predicted the opposite sex to that provided in the phenotype file.  
+```{r tabSexpredictions}
+pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
+``` 
 
+Second ,we will compare the sex predictions to that provided in the phenotype file
 
-Samples with incorrect predicted sex are written to the file SexMismatches.csv.
+```{r tabSexReported}
+pander(table(QCmetrics$predSex, QCmetrics$Sex))
+``` 
+
+Samples where predicted sex is inconsistent with reported sex are written to the file SexMismatches.csv.
 
 
 
 #### Step 7: Compare with SNP data
 
-To check for potential sample swaps we will compare the 59 SNPs on the EPIC array to genotype data we have. Genotype data was available for `r` samples. 
+To check for potential sample swaps we will compare the 59 SNPs on the EPIC array to genotype data we have from SNP arrays. Genotype data was available for `r sum(!is.na(QCmetrics$genoCheck))` (`r sum(!is.na(QCmetrics$genoCheck))/nrow(QCmetrics)*100`%) samples. 
 
 ```{r genoCheck, results = "asis", echo = FALSE}
 
-pander(table(QCmetrics$genoCheck > 0.95))
-nFail<-length(which(QCmetrics$genoCheck == FALSE))
-nRematch<-sum(!is.na(QCmetrics$genoMatch[QCmetrics$genoCheck == FALSE]))
+hist(QCmetrics$genoCheck, xlab = "Correlation SNP vs DNAm Array", breaks = 50, ylab = "nSamples")
+
+pander(table(QCmetrics$genoCheck > 0.8), caption = "Number of samples where genotypes concordant across SNP and DNAm arrays")
+nFail<-sum(QCmetrics$genoCheck < 0.8, na.rm = TRUE)
+nRematch<-sum(!is.na(QCmetrics$genoMatch[QCmetrics$genoCheck < 0.8]))
 
 
 if(nFail > 0){
-	write.csv(QCmetrics[QCmetrics$genoCheck == FALSE,], file = "../../DNAm/QCmetrics/CompSNPdataGeneticErrors.csv")
+	write.csv(QCmetrics[QCmetrics$genoCheck < 0.8,], file = "../../DNAm/QCmetrics/CompSNPdataGeneticErrors.csv")
 }
 ```
 
 If any of the DNAm samples are not genetically concordant across the EPIC data and SNP chip data then we perform a search to see if they are genetically identical to any other sample in the SNP chip data. This was performed for `r nFail` samples and we identified matching SNP data for `r nRematch` of these individuals. The output of this step has been written to CompSNPdataGeneticErrors.csv.
 
-```{r genoMatch}
+```{r genoMatch, echo = FALSE}
 
+which(!is.na(QCmetrics$genoMatch) & QCmetrics$genoCheck < 0.8)
 
 ```
 

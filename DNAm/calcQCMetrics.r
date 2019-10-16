@@ -176,16 +176,18 @@ if(!"genoCheck"%in% colnames(QCmetrics)){
 	## filter so only one observation of each indivudal in geno data
 	genoToSearch<-match(unique(QCmetrics$Indidivual.ID),QCmetrics$Indidivual.ID)
 	genoMatch<-rep(NA, nrow(QCmetrics))
+	genoMatchVal<-rep(NA, nrow(QCmetrics))
 	for(i in 1:ncol(betas.rs)){
 		if(intensPASS[i] == TRUE){
-			corVals<-rep(NA, length(genoToSearch))
+			corVals<-rep(NA, nrow(geno.mat))
 			for(j in genoToSearch){
 				if(!is.na(geno.mat[j,1])){
 					corVals[j]<-cor(geno.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
 				}
 			}
-			if(max(corVals, na.rm = TRUE) > 0.95){
-				genoMatch[i]<-as.character(QCmetrics$Indidivual.ID)[which(corVals > 0.95)]
+			if(max(corVals, na.rm = TRUE) > 0.9){ ## NB threshold to say 
+				genoMatch[i]<-as.character(QCmetrics$Indidivual.ID)[which(corVals > 0.9)]
+				genoMatchVal[i]<-max(corVals)
 			}
 		}
 	}
@@ -198,7 +200,7 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 	dasen(gfile, node="normbeta")
 	normbetas<-index.gdsn(gfile, "normbeta")[,]
 	qualDat<-qual(rawbetas, normbetas)
-	qualDat[which(intensPASS[i] == FALSE)]<-NA
+	qualDat[which(intensPASS == FALSE),]<-NA
 	QCmetrics<-cbind(QCmetrics,qualDat)
 }
 

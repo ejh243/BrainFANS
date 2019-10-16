@@ -36,7 +36,7 @@ if(file.exists(gdsFile)){
 
 
 	## does it contain all the samples we are interested in?
-	if(sum(sampleSheet$Basename %in% pData(gfile)$barcode) < nrow(sampleSheet)){
+	if(sum(sampleSheet$Basename %in% colnames(gfile)) < nrow(sampleSheet)){ ## this sometimes creates an error
 		#closefn.gds(gfile)
 		source(paste(scriptFolder, "/loadDataGDS.r", sep = "")) ## reload data if some samples are missing
 	}
