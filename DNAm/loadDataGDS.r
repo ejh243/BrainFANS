@@ -30,10 +30,12 @@ if(file.exists(gdsFile) & recreate == TRUE){
 	}
 }
 
+print(paste(length(sampToLoad), " samples to load"))
+
 setwd("iDats")
 ## load each file from sampleSheet and add to gds file
 for(each in sampToLoad){
-	gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = "")) 
+	gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = ""))
 }
 
 

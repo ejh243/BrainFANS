@@ -15,8 +15,6 @@ if (length(args)==0) {
 
 source(args[1])
 
-
-
 setwd(dataDir) 
 
 ## load sample sheet
@@ -31,20 +29,23 @@ print(paste(nrow(sampleSheet), "samples identified from sample sheet to be loade
 ## to avoid loading the data multiple times check if gds files exist
 
 if(file.exists(gdsFile)){
-	gfile <- openfn.gds(gdsFile)
 	print(paste("Loading gds file:", gdsFile))
+	gfile <- openfn.gds(gdsFile)
+
 
 
 	## does it contain all the samples we are interested in?
 	if(sum(sampleSheet$Basename %in% colnames(gfile)) < nrow(sampleSheet)){ ## this sometimes creates an error
 		#closefn.gds(gfile)
 		source(paste(scriptFolder, "/loadDataGDS.r", sep = "")) ## reload data if some samples are missing
+		
 	}
 	## close gds file
 	closefn.gds(gfile)	
 } else { ## otherwise create
-	source(paste(scriptFolder, "/loadDataGDS.r", sep = ""))
 	print(paste("Creating gds file:", gdsFile))
+	source(paste(scriptFolder, "/loadDataGDS.r", sep = ""))
+
 }
 
 

@@ -3,15 +3,16 @@
 ## 2) within cell type
 ## script also performs sample filtering ## to add
 
+source("")
 library(bigmelon)
 setwd(dataDir)
+
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
 
 normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
 
-load(qcData)
-load("QCmetrics/CellTypePCA.rdata")
+QCmetrics<-pData(gfile)
 
 ## create new gfile with only samples that pass QC
 if(exists(normgdsFile)){
@@ -23,30 +24,20 @@ for(node in ls.gdsn(gfile)){
 }
 
 ## filter samples
-passQC<-QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
+passQC<-QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex) & QCmetrics$predLabelledCellType == TRUE
 write.csv(QCmetrics[!passQC,], "QCmetrics/ExcludedSamples.csv")
 add.gdsn(gfile, 'QCoutcome', val = passQC, replace = TRUE)
-
-## exclude cell type outliers
-passCellQC<-rep("FALSE", nrow(QCmetrics))
-passCellQC[which(passQC == TRUE)]<-!as.logical(cellOutlier)
-
-add.gdsn(gfile, 'CellQCoutcome', val = passCellQC, replace = TRUE)
-subSet(normfile, i=1:length(rownames(normfile)), j=(1:length(colnames(normfile)))[passCellQC]) ## i is probes, j is samples
-## replace pData with QC metrics
-QCmetrics<-QCmetrics[passCellQC,]
-add.gdsn(normfile, 'pData', val = QCmetrics, replace = TRUE)
+## need to close gds file in order to open in another R session
+closefn.gds(gfile)
 
 
 ## repeat detection p value filtering
 pfilter(normfile)
 
-## need to close gds file in order to open in another R session
-closefn.gds(gfile)
+
 
 ## normalise all samples together
 dasen(normfile, node="normbeta")
-normbetas<-index.gdsn(normfile, "normbeta")[,]
 
 ## need to extract below to run normalisation on each cell type
 meth<-methylated(normfile)[,]
