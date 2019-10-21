@@ -16,9 +16,12 @@ do
   basename=${basename##*/}
   
 
-  if [-f ${foldername}/${basename}_depDup_q30.bam]
+  if [ -f ${foldername}/${basename}_depDup_q30.bam ]
   then
     else  
+
+	  ## count uniqueness 
+	  ${BBMAP}/bbcountunique.sh in=${f} out=${f//_r1.fq.gz/_hist.txt} interval=5000 overwrite=true cumulative=true count=t k=31
 
 	  mkdir -p ${foldername}
 	  bowtie2 -x ${REFGENOME}/genome -U ${f} -S ${foldername}/${basename}.sam &> ${foldername}/${basename}.bowtie.log

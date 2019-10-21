@@ -3,7 +3,7 @@
 ## converts to bam files	
 ## excludes duplicates 	
 	
-FQFILES=$(ls ${DATADIRPE}/M*/11_trimmed/*_r1.fq.gz)	
+FQFILES=$(ls ${DATADIRPE}/11_trimmed/*_r1.fq.gz)	
 	
 echo "Number of .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""	
 	

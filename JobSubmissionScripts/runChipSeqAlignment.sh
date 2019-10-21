@@ -39,6 +39,7 @@ module purge ## had conflict issues if this wasn't run first
 module load Bowtie2/2.3.4.2-foss-2018b
 module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
+module load Java
 sh $PBS_O_WORKDIR/ChipSeq/alignment.sh
 
 echo Starting peak calling at:

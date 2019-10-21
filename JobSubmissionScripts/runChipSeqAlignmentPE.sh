@@ -8,6 +8,8 @@
 #PBS -e LogFiles/ChipAlignmentPE.err # error file
 #PBS -o LogFiles/ChipAlignmentPE.log # output file
 
+## needs to be executed from the scripts folder
+
 ## Output some useful job information
 
 echo PBS: working directory is $PBS_O_WORKDIR
@@ -25,7 +27,7 @@ date -u
 ######
 
 cd $PBS_O_WORKDIR
-
+#cd ${SCRIPTDIR}
 source ./ChipSeq/config.txt
 
 ## merge QC output
@@ -39,14 +41,23 @@ module purge ## had conflict issues if this wasn't run first
 module load Bowtie2/2.3.4.2-foss-2018b
 module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
-module load Java
-sh $PBS_O_WORKDIR/ChipSeq/alignmentPE.sh
+#module load Java
+sh ${SCRIPTDIR}/ChipSeq/alignmentPE.sh
 
 echo Starting peak calling at:
 date -u
 module purge
 module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
-sh $PBS_O_WORKDIR/ChipSeq/peakCallingPE.sh
+sh ${SCRIPTDIR}/ChipSeq/peakCallingPE.sh
+
+## generate QC metrics
+module purge
+module load R
+Rscript CalcChipQCMetrics.r 
+
+
+
+## produce QC report
 
 
 ## print finish date and time
