@@ -1,0 +1,37 @@
+---
+title: "Summary of CNVs called with PennCNV"
+author: "Eilis Hannon"
+date: "29 May 2019"
+output: html_document
+---
+
+# R -e "rmarkdown::render('script.Rmd',output_file='output.html')"
+
+```{r, echo = FALSE}
+#args<-commandArgs(trailingOnly = TRUE)
+#fileName<-args[1]
+#superPop<-args[2]
+#folder<-dirname(fileName)
+
+setwd("/gpfs/mrc0/projects/Research_Project-MRC190311/SNPdata/CNV/")
+dat<-read.table("PennCNVOutput/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv", stringsAsFactors=FALSE)
+
+dat$V2<-as.numeric(gsub("numsnp=", "",dat$V2))
+dat$V3<-as.numeric(gsub(",", "", gsub("length=", "",dat$V3)))
+
+## summarise CNV calls
+
+par(mfrow = c(1,2))
+hist(dat$V2, xlab = "number of markers", breaks = 35)
+hist(dat$V3/1000, xlab = "length (kb)", breaks = 35)
+
+#totByPerson<-aggregate(
+
+## do any overlap known scz cnv loci
+sczLoci<-read.csv("../../References/CNV/SCZ_CNVloci.csv", skip = 1)
+
+## do any overlap pathogenic cnv loci
+
+```
+
+
