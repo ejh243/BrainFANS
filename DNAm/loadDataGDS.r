@@ -13,22 +13,7 @@ library(IlluminaHumanMethylationEPICmanifest)
 setwd(dataDir)
 
 ## load data
-## check if gds file exists; if it does it will be deleted and recreated 
-if(file.exists(gdsFile) & recreate == TRUE){
-	file.remove(gdsFile)
-	## create list of samples that need to be loaded
-	sampToLoad<-sampleSheet$Basename
-} else {
-	if(file.exists(gdsFile) & recreate == FALSE){ ## alternatively update existing gfile
-		gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
-		sampToLoad<-sampleSheet$Basename[!sampleSheet$Basename %in% read.gdsn(index.gdsn(gfile, "pData/Basename"))]
-		closefn.gds(gfile)
-	}else {
-		if(!file.exists(gdsFile)){
-			sampToLoad<-sampleSheet$Basename
-		}
-	}
-}
+sampToLoad<-sampleSheet$Basename
 
 print(paste(length(sampToLoad), " samples to load"))
 
@@ -64,6 +49,17 @@ colnames(sampleSheet)[1]<-"barcode"
 add.gdsn(gfile, 'pData', val = data.frame(lapply(as.data.frame(sampleSheet), as.character), stringsAsFactors = FALSE), replace = TRUE)
 
 
+## create back up
+
+ f <- createfn.gds(gsub("\\.gds", "_backup.gds", gdsFile))
+ for(node in ls.gdsn(gfile)){
+	copyto.gdsn(node = f, source = index.gdsn(gfile, node), name = node)
+}
+
 ## need to close gds file in order to open in another R session
 closefn.gds(gfile)
+closefn.gds(f)
+
+
+
 

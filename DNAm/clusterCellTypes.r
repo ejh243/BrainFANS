@@ -18,7 +18,7 @@ passQC<-QCmetrics$Basename[QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS 
 sampleSheet<-QCmetrics
 sampleSheet<-sampleSheet[match(passQC, sampleSheet$Basename),]
 
-rawbetas<-betas(gfile)[,]
+rawbetas<-gfile[,, node = "betas"]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
 auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 rawbetas<-rawbetas[auto.probes,]
@@ -73,7 +73,7 @@ for(each in colnames(cellMedPCA)){
 
 y_lim<-range(mahDistPCA)
 par(mfrow = c(2,2))
-for(each in colnames(cellMed)){
+for(each in colnames(cellMedPCA)){
 	boxplot(mahDistPCA[,each] ~ sampleSheet$Cell.type, main = paste("Comparision with ", each), col = rainbow(4), ylab = "Mahalanobis distance", xlab = "Labelled cell type")
 }
 closestCellTypePCA<-colnames(mahDistPCA)[unlist(apply(mahDistPCA, 1, which.min))]
@@ -144,8 +144,9 @@ predLabelledCellType[is.na(predLabelledCellType)]<-FALSE
 sampleSheet$predLabelledCellType<-predLabelledCellType
 ## for time being take more stringent approach.
 
-add.gdsn(gfile, 'pData', val = data.frame(lapply(as.data.frame(sampleSheet), as.character), stringsAsFactors = FALSE), replace = TRUE)
+add.gdsn(gfile, 'QCdata', val = sampleSheet, replace = TRUE)
 
+##save all QC data
 
 ## need to close gds file in order to open in another R session
 closefn.gds(gfile)

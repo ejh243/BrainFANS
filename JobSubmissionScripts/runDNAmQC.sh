@@ -5,8 +5,8 @@
 #PBS -A Research_Project-MRC190311 # research project to submit under. 
 #PBS -l procs=1 # specify number of processors.
 #PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e LogFiles/QCSNPdata.err # error file
-#PBS -o LogFiles/QCSNPdata.log # output file
+#PBS -e ../LogFiles/QCDNAdata.err # error file
+#PBS -o ../LogFiles/QCDNAdata.log # output file
 
 
 ## Output some useful job information
@@ -31,6 +31,10 @@ Rscript performQC.r rmdConfig.run1
 Rscript -e "rmarkdown::render('QC.rmd')"
 
 cp QC.html ../../DNAm/QCMetrics
+
+Rscript QCWithinCellType.r
+
+Rscript -e "rmarkdown::render('QCwithCellType.rmd')"
 
 
 
