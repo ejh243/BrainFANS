@@ -90,3 +90,9 @@ rm SCZ2_QCd.ld.prune*
 
 ## extract SNP probes for comparision with DNAm data
 ${PLINK}/plink --bfile SCZ2_QCd --extract ../References/EPICArray/RSprobes.txt --recodeA --out SCZ_59DNAmSNPs
+
+## recodeA for QTL analyses
+for chr in {1..22}
+do
+${PLINK}/plink --bfile SCZ2_QCd --chr ${chr} --recodeA --out SCZ2_QCd_recode_chr${chr}
+done
