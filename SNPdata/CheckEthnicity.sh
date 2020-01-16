@@ -1,7 +1,7 @@
 
 
 ## check sample ethnicity by comparing to 1000G
-cd ${DATADIR}/SNPdata/
+cd ${DATADIR}/SNPdata/Merged/
 
 # change variant ids to chr:bp
 awk '{if ($1 != 0) print $2,"chr"$1":"$4}' SCZ2_QCd.bim > updateTo1KGFormat.txt

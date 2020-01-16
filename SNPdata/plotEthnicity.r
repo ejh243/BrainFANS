@@ -17,9 +17,21 @@ calcPopDist<-function(dat.pca, ref){
 args<-commandArgs(TRUE)
 
 setwd(args[1])
+refFolder<-args[2]
+subset<-args[3] ## use , to separate multiple files
+
+
+if(!is.na(subset)){
+	subset = unlist(strsplit(subset, ","))
+	#print(subset)
+	keepFiles<-sapply(subset, read.table, simplify=FALSE)
+	
+}
+
+
 pcas<-read.table("mergedw1000G.pca.eigenvec", stringsAsFactors = FALSE)
-KGped<-read.table("../References/1000G/20130606_g1k.ped", stringsAsFactors = FALSE, header = TRUE, sep = "\t")
-popInfo<-read.table("../References/1000G/PopInfo.txt", stringsAsFactors = FALSE, header = TRUE, sep = "\t") ## table made from 1000G website
+KGped<-read.table(paste(refFolder, "/1000G/20130606_g1k.ped", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t")
+popInfo<-read.table(paste(refFolder, "/1000G/PopInfo.txt", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t") ## table made from 1000G website
 
 KGped<-KGped[match(pcas[,2], KGped[,2]),]
 nPops<-length(table(KGped$Population))
@@ -43,6 +55,20 @@ plot(pcas[,3], pcas[,6], xlab = "PC1", ylab = "PC4", pch = ptType, col = ptCol)
 plot(0,1,type = "n", axes = FALSE, xlab = "", ylab = "")
 legend("center", pch = 16, col = rainbow(nPops), levels(as.factor(KGped$Population)), cex = 1.5, ncol = 3)
 
+if(length(args) > 2){
+	for(each in subset){
+		par(mfrow = c(2,2))
+		filterIndex<-which(pcas[,1] %in% keepFiles[[each]][,1] | !is.na(KGped[,1]))
+
+		plot(pcas[filterIndex,3], pcas[filterIndex,4], xlab = "PC1", ylab = "PC2", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(pcas[filterIndex,3], pcas[filterIndex,5], xlab = "PC1", ylab = "PC3", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(pcas[filterIndex,3], pcas[filterIndex,6], xlab = "PC1", ylab = "PC4", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(0,1,type = "n", axes = FALSE, xlab = "", ylab = "")
+		fileName<-tail(unlist(strsplit(each, "/")), n = 1)
+		title(sub = paste(fileName, "\n(", nrow(keepFiles[[each]]), " individuals)", sep = ""))
+		legend("center", pch = 16, col = rainbow(nPops), levels(as.factor(KGped$Population)), cex = 1.5, ncol = 3)
+	}
+}
 
 ## alternatively plot "super populations"
 
@@ -55,6 +81,22 @@ plot(pcas[,3], pcas[,5], xlab = "PC1", ylab = "PC3", pch = ptType, col = ptCol)
 plot(pcas[,3], pcas[,6], xlab = "PC1", ylab = "PC4", pch = ptType, col = ptCol)
 plot(0,1,type = "n", axes = FALSE, xlab = "", ylab = "")
 legend("center", pch = 16, col = rainbow(nSuperPops), levels(as.factor(KGped$SuperPopulation)), cex = 1.5)
+
+if(length(args) > 2){
+	for(each in subset){
+		
+		filterIndex<-which(pcas[,1] %in% keepFiles[[each]][,1] | !is.na(KGped[,1]))
+
+		plot(pcas[filterIndex,3], pcas[filterIndex,4], xlab = "PC1", ylab = "PC2", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(pcas[filterIndex,3], pcas[filterIndex,5], xlab = "PC1", ylab = "PC3", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(pcas[filterIndex,3], pcas[filterIndex,6], xlab = "PC1", ylab = "PC4", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(0,1,type = "n", axes = FALSE, xlab = "", ylab = "")
+		fileName<-tail(unlist(strsplit(each, "/")), n = 1)
+		title(sub = paste(fileName, "\n(", nrow(keepFiles[[each]]), " individuals)", sep = ""))
+		legend("center", pch = 16, col = rainbow(nSuperPops), levels(as.factor(KGped$SuperPopulation)), cex = 1.5)
+	}
+}
+
 dev.off()
 
 
@@ -121,6 +163,28 @@ plot(pcas[,3], pcas[,4], xlab = "PC1", ylab = "PC2", type = "n")
 points(pcas[which(ptType == 20),3], pcas[which(ptType == 20),4], pch = 20, col = ptCol[which(ptType == 20)])
 plot(pcas[,3], pcas[,4], xlab = "PC1", ylab = "PC2", type = "n")
 points(pcas[which(ptType == 3),3], pcas[which(ptType == 3),4], pch = 3, col = ptCol[which(ptType == 3)])
+
+if(length(args) > 2){
+	for(each in subset){
+		layout(matrix(c(1,2,3,4), ncol = 2), widths = c(3,3,3,0.75))
+		filterIndex<-which(pcas[,1] %in% keepFiles[[each]][,1] | !is.na(KGped[,1]))
+
+		plot(pcas[filterIndex,3], pcas[filterIndex,4], xlab = "PC1", ylab = "PC2", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(pcas[filterIndex,3], pcas[filterIndex,5], xlab = "PC1", ylab = "PC3", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(pcas[filterIndex,3], pcas[filterIndex,6], xlab = "PC1", ylab = "PC4", pch = ptType[filterIndex], col = ptCol[filterIndex])
+		plot(0,1,type = "n", axes = FALSE, xlab = "", ylab = "")
+		fileName<-tail(unlist(strsplit(each, "/")), n = 1)
+		title(sub = paste(fileName, "\n(", nrow(keepFiles[[each]]), " individuals)", sep = ""))
+		#legend("center", pch = 16, col = rainbow(nSuperPops), levels(as.factor(KGped$SuperPopulation)), cex = 1.5)
+		
+		plot(pcas[,3], pcas[,4], xlab = "PC1", ylab = "PC2", type = "n")
+		points(pcas[which(ptType == 20),3], pcas[which(ptType == 20),4], pch = 20, col = ptCol[which(ptType == 20)])
+		plot(pcas[,3], pcas[,4], xlab = "PC1", ylab = "PC2", type = "n")
+		points(pcas[which(pcas[,1] %in% keepFiles[[each]][,1]),3], pcas[which(pcas[,1] %in% keepFiles[[each]][,1]),4], pch = 3, col = ptCol[which(pcas[,1] %in% keepFiles[[each]][,1])])
+
+	}
+}
+
 dev.off()
 
 
@@ -130,3 +194,11 @@ outPred<-outPred[which(ptType == 3),]
 write.csv(table(outPred$predPop), "TablePredictedPopulations.csv")
 write.csv(outPred, "PredictedPopulations.csv", quote = FALSE, row.names = FALSE)
 
+if(length(args) > 2){
+	for(each in subset){
+		fileName<-tail(unlist(strsplit(each, "/")), n = 1)
+		outPred.tmp<-outPred[which(outPred[,1] %in% keepFiles[[each]][,1]),]
+		write.csv(table(outPred.tmp$predPop), paste("TablePredictedPopulations", fileName, ".csv", sep = ""))
+	}
+}
+		

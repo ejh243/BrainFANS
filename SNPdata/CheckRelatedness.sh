@@ -1,6 +1,6 @@
 ## because our sample is mixed ethnicity this looks funky return to after checking ethnicity.
 
-cd ${DATADIR}/SNPdata/
+cd ${DATADIR}/SNPdata/Merged
 
 ## check for relatedness with other samples first with KING
 $KINGPATH/king -b SCZ2_QCd.bed --kinship

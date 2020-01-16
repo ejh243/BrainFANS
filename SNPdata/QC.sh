@@ -10,10 +10,10 @@
 ######
 
 
-cd ${DATADIR}/SNPdata/
+cd ${DATADIR}/SNPdata/Merged
 
 ## some samples were run twice (two different brain regions) identify these:
-$KINGPATH/king -b SCZ2_gr38_binary.bed --duplicate
+$KINGPATH/king -b SCZ_gr38_binary.bed --duplicate
 
 ## calc missingness rate to identify those to exclude
 cut -f 1,2 king.con > duplicateSamples.tmp
@@ -21,21 +21,21 @@ cut -f 3,4 king.con >> duplicateSamples.tmp
 sort duplicateSamples.tmp | uniq > duplicateSamples.txt
 rm duplicateSamples.tmp
 
-${PLINK}/plink --bfile SCZ2_gr38_binary --missing --out duplicateSamples
+${PLINK}/plink --bfile SCZ_gr38_binary --missing --out duplicateSamples
 
 ## use python script to identify duplicated with greatest missingness
-python ../scripts/SNPdata/ExcludeDuplicates.py king.con duplicateSamples.imiss dupsToExclude.txt
+python ../../scripts/SNPdata/ExcludeDuplicates.py king.con duplicateSamples.imiss dupsToExclude.txt
 
 ## remove duplicates
-${PLINK}/plink --bfile SCZ2_gr38_binary --remove dupsToExclude.txt --make-bed --out SCZ2_gr38_update_1
+${PLINK}/plink --bfile SCZ_gr38_binary --remove dupsToExclude.txt --make-bed --out SCZ2_gr38_update_1
 
 ## update sample ids
-${PLINK}/plink --bfile SCZ2_gr38_update_1 --update-ids ID_sentrix_ID.txt --make-bed --out SCZ2_gr38_update_2
+${PLINK}/plink --bfile SCZ2_gr38_update_1 --update-ids UpdateIDs.txt --make-bed --out SCZ2_gr38_update_2
 
 ## remove variants at the same position (i.e. triallelic)
 awk '{if ($1 != 0) print $1":"$4}' SCZ2_gr38_update_2.bim > pos.tmp
 sort pos.tmp | uniq -d > dupLocs.txt
-awk --delimiter=":"'{print $1,$2}' dupLocs.txt
+#awk --delimiter=":" '{print $1,$2}' dupLocs.txt
 awk -F ":" '{print $1,$2-1,$2,"set1", "set2"}' dupLocs.txt > positionsExclude.txt
 
 ${PLINK}/plink --bfile SCZ2_gr38_update_2 --exclude range positionsExclude.txt --make-bed --out SCZ2_gr38_update_3;
@@ -43,7 +43,7 @@ rm pos.tmp
 rm dupLocs.txt
 
 ## update sex in fam file
-${PLINK}/plink --bfile SCZ2_gr38_update_3 --update-sex MRC2_UpdateSex.txt --make-bed --out SCZ2_gr38_update_4 
+${PLINK}/plink --bfile SCZ2_gr38_update_3 --update-sex UpdateSex.txt --make-bed --out SCZ2_gr38_update_4 
 
 ## perform sex check on samples with enough data
 ## there are a couple of mismatches, and 1 which does not have a sex predicted. 
@@ -51,8 +51,9 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_4 --mind 0.02 --check-sex --out SexCheck
 
 ## exclude sample which does not have a sex predicted
 ## exclude mismatched samples
+## retain samples with missing sex info
 awk '{if ($4 == 0) print $1,$2 }' SexCheck.sexcheck > sexErrors.txt
-awk '{if ($4 != $3) print $1,$2 }' SexCheck.sexcheck >> sexErrors.txt
+awk '{if ($4 != $3 && $3 != 0) print $1,$2 }' SexCheck.sexcheck >> sexErrors.txt
 ${PLINK}/plink --bfile SCZ2_gr38_update_4 --remove sexErrors.txt --make-bed --out SCZ2_gr38_update_5
 
 ## check for runs of homozygosity
@@ -89,10 +90,5 @@ ${GCTA}/gcta64 --grm SCZ2_QCd_GCTA --pca --out SCZ2_QCd.pca
 rm SCZ2_QCd.ld.prune*
 
 ## extract SNP probes for comparision with DNAm data
-${PLINK}/plink --bfile SCZ2_QCd --extract ../References/EPICArray/RSprobes.txt --recodeA --out SCZ_59DNAmSNPs
+${PLINK}/plink --bfile SCZ2_QCd --extract ../../References/EPICArray/RSprobes.txt --recodeA --out SCZ_59DNAmSNPs
 
-## recodeA for QTL analyses
-for chr in {1..22}
-do
-${PLINK}/plink --bfile SCZ2_QCd --chr ${chr} --recodeA --out SCZ2_QCd_recode_chr${chr}
-done
