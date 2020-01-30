@@ -1,4 +1,6 @@
 ## functions for estimate cell counts eddited to take matrices rather than mset
+## relaxed p value threshold to select probes to 1e-4
+
 library(genefilter)
 library(quadprog)
 
@@ -111,13 +113,13 @@ pickCompProbes <- function(rawbetas, cellInd, cellTypes = NULL, numProbes = 50, 
     
     if (probeSelect == "any"){
         probeList <- lapply(tstatList, function(x) {
-            y <- x[x[,"p.value"] < 1e-8,]
+            y <- x[x[,"p.value"] < 1e-4,]
             yAny <- y[order(abs(y[,"dm"]), decreasing=TRUE),]      
             c(rownames(yAny)[1:(numProbes*2)])
         })
     } else {
         probeList <- lapply(tstatList, function(x) {
-            y <- x[x[,"p.value"] < 1e-8,]
+            y <- x[x[,"p.value"] < 1e-4,]
             yUp <- y[order(y[,"dm"], decreasing=TRUE),]
             yDown <- y[order(y[,"dm"], decreasing=FALSE),]
             c(rownames(yUp)[1:numProbes], rownames(yDown)[1:numProbes])

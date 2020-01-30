@@ -40,9 +40,16 @@ module load R/3.5.1-foss-2018b-Python-2.7.15
 sh SNPdata/QC.sh
 sh SNPdata/CheckEthnicity.sh
 # plot PCs
-Rscript SNPdata/plotEthnicity.r ${DATADIR}/SNPdata/
+Rscript SNPdata/plotEthnicity.r ${DATADIR}/SNPdata/Merged ${KGG} ${DATADIR}/SNPdata/Merged/MRCSCZsamples.txt
+Rscript SNPdata/plotEthnicity.r ${DATADIR}/SNPdata/Merged ${KGG} ${DATADIR}/SNPdata/Merged/SFARIFoetalSamples.txt
 sh SNPdata/CheckRelatedness.sh
-Rscript SNPdata/plotKinshipCoeff.r ${DATADIR}/SNPdata/
+Rscript SNPdata/plotKinshipCoeff.r ${DATADIR}/SNPdata/Merged
+
+module load VCFtools
+cd ${DATADIR}/SNPdata/Merged
+grep "EUR" PredictedPopulations.csv | cut -f1-2 --delim="," --output-delimiter=" " > EURSamples.txt
+
+sh SNPdata/formatForImputation.sh
 
 ## print finish date and time
 echo Job finished on:

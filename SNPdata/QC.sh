@@ -72,7 +72,9 @@ ${PLINK}/plink --bfile SCZ2_gr38_update_6 --exclude noLocPos.tmp --maf 0.001 --h
 
 
 ## write list of samples that passed QC for CNV calling
-cut -f 1 --delimiter=" " SCZ2_QCd.fam > CNV/Samples.txt
+
+cut -f 1,2 --delimiter=" " SCZ_gr38_binary.fam > ${DATADIR}/SNPdata/CNV/ID_Map.txt
+cut -f 2 --delimiter=" " SCZ2_QCd.fam > ${DATADIR}/SNPdata/CNV/Samples.txt
 
 ## clean up intermediate files but keep log files
 rm SCZ2_gr38_update_*.b*

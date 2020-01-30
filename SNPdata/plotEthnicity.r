@@ -30,8 +30,8 @@ if(!is.na(subset)){
 
 
 pcas<-read.table("mergedw1000G.pca.eigenvec", stringsAsFactors = FALSE)
-KGped<-read.table(paste(refFolder, "/1000G/20130606_g1k.ped", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t")
-popInfo<-read.table(paste(refFolder, "/1000G/PopInfo.txt", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t") ## table made from 1000G website
+KGped<-read.table(paste(refFolder, "/20130606_g1k.ped", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t")
+popInfo<-read.table(paste(refFolder, "/PopInfo.txt", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t") ## table made from 1000G website
 
 KGped<-KGped[match(pcas[,2], KGped[,2]),]
 nPops<-length(table(KGped$Population))
