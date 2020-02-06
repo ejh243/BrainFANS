@@ -38,6 +38,7 @@ for(colName in colsToPlot){
 
 invisible(dev.off())
 
+sys.variables<-unname(sys.variables)
 sys.variables<-signif(sys.variables, 3)
 
 cat(sys.variables) # print so can be saved as bash variables
@@ -69,12 +70,11 @@ invisible(dev.off())
 
 ## check by ethnicity
 predPop<-read.csv(superPop)
-predPop<-predPop[match(gsub("PennCNVInput/", "", dat$File), predPop$V1),]
+predPop<-predPop[match(gsub("PennCNVInput/", "", dat$File), predPop$V2),]
 pdf(paste(folder, "BoxplotCNVMetricsByPredPop.pdf", sep = "/"))
 par(mfrow = c(2,2))
 par(mar = c(4,4,1,1))
 for(colName in colsToPlot){
-
 boxplot(dat[,colName] ~ predPop$predPop, ylab = colName, main = "", col = rainbow(5))
 }
 invisible(dev.off())

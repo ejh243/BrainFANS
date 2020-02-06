@@ -3,10 +3,11 @@
 
 
 cd ${DATADIR}/scripts
+CNVPATH=${DATADIR}/SNPdata/CNV
 
 
 # create plots of QC metrics and calculate exclusion thresholds (nb outliers defined as > 3 SD from mean)
-QCFILTER=($(Rscript SNPdata/summarizeCNVMetrics.r ../SNPdata/CNV/PennCNVOutput/SampleQC.txt ../SNPdata/PredictedPopulations.csv))
+QCFILTER=($(Rscript SNPdata/summarizeCNVMetrics.r ${CNVPATH}/PennCNVOutput/SampleQC.txt ../SNPdata/Merged/PredictedPopulations.csv))
 
 cd ${DATADIR}/SNPdata/CNV
 
@@ -31,8 +32,10 @@ ${PENNCNVPATH}/scan_region.pl PennCNVOutput/SCZ_GCModel_MergedFiltered.rawcnv --
 
 cd ${DATADIR}/scripts
 
-QCFILTER=($(Rscript SNPdata/summarizeCNVMetrics.r ../SNPdata/CNV/PennCNVOutput/EURonly/SampleQC.txt ../SNPdata/PredictedPopulations.csv))
+QCFILTER=($(Rscript SNPdata/summarizeCNVMetrics.r ${CNVPATH}/PennCNVOutput/EURonly/SampleQC.txt ../SNPdata/Merged/PredictedPopulations.csv))
 
+
+cd ${DATADIR}/SNPdata/CNV
 # Filter samples
 # Samples are excluded if > 10mbp of CNVs and outliers for Log2 ratio standard deviation, B-allele frequency drift, wave factor and total number of CNVs.
 ${PENNCNVPATH}/filter_cnv.pl --qclogfile PennCNVOutput/EURonly/SCZ2.log --qclrrsd ${QCFILTER[0]} --qcbafdrift ${QCFILTER[1]}  --qcwf ${QCFILTER[2]} --qcnumcnv ${QCFILTER[3]} --maxtotalcnvlength 10m --qcpassout PennCNVOutput/EURonly/SamplesIncluded.txt --output PennCNVOutput/EURonly/SCZ_GCModel_SampleFiltered.rawcnv PennCNVOutput/EURonly/SCZ_GCModel.rawcnv 
