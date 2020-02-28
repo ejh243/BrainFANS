@@ -39,6 +39,11 @@ echo CNVs called on full sample
 cd ${DATADIR}/scripts
 sh SNPdata/FilterCNVCalls.sh
 
+module load Pandoc
+R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/MRCSCZsamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundAll_SCZSamples.html')"
+R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/SFARIFoetalSamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundAll_SFARISamples.html')"
+R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/EURonly/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/MRCSCZsamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundEUR_SCZSamples.html')"
+R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/EURonly/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/SFARIFoetalSamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundEUR_SFARISamples.html')"
 
 ## print finish date and time
 echo Job finished on:

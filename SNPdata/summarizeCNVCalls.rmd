@@ -3,13 +3,18 @@ title: "Summary of CNVs called with PennCNV"
 author: "Eilis Hannon"
 date: "31st Jan 2020"
 output: html_document
+params:
+  fileName: NULL
+  subset: NULL
 ---
 
-```{r, echo = FALSE}
-#args<-commandArgs(trailingOnly = TRUE)
-#fileName<-args[1]
-#superPop<-args[2]
-#folder<-dirname(fileName)
+```{r, echo = FALSE, include = FALSE, message=FALSE}
+fileName <- params$fileName
+subset <- params$subset
+
+if(is.null(fileName)){
+  quit()
+}
 
 findOverlapsMinProp<-function(query, subject, pThres){
 	# function to find overlap between two Granges based on minimum proportion
@@ -25,14 +30,20 @@ findOverlapsMinProp<-function(query, subject, pThres){
 
 
 library(GenomicRanges)
-library("chromoMap")
+library(karyoploteR)
+library(pander)
 
-setwd("/gpfs/mrc0/projects/Research_Project-MRC190311/SNPdata/CNV/")
-dat<-read.table("PennCNVOutput/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv", stringsAsFactors=FALSE)
+dat<-read.table(fileName, stringsAsFactors=FALSE)
 colnames(dat)<-c("Coordinates", "numsnp", "length", "type", "IndividualID", "startsnp", "endsnp", "genes", "V9")
+
+## 
+if(!is.null(subset)){
+  keepList<-read.table(subset, stringsAsFactors = FALSE, header = FALSE, row.names = NULL)
+  dat<-dat[dat$IndividualID %in% keepList$V2,]
+}
+
 dat$numsnp<-as.numeric(gsub("numsnp=", "",dat$numsnp))
 dat$length<-as.numeric(gsub(",", "", gsub("length=", "",dat$length)))
-
 
 ## separate coordnates into chr,bp
 bprange<-unlist(lapply(strsplit(dat$Coordinates, ":"), tail, n = 1))
@@ -44,34 +55,60 @@ dat)
 colnames(dat)[c(1:3)]<-c("chr", "start", "end")
 ```
 
+#### CNVs loaded from: `r fileName`
+
+#### `r if(!is.null(subset)){paste("CNVs filtered to individuals in:",subset)}`
+
 ## Summary of CNVs Called
 
-In total we identified `{r nrow(dat)}` CNVs across `r length(unique(dat$IndividualID))` individuals. The mean number of CNVs per person was `r signif(mean(as.numeric(table(dat$IndividualID))),3)` (SD = `r signif(sd(as.numeric(table(dat$IndividualID))),3)`).
+In total `r nrow(dat)` CNVs across `r length(unique(dat$IndividualID))` individuals were identified. The mean number of CNVs per person was `r signif(mean(as.numeric(table(dat$IndividualID))),3)` (SD = `r signif(sd(as.numeric(table(dat$IndividualID))),3)`).
 
-```{r}
+```{r, echo = FALSE}
 
-hist(as.numeric(table(dat$IndividualID)), xlab = "number of CNVs", ylab = "number of individuals", main = "")
+hist(as.numeric(table(dat$IndividualID)), xlab = "Number of CNVs", ylab = "Number of Individuals", main = "", breaks = 25)
 
 ```
 
-CNVs were a mean of `r signif(dat$length,3)` bp (SD = `r signif(sd(dat$length),3)` bp). 
+Distribution of the types of CNV called.
 
-```{r}
+```{r, echo = FALSE}
+pander(table(dat$type))
+```
+
+The table below contains details of the CNVs that are not the typical single copy deletion or duplication.
+
+```{r, echo = FALSE}
+tabToPrint<-dat[which(!dat$type %in% c("state2,cn=1", "state5,cn=3")),-c(1:3)]
+rownames(tabToPrint)<-NULL
+pander(tabToPrint)
+
+```
+
+CNVs were a mean of `r signif(mean(dat$length),3)` bp (SD = `r signif(sd(dat$length),3)` bp). 
+
+```{r, echo = FALSE, fig.width = 15}
 par(mfrow = c(1,2))
-hist(dat$numsnp, xlab = "number of markers", ylab = "number of CNVs", breaks = 35, main = "All")
-hist(dat$length/1000, xlab = "length (kb)", ylab = "number of CNVs", breaks = 35, main = "All")
+hist(dat$numsnp, xlab = "Number of markers", ylab = "Number of CNVs", breaks = 35, main = "All")
+mtext(paste("Mean = ", signif(mean(dat$numsnp),3), "; SD = ", signif(sd(dat$numsnp),3), sep = ""), side = 3, line = 0, adj = 1)
+hist(dat$length/1000, xlab = "length (kb)", ylab = "Number of CNVs", breaks = 35, main = "All")
+mtext(paste("Mean = ", signif(mean(dat$length/1000),3), "; SD = ", signif(sd(dat$length/1000),3), sep = ""), side = 3, line = 0, adj = 1)
 index.del<-which(dat$type == "state2,cn=1")
 index.dup<-which(dat$type == "state5,cn=3")
 ```
 
-`r length(index.del)` CNVs were deletions and r length(index.dup)` CNVs were duplications.
+`r length(index.del)` CNVs were deletions and `r length(index.dup)` CNVs were duplications.
 
-```{r}
-hist(dat$numsnp[index.del], xlab = "number of markers", breaks = 35, main = "Deletions")
+```{r, echo = FALSE, fig.width = 15}
+par(mfrow = c(1,2))
+hist(dat$numsnp[index.del], xlab = "Number of markers", breaks = 35, main = "Deletions")
+mtext(paste("Mean = ", signif(mean(dat$numsnp[index.del]),3), "; SD = ", signif(sd(dat$numsnp[index.del]),3), sep = ""), side = 3, line = 0, adj = 1)
 hist(dat$length[index.del]/1000, xlab = "length (kb)", breaks = 35, main = "Deletions")
+mtext(paste("Mean = ", signif(mean(dat$length[index.del]/1000),3), "; SD = ", signif(sd(dat$length[index.del]/1000),3), sep = ""), side = 3, line = 0, adj = 1)
 
-hist(dat$numsnp[index.dup], xlab = "number of markers", breaks = 35, main = "Duplications")
+hist(dat$numsnp[index.dup], xlab = "Number of markers", breaks = 35, main = "Duplications")
+mtext(paste("Mean = ", signif(mean(dat$numsnp[index.dup]),3), "; SD = ", signif(sd(dat$numsnp[index.dup]),3), sep = ""), side = 3, line = 0, adj = 1)
 hist(dat$length[index.dup]/1000, xlab = "length (kb)", breaks = 35, main = "Duplications")
+mtext(paste("Mean = ", signif(mean(dat$length[index.dup]/1000),3), "; SD = ", signif(sd(dat$length[index.dup]/1000),3), sep = ""), side = 3, line = 0, adj = 1)
 
 ```
 
@@ -79,22 +116,27 @@ hist(dat$length[index.dup]/1000, xlab = "length (kb)", breaks = 35, main = "Dupl
 
 Below are histograms for the aggregation of CNV burden per person
 
-```{r}
+```{r, echo = FALSE, fig.width = 15}
 ## summarise CNVs by person
 par(mfrow = c(1,2))
 totByPerson<-aggregate(dat$length/1000, by = list(dat$IndividualID), sum)
 muByPerson<-aggregate(dat$length/1000, by = list(dat$IndividualID), mean)
 hist(totByPerson[,2], xlab = "Combined length of CNVs (kb)", ylab = "Number of individuals", breaks = 35, main = "All")
+mtext(paste("Mean = ", signif(mean(totByPerson[,2]),3), "; SD = ", signif(sd(totByPerson[,2]),3), sep = ""), side = 3, line = 0, adj = 1)
 hist(muByPerson[,2], xlab = "Mean length of CNVs (kb)", ylab = "Number of individuals", breaks = 35, main = "All")
+mtext(paste("Mean = ", signif(mean(muByPerson[,2]),3), "; SD = ", signif(sd(muByPerson[,2]),3), sep = ""), side = 3, line = 0, adj = 1)
 totByPerson<-aggregate(dat$length[index.del]/1000, by = list(dat$IndividualID[index.del]), sum)
 muByPerson<-aggregate(dat$length[index.del]/1000, by = list(dat$IndividualID[index.del]), mean)
 hist(totByPerson[,2], xlab = "Combined length of CNVs (kb)", ylab = "Number of individuals", breaks = 35, main = "Deletions")
+mtext(paste("Mean = ", signif(mean(totByPerson[,2]),3), "; SD = ", signif(sd(totByPerson[,2]),3), sep = ""), side = 3, line = 0, adj = 1)
 hist(muByPerson[,2], xlab = "Mean length of CNVs (kb)", ylab = "Number of individuals", breaks = 35, main = "Deletions")
+mtext(paste("Mean = ", signif(mean(muByPerson[,2]),3), "; SD = ", signif(sd(muByPerson[,2]),3), sep = ""), side = 3, line = 0, adj = 1)
 totByPerson<-aggregate(dat$length[index.dup]/1000, by = list(dat$IndividualID[index.dup]), sum)
 muByPerson<-aggregate(dat$length[index.dup]/1000, by = list(dat$IndividualID[index.dup]), mean)
 hist(totByPerson[,2], xlab = "Combined length of CNVs (kb)", ylab = "Number of individuals", breaks = 35, main = "Duplications")
+mtext(paste("Mean = ", signif(mean(totByPerson[,2]),3), "; SD = ", signif(sd(totByPerson[,2]),3), sep = ""), side = 3, line = 0, adj = 1)
 hist(muByPerson[,2], xlab = "Mean length of CNVs (kb)", ylab = "Number of individuals", breaks = 35, main = "Duplications")
-
+mtext(paste("Mean = ", signif(mean(muByPerson[,2]),3), "; SD = ", signif(sd(muByPerson[,2]),3), sep = ""), side = 3, line = 0, adj = 1)
 
 
 ```
@@ -103,41 +145,15 @@ hist(muByPerson[,2], xlab = "Mean length of CNVs (kb)", ylab = "Number of indivi
 
 Here we will plot the chromosomal distribution of CNVs.
 
-```{r}
-barplot(table(as.numeric(gsub("chr", "", dat$chr))))
-```
-
-```{r}
-library("karyoploteR")
-
-#cbind(paste("CNV",rownames(dat), sep = ""), dat$chr, dat$start, dat$end)
-
-plot.params <- getDefaultPlotParams(plot.type=2)
-plot.params$ideogramheight <- 50
-plot.params$data1height <- 400
-plot.params$data1inmargin <- 1
-plot.params$data2height <- 0
-plot.params$data1max<-33
-
-plotDefaultPlotParams(plot.type = 2, plot.params=plot.params)
-
-kp <- plotKaryotype(genome="hg38", plot.type=2,chromosomes=c("autosomal"), plot.params=plot.params)
-kpDataBackground(kp, data.panel = 1)
-kpAxis(kp, ymin=0, ymax=max(mcols(cov.del)[,1]), col="gray50", cex=0.5)
-kpBars(kp, cov.del, col = "red", border = "red", ymax = max(mcols(cov.del)[,1])
-
-kp <- plotKaryotype(genome="hg38", plot.type=2,chromosomes=c("autosomal"), plot.params=plot.params)
-kpDataBackground(kp, data.panel = 1)
-#kpAxis(kp, ymin=0, ymax=max(mcols(cov.del)[,1]), col="gray50", cex=0.5)
-kpHeatmap(kp, cov.del, col = c("white","lightblue", "navy"), ymax = 10)
-
+```{r, echo = FALSE, fig.height = 7, fig.width = 15}
+chrDist<-table(dat$type, as.numeric(gsub("chr", "", dat$chr)))
+barplot(chrDist, ylab = "Number of CNVs", col = palette())
 
 ```
 
-## Comparision with Lists of Pathogenic CNV
+Below is a karotype map  with a barchart above each chromosome depicting the number of called CNVs at each genomic position. Deletions are plotted in red and duplications in blue.
 
-
-```{r}
+```{r, echo = FALSE, fig.width = 15, fig.height = 10}
 index<-which(dat$type == "state2,cn=1")
 allCNVs.del<-GRanges(dat$Coordinates[index])
 mcols(allCNVs.del)$SampleID <- dat$IndividualID[index]
@@ -150,9 +166,45 @@ pThres<-0.9 ## set as minimum overlap required
 
 ## count number of CNVs at each position
 cov.del<-as(coverage(allCNVs.del), "GRanges")
-names(mcols(cov.del))<-"y"
+names(mcols(cov.del))<-"y1"
 cov.dup<-as(coverage(allCNVs.dup), "GRanges")
+names(mcols(cov.dup))<-"y1"
+
+#cbind(paste("CNV",rownames(dat), sep = ""), dat$chr, dat$start, dat$end)
+
+plot.params <- getDefaultPlotParams(plot.type=2)
+plot.params$ideogramheight <- 50
+plot.params$data1height <- 400
+plot.params$data1inmargin <- 1
+plot.params$data2height <- 0
+plot.params$data1max<-33
+
+
+kp <- plotKaryotype(genome="hg38", plot.type=2,chromosomes=c("autosomal"), plot.params=plot.params)
+kpDataBackground(kp, data.panel = 1)
+kpAxis(kp, ymin=0, ymax=max(mcols(cov.del)[,1]), col="gray50", cex=0.5)
+kpBars(kp, cov.del, col = "red", border = "red", ymax = max(mcols(cov.del)[,1]), main = "Deletions")
+kp <- plotKaryotype(genome="hg38", plot.type=2,chromosomes=c("autosomal"), plot.params=plot.params)
+kpDataBackground(kp, data.panel = 1)
+kpAxis(kp, ymin=0, ymax=max(mcols(cov.del)[,1]), col="gray50", cex=0.5)
+kpBars(kp, cov.dup, col = "blue", border = "blue", ymax = max(mcols(cov.dup)[,1]), main = "Duplications")
+```
+
+```{r, echo = FALSE, fig.width = 15, include = FALSE}
+names(mcols(cov.del))<-"y"
 names(mcols(cov.dup))<-"y"
+kp <- plotKaryotype(genome="hg38", plot.type=2,chromosomes=c("autosomal"), plot.params=plot.params)
+kpDataBackground(kp, data.panel = 1)
+#kpAxis(kp, ymin=0, ymax=max(mcols(cov.del)[,1]), col="gray50", cex=0.5)
+kpHeatmap(kp, cov.del, colors = c("white","red"), main = "Deletions")
+kpHeatmap(kp, cov.dup, colors = c("white","blue"), main = "Duplications")
+
+```
+
+## Comparision with Lists of Pathogenic CNV
+
+
+```{r, echo = FALSE, message=FALSE}
 
 ## do any overlap known scz cnv loci ## list taken from Rees et al. Br J Psychiatry (merge tables 1 & 2)
 sczLoci<-read.csv("../../References/CNV/SCZ_CNVloci.csv", skip = 1, stringsAsFactors = FALSE)
@@ -170,11 +222,16 @@ overlapDel<-findOverlapsMinProp(allCNVs.del, sczLoci.hg38.del, pThres)
 overlapDup<-findOverlapsMinProp(allCNVs.dup, sczLoci.hg38.dup, pThres)
 output<-rbind(data.frame(overlapDel), data.frame(overlapDup))
 write.csv(output, "CNVsoverlappingKnownSCZRiskLoci.csv")
+
 ```
 
-First, we will consider identified as associated with schizophrenia. In this sample `r nrow(output)` individuals had a CNV overlapping the list of `r nrow(sczLoci)` CNVs. To be classied as overlapping, `r pThres*100`% bp of the CNV had to overlap the known loci.
+The CNVs called in this samples were compared to a published list of CNVs identified as associated with schizophrenia. In this sample `r nrow(output)` individuals had a CNV overlapping the list of `r nrow(sczLoci)` CNVs. To be classied as overlapping, `r pThres*100`% of the CNV had to overlap the published loci.
 
-```{r}
+```{r, echo = FALSE}
+pander(output, caption = "CNVs that overlap published list of CNVs associated with schizophrenia")
+```
+
+```{r, echo = FALSE, message=FALSE}
 ## do any overlap known ID cnv loci ## list taken from Rees et al. JAMA Psychiatry 2016 (eTable 2)
 idLoci<-read.csv("../../References/CNV/IDCNVLoci.csv", stringsAsFactors = FALSE)
 idLoci<-idLoci[which(idLoci$hg38 != ""),] ## 1 region I couldn't lift over
@@ -191,19 +248,24 @@ output<-rbind(data.frame(overlapDel), data.frame(overlapDup))
 write.csv(output, "CNVsoverlappingIDRiskLoci.csv")
 ```
 
-Next, we will consider CNVs identified as associated with intellectual disability. In this sample `r nrow(output)` individuals had a CNV overlapping the list of `r nrow(idLoci)` CNVs. 
+The CNVs called in this sample were compared to a published list of CNVs identified as associated with intellectual disability. In this sample `r nrow(output)` individuals had a CNV overlapping the list of `r nrow(idLoci)` CNVs. 
 
-```{r}
+```{r, echo = FALSE}
+pander(output, caption = "CNVs called that overlap published list of CNVs associated with intellectual disability")
+```
+
+```{r, echo = FALSE, message=FALSE}
 ## do any overlap known pathogenic cnv loci ## list taken from Kendall et al 2017 Biol Psychiatry
 pathLoci<-read.table("../../References/CNV/PathogenicCNVLoci.txt", stringsAsFactors = FALSE, sep = "\t", header = TRUE)
 pathLoci<-pathLoci[which(pathLoci$hg38 != ""),] ## 1 region I couldn't lift over
 pathLoci.hg38.del<-GRanges(pathLoci$hg38[grep("del", pathLoci$CNV.locus)])
 mcols(pathLoci.hg38.del)$Locus<-pathLoci$CNV.locus[grep("del", pathLoci$CNV.locus)]
 mcols(pathLoci.hg38.del)$hg38<-pathLoci$hg38[grep("del", pathLoci$CNV.locus)]
+mcols(pathLoci.hg38.del)$Phenotype<-pathLoci$Medical.Phenotypes...excluding..developmental.delay..and.neuropsychiatric..phenotypes[grep("del", pathLoci$CNV.locus)]
 pathLoci.hg38.dup<-GRanges(pathLoci$hg38[grep("dup", pathLoci$CNV.locus)])
 mcols(pathLoci.hg38.dup)$Locus<-pathLoci$CNV.locus[grep("dup", pathLoci$CNV.locus)]
 mcols(pathLoci.hg38.dup)$hg38<-pathLoci$hg38[grep("dup", pathLoci$CNV.locus)]
-
+mcols(pathLoci.hg38.dup)$Phenotype<-pathLoci$Medical.Phenotypes...excluding..developmental.delay..and.neuropsychiatric..phenotypes[grep("dup", pathLoci$CNV.locus)]
 pThres<-0.9 ## set as minimum overlap required
 overlapDel<-findOverlapsMinProp(allCNVs.del, pathLoci.hg38.del, pThres)
 overlapDup<-findOverlapsMinProp(allCNVs.dup, pathLoci.hg38.dup, pThres)
@@ -216,3 +278,6 @@ write.csv(output, "CNVsoverlappingPathogenicCNV.csv")
 
 Finally, we will consider pathogenic CNV loci. In this sample `r nrow(output)` individuals had a CNV overlapping the list of `r nrow(pathLoci)` CNVs. 
 
+```{r, echo = FALSE}
+pander(output, caption = "CNVs called that overlap published list of pathogenic CNVs")
+```
