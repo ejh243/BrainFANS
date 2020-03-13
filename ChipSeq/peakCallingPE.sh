@@ -1,12 +1,12 @@
 ## Written by Eilis
 
 
-BAMFILES=$(ls ${DATADIRPE}/alignedData/*_depDup_q30.bam)
+BAMFILES=($(ls ${DATADIRPE}/alignedData/*_depDup_q30.bam))
 mkdir -p ${DATADIRPE}/MACS2
 
 echo "Number of bam files found for peak calling:" "${#BAMFILES[@]}"
 
-for f in ${BAMFILES};
+for f in ${BAMFILES[@]};
 do
    echo "Peak Calling" ${f}
   basename=${f%.bam}

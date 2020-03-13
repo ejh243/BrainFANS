@@ -134,5 +134,6 @@ cp BrainFANS_HRC1.1EUR_rsq0.3_QCd.bed BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.bed
 cp BrainFANS_HRC1.1EUR_rsq0.3_QCd.bim BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.bim
 cp BrainFANS_HRC1.1EUR_rsq0.3_QCd.fam BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.fam
 
-${PLINK}/plink --bfile BrainFANS_HRC1.1EUR_rsq0.3_QCd --update-sex ../../UpdateSex.txt --maf 0.01 --hwe 0.00001 --make-bed --out BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp
-
+${PLINK}/plink --bfile BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp --remove filterSamples.txt --update-sex ../../UpdateSex.txt --maf 0.01 --hwe 0.00001 --make-bed --out BrainFANS_HRC1.1EUR_rsq0.3_QCd
+rm BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.b*
+rm BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.fam

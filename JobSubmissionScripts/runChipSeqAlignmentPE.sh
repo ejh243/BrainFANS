@@ -38,7 +38,7 @@ multiqc . -f ## can add flag to ignore certain folders if needed
 
 ## run alignment
 module purge ## had conflict issues if this wasn't run first
-module load Bowtie2/2.3.4.2-foss-2018b
+module load Bowtie2
 module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
 #module load Java
