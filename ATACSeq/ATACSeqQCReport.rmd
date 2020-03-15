@@ -52,7 +52,9 @@ endcodeQC<-matrix(data = unlist(lapply(gsub("_depDup_q30.bam", ".nodup.pbc.qc", 
 
 ```
 
-This report makes use of two R packages to summarise the performace on ATAC-seq, [ChIPQC R package](http://bioconductor.org/packages/release/bioc/html/ChIPQC.html) downloaded from Bioconductor, but it also uses the output from the [BBMap](https://sourceforge.net/projects/bbmap/) bbcountunique.sh tool. Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. As this is pilot data the pipeline is still under development. The content of this report is based on a similar report generated for ChIP-Seq data.
+This report provides a summary of an ATAC-seq experiement from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment, filtering and peak calling steps. The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines] (https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. As this is pilot data the pipeline is still under development.
+
+This report makes use of the quality control metrics generated as part of that pipeline, 2 R packages [ATACseqQC R package](https://bioconductor.org/packages/release/bioc/html/ATACseqQC.html) and [ChIPQC R package](http://bioconductor.org/packages/release/bioc/html/ChIPQC.html) as well as other tools such as [BBMap](https://sourceforge.net/projects/bbmap/) bbcountunique.sh tool. 
 
 ## 1. Data summary
 
@@ -67,29 +69,30 @@ Below is a table summarising the raw sequencing data we received.
 ## get stats for r1
 r1_dat<-fastqcStats[match(paste0(sampleSheet$SampleID, "_r1"), fastqcStats$Sample), c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")]
 
-colnames(r1_dat)<-paste("r1", c("nReads", "Mean_length", "Range_length", "GC_percent", "total_deduplicated_percentage"), sep = "_")
+colnames(r1_dat)<-c("nReads", "Mean(length)", "Range(length)", "%GC", "%Distinct")
 
 ## if paired end get stats for r2
 r2_dat<-matrix(data = "NA", nrow = nrow(r1_dat), ncol = ncol(r1_dat))
 if(sum(sampleSheet$ReadType == "Paired") > 0){
 	r2_dat[which(sampleSheet$ReadType == "Paired"),]<-as.matrix(fastqcStats[match(paste0(sampleSheet$SampleID[which(sampleSheet$ReadType == "Paired")], "_r2"), fastqcStats$Sample),c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")])
 }
-colnames(r2_dat)<-paste("r2", c("nReads", "Mean_length", "Range_length", "GC_percent", "total_deduplicated_percentage"), sep = "_")
+colnames(r2_dat)<-c("nReads", "Mean(length)", "Range(length)", "%GC", "%Distinct")
 
 
 
-kable(cbind(r1_dat, r2_dat), digits = 2) %>%
-	add_header_above(header = setNames(c(1, ncol(r1_dat),ncol(r2_dat)),c("", "Read 1","Read 2")))
+kable(cbind(r1_dat, r2_dat), digits = 2, row.names = FALSE) %>%
+  kable_styling(full_width = F, position = "center") %>%
+  	add_header_above(header = setNames(c(ncol(r1_dat),ncol(r2_dat)),c("Read 1","Read 2")))
 
 ```
 
-## Estimate Library Complexity
+## 1.2 Estimate Library Complexity
 
 A good ATAC-seq experiment will capture enrichment at a broad range of genomic locations. The number of distinct or unique reads in an indicator of the diversity or complexity of the data. If the sample does not contain sufficient DNA and/or you over-sequence, you will simply be repeatedly sequencing PCR duplicates of a restricted pool of distinct DNA fragments. This is known a low-complexity library and is not desirable.  
 
 Complexity can be assesed at two points from both the raw sequencing reads and the aligned reads. In this section we will assess the number of unique reads as the total number of reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. 
 
-```{r, plotUniquenessCurve, echo = FALSE, fig.height = 6, fig.width = 6, fig.caption = "Figure 1: Line graph of number of unique reads (y-axis) as number of reads (x-axis) increases.", message = FALSE,results='hide'}
+```{r, plotUniquenessCurve, echo = FALSE, fig.height = 6, fig.width = 8, fig.caption = "Figure 1: Line graph of number of unique reads (y-axis) as number of reads (x-axis) increases.", message = FALSE,results='hide'}
 ## plot uniqueness curves
 ## calc percentage duplicates as sequencing increases
 perc.dup<-(hist.data[,1] - hist.data[,-1])/hist.data[,1]*100
@@ -163,7 +166,8 @@ KsRatio<-r1_dat[,1]/monodPars[,2]
 
 ## plot assymptote against ratio above.
 plot(monodPars[,1]/1000000, KsRatio, xlab = "Total nUnique Reads", ylab = "Ratio nReads:Ks", pch = 16, col = lineCol, cex.axis = 1.5, cex.lab = 1.5)
-legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol, lwd = 2, cex = 1.5)
+legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol, lwd = 2, cex = 0.8)
+abline(h = 1, lty = 2)
 	
 ```
 
@@ -184,8 +188,10 @@ bowtieStats<-cbind(bowtieStats, rowSums(bowtieStats[,3:4])/bowtieStats[,2]*100)
 colnames(bowtieStats)<-c("Sample", "nPairs", "nPairsAlignOnce", "nPairsAlignMulti", "overallAlignmentRate", "pairAlignmentRate") 
 bowtieStats$Sample<-gsub("_trimmed.bowtie", "", as.character(bowtieStats$Sample))
 
-kable(bowtieStats) %>%
-  kable_styling(full_width = F, position = "center")
+
+kable(bowtieStats, digits = 2) %>%
+  kable_styling(full_width = F, position = "center") %>%
+    row_spec(which(bowtieStats$overallAlignmentRate < 80), color = "white", background = "#D7261E")
 
 ```
 
@@ -258,11 +264,12 @@ mtext("None", at = 3.05, side = 3)
 
 ```
 
-## Fragment Size Distribution
+
+## 2.4 Fragment Size Distribution
 
 ATAC-seq data should be enriched for specific sized fragments, so the distribution of fragement size should show periodicity. Typically there should be a large proportion of reads with fragment length < 100bp indicating nucleosome-free fragments, the plot show then show periodicity of ~ 200bp representing  enrichment of mono-, di-, and tri-nucleosome bound fragments (~200, 400, 600?p, respectively).  In the plot below, a sucessful ATAC-seq experiment should have a peak at ~50-100bp with a large proportion of reads less than 100 bp, and peaks at 200bp, 400bp,600bp. If there was no chromatin in the sample the graph would have no periodicity and resemble a poisson distribution with lambda = 1).
 
-```{r,echo = FALSE, fig.width = 6, fig.height = 8, fig.align = "center"}
+```{r,echo = FALSE, fig.width = 10, fig.height = 6, fig.align = "center"}
 
 standardizeValues<-function(frag.len){
     x <- 1:1010
@@ -291,6 +298,17 @@ for(i in 2:nrow(sampleSheet)){
 
 ```
 
+### 2.5 Cross-correlation
+
+Normalized Strand Cross-correlation coefficient (NSC):
+A measure of enrichment derived without dependence on prior determination of enriched regions. Forward and reverse strand read coverage signal tracks are computed (number of unique mapping read starts at each base in the genome on the + and - strand counted separately). The forward and reverse tracks are shifted towards and away from each other by incremental distances and for each shift, the Pearson correlation coefficient is computed. In this way, a cross-correlation profile is computed, representing the correlation between forward and reverse strand coverage at different shifts. The highest cross-correlation value is obtained at a strand shift equal to the predominant fragment length in the dataset as a result of clustering/enrichment of relative fixed-size fragments around the binding sites of the target factor or feature.
+
+The NSC is the ratio of the maximal cross-correlation value (which occurs at strand shift equal to fragment length) divided by the background cross-correlation (minimum cross-correlation value over all possible strand shifts). Higher values indicate more enrichment, values less than 1.1 are relatively low NSC scores, and the minimum possible value is 1 (no enrichment). This score is sensitive to technical effects; for example, high-quality antibodies such as H3K4me3 and CTCF score well for all cell types and ENCODE production groups, and variation in enrichment in particular IPs is detected as stochastic variation. This score is also sensitive to biological effects; narrow marks score higher than broad marks (H3K4me3 vs H3K36me3, H3K27me3) for all cell types and ENCODE production groups, and features present in some individual cells, but not others, in a population are expected to have lower scores.
+
+Relative Strand Cross-correlation coefficient (RSC):
+A measure of enrichment derived without dependence on prior determination of enriched regions. Forward and reverse strand read coverage signal tracks are computed (number of unique mapping read starts at each base in the genome on the + and - strand counted separately). The forward and reverse tracks are shifted towards and away from each other by incremental distances and for each shift, the Pearson correlation coefficient is computed. In this way, a cross-correlation profile is computed representing the correlation values between forward and reverse strand coverage at different shifts. The highest cross-correlation value is obtained at a strand shift equal to the predominant fragment length in the dataset as a result of clustering/enrichment of relative fixed-size fragments around the binding sites of the target factor. For short-read datasets (< 100 bp reads) and large genomes with a significant number of non-uniquely mappable positions (e.g., human and mouse), a cross-correlation phantom-peak is also observed at a strand-shift equal to the read length. This read-length peak is an effect of the variable and dispersed mappability of positions across the genome. For a significantly enriched dataset, the fragment length cross-correlation peak (representing clustering of fragments around target sites) should be larger than the mappability-based read-length peak.
+
+The RSC is the ratio of the fragment-length cross-correlation value minus the background cross-correlation value, divided by the phantom-peak cross-correlation value minus the background cross-correlation value. The minimum possible value is 0 (no signal), highly enriched experiments have values greater than 1, and values much less than 1 may indicate low quality.
 
 ## 3. Nucleosome positioning
 
@@ -332,16 +350,13 @@ The TSS enrichment calculation is a signal to noise calculation. The reads aroun
 
 ### 3.4 Heatmap and coverage curve for nucleosome positions
 
-By averaging the signal across all active TSSs, we should observe that nucleosome-free fragments are enriched at the TSSs, whereas the nucleosome-bound fragments should be enriched both upstream and downstream of the active TSSs and display characteristic phasing of upstream and downstream nucleosomes. Because ATAC-seq reads are concentrated at regions of open chromatin, users should see a strong nucleosome signal at the +1 nucleosome, but the signal decreases at the +2, +3 and +4 nucleosomes. In order to visualise this reads need to be split into different bins, namely nucleosome free, mononucleosome, dinucleosome, and trinucleosome.  This is performed using a random forest to classify the fragments based on fragment length, GC content and conservation scores. The randome forest is trained using the top 10% of short reads (reads below 100_bp) as nucleosome-free regions and the top 10% of intermediate length reads as (reads between 180 and 247 bp) mononucleosome. Reads that do not fit into any of the bins will be discarded.
+By averaging the signal across all active TSSs, we should observe that nucleosome-free fragments are enriched at the TSSs, whereas the nucleosome-bound fragments should be enriched both upstream and downstream of the active TSSs and display characteristic phasing of upstream and downstream nucleosomes. Because ATAC-seq reads are concentrated at regions of open chromatin, users should see a strong nucleosome signal at the +1 nucleosome, but the signal decreases at the +2, +3 and +4 nucleosomes. In order to visualise this reads need to be split into different bins, namely nucleosome free, mononucleosome, dinucleosome, and trinucleosome.  This is performed using a random forest to classify the fragments based on fragment length, GC content and conservation scores. The random forest is trained using the top 10% of short reads (reads below 100_bp) as nucleosome-free regions and the top 10% of intermediate length reads as (reads between 180 and 247 bp) mononucleosome. Reads that do not fit into any of the bins will be discarded.
 
 
-Typical TSS enrichment plot shows that nucleosome-free fragments are enriched at TSS, while mono-nucleosome fragments are depleted at TSS but enriched at flanking regions. Below we include two figures to confirm this pattern. 
 
-First, in the heatmap below, each row reprsents a TSS and the columns positions around the TSS. In the panel on the left representing the nucleosome-free fragments, there should be a hotspot (coloured red) in the centre, and in the panel on the right representing the mononucleosome fragments there should be a cold spot (coloured  yellow) in the centre and the edges of the plot hot (i.e. red).
-
-```{r,echo = FALSE, fig.width = 6, fig.height = 6, fig.align = "center"}
+```{r,echo = FALSE, fig.width = 6, fig.height = 6, fig.align = "center", include = FALSE}
 ## log2 transformed signals
-library(TxDb.Hsapiens.UCSC.hg38.knownGene) ## need to load here rather than beginning as conflicts with dplyr
+library(TxDb.Hsapiens.UCSC.hg38.knownGene) ## need to loaded here rather than beginning as conflicts with dplyr
 txs <- transcripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
 TSS <- promoters(txs, upstream=0, downstream=1)
 TSS <- unique(TSS)
@@ -353,11 +368,11 @@ logTrans<-function(list){
 }
 sigs.log2 <- lapply(sigs.collate, logTrans)
 #plot heatmap
-featureAlignedHeatmap(sigs.log2[[1]], reCenterPeaks(TSS, width=ups+dws),
-						  zeroAt=.5, n.tile=NTILE)
+#First, in the heatmap below, each row reprsents a TSS and the columns positions around the TSS. In the panel on the left representing the nucleosome-free fragments, there should be a hotspot (coloured red) in the centre, and in the panel on the right representing the mononucleosome fragments there should be a cold spot (coloured  yellow) in the centre and the edges of the plot hot (i.e. red).
+#featureAlignedHeatmap(sigs.log2[[1]], reCenterPeaks(TSS, width=ups+dws), zeroAt=.5, n.tile=NTILE)
 ```
 
-Second, the line graph below, plots the standardardized coverage of reads within 1kp of a TSS. The black solid line represents the nucleosome free fragments, which should peak at 0bp indictaing an enrichment of fragments at the TSS. The red dashed line represents the mononucleosome fragments, which should have a deression at 0, and peaks of signal either side. 
+Typical TSS enrichment plot shows that nucleosome-free fragments are enriched at TSS, while mono-nucleosome fragments are depleted at TSS but enriched at flanking regions. The line graph below, plots the standardardized coverage of reads within 1kp of a TSS. The first plot includes the nucleosome free fragments, which should peak at 0bp indictaing an enrichment of fragments at the TSS. The second plot includes the mononucleosome fragments, which should have a depression at 0, and peaks of signal either side. 
 
 ```{r, include = FALSE}
 
@@ -409,13 +424,20 @@ abline(v=seq(0, 100, by=10)+1, lty=2, col="gray")
 This section uses genomic annotation to show where reads map in terms of genomic features. Below this is represented as a heatmap showing the enrichment of reads compared to the background levels of the feature. Typically we would expect more than half of the peaks fall into enhancer regions (distal intergenic and intronic regions), and only around 25% of the peaks are in promoter regions.
 
 
-```{r, plotGenomicHeatmap, echo = FALSE, fig.width = 6, fig.height = 6, fig.cap="Heatmap genomic feature enrichment",results='hide'}
+```{r, plotGenomicHeatmap, echo = FALSE, fig.width = 8, fig.height = 6, fig.cap="Figure X: Heatmap genomic feature enrichment",results='hide'}
 plotRegi(dat, facet=FALSE)
 ```
 
 
 ## 4. Peak calling
 
+## 4.1 Summary of peaks
+
+Below is a histogram showing the distribution of the number of peaks per sample. 
+
+```{r,echo = FALSE, fig.width = 5, fig.height = 5, fig.align = "center"}
+hist(unlist(lapply(peaks(dat), length)))
+```
 
 Do we see a relationship between number of aligned reads and peaks. If samples have comparable library complexity (both biologically and technically) we would expect a consisent relathionship across the samples.
 
@@ -434,7 +456,7 @@ legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol)
 Figure X represents the mean read depth across and around peaks centered
 on the summit (point of highest pileup) for each peak, with each sample presented by a different coloured line. Good ChIPs will show distinctive patterns of enrichment in these peaks, while associated controls will be relatively flat. These profiles can vary depending on what type of mark is being studied b  transcription factor, histone mark, or other DNAbinding protein such as a polymerase b  but similar marks usually have a distinctive profile in successful ChIPs. This plot can be used to identify different peak shapes as well differences in absolute heights which can be helpful for identifing outliers. 
 
-```{r, echo = FALSE, fig.width = 6, fig.height = 6, fig.cap="Plot of the average signal profile across peaks",results='hide'}
+```{r, echo = FALSE, fig.width = 8, fig.height = 6, fig.cap="Figure X: Plot of the average signal profile across peaks",results='hide'}
 #plotPeakProfile(dat, facet = FALSE)
 peakDat<-Normalisedaveragepeaksignal(dat)
 
@@ -446,7 +468,7 @@ for(i in 2:ncol(peakDat)){
 axis(1, at = seq(0,400, 50), seq(-200, 200, 50))
 axis(2)
 box()
-legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol, lwd = 2, cex = 1.5)
+legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol, lwd = 2, cex = 0.8)
 
 ```
 
@@ -455,17 +477,17 @@ legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol, lwd = 2, cex =
 
 Boxplot of the distribution of reads in peaks. 
 
-```{r, echo = FALSE, fig.width = 6, fig.height = 6, fig.cap="Barplot of the proportion of reads in called peaks"}
+```{r, echo = FALSE, fig.width = 10, fig.height = 6, fig.cap="Figure X: Barplot of the proportion of reads in called peaks"}
 plotRap(dat, facet = FALSE)
 
 ```
 
 Barplot of the percentage of reads in peaks called for that sample. This plot gives a good indication of how "enriched" the sample is and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads. According to the ENCODE standard processing pipeline for ATAC-seq the FRiP score should be > 0.3, though values greater than 0.2 are acceptable. 
 
-```{r, plotFrip, echo = FALSE, fig.width = 5, fig.height = 5, fig.cap="Barplot of the % fragments in peaks per sample"}
+```{r, plotFrip, echo = FALSE, fig.width = 5, fig.height = 5, fig.cap="Figure X: Barplot of the % fragments in peaks per sample"}
 y_lim<-c(0,max(frip(dat)*100, na.rm = TRUE)*1.1)
 barplot(frip(dat)*100, col = lineCol, ylim = y_lim, ylab = "% Reads in Peaks", names.arg = sampleSheet$IID, cex.axis = 1.5, cex.lab = 1.5)
-legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol, lwd = 2, cex = 1.5)
+legend("topright", sampleSheet$SampleID, pch = 16, col = lineCol, lwd = 2, cex = 0.8)
 abline(h = 0.2, lty = 2)
 abline(h = 0.3, lty = 2)
 ```
@@ -494,7 +516,7 @@ plotDistToTSS(peakAnnoList)
 ```
 
 
-## Which genes are these peaks annotated to?
+### Which genes are these peaks annotated to?
 
 ```{r, pathwayAnalysis,echo = FALSE, fig.width = 8, fig.height = 6, fig.cap="",results="hide"}
 
@@ -535,7 +557,7 @@ dotplot(compKEGG, showCategory = 15, title = "KEGG Pathway Enrichment Analysis")
 ```
 
 
-```{r, summaryDataTable, results = "asis", echo = FALSE, message = FALSE}
+```{r, summaryDataTable, results = "asis", echo = FALSE, message = FALSE, include = FALSE}
 sumTab<-cbind(sampleSheet[,c("SampleID", techVars)], reads(dat), unlist(lapply(peaks(dat), length)))
 colnames(sumTab)<-c("SampleID", techVars, "AlignedReads", "Peaks")
 kable(sumTab, caption = "Table 1: Summary of aligned reads and number of peaks")
