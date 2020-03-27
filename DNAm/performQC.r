@@ -26,41 +26,9 @@ if(!"Basename" %in% colnames(sampleSheet)){
 
 print(paste(nrow(sampleSheet), "samples identified from sample sheet to be loaded"))
 
-## to avoid loading the data multiple times check if gds files exist
+source(paste(scriptFolder, "/loadDataGDS.r", sep = ""))
 
-if(file.exists(gdsFile)){
-	print(paste("Loading gds file:", gdsFile))
-	gfile <- openfn.gds(gdsFile)
-
-
-
-	## does it contain all the samples we are interested in?
-	if(sum(sampleSheet$Basename %in% colnames(gfile)) < nrow(sampleSheet)){ ## this sometimes creates an error
-		#closefn.gds(gfile)
-		source(paste(scriptFolder, "/loadDataGDS.r", sep = "")) ## reload data if some samples are missing
-		
-	}
-	## close gds file
-	closefn.gds(gfile)	
-} else { ## otherwise create
-	print(paste("Creating gds file:", gdsFile))
-	source(paste(scriptFolder, "/loadDataGDS.r", sep = ""))
-
-}
-
-
-## check if QC metrics have been generated
-if(file.exists(qcData)){
-	load(qcData)
-	
-	## check if QC metrics present for all samples
-	if(nrow(QCmetrics) != nrow(sampleSheet)){
-		file.remove(qcData)
-		source(paste(scriptFolder, "/calcQCMetrics.r", sep = ""))
-	}
-} else {
-	source(paste(scriptFolder, "/calcQCMetrics.r", sep = ""))
-}
+source(paste(scriptFolder, "/calcQCMetrics.r", sep = ""))
 
 
 

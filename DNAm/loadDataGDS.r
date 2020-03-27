@@ -15,14 +15,30 @@ setwd(dataDir)
 ## load data
 sampToLoad<-sampleSheet$Basename
 
-print(paste(length(sampToLoad), " samples to load"))
-
-setwd("iDats")
-## load each file from sampleSheet and add to gds file
-for(each in sampToLoad){
-	gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = ""))
-}
-
+##check if gds file already exists
+if(file.exists(gdsFile)){
+	print(paste("Loading gds file:", gdsFile))
+	gfile <- openfn.gds(gdsFile, readonly = FALSE)
+	## check if all samples are present
+	if(sum(sampleSheet$Basename %in% colnames(gfile)) != nrow(sampleSheet)){
+	 sampToLoad<-sampToLoad[!sampleSheet$Basename %in% colnames(gfile)]
+	}
+	## if any missing add to existing gds
+	if(length(sampToLoad) > 0){
+		print(paste(length(sampToLoad), " samples to load"))
+		## load each file from sampleSheet and add to gds file
+		setwd("iDats")
+		for(each in sampToLoad){
+			gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = ""))
+		}
+	}
+} else { ## otherwise create
+	print(paste("Creating gds file:", gdsFile))
+	setwd("iDats")
+	for(each in sampToLoad){
+			gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = ""))
+		}
+}	
 
 
 ## update feature data
@@ -49,6 +65,7 @@ colnames(sampleSheet)[1]<-"barcode"
 add.gdsn(gfile, 'pData', val = data.frame(lapply(as.data.frame(sampleSheet), as.character), stringsAsFactors = FALSE), replace = TRUE)
 
 
+setwd(dataDir)
 ## create back up
 
  f <- createfn.gds(gsub("\\.gds", "_backup.gds", gdsFile))

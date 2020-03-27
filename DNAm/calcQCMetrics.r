@@ -11,6 +11,7 @@ gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
 ## see if any QC data already exists
 if(file.exists(qcData)){
 	load(qcData)
+	## check contains all required samples
 	if(nrow(QCmetrics) == nrow(sampleSheet)){
 		print("QC file loaded")
 	} else {
@@ -150,7 +151,7 @@ if(!exists("snpCor")){
 
 if(!"genoCheck"%in% colnames(QCmetrics)){
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
-	geno<-geno[match(gsub("-", "_", QCmetrics$Indidivual.ID), geno$FID),]
+	geno<-geno[match(gsub("-", "_", QCmetrics$Indidivual.ID), geno$IID),]
 	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
 	betas.rs<-rawbetas[rsIDs,]
 	### first check direction of minor alleles

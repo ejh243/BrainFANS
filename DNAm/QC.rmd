@@ -503,9 +503,11 @@ Samples where predicted sex is inconsistent with reported sex are written to the
 
 To check for potential sample swaps we will compare the 59 SNPs on the EPIC array to genotype data we have from SNP arrays. Genotype data was available for `r sum(!is.na(QCmetrics$genoCheck))` (`r sum(!is.na(QCmetrics$genoCheck))/nrow(QCmetrics)*100`%) samples. 
 
-```{r genoCheck, results = "asis", echo = FALSE}
+```{r genoCheck, results = "as.is", echo = FALSE}
 
-hist(QCmetrics$genoCheck, xlab = "Correlation SNP vs DNAm Array", breaks = 50, ylab = "nSamples")
+if(class(QCmetrics$genoCheck) == "numeric"){
+  hist(QCmetrics$genoCheck, xlab = "Correlation SNP vs DNAm Array", breaks = 50, ylab = "nSamples")
+}
 
 pander(table(QCmetrics$genoCheck > 0.8), caption = "Number of samples where genotypes concordant across SNP and DNAm arrays")
 nFail<-sum(QCmetrics$genoCheck < 0.8, na.rm = TRUE)
@@ -538,7 +540,7 @@ abline(h=1, col = "red")
 
 We will use histograms and scatterplots below to visualally inspect for potential outliers or patterns in the data. In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
 
-```{r, betasPCAHist, fig.width = 15, fig.height = 4, echo = FALSE}
+```{r, echo=FALSE, fig.height=4, betasPCAHist, fig.width=15}
 par(mar = c(4,4,4,1))
 ### are there any outliers?
 par(mfrow = c(1,4))
