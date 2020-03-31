@@ -10,8 +10,8 @@ knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache 
 library(bigmelon)
 library(gplots)
 library(diptest)
-library(pander)
 library(corrplot)
+library(pander)
 source("rmdConfig.run1") ### change the content of this file to to run QC on different set of data
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 setwd(dataDir) 
@@ -127,9 +127,9 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Project))` studies. 
 
-```{r studyTable, results = "as.is", echo = FALSE}
+```{r studyTable, results = "asis", echo = FALSE}
 
-pander(as.data.frame(table(QCmetrics$Project)),table.attr = "style='width:50%'", col.names = c("Project", "Nsamples"))
+pander(as.data.frame(table(QCmetrics$Project)), col.names = c("Project", "Nsamples"))
 
 
 ```
@@ -138,10 +138,12 @@ pander(as.data.frame(table(QCmetrics$Project)),table.attr = "style='width:50%'",
 
 These are only included if they are categorical. For this study the following technical variables were included:
 
-```{r techVarSpecification, results = "as.is", echo = FALSE}
-panderOptions('knitr.auto.asis', FALSE)
+```{r techVarSpecification, results = "asis", echo = FALSE}
 for(item in techVar){
-	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
+  tabTemp<-as.data.frame(table(QCmetrics[,item],QCmetrics$Project))
+  if(nrow(tabTemp) < 11){
+  	pander(t(tabTemp), caption = paste("Summary of samples categorised by", item), row.names = c("Variable", paste("Number of Samples", levels(QCmetrics$Project))))
+  }
 }
 if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% techVar]){
@@ -159,10 +161,10 @@ if(length(missingVar[missingVar %in% techVar]) > 0){
 
 These are only included if they are categorical. For this study the following biological variables were included:
 
-```{r bioVarSpecification, echo = FALSE, results = "as.is", echo = FALSE}
+```{r bioVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
 for(item in bioVar){
-	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
+	pander(as.data.frame(table(QCmetrics[,item], QCmetrics$Project)), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", paste("Number of Samples", levels(QCmetrics$Project))))
 }
 if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% bioVar]){
@@ -228,6 +230,10 @@ par(mfrow = c(1,1))
 par(mar = c(4,4,4,1))
 hist(QCmetrics$intens.ratio, xlab = "Ratio of M:U intensities", breaks = 25, main = "", col = "gray")
 
+for(each in levels(QCmetrics$Project)){
+  hist(QCmetrics$intens.ratio[which(QCmetrics$Project == each)], xlab = "Ratio of M:U intensities", breaks = 25, main = each, col = "gray")
+
+}
 
 for(i in 2:ncol(plotCols)){
 	model<-lm(QCmetrics$intens.ratio ~ plotCols[,i])
@@ -241,7 +247,19 @@ for(i in 2:ncol(plotCols)){
 ```
 
 
-#### Step 3: Bisulfite Conversion Efficiency
+#### Step 3: Fully Methylated Controls
+
+
+```{r}
+nFMLab<-sum(QCmetrics$Extraction.Plate == "Meth Control")
+nFMDat<-sum(QCmetrics$intens.ratio > 4)  
+nFMCorrect<-sum(QCmetrics$Extraction.Plate == "Meth Control" & QCmetrics$intens.ratio > 4)
+
+```
+
+In this dataset `r nFMLab` fully methylated control samples were included to check that plates were orientated correctly. From the ratio of M intensities to U intensities `r nFMDat` fully methylated control probes were detected, `r nFMCorrect` (`r signif(nFMCorrect/nFMLab*100,3)`%) fully methylated controls were identified in the correct position.
+
+#### Step 4: Bisulfite Conversion Efficiency
 
 For each sample a bisulfite conversion statistic is calculated as the median value across 8 fully methylated control probes. We apply a threshold of 80% excluding samples below this threshold. In this dataset `r sum(QCmetrics$bisulfCon<80, na.rm = TRUE)` (`r signif(sum(QCmetrics$bisulfCon<80, na.rm = TRUE)/nSamIP*100,3)` %) samples fail at this threshold.
 
@@ -252,12 +270,18 @@ par(mar = c(4,4,1,1))
 hist(QCmetrics$bisulfCon, xlab = "Bisulfite conversion (%)", breaks = 25, main = "", col = "gray")
 abline(v = 80, col = "red")
 
+for(each in levels(QCmetrics$Project)){
+  hist(QCmetrics$bisulfCon[which(QCmetrics$Project == each)], xlab = "Bisulfite conversion (%)", breaks = 25, main = each, col = "gray")
+  abline(v = 80, col = "red")
+
+}
+
 #plot(QCmetrics$bisulfCon, QCmetrics$M.median, xlab = "Bisulfite conversion (%)", ylab = "median M intensity", pch = 16)
 #abline(v = 80, col = "red")
 
 ```
 
-#### Step 4: Control Probes
+#### Step 5: Control Probes
 
 As recommended by Lehne et al. we performed principal component (PC) analysis of the control probes to identify batch effects and poorly performing samples. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
 
@@ -306,7 +330,7 @@ corrplot(corMat)
 
 ```
 
-Here we plot scatterplots of each PC against PC 1 to check for the presence of outliers.
+Here we plot scatterplots of each PC against PC1 to check for the presence of outliers.
 
 
 ```{r, controlProbeScatter, fig.width = 15, fig.height = 5, echo = FALSE}
@@ -344,7 +368,7 @@ for(i in 2:ncol(plotCols)){
 ```
 
 
-#### Step 5: Genetically Identical Samples
+#### Step 6: Genetically Identical Samples
 
 This step uses the 59 SNP probes on the array to identify genetically identical samples. For all pairs of samples a correlation statistic across these probes is calculated. If there are correlations greater than 0.8 (highlighted by the red vertical line), this suggests the presence of genetically identical samples.
 
@@ -355,6 +379,12 @@ for(i in 1:ncol(snpCor)){
 }
  hist(snpCor, breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = "All samples", col = "gray")
 abline(v = 0.8, col = "red")
+
+for(each in levels(QCmetrics$Project)){
+   hist(snpCor[which(QCmetrics$Project == each),which(QCmetrics$Project == each)], breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = each, col = "gray")
+abline(v = 0.8, col = "red")
+  
+}
 
 
 ```
@@ -376,9 +406,14 @@ abline(v = 0.8, col = "red")
 We identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
 
 
-```{r,echo = FALSE}
+```{r,echo = FALSE, results = "asis"}
+pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
 
-pander(as.data.frame(table(table(predictedduplicates))), col.names = c("Number of Samples", "Number of Individuals"),table.attr = "style='width:50%'")
+for(each in levels(QCmetrics$Project)){
+    print(paste("Project:", each))
+    pander(t(as.data.frame(table(table(predictedduplicates[which(QCmetrics$Project == each)])))), row.names = c("Number of Samples", "Number of Individuals"))
+}
+
 
 ```
 
@@ -409,7 +444,7 @@ if(length(unique(QCmetrics$Project)) > 1){
 ```
 
 
-Checking if genetically identical samples have the sample Individual ID.
+Checking if genetically identical samples have the sample Individual ID:
 
 ```{r,echo = FALSE}
 
@@ -425,7 +460,7 @@ Checking if genetically identical samples have the sample Individual ID.
 		}
 		dupSampleIDs<-c(dupSampleIDs, paste(sort(QCmetrics$Indidivual.ID[index]), sep = "|", collapse = "|"))
   }
-	
+
 	if(length(errors) == 0){
 	  print("All genetically identical samples had the same individual ID")  
 	} else {
@@ -442,6 +477,8 @@ Checking if genetically identical samples have the sample Individual ID.
 	}
 
 ```
+
+Checking if samples with same Individual ID are genetically identical:
 
 ```{r checkGenoSampleswithSameID, echo = FALSE}
 
@@ -461,12 +498,16 @@ for(each in unique(QCmetrics$Indidivual.ID)){
 }
 
 if(length(errorIndexes) > 0){
+  print("ERROR: samples labelled as the same individual are not geneticaly identical see output file WithinDNAmGeneticErrors.csv for details")
 	write.csv(QCmetrics[errorIndexes,], "../../DNAm/QCmetrics/WithinDNAmGeneticErrors.csv", row.names = FALSE)
+} else {
+  
+  print("All samples labelled as the same individual are geneticaly identical")
 }
 ```
 
 
-#### Step 6: Sex Prediction
+#### Step 7: Sex Prediction
 
 Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. Based on these assumptions we can predict male or female from each sex chromosome. 
 
@@ -485,50 +526,44 @@ write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetr
 First we will compare the sex predictions from the X and Y chromosomes.
 
 
-```{r tabSexpredictions}
-pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
+```{r tabSexpredictions, echo = FALSE}
+pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y, QCmetrics$Project))
 ``` 
 
 Second ,we will compare the sex predictions to that provided in the phenotype file
 
-```{r tabSexReported}
-pander(table(QCmetrics$predSex, QCmetrics$Sex))
+```{r tabSexReported, echo = FALSE}
+pander(table(QCmetrics$predSex, QCmetrics$Sex, QCmetrics$Project))
 ``` 
 
 Samples where predicted sex is inconsistent with reported sex are written to the file SexMismatches.csv.
 
 
 
-#### Step 7: Compare with SNP data
+#### Step 8: Compare with SNP data
 
 To check for potential sample swaps we will compare the 59 SNPs on the EPIC array to genotype data we have from SNP arrays. Genotype data was available for `r sum(!is.na(QCmetrics$genoCheck))` (`r sum(!is.na(QCmetrics$genoCheck))/nrow(QCmetrics)*100`%) samples. 
 
-```{r genoCheck, results = "as.is", echo = FALSE}
+```{r genoCheck, results = "asis", echo = FALSE}
 
 if(class(QCmetrics$genoCheck) == "numeric"){
   hist(QCmetrics$genoCheck, xlab = "Correlation SNP vs DNAm Array", breaks = 50, ylab = "nSamples")
 }
 
-pander(table(QCmetrics$genoCheck > 0.8), caption = "Number of samples where genotypes concordant across SNP and DNAm arrays")
+pander(table(QCmetrics$genoCheck > 0.8, QCmetrics$Project), caption = "Number of samples where genotypes concordant across SNP and DNAm arrays")
 nFail<-sum(QCmetrics$genoCheck < 0.8, na.rm = TRUE)
 nRematch<-sum(!is.na(QCmetrics$genoMatch[QCmetrics$genoCheck < 0.8]))
 
 
 if(nFail > 0){
-	write.csv(QCmetrics[QCmetrics$genoCheck < 0.8,], file = "../../DNAm/QCmetrics/CompSNPdataGeneticErrors.csv")
+	write.csv(QCmetrics[which(QCmetrics$genoCheck < 0.8),], file = "../../DNAm/QCmetrics/CompSNPdataGeneticErrors.csv")
 }
 ```
 
 If any of the DNAm samples are not genetically concordant across the EPIC data and SNP chip data then we perform a search to see if they are genetically identical to any other sample in the SNP chip data. This was performed for `r nFail` samples and we identified matching SNP data for `r nRematch` of these individuals. The output of this step has been written to CompSNPdataGeneticErrors.csv.
 
-```{r genoMatch, echo = FALSE}
 
-which(!is.na(QCmetrics$genoMatch) & QCmetrics$genoCheck < 0.8)
-
-```
-
-
-#### Step 8: Principal Component Analysis
+#### Step 9: Principal Component Analysis
 
 To identify and visually inspect potential outliers we performed principal component analysis on the autosomal probes. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
 
@@ -577,13 +612,13 @@ for(i in 2:ncol(plotCols)){
 }
 ```
 
-#### Step 8: Detection P values
+#### Step 10: Detection P values
 
 Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter)` samples are recommended for removal. 
 
 
 
-#### Step 9: Age Prediction
+#### Step 11: Age Prediction
 
 The age of samples can be predicted from the DNAm data using the Epigenetic Clock algorithm developed by Steve Horvath. These predicted values are compared to the samples' reported ages. As on a sample level this estimaion can be inaccurate it is used as a quality check of the overall data set and not as a reason to exclude individual samples. The overall correlation was `r signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = "pairwise.complete.obs"),3)` and the root mean square error was `r signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3)` years.
 
@@ -615,7 +650,7 @@ if(length(unique(QCmetrics$Study)) > 1){
 ```
 
 
-#### Step 10: Influence of Normalisation
+#### Step 12: Influence of Normalisation
 
 The goal of normalisation is to convert data for each sample onto a common distribution and minimise effects of technical variation. Outlier samples will need a high level of manipulation to transform them to look more similar to the rest of the sample. To identify samples that are dramatically altered as a result of normalization the quantified the difference between the normalized and raw data at each probe for each sample calculating the root mean square. Previously we have applied a threshold of 0.05 to exclude samples. 
 
