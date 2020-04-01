@@ -6,7 +6,6 @@
 #args<-commandArgs(trailingOnly = TRUE)
 
 library(bigmelon)
-library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 library(IlluminaHumanMethylationEPICmanifest)
 
@@ -39,6 +38,10 @@ if(file.exists(gdsFile)){
 			gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = ""))
 		}
 }	
+
+## as I get error with above if different versions of the array with different numbers of probes here is a work around
+#mset <- methylumIDATepic(sampToLoad, force=T, n=T)
+#gfile <- es2gds(mset, gdsFile) 
 
 
 ## update feature data

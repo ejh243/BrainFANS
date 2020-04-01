@@ -1,7 +1,7 @@
 ## run this script to confirm sorted cell fractions are labelled correctly and data clusters as expected
 ## use QC metrics for phenotype data!!
 ## within adult samples do PCA to cluster sample types
-thresBS<-80
+
 
 library(bigmelon)
 library(pheatmap)
@@ -12,8 +12,24 @@ setwd(dataDir)
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
 ## filter samples
+## exclude low intensite; incomplete bisulfite conversion, incorrect sex prediction, discordant with SNP data
 load(qcData)
-passQC<-QCmetrics$Basename[QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex) & QCmetrics$M.median > 1000 & QCmetrics$U.median > 1000 & ]
+if(sexCheck){
+	QCSum<-cbind(QCmetrics$bisulfCon > thresBS,as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex),(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres))
+	colnames(QCSum)<-c("BSConversion", "SexPrediction", paste0("intens<", intenThres))
+} else {
+	QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres))
+	colnames(QCSum)<-c("BSConversion",  paste0("intens<", intenThres))
+}
+if(snpCheck){
+	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
+	colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
+}
+rownames(QCSum)<-rownames(QCmetrics)
+QCSum<-cbind(QCSum, rowSums(QCSum, na.rm = TRUE) == rowSums(!is.na(QCSum)))
+colnames(QCSum)[ncol(QCSum)]<-"passS2"
+
+passQC<-rownames(QCSum)[QCSum[,"passS2"]]
 
 sampleSheet<-QCmetrics
 sampleSheet<-sampleSheet[match(passQC, sampleSheet$Basename),]
@@ -23,12 +39,6 @@ rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
 auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 rawbetas<-rawbetas[auto.probes,]
 
-sampleKeep<-which(sampleSheet$Project == "MRC")
-rawbetas<-rawbetas[,sampleKeep]
-sampleSheet<-sampleSheet[sampleKeep,]
-sampleSheet$Cell.type<-as.factor(as.character(sampleSheet$Cell.type))
-
-
 cellTypes<-unique(sampleSheet$Cell.type)
 cellCols<-rainbow(length(cellTypes))[as.factor(sampleSheet$Cell.type)]
 
@@ -37,16 +47,7 @@ rawbetas<-na.omit(rawbetas)
 
 ## filter out SNPs
 rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
-
-sample_anno<-sampleSheet[,c("Age","Sex", "Cell.type")]
-sample_anno$Age<-as.numeric(sample_anno$Age)
-rownames(sample_anno)<-sampleSheet$Basename
 sigma<-apply(rawbetas, 1, sd)
-
-## initial cluster
-pdf("QCmetrics/ClusterCelltypes.pdf", width = 15, height = 10)
-pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],], annotation_col = sample_anno,  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Pre Sample Type Filtering")
-
 
 ## use Mahalanobis to calculate difference with cell type medians from PCAs
 
@@ -74,26 +75,11 @@ for(each in colnames(cellMedPCA)){
 	}
 }
 
-y_lim<-range(mahDistPCA)
-par(mfrow = c(2,3))
-for(each in colnames(cellMedPCA)){
-	boxplot(mahDistPCA[,each] ~ sampleSheet$Cell.type, main = paste("Comparision with ", each), col = rainbow(5), ylab = "Mahalanobis distance", xlab = "Labelled cell type")
-}
 closestCellTypePCA<-colnames(mahDistPCA)[unlist(apply(mahDistPCA, 1, which.min))]
-
-table(sampleSheet$Cell.type,closestCellTypePCA)
-
-###
-
-pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(sampleSheet$Cell.type == closestCellTypePCA)], annotation_col = sample_anno[which(sampleSheet$Cell.type == closestCellTypePCA),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Mahalanobis Distance of PCs")
-
-## look at PCA plot
-
-
 predLabelledCellType<-sampleSheet$Cell.type == closestCellTypePCA
 
 sampleSheet<-cbind(sampleSheet, closestCellTypePCA, predLabelledCellType)
-write.csv(sampleSheet[which(predLabelledCellType == "FALSE"),], "QCmetrics/SamplesPredictedDiffCellTypePCAMahDist.csv")
+write.csv(sampleSheet[which(predLabelledCellType == "FALSE"),], paste0(qcOutFolder, "SamplesPredictedDiffCellTypePCAMahDist.csv"))
 
 
 ## instead calculate outliers
@@ -118,39 +104,25 @@ for(i in 1:length(cellTypes)){
 
 sampleSheet<-cbind(sampleSheet, pcaCellClassify)
 
-write.csv(sampleSheet[which(pcaCellClassify !=  sampleSheet$Cell.type | is.na(pcaCellClassify)),],"QCmetrics/SamplesPredictedDiffCellTypePCAOutlier.csv")
+write.csv(sampleSheet[which(pcaCellClassify !=  sampleSheet$Cell.type | is.na(pcaCellClassify)),],paste0(qcOutFolder, "SamplesPredictedDiffCellTypePCAOutlier.csv"))
 
-pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(sampleSheet$Cell.type == pcaCellClassify)], annotation_col = sample_anno[which(sampleSheet$Cell.type == pcaCellClassify),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
-
-### plot of PCA to compare methods
-
-par(mfrow = c(1,3))
-plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type))
-legend("topright", pch = 16, col = palette()[1:length(cellTypes)], colnames(lowerBound))
-plot(betas.scores[,1], betas.scores[,2], pch = c(4,1)[as.factor(sampleSheet$Cell.type == closestCellTypePCA)], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type), main = "Method 1")
-points(cellMedPCA[1,], cellMedPCA[2,], pch = 16, col = as.factor(colnames(cellMedPCA)))
-
-plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type), pch = c(4,1)[as.factor(sampleSheet$Cell.type == pcaCellClassify)], main = "Method 2")
-## add in NAs
-points(betas.scores[is.na(pcaCellClassify),1], betas.scores[is.na(pcaCellClassify),2],col = as.factor(sampleSheet$Cell.type[is.na(pcaCellClassify)]), pch = 3)
-legend("topright", pch = c(4,1,3), c("Discordant","Concordant",  "Not predicted"))
-
-for(i in 1:length(cellTypes)){
-	polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = palette()[i])
-}
-dev.off()
-## compare filtering of both methods:
-
-table(sampleSheet$Cell.type == closestCellTypePCA, sampleSheet$Cell.type == pcaCellClassify & !is.na(pcaCellClassify))
 
 predLabelledCellType<-sampleSheet$Cell.type == pcaCellClassify
 predLabelledCellType[is.na(predLabelledCellType)]<-FALSE
 sampleSheet$predLabelledCellType<-predLabelledCellType
+
 ## for time being take more stringent approach.
-
 add.gdsn(gfile, 'QCdata', val = sampleSheet, replace = TRUE)
-
-##save all QC data
 
 ## need to close gds file in order to open in another R session
 closefn.gds(gfile)
+
+save(betas.scores, mahDistPCA, file = paste0(qcOutFolder,"WithinCellPCAValues.rdata"))
+
+## add outcome to qc summary
+
+sampleSheet<-sampleSheet[rownames(QCSum),]
+QCSum<-cbind(QCSum, sampleSheet$predLabelledCellType)
+colnames(QCSum)[ncol(QCSum)]<-"predLabelledCellType"
+
+write.csv(QCSum, paste0(qcOutFolder,"PassQCStatusAllSamples.csv"))

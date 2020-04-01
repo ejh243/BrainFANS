@@ -193,7 +193,7 @@ if(!"genoCheck"%in% colnames(QCmetrics)){
 		for(each in dupCombos){
 			dupIDs<-c(dupIDs, paste(rownames(geno.all.mat)[which(indGenoCombo == each)], collapse = ";"))
 		}
-		write.csv(dupIDs, "QCmetrics/IndividualsWithIdenticlaGenotypeCombinationsInComparisionWithSNPData.csv")
+		write.csv(dupIDs, paste0(qcOutFolder,"/IndividualsWithIdenticlaGenotypeCombinationsInComparisionWithSNPData.csv"))
 	}
 		
 	

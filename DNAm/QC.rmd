@@ -2,6 +2,8 @@
 title: "DNA methylation Illumina Arrays Quality Control Report"
 author: "E Hannon"
 output: html_document
+params:
+  config: NA
 ---
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = TRUE)
@@ -12,7 +14,7 @@ library(gplots)
 library(diptest)
 library(corrplot)
 library(pander)
-source("rmdConfig.run1") ### change the content of this file to to run QC on different set of data
+source(params$config) ### change the content of this file to to run QC on different set of data
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 setwd(dataDir) 
 load(qcData)
@@ -125,14 +127,8 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 **Sample tissue:** `r tissueType` 
 
-Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Project))` studies. 
+Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Indidivual.ID))` individuals.
 
-```{r studyTable, results = "asis", echo = FALSE}
-
-pander(as.data.frame(table(QCmetrics$Project)), col.names = c("Project", "Nsamples"))
-
-
-```
 
 #### Summary of Technical Variables
 
@@ -140,9 +136,9 @@ These are only included if they are categorical. For this study the following te
 
 ```{r techVarSpecification, results = "asis", echo = FALSE}
 for(item in techVar){
-  tabTemp<-as.data.frame(table(QCmetrics[,item],QCmetrics$Project))
-  if(nrow(tabTemp) < 11){
-  	pander(t(tabTemp), caption = paste("Summary of samples categorised by", item), row.names = c("Variable", paste("Number of Samples", levels(QCmetrics$Project))))
+  tabTemp<-as.data.frame(table(QCmetrics[,item]))
+  if(nrow(tabTemp) < 2){
+  	pander(t(tabTemp), caption = paste("Summary of samples categorised by", item), row.names = c("Variable", "Number of Samples"))
   }
 }
 if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
@@ -164,7 +160,7 @@ These are only included if they are categorical. For this study the following bi
 ```{r bioVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
 for(item in bioVar){
-	pander(as.data.frame(table(QCmetrics[,item], QCmetrics$Project)), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", paste("Number of Samples", levels(QCmetrics$Project))))
+	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
 }
 if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
 	for(item in uniqueVar[uniqueVar %in% bioVar]){
@@ -230,11 +226,6 @@ par(mfrow = c(1,1))
 par(mar = c(4,4,4,1))
 hist(QCmetrics$intens.ratio, xlab = "Ratio of M:U intensities", breaks = 25, main = "", col = "gray")
 
-for(each in levels(QCmetrics$Project)){
-  hist(QCmetrics$intens.ratio[which(QCmetrics$Project == each)], xlab = "Ratio of M:U intensities", breaks = 25, main = each, col = "gray")
-
-}
-
 for(i in 2:ncol(plotCols)){
 	model<-lm(QCmetrics$intens.ratio ~ plotCols[,i])
 	anova(model)
@@ -269,12 +260,6 @@ par(mfrow = c(1,1))
 par(mar = c(4,4,1,1))
 hist(QCmetrics$bisulfCon, xlab = "Bisulfite conversion (%)", breaks = 25, main = "", col = "gray")
 abline(v = 80, col = "red")
-
-for(each in levels(QCmetrics$Project)){
-  hist(QCmetrics$bisulfCon[which(QCmetrics$Project == each)], xlab = "Bisulfite conversion (%)", breaks = 25, main = each, col = "gray")
-  abline(v = 80, col = "red")
-
-}
 
 #plot(QCmetrics$bisulfCon, QCmetrics$M.median, xlab = "Bisulfite conversion (%)", ylab = "median M intensity", pch = 16)
 #abline(v = 80, col = "red")
@@ -380,12 +365,6 @@ for(i in 1:ncol(snpCor)){
  hist(snpCor, breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = "All samples", col = "gray")
 abline(v = 0.8, col = "red")
 
-for(each in levels(QCmetrics$Project)){
-   hist(snpCor[which(QCmetrics$Project == each),which(QCmetrics$Project == each)], breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = each, col = "gray")
-abline(v = 0.8, col = "red")
-  
-}
-
 
 ```
 
@@ -409,12 +388,6 @@ We identified `r length(unique(predictedduplicates))` genetically unique individ
 ```{r,echo = FALSE, results = "asis"}
 pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
 
-for(each in levels(QCmetrics$Project)){
-    print(paste("Project:", each))
-    pander(t(as.data.frame(table(table(predictedduplicates[which(QCmetrics$Project == each)])))), row.names = c("Number of Samples", "Number of Individuals"))
-}
-
-
 ```
 
 These correlations can be visualised in the following heatmap, where the colours indicate samples from the same individual.
@@ -428,19 +401,6 @@ These correlations can be visualised in the following heatmap, where the colours
 		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1), main = "All")
 	}
 
-## separate by study
-if(length(unique(QCmetrics$Project)) > 1){
-  for(each in unique(QCmetrics$Project)){
-    if("Indidivual.ID" %in% colnames(plotCols)){
-      index<-which(QCmetrics$Project == each)
-  		heatmap.2(snpCor[index,index], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[index], RowSideColors = plotCols$Indidivual.ID[index], labCol = QCmetrics$Indidivual.ID[index], labRow = "", margins = c(6,6), main = each)
-  	} else {
-  		heatmap.2(snpCor[index,index], trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1), main = each)
-  	}
-    
-  }
-}
-	
 ```
 
 
@@ -527,13 +487,13 @@ First we will compare the sex predictions from the X and Y chromosomes.
 
 
 ```{r tabSexpredictions, echo = FALSE}
-pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y, QCmetrics$Project))
+pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
 ``` 
 
 Second ,we will compare the sex predictions to that provided in the phenotype file
 
 ```{r tabSexReported, echo = FALSE}
-pander(table(QCmetrics$predSex, QCmetrics$Sex, QCmetrics$Project))
+pander(table(QCmetrics$predSex, QCmetrics$Sex))
 ``` 
 
 Samples where predicted sex is inconsistent with reported sex are written to the file SexMismatches.csv.
@@ -550,7 +510,7 @@ if(class(QCmetrics$genoCheck) == "numeric"){
   hist(QCmetrics$genoCheck, xlab = "Correlation SNP vs DNAm Array", breaks = 50, ylab = "nSamples")
 }
 
-pander(table(QCmetrics$genoCheck > 0.8, QCmetrics$Project), caption = "Number of samples where genotypes concordant across SNP and DNAm arrays")
+pander(table(QCmetrics$genoCheck > 0.8), caption = "Number of samples where genotypes concordant across SNP and DNAm arrays")
 nFail<-sum(QCmetrics$genoCheck < 0.8, na.rm = TRUE)
 nRematch<-sum(!is.na(QCmetrics$genoMatch[QCmetrics$genoCheck < 0.8]))
 
