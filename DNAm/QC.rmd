@@ -227,11 +227,13 @@ par(mar = c(4,4,4,1))
 hist(QCmetrics$intens.ratio, xlab = "Ratio of M:U intensities", breaks = 25, main = "", col = "gray")
 
 for(i in 2:ncol(plotCols)){
-	model<-lm(QCmetrics$intens.ratio ~ plotCols[,i])
-	anova(model)
-	legendDat<-legendParams[[i-1]]
-	boxplot(QCmetrics$intens.ratio ~ plotCols[,i], col = legendDat[,2], names = legendDat[,1], xlab = "", ylab = "Ratio M:U", main = paste("Split by ", colnames(plotCols)[i]))
-	title(main = paste("ANOVA P =", signif(anova(model)[1,5], 3)), line = 0.5, adj = 1)
+  if(length(unique(plotCols[!is.na(QCmetrics$intens.ratio),i])) > 1){
+  	model<-lm(QCmetrics$intens.ratio ~ plotCols[,i])
+  	anova(model)
+  	legendDat<-legendParams[[i-1]]
+  	boxplot(QCmetrics$intens.ratio ~ plotCols[,i], col = legendDat[,2], names = legendDat[,1], xlab = "", ylab = "Ratio M:U", main = paste("Split by ", colnames(plotCols)[i]))
+  	title(main = paste("ANOVA P =", signif(anova(model)[1,5], 3)), line = 0.5, adj = 1)
+  }
 }
 
 
@@ -241,7 +243,7 @@ for(i in 2:ncol(plotCols)){
 #### Step 3: Fully Methylated Controls
 
 
-```{r}
+```{r, echo = FALSE}
 nFMLab<-sum(QCmetrics$Extraction.Plate == "Meth Control")
 nFMDat<-sum(QCmetrics$intens.ratio > 4)  
 nFMCorrect<-sum(QCmetrics$Extraction.Plate == "Meth Control" & QCmetrics$intens.ratio > 4)

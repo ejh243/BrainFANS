@@ -12,7 +12,7 @@ setwd(dataDir)
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
 ## filter samples
-## exclude low intensite; incomplete bisulfite conversion, incorrect sex prediction, discordant with SNP data
+## exclude low intensity; incomplete bisulfite conversion, incorrect sex prediction, discordant with SNP data
 load(qcData)
 if(sexCheck){
 	QCSum<-cbind(QCmetrics$bisulfCon > thresBS,as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex),(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres))
@@ -47,7 +47,6 @@ rawbetas<-na.omit(rawbetas)
 
 ## filter out SNPs
 rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
-sigma<-apply(rawbetas, 1, sd)
 
 ## use Mahalanobis to calculate difference with cell type medians from PCAs
 

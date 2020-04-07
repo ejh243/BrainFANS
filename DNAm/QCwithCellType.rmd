@@ -2,134 +2,182 @@
 title: "Brain FANS Project Quality Control within Cell Type"
 author: "E Hannon"
 output: html_document
+params:
+  config: NA
 ---
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, echo = FALSE)
 ```
+
 ```{r setup, include=FALSE}
 library(bigmelon)
 library(pheatmap)
-source("rmdConfig.run1") ## change the content of this file to to run QC on different set of data
-## prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
-setwd(dataDir) 
-load(qcData)
-thresBS<-80
-passQC<-QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
-load("QCmetrics/CellTypePCA.rdata")
+library(pander)
+source(params$config)
+setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
-sampleSheet<-pData(gfile)[passQC,]
-studyInd<-sampleSheet$Project
-tissueInd<-sampleSheet$Brain.Region
-rawbetas<-betas(gfile)[,passQC]
+
+## filter samples
+sampleSheet<-read.gdsn(index.gdsn(gfile, "QCdata"))
+load(paste0(qcOutFolder,"WithinCellPCAValues.rdata"))
+
+
+QCSum<-read.csv(paste0(qcOutFolder,"PassQCStatusAllSamples.csv"), stringsAsFactors = FALSE, row.names = 1)
+nStart<-nrow(QCSum)
+nExclude<-sum(!QCSum[,"passS2"])
+passQC<-rownames(QCSum)[as.logical(QCSum[,"passS2"])]
+
+sampleSheet<-sampleSheet[match(passQC, sampleSheet$Basename),]
+
+rawbetas<-gfile[,, node = "betas"]
+rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
 auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 rawbetas<-rawbetas[auto.probes,]
-## exclude rs probes
-rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
-
-```
-
-After performing quality control across all samples excluding samples that failed our primary qualtiy control metrics relating to data quality we will perform a secondary QC stage within each cell-type to identify outliers or potentially mislabelled samples. 
-
-First we will produce a heatmap and hierarchical cluster of the samples to gauge how cleanly the cell-types are clustering. The following heatmaps are based on autosomal probes across the top 500 most variable probes in that subset of the data.
- 
-
-```{r hclustBefore, fig.width = 15, fig.height = 8, echo = FALSE}
 
 cellTypes<-unique(sampleSheet$Cell.type)
 cellCols<-rainbow(length(cellTypes))[as.factor(sampleSheet$Cell.type)]
 
+## filter out NAs
+rawbetas<-na.omit(rawbetas)
 
-## first do heatmap to check how things look intially
-sample_anno<-sampleSheet[,c("Age","Sex", "Brain.Region", "Indidivual.ID","Cell.type")]
+## filter out SNPs
+if(length(grep("rs", rownames(rawbetas))) > 0){
+  rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
+}
+
+sample_anno<-sampleSheet[,c("Age","Sex", "Cell.type")]
 sample_anno$Age<-as.numeric(sample_anno$Age)
 rownames(sample_anno)<-sampleSheet$Basename
-sigma<-list()
+sigma<-apply(rawbetas, 1, sd)
 
-### across everything
+cellMedPCA<-aggregate(betas.scores, by = list(sampleSheet$Cell.type), median, na.rm = TRUE)
+rownames(cellMedPCA)<-cellMedPCA[,1]
+cellMedPCA<-as.matrix(t(cellMedPCA[,-1]))
 
-sigma[["all"]]<-apply(rawbetas,1, sd)
-pheatmap(rawbetas[order(sigma[["all"]], decreasing = TRUE)[1:500],], annotation_col = sample_anno,  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = "All")
+cellMeanPCA<-aggregate(betas.scores, by = list(sampleSheet$Cell.type), mean, na.rm = TRUE)
+rownames(cellMeanPCA)<-cellMeanPCA[,1]
+cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
 
-### split by study, tissue etc.
+cellSDPCA<-aggregate(betas.scores, by = list(sampleSheet$Cell.type), sd, na.rm = TRUE)
+rownames(cellSDPCA)<-cellSDPCA[,1]
+cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
-for(eachStudy in unique(studyInd)){
-  sigma[[eachStudy]]<-apply(rawbetas[,which(studyInd == eachStudy)],1, sd)
-  pheatmap(rawbetas[order(sigma[[eachStudy]], decreasing = TRUE)[1:500],which(studyInd == eachStudy)], annotation_col = sample_anno[which(studyInd == eachStudy),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = eachStudy)
-}
-
-for(eachBR in unique(tissueInd)){
-  sampleKeep<-which(tissueInd == eachBR)
-  sigma[[eachBR]]<-apply(rawbetas[,sampleKeep],1, sd)
-  pheatmap(rawbetas[order(sigma[[eachBR]], decreasing = TRUE)[1:500],sampleKeep], annotation_col = sample_anno[sampleKeep,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = eachBR)
-}
-
-for(eachStudy in unique(studyInd)){
-  for(eachBR in unique(tissueInd)){
-    sampleKeep<-which(studyInd == eachStudy & tissueInd == eachBR)
-    if(length(sampleKeep) > 2){
-      sigma[[paste(eachStudy, eachBR, sep = "_")]]<-apply(rawbetas[,sampleKeep],1, sd)
-	
-	    pheatmap(rawbetas[order(sigma[[paste(eachStudy, eachBR, sep = "_")]], decreasing = TRUE)[1:1000],sampleKeep], annotation_col = sample_anno[sampleKeep,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = paste(eachStudy, ":", eachBR))
-    }
-  }
-}
+lowerBound<-cellMeanPCA-2*cellSDPCA
+upperBound<-cellMeanPCA+2*cellSDPCA
 
 
 ```
 
-```{r hclustAfter, echo = FALSE}
-## remove cell outliers
-for(eachStudy in unique(studyInd)){
-	index<-which(studyInd == eachStudy & cellOutlier == FALSE)
-  sigma[[eachStudy]]<-apply(rawbetas[,index],1, sd)
-  pheatmap(rawbetas[order(sigma[[eachStudy]], decreasing = TRUE)[1:500],index], annotation_col = sample_anno[index,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = 4, main = eachStudy)
+## Summary of quality control thus far
+
+After performing quality control (QC) across all samples (n = `r nStart`), `r nExclude`  samples were excluded after stages 1 and 2 of the QC. The first stage of the QC determines the DNAm data are of sufficient quality and stage determines whether the sample came from the correct individual. This third stage will look to establish the success of the FACs sorting and check whether samples cluster by their labelled cell type. 
+
+## Initial Visualisation 
+
+First, we will produce a heatmap and hierarchical cluster across all samples that passed stages 1 and 2 of the QC to gauge how cleanly the cell-types are clustering. The following heatmap is on based on 500 most variable autosomal probes (ranked by SD), we will force it to cut the hierarchical cluster into the same number of groups as cell types. 
+
+```{r hclustBefore, fig.width = 15, fig.height = 8, echo = FALSE}
+## initial cluster
+pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],], annotation_col = sample_anno,  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Pre Sample Type Filtering")
+
+
+```
+
+As in general the samples cluster by cell type, we can use these data to do an internal prediction of what cell type each sample is most similar to. In the following sections we will implement two methods to do this classification. Both are based on using principal components analysis across all samples and assigning each sample a predicted cell type by comparing it's profile the mean profile of each cell type. The following methods are based on the top `r ncol(betas.scores)` PCs, which were selected as they individually explain > 1% of the variance in DNA methylation. 
+
+
+### Predicting cell-type: Method 1 - Mahalanobis distance
+
+```{r, echo = FALSE}
+
+tab1<-table(sampleSheet$Cell.type,sampleSheet$closestCellTypePCA)
+percCon1<-sum(diag(tab1))/nrow(sampleSheet)*100
+
+```
+
+
+In this approach we will use Mahalanobis distance to compare each sample to all possible cell types. The closest cell type i.e. the smallest Mahalanobis distance, will be assigned to that sample. Mahalanobis distance is multi-dimensional generalization of the idea of measuring how many standard deviations away a point P is from the median of a distribution D. Here the distribution is a cell type and the point is a sample. If the sample looks exactly like the median of a cell type, it's mahalanobis distance will be 0, the larger the distance metric the further away it is.  For this method, all samples are assigned a cell type, as they have to be closest to something, but they could still be very dissimilar to the cell type they are assigned. This prediction is not possible for cell types with a limited number of samples.
+
+The table below shows how many samples were predicted the same as their label.In this sample, `r signif(percCon1, 3)`% of the samples had DNAm profiles which most closely resemebled the cell type they were labelled. It should be noted that discrepancies between this prediction and the sample label may arise due to 1) poor data quality, 2) insufficient isolation, 3) sample mislabelling. 
+
+```{r, echo = FALSE}
+
+pander(tab1)
+
+```
+
+To visualise the success of this filtering steps, we will repeat the hierarchical cluster from earlier using only the samples whose prediction matched their label. 
+
+```{r hclustAfter, echo = FALSE, fig.width = 15, fig.height = 8}
+index<-which(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA))
+pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],index], annotation_col = sample_anno[index,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Mahalanobis Distance of PCs")
+
+```
+
+Below are a series of boxplots to look at the distribution of the distances to gauge how equal the prediction works across cell-types. Each panel plots the distances to a single cell type, where the different boxplots group samples by their labelled cell type. 
+
+
+```{r, echo = FALSE, fig.width = 15, fig.height = 8}
+y_lim<-range(mahDistPCA)
+par(mfrow = c(2,3))
+for(each in colnames(cellMedPCA)){
+	boxplot(mahDistPCA[,each] ~ sampleSheet$Cell.type, main = paste("Comparision with ", each), col = rainbow(5), ylab = "Mahalanobis distance", xlab = "Labelled cell type")
 }
-
-
 ```
 
 
-Next we will do PCA across all samples and use Mahalanobis distance to ascertain if each sample looks like the rest of it's cell type.
 
-```{r mahalanobisDist, eval = FALSE}
+### Predicting cell-type: Method 2 - defined polytope 
 
-
-```
-
-Next we will use principal component analysis within each cell-type to identify outlier samples. Within each cell-type we take all the PCs that explain > 1% of the variance. In the histograms below the dashed red lines indicate 2 or 3 SD from the mean.
+In this second method, we define a regular polytope in `r ncol(betas.scores)` dimensional space for each cell type. The centre of each polytope is calculated as the mean the PCs. The polytope then extends 2 SD away from the mean in all dimensions. The geometric position of each sample is compared to each of these regions and if it falls within a polytope it is assigned to that cell type. With this approach, a sample may fall outside of all cell types and therefore remain unassigned. It is also possible that the regions for two cell types will overlap.  
 
 ```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
 
-for(study in unique(studyInd)){
-	for(each in cellTypes){
-		sampleInd<-which(sampleSheet$Cell.type == each & sampleSheet$Project == study)
-		if(length(sampleInd) > 5){
-		pca<-cellPCA[[study]][[each]]
-		par(mfrow = c(1,1))
-		varExp<-pca$sdev^2/sum(pca$sdev^2)*100
-		plot(1:30, varExp[1:30]*100, type = "b", ylab = "% variance explained", xlab = "Beta PC", lty = 1, main = paste(study, each, sep = " : "))
-		abline(h=1, col = "red")
-		par(mfrow = c(2,3))
-		for(j in which(varExp > 1)){
-			pcDat<-pca$x[,j]
-			mu<-mean(pcDat, na.rm = TRUE)
-			sigma<-sd(pcDat, na.rm = TRUE)
-			#x_lim<-range(c(mu-3*sigma, mu+3*sigma, pcDat), na.rm = TRUE)
-			hist(pcDat, xlab = paste("Betas:PC", j, sep = ""), breaks = 15, main = paste(signif(varExp[j],3), "% variance explained"), col = "gray", cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
-			for(i in 2:3){
-				abline(v = mu+i*sigma, col = "red", lty = 2)
-				abline(v = mu-i*sigma, col = "red", lty = 2)
-			}
-		}	
-		
-		par(mfrow = c(1,3))
-		for(j in which(varExp[-1] > 0.01)){
-			j<-j+1
-			plot(pca$x[,1], pca$x[,j], pch = 16, xlab = "Betas:PC1", ylab = paste("Betas:PC", j, sep = ""), main=paste(study, each, sep = ":"))
-		}
-		}
-	}
+pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], annotation_col = sample_anno[which(sampleSheet$Cell.type == sampleSheet$pcaCellClassify),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
+
+```
+
+```{r}
+tab2<-table(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA), sampleSheet$Cell.type == sampleSheet$pcaCellClassify & !is.na(sampleSheet$pcaCellClassify))
+percCon2<-sum(diag(tab2))/nrow(sampleSheet)*100
+```
+
+The table below shows how many samples were predicted the same as their label.In this sample, `r signif(percCon2, 3)`% of the samples had DNAm profiles which most closely resemebled the cell type they were labelled. 
+```{r}
+pander(tab2)
+```
+
+### Comparision of Methods
+
+```{r}
+## compare filtering of both methods:
+
+tab3<-table(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA), sampleSheet$Cell.type == sampleSheet$pcaCellClassify & !is.na(sampleSheet$pcaCellClassify))
+
+```
+
+Let's compare the accuracy of the two methods
+
+Here is a plot of the first two PCs to visualise how the two methods differ. The boxes in the panel on the far right, highlight the area on the graph within which each cell type is assigned. NB, in reality this algorithm is performed in higher dimensional space.
+
+```{r, fig.width = 15, fig.height = 8}
+
+### plot of PCA to compare methods
+
+par(mfrow = c(1,3))
+plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type))
+legend("topleft", pch = 16, col = palette()[1:length(cellTypes)], colnames(lowerBound))
+plot(betas.scores[,1], betas.scores[,2], pch = c(4,1)[as.factor(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA))], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type), main = "Method 1")
+points(cellMedPCA[1,], cellMedPCA[2,], pch = 16, col = as.factor(colnames(cellMedPCA)))
+
+plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type), pch = c(4,1)[as.factor(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], main = "Method 2")
+## add in NAs
+points(betas.scores[is.na(sampleSheet$pcaCellClassify),1], betas.scores[is.na(sampleSheet$pcaCellClassify),2],col = as.factor(sampleSheet$Cell.type[is.na(sampleSheet$pcaCellClassify)]), pch = 3)
+legend("topleft", pch = c(4,1,3), c("Discordant","Concordant",  "Not predicted"))
+
+for(i in 1:length(cellTypes)){
+	polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = palette()[i])
 }
 
 ```

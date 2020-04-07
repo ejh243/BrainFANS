@@ -1,4 +1,4 @@
-## functions for estimate cell counts eddited to take matrices rather than mset
+## functions for estimate cell counts edited to take matrices rather than mset
 ## relaxed p value threshold to select probes to 1e-4
 
 library(genefilter)

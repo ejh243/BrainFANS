@@ -2,22 +2,19 @@
 ## 1) across all samples
 ## 2) within cell type
 ## script also performs sample filtering ## to add
-thresBS<-80
-source("") ## enter config file
+
 library(bigmelon)
+source()
 setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
 ## filter samples
-#load(qcData)
+QCSum<-read.csv(paste0(qcOutFolder,"PassQCStatusAllSamples.csv"), stringsAsFactors = FALSE, row.names = 1)
+
+passQC<-rownames(QCSum)[which(QCSum$predLabelledCellType == "TRUE")]
 QCmetrics<-read.gdsn(index.gdsn(gfile, "QCdata"))
-passQC<-QCmetrics$Basename[as.logical(QCmetrics$intensPASS) & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex) & as.logical(QCmetrics$predLabelledCellType)]
-write.csv(QCmetrics[-match(passQC, QCmetrics$Basename),], "QCmetrics/ExcludedSamples.csv")
-
-QCmetrics<-QCmetrics[as.logical(QCmetrics$intensPASS) & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex) & as.logical(QCmetrics$predLabelledCellType),]
-
-
+QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
 
@@ -53,21 +50,19 @@ rawbetas<-betas(normfile)[,]
 
 
 cellTypes<-unique(QCmetrics$Cell.type)
-projects<-unique(QCmetrics$Project)
 
 celltypeNormbeta<-matrix(NA, nrow = nrow(meth), ncol = ncol(meth))
 rownames(celltypeNormbeta)<-rownames(rawbetas)
 colnames(celltypeNormbeta)<-colnames(rawbetas)
-for(entry in projects){
-	for(each in cellTypes){
-		index<-which(QCmetrics$Cell.type == each & QCmetrics$Project == entry)
-		if(length(index) > 5){
-			## perform normalisation within cell type & study
-			## compare effect of normalisation within cell type
-			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeType)
-		}
+for(each in cellTypes){
+	index<-which(QCmetrics$Cell.type == each)
+	if(length(index) > 2){
+		## perform normalisation within cell type & study
+		## compare effect of normalisation within cell type
+		celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeType)
 	}
 }
+
 
 add.gdsn(normfile, 'celltypenormbeta', val = celltypeNormbeta, replace = TRUE)
 
