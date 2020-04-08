@@ -5,62 +5,116 @@ thresBS<-80
 library(bigmelon)
 library(pheatmap)
 library(glmnet)
+library(RColorBrewer)
 
 setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
 ## filter samples
-load(qcData)
-passQC<-QCmetrics$Basename[QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)]
+QCSum<-read.csv(paste0(qcOutFolder,"PassQCStatusAllSamples.csv"), stringsAsFactors = FALSE, row.names = 1)
 
-sampleSheet<-QCmetrics
-sampleSheet<-sampleSheet[match(passQC, sampleSheet$Basename),]
+passQC<-rownames(QCSum)[which(QCSum$predLabelledCellType == "TRUE")]
+QCmetrics<-read.gdsn(index.gdsn(gfile, "QCdata"))
+QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 rawbetas<-betas(gfile)[,]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
-auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
-rawbetas<-rawbetas[auto.probes,]
 
-sampleKeep<-which(sampleSheet$Project == "MRC")
-rawbetas<-rawbetas[,sampleKeep]
-sampleSheet<-sampleSheet[sampleKeep,]
-sampleSheet$Cell.type<-as.factor(as.character(sampleSheet$Cell.type))
-
+col_pal<-brewer.pal(length(unique(QCmetrics$Cell.type)), "Set1")
 
 load("RefDataForCellCompEstimation.rdata")
-counts <- projectCellType(rawbetas[rownames(braincelldata), ], braincelldata)
+counts.all <- projectCellType(rawbetas[rownames(braincelldata), ], braincelldata)
 
 ## plot results
+pdf(paste0(qcOutFolder, "PredictedCellComposition.pdf"),width = 12)
+par(mfrow = c(2,3))
+for(each in unique(QCmetrics$Cell.type)){
+	barplot(t(counts.all[which(QCmetrics$Cell.type == each),])*100, col = col_pal, main = each, ylab = "% estimated", names.arg = rep("", sum(QCmetrics$Cell.type == each)))
+}
+plot(0,1, type = "n", xlab = "", ylab = "", axes = FALSE)
+legend("center", colnames(counts.all), col = col_pal[1:ncol(counts.all)], pch = 15)
+
 par(mfrow = c(2,2))
-for(each in unique(sampleSheet$Cell.type)){
-	barplot(t(counts[which(sampleSheet$Cell.type == each),])*100, col = brewer.pal(3, "Set1"), main = each, ylab = "% estimated", names.arg = sampleSheet$Samples.ID[which(sampleSheet$Cell.type == each)])
+for(i in 1:ncol(counts.all)){
+	boxplot(counts.all[,i]*100 ~ QCmetrics$Cell.type, col = col_pal, ylab = paste("%", colnames(counts.all)[i], "estimated"), xlab = "Cell type")
 }
 
-par(mfrow = c(1,3))
-for(i in 1:ncol(counts)){
-	boxplot(counts[,i]*100 ~ sampleSheet$Cell.type, col = brewer.pal(4, "Set1"), ylab = paste("%", colnames(counts)[i], "estimated"), xlab = "Cell type")
-}
-
-aggregate(counts , by = list(sampleSheet$Cell.type), mean)
+#aggregate(counts , by = list(QCmetrics$Cell.type), mean)
 
 ## filter out outlier samples
 
-counts.sub<-counts[which(sampleSheet$predLabelledCellType == "TRUE"),]
-sample.sub<-sampleSheet[which(sampleSheet$predLabelledCellType == "TRUE"),]
+counts.sub<-counts.all[which(QCmetrics$predLabelledCellType == "TRUE"),]
+sample.sub<-QCmetrics[which(QCmetrics$predLabelledCellType == "TRUE"),]
 
 ## plot results
-par(mfrow = c(2,2))
+par(mfrow = c(2,3))
 for(each in unique(sample.sub$Cell.type)){
-	barplot(t(counts.sub[which(sample.sub$Cell.type == each),])*100, col = brewer.pal(3, "Set1"), main = each, ylab = "% estimated")
+	barplot(t(counts.sub[which(sample.sub$Cell.type == each),])*100, col = col_pal, main = each, ylab = "% estimated")
 }
 
+par(mfrow = c(2,2))
+for(i in 1:ncol(counts.all)){
+	boxplot(counts.sub[,i]*100 ~ sample.sub$Cell.type, col = col_pal, ylab = paste("%", colnames(counts.all)[i], "estimated"), xlab = "Cell type")
+}
+
+#aggregate(counts ~ QCmetrics$Cell.type, mean)
+dev.off()
+
+
+#################
+
+### repeat cellullar composition estmation excluding double negative
+
+#################
+
+
+load("RefDataForCellCompEstimationNoDoubleNeg.rdata")
+counts.nodneg <- projectCellType(rawbetas[rownames(braincelldata), ], braincelldata)
+
+## plot results
+pdf(paste0(qcOutFolder, "PredictedCellCompositionNoDoubleNeg.pdf"),width = 12)
+par(mfrow = c(2,3))
+for(each in unique(QCmetrics$Cell.type)){
+	barplot(t(counts.nodneg[which(QCmetrics$Cell.type == each),])*100, col = col_pal[-1], main = each, ylab = "% estimated", names.arg = rep("", sum(QCmetrics$Cell.type == each)))
+}
+plot(0,1, type = "n", xlab = "", ylab = "", axes = FALSE)
+legend("center", colnames(counts.nodneg), col = col_pal[c(1:ncol(counts.nodneg))+1], pch = 15)
+
+par(mfrow = c(2,2))
+for(i in 1:ncol(counts.nodneg)){
+	boxplot(counts.nodneg[,i]*100 ~ QCmetrics$Cell.type, col = col_pal, ylab = paste("%", colnames(counts.nodneg)[i], "estimated"), xlab = "Cell type")
+}
+
+#aggregate(counts , by = list(QCmetrics$Cell.type), mean)
+
+## filter out outlier samples
+
+counts.sub<-counts.nodneg[which(QCmetrics$predLabelledCellType == "TRUE"),]
+sample.sub<-QCmetrics[which(QCmetrics$predLabelledCellType == "TRUE"),]
+
+## plot results
+par(mfrow = c(2,3))
+for(each in unique(sample.sub$Cell.type)){
+	barplot(t(counts.sub[which(sample.sub$Cell.type == each),])*100, col = col_pal[-1], main = each, ylab = "% estimated",names.arg = rep("", sum(sample.sub$Cell.type == each)))
+}
+plot(0,1, type = "n", xlab = "", ylab = "", axes = FALSE)
+legend("center", colnames(counts.nodneg), col = col_pal[c(1:ncol(counts.nodneg))+1], pch = 15)
+
+par(mfrow = c(2,2))
+for(i in 1:ncol(counts.nodneg)){
+	boxplot(counts.sub[,i]*100 ~ sample.sub$Cell.type, col = col_pal, ylab = paste("%", colnames(counts.nodneg)[i], "estimated"), xlab = "Cell type")
+}
+
+#aggregate(counts ~ QCmetrics$Cell.type, mean)
+dev.off()
+
+## compare output with and without double negative
+pdf(paste0(qcOutFolder, "ComparePredictedCellCompositionWithoutDoubleNeg.pdf"),width = 12, height = 4)
 par(mfrow = c(1,3))
-for(i in 1:ncol(counts)){
-	boxplot(counts.sub[,i]*100 ~ sample.sub$Cell.type, col = brewer.pal(4, "Set1"), ylab = paste("%", colnames(counts)[i], "estimated"), xlab = "Cell type")
+for(each in c("IRF8","NeuN","Sox10")){
+	plot(counts.all[,each], counts.nodneg[,each], pch = 16,main = each, xlab = "With DNeg", ylab = "Without DNeg", col = col_pal[as.factor(QCmetrics$Cell.type)])
+	abline(a = 0, b = 1)
 }
-
-aggregate(counts ~ sampleSheet$Cell.type, mean)
-
-
+dev.off()
 

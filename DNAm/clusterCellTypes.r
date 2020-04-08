@@ -108,6 +108,8 @@ write.csv(sampleSheet[which(pcaCellClassify !=  sampleSheet$Cell.type | is.na(pc
 
 predLabelledCellType<-sampleSheet$Cell.type == pcaCellClassify
 predLabelledCellType[is.na(predLabelledCellType)]<-FALSE
+## keep all TOTAL samples
+predLabelledCellType[which(sampleSheet$Cell.type == "Total")]<-TRUE
 sampleSheet$predLabelledCellType<-predLabelledCellType
 
 ## for time being take more stringent approach.

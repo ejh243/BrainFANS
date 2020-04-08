@@ -3,6 +3,7 @@
 ## the script that generates QC metrics
 ## it is written to minimise the need to reload/re perform data QC 
 ## open and close the gds file within each script
+## NB sampleSheet needs a column called "Project"
 
 args<-commandArgs(trailingOnly = TRUE)
 
@@ -29,6 +30,8 @@ print(paste(nrow(sampleSheet), "samples identified from sample sheet to be loade
 source(paste(scriptFolder, "/loadDataGDS.r", sep = ""))
 
 source(paste(scriptFolder, "/calcQCMetrics.r", sep = ""))
+
+source(paste(scriptFolder, "/clusterCellTypes.r", sep = ""))
 
 
 
