@@ -115,6 +115,16 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
 	QCmetrics<-cbind(QCmetrics,DNAmAge)
 }
 
+## calc Cortical Clock Age
+if(!"CCDNAmAge" %in% colnames(QCmetrics)){	
+	CC_coef<-read.csv(paste0(refFiles, "/CortexClock/CorticalClockCoefficients.csv"), stringsAsFactors = FALSE)
+	anti.trafo= function(x,adult.age=20) { ifelse(x<0, (1+adult.age)*exp(x)-1, (1+adult.age)*x+adult.age) }
+	CCDNAmAge<-	anti.trafo(as.numeric(CC_coef[1,2] + t(rawbetas[CC_coef[-1,1],])  %*% CC_coef[-1,2]))
+	CCDNAmAge[!QCmetrics$intensPASS]<-NA
+	QCmetrics<-cbind(QCmetrics,CCDNAmAge)
+}
+
+
 ## check sex
 # idenitfy X chromosome probes
 if(!"predSex" %in% colnames(QCmetrics)){	
