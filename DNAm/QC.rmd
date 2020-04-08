@@ -210,6 +210,22 @@ for(i in 2:ncol(plotCols)){
 
 ```
 
+In order to decide a threshold to filter samples by, we will trying fitting a bimodal distribution to the distribution of intensities. The idea here being that there will be a distribution forthe failed samples and a distribution for the passed samples. 
+
+```{r}
+library(mixtools)
+mixmdl.m = normalmixEM(QCmetrics$M.median, mu = c(250, 3000), sigma = c(250, 1000))
+mixmdl.u = normalmixEM(QCmetrics$U.median, mu = c(250, 3000), sigma = c(250, 1000))
+
+par(mfrow = c(1,2))
+plot(mixmdl.m,which=2)
+lines(density(QCmetrics$M.median), lty=2, lwd=2)
+plot(mixmdl.u,which=2)
+lines(density(QCmetrics$U.median), lty=2, lwd=2)
+    
+
+```
+
 #### Step 2: Ratio of M and U Intensities
 
 ```{r, bimodalTest, echo = FALSE}
@@ -582,33 +598,26 @@ Detection p values provide a measure of the accuracy of DNAm value at a specific
 
 #### Step 11: Age Prediction
 
-The age of samples can be predicted from the DNAm data using the Epigenetic Clock algorithm developed by Steve Horvath. These predicted values are compared to the samples' reported ages. As on a sample level this estimaion can be inaccurate it is used as a quality check of the overall data set and not as a reason to exclude individual samples. The overall correlation was `r signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = "pairwise.complete.obs"),3)` and the root mean square error was `r signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3)` years.
+The age of samples can be predicted from the DNAm data using the Epigenetic Clock algorithm developed by Steve Horvath. These predicted values are compared to the samples' reported ages. As on a sample level this estimaion can be inaccurate it is used as a quality check of the overall data set and not as a reason to exclude individual samples. The overall correlation was `r signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = "pairwise.complete.obs"),3)` and the root mean square error was `r signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3)` years. We also applied a custom clock algorithm developed secifically for cortical samples. The overall correlation was `r signif(cor(as.numeric(QCmetrics$Age), QCmetrics$CCDNAmAge, use = "pairwise.complete.obs"),3)` and the root mean square error was `r signif(sqrt(mean((QCmetrics$Age-QCmetrics$CCDNAmAge)^2, na.rm = TRUE)),3)` years.
 
 ```{r dnamage, echo=FALSE, fig.width = 10, fig.height = 5}
-model<-lm(QCmetrics$Age~QCmetrics$DNAmAge)
 
-if(length(unique(QCmetrics$Study)) > 1){
 par(mfrow = c(1,2))
-}
-plot(QCmetrics$DNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Reported Age against Predicted Age", pch=16, col="purple")
+
+model<-lm(QCmetrics$Age~QCmetrics$DNAmAge)
+plot(QCmetrics$DNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Horvath Clock", pch=16, col="purple")
 title(main = paste("r = ", signif(cor(QCmetrics$DNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
-#title(main = paste("RMSE = ", signif(sqrt(median(diff(QCmetrics$DNAmAge, QCmetrics$Age)^2)),3)), line = 2, adj = 1)
+title(main = paste("RMSE = ", signif(sqrt(median(abs(QCmetrics$DNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
 abline(model, lty = 2)
 abline(a = 0, b = 1)
 
-## separate by study
-if(length(unique(QCmetrics$Study)) > 1){
-	for(each in unique(QCmetrics$Study)){
-		plot(QCmetrics$DNAmAge[which(QCmetrics$Study == each)], QCmetrics$Age[which(QCmetrics$Study == each)], xlab = "Predicted", ylab = "Reported", main="Reported Age against Predicted Age", pch=16, col="purple")
-		title(main = paste("r = ", signif(cor(QCmetrics$DNAmAge[which(QCmetrics$Study == each)], QCmetrics$Age[which(QCmetrics$Study == each)], use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
-		title(main = paste("RMSE = ", signif(sqrt(median(diff(QCmetrics$DNAmAge[which(QCmetrics$Study == each)], QCmetrics$Age[which(QCmetrics$Study == each)])^2)),3)), line = 2, adj = 1)
+model<-lm(QCmetrics$Age~QCmetrics$CCDNAmAge)
+plot(QCmetrics$CCDNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Cortical Clock", pch=16, col="purple")
+title(main = paste("r = ", signif(cor(QCmetrics$CCDNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
+title(main = paste("RMSE = ", signif(sqrt(median(abs(QCmetrics$CCDNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
+abline(model, lty = 2)
+abline(a = 0, b = 1)
 
-		model<-lm(QCmetrics$Age~QCmetrics$DNAmAge, subset = which(QCmetrics$Study == each))
-		abline(model, lty = 2)
-		abline(model, lty = 2)
-		abline(a = 0, b = 1)
-	}
-}
 ```
 
 
