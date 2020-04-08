@@ -14,6 +14,7 @@ library(bigmelon)
 library(pheatmap)
 library(pander)
 source(params$config)
+
 setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
@@ -35,8 +36,8 @@ rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
 auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 rawbetas<-rawbetas[auto.probes,]
 
-cellTypes<-unique(sampleSheet$Cell.type)
-cellCols<-rainbow(length(cellTypes))[as.factor(sampleSheet$Cell.type)]
+cellTypes<-sort(unique(sampleSheet$Cell.type))
+cellCols<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray")
 
 ## filter out NAs
 rawbetas<-na.omit(rawbetas)
@@ -69,9 +70,27 @@ upperBound<-cellMeanPCA+2*cellSDPCA
 
 ```
 
-## Summary of quality control thus far
+## Summary of Quality Control Stages 1 and 2
 
-After performing quality control (QC) across all samples (n = `r nStart`), `r nExclude`  samples were excluded after stages 1 and 2 of the QC. The first stage of the QC determines the DNAm data are of sufficient quality and stage determines whether the sample came from the correct individual. This third stage will look to establish the success of the FACs sorting and check whether samples cluster by their labelled cell type. 
+After performing quality control (QC) across all samples (n = `r nStart`), `r nExclude`  samples were excluded after stages 1 and 2 of the QC. The first stage of the QC determines the DNAm data are of sufficient quality and stage determines whether the sample came from the correct individual. The table below summarises how many samples fail each of the QC steps within the first two stages, and the overlap of sample failures. 
+
+```{r}
+
+overlapTab<-matrix(data = NA, ncol = ncol(QCSum), nrow = ncol(QCSum))
+colnames(overlapTab)<-colnames(QCSum)
+rownames(overlapTab)<-colnames(QCSum)
+for(i in 1:ncol(QCSum)){
+  for(j in 1:ncol(QCSum)){
+    overlapTab[i,j]<-sum(QCSum[,i] == FALSE & QCSum[,j] == FALSE, na.rm = TRUE)
+  }
+}
+
+pander(overlapTab[-ncol(QCSum),-ncol(QCSum)])
+
+```
+
+The third stage of the QC pipeline will look to establish the success of the FACs sorting and check whether samples cluster by their labelled cell type. 
+
 
 ## Initial Visualisation 
 
@@ -92,12 +111,12 @@ As in general the samples cluster by cell type, we can use these data to do an i
 ```{r, echo = FALSE}
 
 tab1<-table(sampleSheet$Cell.type,sampleSheet$closestCellTypePCA)
-percCon1<-sum(diag(tab1))/nrow(sampleSheet)*100
+percCon1<-sum(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA))/nrow(sampleSheet)*100
 
 ```
 
 
-In this approach we will use Mahalanobis distance to compare each sample to all possible cell types. The closest cell type i.e. the smallest Mahalanobis distance, will be assigned to that sample. Mahalanobis distance is multi-dimensional generalization of the idea of measuring how many standard deviations away a point P is from the median of a distribution D. Here the distribution is a cell type and the point is a sample. If the sample looks exactly like the median of a cell type, it's mahalanobis distance will be 0, the larger the distance metric the further away it is.  For this method, all samples are assigned a cell type, as they have to be closest to something, but they could still be very dissimilar to the cell type they are assigned. This prediction is not possible for cell types with a limited number of samples.
+In this approach we will use Mahalanobis distance to compare each sample to all possible cell types. The closest cell type i.e. the smallest Mahalanobis distance, will be assigned to that sample. Mahalanobis distance is multi-dimensional generalization of the idea of measuring how many standard deviations away a point P is from the median of a distribution D. Here the distribution is a cell type and the point is a sample. If the sample looks exactly like the median of a cell type, it's mahalanobis distance will be 0, the larger the distance metric, the further away it is.  For this method, all samples are assigned a cell type, as they have to be closest to something, but they could still be very dissimilar to the cell type they are assigned. This prediction is not possible for cell types with a limited number of samples.
 
 The table below shows how many samples were predicted the same as their label.In this sample, `r signif(percCon1, 3)`% of the samples had DNAm profiles which most closely resemebled the cell type they were labelled. It should be noted that discrepancies between this prediction and the sample label may arise due to 1) poor data quality, 2) insufficient isolation, 3) sample mislabelling. 
 
@@ -132,14 +151,9 @@ for(each in colnames(cellMedPCA)){
 
 In this second method, we define a regular polytope in `r ncol(betas.scores)` dimensional space for each cell type. The centre of each polytope is calculated as the mean the PCs. The polytope then extends 2 SD away from the mean in all dimensions. The geometric position of each sample is compared to each of these regions and if it falls within a polytope it is assigned to that cell type. With this approach, a sample may fall outside of all cell types and therefore remain unassigned. It is also possible that the regions for two cell types will overlap.  
 
-```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
-
-pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], annotation_col = sample_anno[which(sampleSheet$Cell.type == sampleSheet$pcaCellClassify),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
-
-```
 
 ```{r}
-tab2<-table(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA), sampleSheet$Cell.type == sampleSheet$pcaCellClassify & !is.na(sampleSheet$pcaCellClassify))
+tab2<-table(sampleSheet$Cell.type, sampleSheet$pcaCellClassify)
 percCon2<-sum(diag(tab2))/nrow(sampleSheet)*100
 ```
 
@@ -148,7 +162,17 @@ The table below shows how many samples were predicted the same as their label.In
 pander(tab2)
 ```
 
+To visualise the success of this filtering steps, we will repeat the hierarchical cluster from earlier using only the samples whose prediction matched their label. 
+
+```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
+
+pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], annotation_col = sample_anno[which(sampleSheet$Cell.type == sampleSheet$pcaCellClassify),],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
+
+```
+
 ### Comparision of Methods
+
+Let's compare the accuracy of the two methods. The table below summarises the number of samples correctly predicted by each method and the overlap between the two methods. 
 
 ```{r}
 ## compare filtering of both methods:
@@ -157,27 +181,40 @@ tab3<-table(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$clos
 
 ```
 
-Let's compare the accuracy of the two methods
 
-Here is a plot of the first two PCs to visualise how the two methods differ. The boxes in the panel on the far right, highlight the area on the graph within which each cell type is assigned. NB, in reality this algorithm is performed in higher dimensional space.
+Here is a plot of the first two PCs to visualise how the two methods differ. The panel of the far left samples are coloured by their labelled cell type, demostrating how clean the sample cluster without filtering for predicted cell types. The middle panel and right hand panel also plots the sample information but the point character reflects the concordance of the prediction from eac hmethod. In addition, the boxes in the right hand panel highlight the area on the graph within which each cell type is assigned. NB, in reality this algorithm is performed in higher dimensional space.
 
-```{r, fig.width = 15, fig.height = 8}
+```{r, fig.width = 15, fig.height = 6}
 
 ### plot of PCA to compare methods
 
 par(mfrow = c(1,3))
-plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type))
-legend("topleft", pch = 16, col = palette()[1:length(cellTypes)], colnames(lowerBound))
-plot(betas.scores[,1], betas.scores[,2], pch = c(4,1)[as.factor(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA))], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type), main = "Method 1")
+plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], pch = 16)
+legend("topright", pch = 16, col = cellCols, colnames(lowerBound))
+plot(betas.scores[,1], betas.scores[,2], pch = c(4,16)[as.factor(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA))], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], main = "Method 1")
 points(cellMedPCA[1,], cellMedPCA[2,], pch = 16, col = as.factor(colnames(cellMedPCA)))
 
-plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = as.factor(sampleSheet$Cell.type), pch = c(4,1)[as.factor(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], main = "Method 2")
+plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], pch = c(4,16)[as.factor(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], main = "Method 2")
 ## add in NAs
 points(betas.scores[is.na(sampleSheet$pcaCellClassify),1], betas.scores[is.na(sampleSheet$pcaCellClassify),2],col = as.factor(sampleSheet$Cell.type[is.na(sampleSheet$pcaCellClassify)]), pch = 3)
-legend("topleft", pch = c(4,1,3), c("Discordant","Concordant",  "Not predicted"))
+legend("topright", pch = c(4,16,3), c("Discordant","Concordant",  "Not predicted"))
 
 for(i in 1:length(cellTypes)){
-	polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = palette()[i])
+	polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[i])
 }
+
+```
+
+Let's explore the other QC metrics of samples that are not predicted as their labelled cell type.
+
+```{r, fig.width = 15, fig.height = 6}
+par(mfrow = c(1,3))
+boxplot(sampleSheet$M.median ~ sampleSheet$predLabelledCellType, ylab = "Median M Intensity", xlab = "Concordant Prediction")
+boxplot(sampleSheet$U.median ~ sampleSheet$predLabelledCellType, ylab = "Median U Intensity", xlab = "Concordant Prediction")
+boxplot(sampleSheet$intens.ratio ~ sampleSheet$predLabelledCellType, ylab = "M:U Ratio", xlab = "Concordant Prediction")
+boxplot(sampleSheet$rmsd ~ sampleSheet$predLabelledCellType, ylab = "Normalisation Violence", xlab = "Concordant Prediction")
+boxplot(sampleSheet$genoCheck ~ sampleSheet$predLabelledCellType, ylab = "Correlation with SNP data", xlab = "Concordant Prediction")
+boxplot(sampleSheet$bisulfCon ~ sampleSheet$predLabelledCellType, ylab = "Bisulfite Coversion", xlab = "Concordant Prediction")
+
 
 ```

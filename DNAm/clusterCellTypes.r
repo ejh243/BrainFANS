@@ -15,11 +15,11 @@ gfile<-openfn.gds(gdsFile, readonly = FALSE)
 ## exclude low intensity; incomplete bisulfite conversion, incorrect sex prediction, discordant with SNP data
 load(qcData)
 if(sexCheck){
-	QCSum<-cbind(QCmetrics$bisulfCon > thresBS,as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex),(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres))
-	colnames(QCSum)<-c("BSConversion", "SexPrediction", paste0("intens<", intenThres))
+	QCSum<-cbind(QCmetrics$bisulfCon > thresBS,as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex),(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres), QCmetrics$rmsd < nvThres)
+	colnames(QCSum)<-c("BSConversion", "SexPrediction", paste0("intens<", intenThres), paste0("normviolence<", nvThres))
 } else {
-	QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres))
-	colnames(QCSum)<-c("BSConversion",  paste0("intens<", intenThres))
+	QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres),QCmetrics$rmsd < nvThres)
+	colnames(QCSum)<-c("BSConversion",  paste0("intens<", intenThres), paste0("normviolence<", nvThres))
 }
 if(snpCheck){
 	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
@@ -40,7 +40,10 @@ auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 rawbetas<-rawbetas[auto.probes,]
 
 cellTypes<-unique(sampleSheet$Cell.type)
-cellCols<-rainbow(length(cellTypes))[as.factor(sampleSheet$Cell.type)]
+cellTypes<-cellTypes[!is.na(cellTypes)]
+## sort so colours lines up correctly
+cellTypes<-sort(cellTypes)
+cellCols<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray") ## assumes celltypes are order alphabetically
 
 ## filter out NAs
 rawbetas<-na.omit(rawbetas)
