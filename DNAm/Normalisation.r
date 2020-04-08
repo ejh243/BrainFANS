@@ -2,9 +2,11 @@
 ## 1) across all samples
 ## 2) within cell type
 ## script also performs sample filtering ## to add
+args<-commandArgs(trailingOnly = TRUE)
+source(args[1])
 
 library(bigmelon)
-source()
+
 setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)

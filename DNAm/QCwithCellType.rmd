@@ -189,14 +189,14 @@ Here is a plot of the first two PCs to visualise how the two methods differ. The
 ### plot of PCA to compare methods
 
 par(mfrow = c(1,3))
-plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], pch = 16)
-legend("topright", pch = 16, col = cellCols, colnames(lowerBound))
-plot(betas.scores[,1], betas.scores[,2], pch = c(4,16)[as.factor(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA))], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], main = "Method 1")
-points(cellMedPCA[1,], cellMedPCA[2,], pch = 16, col = as.factor(colnames(cellMedPCA)))
+plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], pch = 16,cex.axis = 2, cex.lab = 2,cex = 1.2)
+legend("topright", pch = 16, col = cellCols, colnames(lowerBound),cex = 1.2)
+plot(betas.scores[,1], betas.scores[,2], pch = c(4,16)[as.factor(as.character(sampleSheet$Cell.type) == as.character(sampleSheet$closestCellTypePCA))], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], main = "Method 1",cex.axis = 2, cex.lab = 2,cex = 1.2)
+points(cellMedPCA[1,], cellMedPCA[2,], pch = 16, col = as.factor(colnames(cellMedPCA)),cex = 1.2)
 
-plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], pch = c(4,16)[as.factor(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], main = "Method 2")
+plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(sampleSheet$Cell.type)], pch = c(4,16)[as.factor(sampleSheet$Cell.type == sampleSheet$pcaCellClassify)], main = "Method 2",cex.axis = 2, cex.lab = 2,cex = 1.2)
 ## add in NAs
-points(betas.scores[is.na(sampleSheet$pcaCellClassify),1], betas.scores[is.na(sampleSheet$pcaCellClassify),2],col = as.factor(sampleSheet$Cell.type[is.na(sampleSheet$pcaCellClassify)]), pch = 3)
+points(betas.scores[is.na(sampleSheet$pcaCellClassify),1], betas.scores[is.na(sampleSheet$pcaCellClassify),2],col = as.factor(sampleSheet$Cell.type[is.na(sampleSheet$pcaCellClassify)]), pch = 3,cex = 1.2)
 legend("topright", pch = c(4,16,3), c("Discordant","Concordant",  "Not predicted"))
 
 for(i in 1:length(cellTypes)){
@@ -209,12 +209,12 @@ Let's explore the other QC metrics of samples that are not predicted as their la
 
 ```{r, fig.width = 15, fig.height = 6}
 par(mfrow = c(1,3))
-boxplot(sampleSheet$M.median ~ sampleSheet$predLabelledCellType, ylab = "Median M Intensity", xlab = "Concordant Prediction")
-boxplot(sampleSheet$U.median ~ sampleSheet$predLabelledCellType, ylab = "Median U Intensity", xlab = "Concordant Prediction")
-boxplot(sampleSheet$intens.ratio ~ sampleSheet$predLabelledCellType, ylab = "M:U Ratio", xlab = "Concordant Prediction")
-boxplot(sampleSheet$rmsd ~ sampleSheet$predLabelledCellType, ylab = "Normalisation Violence", xlab = "Concordant Prediction")
-boxplot(sampleSheet$genoCheck ~ sampleSheet$predLabelledCellType, ylab = "Correlation with SNP data", xlab = "Concordant Prediction")
-boxplot(sampleSheet$bisulfCon ~ sampleSheet$predLabelledCellType, ylab = "Bisulfite Coversion", xlab = "Concordant Prediction")
+boxplot(sampleSheet$M.median ~ sampleSheet$predLabelledCellType, ylab = "Median M Intensity", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(sampleSheet$U.median ~ sampleSheet$predLabelledCellType, ylab = "Median U Intensity", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(sampleSheet$intens.ratio ~ sampleSheet$predLabelledCellType, ylab = "M:U Ratio", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(sampleSheet$rmsd ~ sampleSheet$predLabelledCellType, ylab = "Normalisation Violence", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(sampleSheet$genoCheck ~ sampleSheet$predLabelledCellType, ylab = "Correlation with SNP data", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(sampleSheet$bisulfCon ~ sampleSheet$predLabelledCellType, ylab = "Bisulfite Coversion", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
 
 
 ```
