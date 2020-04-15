@@ -1,11 +1,8 @@
 source("FunctionsForBrainCellProportionsPrediction.r")
 
-thresBS<-80
-
 library(bigmelon)
 library(pheatmap)
 library(glmnet)
-library(RColorBrewer)
 
 setwd(dataDir)
 
@@ -21,7 +18,12 @@ QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 rawbetas<-betas(gfile)[,]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
 
-col_pal<-brewer.pal(length(unique(QCmetrics$Cell.type)), "Set1")
+cellTypes<-unique(QCmetrics$Cell.type)
+cellTypes<-cellTypes[!is.na(cellTypes)]
+## sort so colours lines up correctly
+cellTypes<-sort(cellTypes)
+col_pal<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray") ## assumes celltypes are order alphabetically
+
 
 load("RefDataForCellCompEstimation.rdata")
 counts.all <- projectCellType(rawbetas[rownames(braincelldata), ], braincelldata)
@@ -29,7 +31,7 @@ counts.all <- projectCellType(rawbetas[rownames(braincelldata), ], braincelldata
 ## plot results
 pdf(paste0(qcOutFolder, "PredictedCellComposition.pdf"),width = 12)
 par(mfrow = c(2,3))
-for(each in unique(QCmetrics$Cell.type)){
+for(each in cellTypes){
 	barplot(t(counts.all[which(QCmetrics$Cell.type == each),])*100, col = col_pal, main = each, ylab = "% estimated", names.arg = rep("", sum(QCmetrics$Cell.type == each)))
 }
 plot(0,1, type = "n", xlab = "", ylab = "", axes = FALSE)
@@ -75,7 +77,7 @@ counts.nodneg <- projectCellType(rawbetas[rownames(braincelldata), ], braincelld
 ## plot results
 pdf(paste0(qcOutFolder, "PredictedCellCompositionNoDoubleNeg.pdf"),width = 12)
 par(mfrow = c(2,3))
-for(each in unique(QCmetrics$Cell.type)){
+for(each in cellTypes){
 	barplot(t(counts.nodneg[which(QCmetrics$Cell.type == each),])*100, col = col_pal[-1], main = each, ylab = "% estimated", names.arg = rep("", sum(QCmetrics$Cell.type == each)))
 }
 plot(0,1, type = "n", xlab = "", ylab = "", axes = FALSE)
