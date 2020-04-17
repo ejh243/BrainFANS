@@ -47,8 +47,10 @@ if(length(grep("rs", rownames(rawbetas))) > 0){
   rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
 }
 
-sample_anno<-sampleSheet[,c("Age","Sex", "Cell.type")]
-sample_anno$Age<-as.numeric(sample_anno$Age)
+sample_anno<-sampleSheet[,c("Age","Sex", "Cell.type") %in% colnames(sampleSheet)]
+if("Age" %in% colnames(sample_anno)){
+  sample_anno$Age<-as.numeric(sample_anno$Age)
+}
 rownames(sample_anno)<-sampleSheet$Basename
 sigma<-apply(rawbetas, 1, sd)
 
@@ -213,7 +215,9 @@ boxplot(sampleSheet$M.median ~ sampleSheet$predLabelledCellType, ylab = "Median 
 boxplot(sampleSheet$U.median ~ sampleSheet$predLabelledCellType, ylab = "Median U Intensity", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
 boxplot(sampleSheet$intens.ratio ~ sampleSheet$predLabelledCellType, ylab = "M:U Ratio", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
 boxplot(sampleSheet$rmsd ~ sampleSheet$predLabelledCellType, ylab = "Normalisation Violence", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
-boxplot(sampleSheet$genoCheck ~ sampleSheet$predLabelledCellType, ylab = "Correlation with SNP data", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+if("genoCheck" %in% colnames(sampleSheet) ){
+  boxplot(sampleSheet$genoCheck ~ sampleSheet$predLabelledCellType, ylab = "Correlation with SNP data", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+}
 boxplot(sampleSheet$bisulfCon ~ sampleSheet$predLabelledCellType, ylab = "Bisulfite Coversion", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
 
 
