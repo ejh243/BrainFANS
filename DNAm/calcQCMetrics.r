@@ -65,6 +65,9 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 	qc.unmeth<-qc.unmeth[grep("Negative", rownames(qc.unmeth), invert=TRUE),]
 	ctrl.all<-t(rbind(qc.meth, qc.unmeth))
 
+	## exclude columns where all NAs
+	ctrl.all<-ctrl.all[,which(colSums(is.na(ctrl.all)) < nrow(ctrl.all))]
+
 	pca <- prcomp(na.omit(ctrl.all))
 	ctrlprobes.scores = pca$x
 	colnames(ctrlprobes.scores) = paste(colnames(ctrlprobes.scores), '_cp', sep='')
@@ -161,7 +164,7 @@ if(!exists("snpCor")){
 
 ## compare to SNP data
 
-if(!"genoCheck"%in% colnames(QCmetrics)){
+if(!"genoCheck"%in% colnames(QCmetrics) & !is.null(genoFile)){
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno.all<-geno
 	geno<-geno[match(gsub("-", "_", QCmetrics$Indidivual.ID), geno$IID),]
@@ -239,4 +242,8 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 closefn.gds(gfile)
 
 # save QC metrics and SNP correlations to generate QC report
-save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, file = qcData)
+if(!is.null(genoFile)){
+	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, file = qcData)
+} else {
+	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, file = qcData)
+}
