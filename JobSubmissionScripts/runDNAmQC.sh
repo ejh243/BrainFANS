@@ -23,19 +23,14 @@ date -u
 
 cd $PBS_O_WORKDIR
 
-module load Pandoc/2.5
-module load R
+module load Pandoc
+module load R/3.6.0-foss-2019a
 
-Rscript performQC.r rmdConfig.run1 
+Rscript performQC.r rmdConfig.sfari 
 
-Rscript -e "rmarkdown::render('QC.rmd')"
+Rscript -e "rmarkdown::render('QC.rmd', params = list(config='rmdConfig.mrc'), output_file='../../DNAm/QCmetrics/QC.html')"
 
-cp QC.html ../../DNAm/QCMetrics
-
-Rscript QCWithinCellType.r
-
-Rscript -e "rmarkdown::render('QCwithCellType.rmd')"
-
+Rscript -e "rmarkdown::render('QCwithCellType.rmd', params = list(config='rmdConfig.mrc'), output_file='../../DNAm/QCmetrics/QCwithinCellType.html')"
 
 
 ## print finish date and time

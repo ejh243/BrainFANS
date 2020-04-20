@@ -3,7 +3,6 @@
 ## the script that generates QC metrics
 ## it is written to minimise the need to reload/re perform data QC 
 ## open and close the gds file within each script
-## NB sampleSheet needs a column called "Project"
 
 args<-commandArgs(trailingOnly = TRUE)
 

@@ -43,7 +43,7 @@ cellTypes<-unique(sampleSheet$Cell.type)
 cellTypes<-cellTypes[!is.na(cellTypes)]
 ## sort so colours lines up correctly
 cellTypes<-sort(cellTypes)
-cellCols<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray") ## assumes celltypes are order alphabetically
+cellCols<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray") ## assumes celltypes are ordered alphabetically
 
 ## filter out NAs
 rawbetas<-na.omit(rawbetas)
