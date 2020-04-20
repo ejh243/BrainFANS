@@ -20,7 +20,7 @@ do
     echo "chr${i}_rsq0.3"
 done > mergefile.txt
 
-${PLINK}/plink --bfile chr${i}_rsq0.3 --merge-list mergefile.txt --make-bed --out BrainFANS_1000GALL_rsq0.3
+${PLINK}/plink --bfile chr1_rsq0.3 --merge-list mergefile.txt --make-bed --out BrainFANS_1000GALL_rsq0.3
 
 rm chr*_rsq0.3.bed
 rm chr*_rsq0.3.bim
@@ -64,6 +64,13 @@ rm BrainFANS_1000GALL_rsq0.3_QCd.ld.prune.fam
 ## plot PCs to identify outliers
 Rscript ../../../../scripts/SNPdata/plotPCs.r BrainFANS_1000GALL_rsq0.3_QCd.pca.eigenvec 3
 
+## extract SNP probes for comparision with DNAm data
+while read line; do
+  grep ${line}: BrainFANS_1000GALL_rsq0.3_QCd.bim > EPICSNPs.txt
+done < ../../../../References/EPICArray/RSprobes1000G_hg38.txt
+
+#${PLINK}/plink --bfile BrainFANS_1000GALL_rsq0.3_QCd --extract . --recodeA --out SCZ_59DNAmSNPs
+
 cd ../EUR
 for i in {1..22}
 do
@@ -85,7 +92,7 @@ do
     echo "chr${i}_rsq0.3"
 done > mergefile.txt
 
-${PLINK}/plink --bfile chr${i}_rsq0.3 --merge-list mergefile.txt --make-bed --out BrainFANS_HRC1.1EUR_rsq0.3
+${PLINK}/plink --bfile chr1_rsq0.3 --merge-list mergefile.txt --make-bed --out BrainFANS_HRC1.1EUR_rsq0.3
 
 rm chr*_rsq0.3.bed
 rm chr*_rsq0.3.bim
@@ -137,3 +144,10 @@ cp BrainFANS_HRC1.1EUR_rsq0.3_QCd.fam BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.fam
 ${PLINK}/plink --bfile BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp --remove filterSamples.txt --update-sex ../../UpdateSex.txt --maf 0.01 --hwe 0.00001 --make-bed --out BrainFANS_HRC1.1EUR_rsq0.3_QCd
 rm BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.b*
 rm BrainFANS_HRC1.1EUR_rsq0.3_QCd_tmp.fam
+
+## extract SNP probes for comparision with DNAm data
+while read line; do
+  grep ${line}: BrainFANS_HRC1.1EUR_rsq0.3_QCd.bim > EPICSNPs.txt
+done < ../../../../References/EPICArray/RSprobes1000G_hg38.txt
+
+#${PLINK}/plink --bfile BrainFANS_1000GALL_rsq0.3_QCd --extract . --recodeA --out SCZ_59DNAmSNPs
