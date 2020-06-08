@@ -11,46 +11,26 @@ bpparam("SerialParam")
 setwd(dataDir) ## change to directory where aligned files (bam) and peaks (narrowPeaks) can be found ## will search for all within this folder
 
 ### Create Sample Sheet
-Peaks<-list.files(".", pattern = ".narrowPeak", recursive = TRUE)
-bamReads<-list.files(".", pattern = "_sorted.bam", recursive = TRUE)
+Peaks<-list.files(peakDir, pattern = ".narrowPeak", recursive = TRUE)
+bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE)
 bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
-bamIDs<-unlist(lapply(strsplit(bamReads, "/"), tail, n = 1))
-bamIDs<-gsub("_trimmed_sorted.bam", "", bamIDs)
-peakIDs<-unlist(lapply(strsplit(Peaks, "/"), tail, n = 1))
-peakIDs<-gsub("_trimmed_depDup_q30_peaks.narrowPeak", "", peakIDs)
-
-
-sampleIDs<-intersect(bamIDs, peakIDs)
-indexB<-NULL
-indexP<-NULL
-indexS<-NULL
-repN<-NULL
-
-for(each in sampleIDs){
-	tmp.b<-which(bamIDs == each)
-	tmp.p<-which(peakIDs == each)
-	if(length(tmp.b) == length(tmp.p)){
-		indexB<-c(indexB, tmp.b)
-		indexP<-c(indexP, tmp.p)
-		repN<-c(repN, 1:length(tmp.b))
-		indexS<-c(indexS, rep(each, length(tmp.b)))
-	} else {
-		print(paste("Can't find matching BAM and PEAK files for", each))
-	}
-	
-}
-
-
-tissue<-"TOTAL"
-
+sampleIDs<-intersect(unlist(lapply(strsplit(Peaks, "_"), head, n = 1)), gsub("_sorted.bam", "", bamReads))
+tissue<-unlist(lapply(strsplit(sampleIDs, "Chip"), head, n = 1))
 pe<-"Paired"
 
-sampleSheet<-data.frame(SampleID = indexS, Tissue=tissue, Factor="H3K27ac", Replicate=repN, ReadType = pe, bamReads = bamReads[indexB], Peaks = Peaks[indexP], stringsAsFactors = FALSE)
+peakIndex<-match(sampleIDs, unlist(lapply(strsplit(Peaks, "_"), head, n = 1)))
 
-write.csv(sampleSheet, "SampleSheetForChipQC.csv")
+sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor="H3K27ac", Replicate=1, ReadType = pe, bamReads = paste(alignedDir, bamReads, sep = "/"), Peaks = paste(peakDir, Peaks[peakIndex],sep = "/"), stringsAsFactors = FALSE)
+
+write.csv(sampleSheet, paste(dataDir, "SampleSheetForChipQC.csv",sep = "/"))
 
 dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
 
-save(dat, file = "ChIPQCObject.rdata")
+save(dat, file = paste(dataDir, "ChIPQCObject.rdata", sep = "/"))
+
+sampleSheet$Peaks<-paste0(peakDir, "/", sampleSheet$Tissue, "_peaks.narrowPeak")
 
 
+dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
+
+save(dat, file = paste(dataDir, "ChIPQCObjectFractionPeaks.rdata", sep = "/"))

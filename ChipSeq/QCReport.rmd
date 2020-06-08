@@ -1,0 +1,169 @@
+---
+title: 'ChipSeq Data QC Report: Source Biosciences'
+author: "Eilis Hannon"
+date: "4th June 2020"
+output: word_document
+params:
+  config: NA
+---
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE,results='hide'}
+
+library(ChIPQC)
+library(knitr)
+library(dplyr)
+library('TxDb.Hsapiens.UCSC.hg38.knownGene')
+library("BiocParallel")
+library(org.Hs.eg.db)
+library(GenomeInfoDb)
+library(ChIPseeker)
+library(GenomicRanges)
+library(clusterProfiler)
+register(DoparParam())
+registered() 
+bpparam("SerialParam")
+source(params$config)
+
+```
+```{r loadDat, echo = FALSE, message = FALSE,results='hide',fig.keep='all'}
+setwd(dataDir)
+sampleSheet<-read.csv("SampleSheetForChipQC.csv", stringsAsFactors = FALSE, row.names = 1)
+
+load("ChIPQCObject.rdata")
+```
+
+
+This report primarily makes use of [ChIPQC R package](http://bioconductor.org/packages/release/bioc/html/ChIPQC.html) downloaded from Bioconductor, but it also uses the output from the [BBMap](https://sourceforge.net/projects/bbmap/) bbcountunique.sh tool. Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. 
+
+## Data summary
+
+Table 1 provides a preliminary overview of the data  loaded in for each sample for quality control. 
+
+```{r, summaryDataTable, results = "asis", echo = FALSE, message = FALSE}
+sumTab<-cbind(sampleSheet[,c(1,2)], reads(dat), unlist(lapply(peaks(dat), length)))
+colnames(sumTab)<-c(colnames(sampleSheet)[c(1,2)], "Reads", "Peaks")
+kable(sumTab, caption = "Table 1: Summary of aligned reads and number of peaks")
+```
+
+
+## Coverage histogram
+
+In this section we will compare the sequencing depth across the genome. Each sample is represented by a line; successful ChIP-seq samples will show a higher proportion of genomic positions at greater depths.
+
+```{r coverageHistogram, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Plot of log10 base pairs at increasing read depths",results='hide'}
+datToPlot<-coveragehistogram(dat)
+datToPlot<-log10(datToPlot)
+datToPlot[which(!is.finite(datToPlot))]<-0
+plot(datToPlot[,1], type = "n", ylab = "log10 BP", xlab = "Depth", xlim = c(0,100), cex.axis = 1.5, cex.lab = 1.5)
+for(i in 1:ncol(datToPlot)){
+	lines(datToPlot[,i], lwd = 1.4)
+}
+
+
+```
+
+## Plot peak profile
+
+Figure X represents the mean read depth across and around peaks centered
+on the summit (point of highest pileup) for each peak, with each sample presented by a different coloured line. Good ChIPs will show distinctive patterns of enrichment in these peaks, while associated controls will be relatively flat. These profiles can vary depending on what type of mark is being studied b  transcription factor, histone mark, or other DNAbinding protein such as a polymerase b  but similar marks usually have a distinctive profile in successful ChIPs. This plot can be used to identify different peak shapes as well differences in absolute heights which can be helpful for identifing outliers. 
+
+```{r, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Plot of the average signal profile across peaks",results='hide',fig.keep='all'}
+par(mfrow = c(2,2))
+plotPeakProfile(dat, facetBy = "Tissue")
+
+
+```
+
+## Enrichment of ChIP
+
+The SSD score is a measure of enrichment. It is computed by looking at the standard deviation of signal pile-up along the genome normalised to the total number of reads. An enriched sample typically has regions of significant pile-up so a higher SSD is more indicative of better enrichment. SSD scores are dependent on the degree of total genome wide signal pile-up and so are sensitive to regions of high signal found with Blacklisted regions as well as genuine ChIP enrichment.
+
+```{r plotSSD, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Boxplot of the SSD across experimental factors",results='hide',fig.keep='all'}
+
+hist(ssd(dat), cex.axis = 1.5, cex.lab = 1.5, ylab = "SSD")
+
+
+```
+
+
+## Specificity of reads in peaks
+
+Boxplot of the distribution of reads in peaks. 
+
+```{r, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Plot of the average signal profile across peaks"}
+plotRap(dat, facet = FALSE)
+
+```
+
+Barplot of the percentage of reads in peaks called for that sample. This plot gives a good indication of how "enriched" the sample is and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads. RiP% values for ChIPs around 5% or higher generally reflect successful enrichment.
+
+```{r, plotFrip, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Plot of the average signal profile across peaks"}
+y_lim<-c(0,max(frip(dat)*100, na.rm = TRUE)*1.1)
+barplot(frip(dat)*100, ylim = y_lim, ylab = "% Reads in Peaks", names.arg = sampleSheet$IID, cex.axis = 1.5, cex.lab = 1.5)
+
+```
+
+## Relative enrichment in genomic intervals
+
+This section uses genomic annotation to show where reads map in terms of genomic
+features. First this is represented as a heatmap showing the enrichment of reads compared to the
+background levels of the feature.
+
+
+```{r plotGenomicHeatmap, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Heatmap genomic feature enrichment",results='hide',fig.keep='all'}
+plotRegi(dat)
+```
+
+Second, we will consider a more extended set of genomic annotations and look at the distribution of genomic locations of peaks. 
+
+```{r plotGenomicAnnotation, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Barplot of genomic feature annotation", message = FALSE, warning = FALSE,results='hide',fig.keep='all'}
+
+## only works for samples with > 0 peaks
+nPeaks<-unlist(lapply(peaks(dat), length))
+peakAnnoList <- lapply(peaks(dat)[which(nPeaks > 0)], annotatePeak,tssRegion=c(-500, 500), 
+                         TxDb=TxDb.Hsapiens.UCSC.hg38.knownGene, 
+                         annoDb="org.Hs.eg.db")
+plotAnnoBar(peakAnnoList)
+
+```
+
+Third, we will look at the proximity of peaks to transcription start sites.
+
+
+```{r plotTSSproximity, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Barplot of proximity to TSS", message = FALSE, warning = FALSE,results='hide',fig.keep='all'}
+plotDistToTSS(peakAnnoList)
+
+```
+
+##
+
+## Sample clustering
+
+Below is a correlation heatmap is based on correlation values for all the peak scores for each sample to demonstrate how samples cluster together.
+
+```{r plotCorHeatmap, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="Heatmap of sample correlations",results='hide',fig.keep='all'}
+
+plotCorHeatmap(dat)
+
+```
+
+Below is a plot of the first two principal component which demonstrates how samples cluster together.
+
+```{r plotPrincomp, echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="",results='hide',fig.keep='all'}
+
+plotPrincomp(dat, dotSize=2)
+
+```
+
+## Pathway analysis of annotated genes
+
+```{r pathwayAnalysis2,echo = FALSE, fig.width = 16, fig.height = 16, fig.cap="",results='hide',fig.keep='all'}
+
+genes = lapply(peakAnnoList, function(i) as.data.frame(i)$geneId)
+names(genes) = sub("_", "\n", names(genes))
+compKEGG <- compareCluster(geneCluster   = genes,
+                         fun           = "enrichKEGG",
+                         pvalueCutoff  = 0.05,
+                         pAdjustMethod = "BH")
+dotplot(compKEGG, showCategory = 15, title = "KEGG Pathway Enrichment Analysis")
+```
