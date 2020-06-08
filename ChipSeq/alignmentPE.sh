@@ -2,42 +2,57 @@
 ## Takes trimmed reads and aligns to genome with bowtie2	
 ## converts to bam files	
 ## excludes duplicates 	
-	
-FQFILES=($(ls ${DATADIRPE}/11_trimmed/*_r1.fq.gz))	
+## output: filtered bam file, tagAlign file (virtual single end), BEDPE file (with read pairs on each line) 
+
+NTHREADS=8
+
+cd ${DATADIRPE}
+FQFILES=($(ls 11_trimmed/*R1*q.gz))
+mkdir -p ${ALIGNEDDIR}	
+
 	
 echo "Number of .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""	
-	
+
 	
 for f in ${FQFILES[@]};	
 do	
   echo "Aligning"" ${f}"	
-  basename=${f%_r1.fq.gz}	
-  foldername=${basename//11_trimmed/alignedData}
-  foldername=${foldername%/*}
-  basename=${basename##*/}
-
-  if [ -f ${foldername}/${basename}_depDup_q30.bam ]	
-  then
-    echo "already aligned"
-  else
-    ## count uniqueness
-	f2=${f//r1/r2}
-	${BBMAP}/bbcountunique.sh in=${f} in2=${f2} out=${f//_r1.fq.gz/_hist.txt} interval=5000 overwrite=true cumulative=true count=t
-
-  
-    mkdir -p ${foldername}
+	fileName=$(basename ${f})
+	sampleName=${fileName/_*}
+	pairedFiles=($(ls 11_trimmed/${sampleName}*.gz))
+	f1=${pairedFiles[0]}
+	f2=${pairedFiles[1]}
 	
-	bowtie2 -x ${REFGENOME}/genome -1 ${f} -2 ${f2} -S ${foldername}/${basename}.sam &> ${foldername}/${basename}.bowtie.log
-	## convert to sam files
-	samtools view -bSo ${foldername}/${basename}.bam ${foldername}/${basename}.sam
-	samtools sort ${foldername}/${basename}.bam > ${foldername}/${basename}_sorted.bam
-	samtools index ${foldername}/${basename}_sorted.bam
-	rm ${foldername}/${basename}.sam
-	
-	## remove duplicates
-	java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${foldername}/${basename}_sorted.bam O=${foldername}/${basename}_depDuplicated.bam M=${foldername}/${basename}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
-	  
-	## remove reads with q < 30 nb 
-	samtools view -q 30 -h ${foldername}/${basename}_depDuplicated.bam > ${foldername}/${basename}_depDup_q30.bam
-  fi	
+	## count uniqueness of fastq files
+	if [ ! -f ${sampleName}_hist.txt ]		
+	then
+		## count uniqueness
+		${BBMAP}/bbcountunique.sh in=${f1} in2=${f2} out=${sampleName}_hist.txt interval=5000 overwrite=true cumulative=true count=t
+	fi	
+	if [ ! -f ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam ]		
+	then
+		
+		bowtie2 -x ${REFGENOME}/genome -1 ${f1} -2 ${f2} -p ${NTHREADS} -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
+
+		## convert to sam file, sort and index
+		samtools view -bSo ${ALIGNEDDIR}/${sampleName}.bam ${ALIGNEDDIR}/${sampleName}.sam
+		samtools sort ${ALIGNEDDIR}/${sampleName}.bam > ${ALIGNEDDIR}/${sampleName}_sorted.bam
+		samtools index ${ALIGNEDDIR}/${sampleName}_sorted.bam
+		rm ${ALIGNEDDIR}/${sampleName}.sam
+		rm ${ALIGNEDDIR}/${sampleName}.bam
+		## remove duplicates
+		java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${ALIGNEDDIR}/${sampleName}_sorted.bam O=${ALIGNEDDIR}/${sampleName}_depDuplicated.bam M=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
+		  
+		## remove reads with q < 30 nb 
+		samtools view -q 30 -h ${ALIGNEDDIR}/${sampleName}_depDuplicated.bam > ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam
+	fi
+    if [ ! -f ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz ]		
+	then	
+		# Create BEDPE file
+		samtools sort -n ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam ${ALIGNEDDIR}/${sampleName}.filt.nmsrt
+		bedtools bamtobed -bedpe -mate1 -i ${ALIGNEDDIR}/${sampleName}.filt.nmsrt | gzip -nc > ${ALIGNEDDIR}/${sampleName}.bedpe.gz
+
+		zcat ${ALIGNEDDIR}/${sampleName}.bedpe.gz | awk 'BEGIN{OFS="\t"}{printf "%s\t%s\t%s\tN\t1000\t%s\n%s\t%s\t%s\tN\t1000\t%s\n",$1,$2,$3,$9,$4,$5,$6,$10}' | gzip -nc > ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz
+	fi
+
 done	
