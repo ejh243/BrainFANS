@@ -12,7 +12,7 @@ mkdir -p ${ALIGNEDDIR}
 
 echo "Number of .fq.gz files found for alignment:" "${#FQFILES[@]}"
 
-for f in ${FQFILES};
+for f in ${FQFILES[@]};
 do
   echo "Aligning" ${f}
   fileName=$(basename ${f})

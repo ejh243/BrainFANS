@@ -14,7 +14,7 @@ mkdir -p ${OUTFOLDER}
 for RAW_BAM_FILE in ${BAMFILES[@]};	
 do
   OFPREFIX=${RAW_BAM_FILE%_sorted.bam}
-  if [ ! -f ${OFPREFIX}*pbc.qc ]
+  if [ ! -f ${OUTFOLDER}/${OFPREFIX}*pbc.qc ]
   then
     # =============================
     # Remove  unmapped, mate unmapped
@@ -44,7 +44,7 @@ do
     FINAL_BAM_PREFIX="${OFPREFIX}.filt.nodup.srt"
     FINAL_BAM_FILE="${FINAL_BAM_PREFIX}.bam" # To be stored
     FINAL_BAM_INDEX_FILE="${FINAL_BAM_PREFIX}.bai" # To be stored
-    FINAL_BAM_FILE_MAPSTATS="${FINAL_BAM_PREFIX}.flagstat.qc" # QC file
+    FINAL_BAM_FILE_MAPSTATS="${OUTFOLDER}/${FINAL_BAM_PREFIX}.flagstat.qc" # QC file
 
     samtools view -F 1804 -b ${FILT_BAM_FILE} -o ${FINAL_BAM_FILE}
 
@@ -58,7 +58,7 @@ do
     # sort by position and strand
     # Obtain unique count statistics
 
-    PBC_FILE_QC="${FINAL_BAM_PREFIX}.pbc.qc"
+    PBC_FILE_QC="${OUTFOLDER}/${FINAL_BAM_PREFIX}.pbc.qc"
 
     # PBC File output
     # TotalReadPairs [tab] DistinctReadPairs [tab] OneReadPair [tab] TwoReadPairs [tab] NRF=Distinct/Total [tab] PBC1=OnePair/Distinct [tab] PBC2=OnePair/TwoPair
