@@ -14,6 +14,8 @@ load(normData)
 
 pheno$Cell.type<-gsub(" \\+ve", "", pheno$Cell.type) ## need to remove the "+" and "-"
 pheno$Cell.type<-gsub(" -ve", "", pheno$Cell.type) ## need to remove the "+" and "-"
+cellInd<-pheno$Cell.type
+
 
 ## parameters
 probeSelect = "any" ## options "both" (select equal number of probes associated with hyper and hypo methylation) or "any" (just select probes based on significance regardless of direction)
