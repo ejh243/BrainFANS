@@ -1,6 +1,6 @@
 #!/bin/sh
 #PBS -V # export all environment variables to the batch job.
-#PBS -q sq # submit to the serial queue
+#PBS -q mrcq # submit to the serial queue
 #PBS -l walltime=72:00:00 # Maximum wall time for the job.
 #PBS -A Research_Project-MRC190311 # research project to submit under. 
 #PBS -l procs=1 # specify number of processors.
@@ -27,7 +27,7 @@ date -u
 ######
 
 cd $PBS_O_WORKDIR
-source ./ATACSeq/config.txt
+source ./$1 ## config file provided on command line when submitting job
 
 ## run fastqc
 module load FastQC 
@@ -60,7 +60,7 @@ done
 ## merge QC output
 module purge ## had conflict issues if this wasn't run first
 module load MultiQC/1.2-intel-2017b-Python-2.7.14
-cd ${DATADIRPE}
+cd ${ALIGNEDDIR} ## need to go up a folder 
 multiqc . -f ## can add flag to ignore certain folders if needed
 
 ## run alignment
@@ -69,11 +69,12 @@ module load Bowtie2/2.3.4.2-foss-2018b
 module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
 #module load Java
-./${SCRIPTDIR}/ATACSeq/alignmentPE.sh
+cd ${SCRIPTDIR}
+./ATACSeq/alignmentPE.sh
 
 module purge ## had conflict issues if this wasn't run first
 module load MultiQC/1.2-intel-2017b-Python-2.7.14
-cd ${DATADIR}
+cd ${DATADIRPE}
 multiqc . -f 
 
 module purge
@@ -82,16 +83,19 @@ module load picard/2.6.0-Java-1.8.0_131
 module load BEDTools
 export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
 
-./${SCRIPTDIR}/ATACSeq/calcENCODEQCmetricsPE.sh
+cd ${SCRIPTDIR}
+./ATACSeq/calcENCODEQCMetricsPE.sh
 
 ## shift reads for peak calling
-./${SCRIPTDIR}/ATACSeq/shiftAlignedReadsPE.sh
+cd ${SCRIPTDIR}
+./ATACSeq/shiftAlignedReadsPE.sh
 
 echo Starting peak calling at:
 date -u
 module purge
 module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
-./${SCRIPTDIR}/ATACSeq/peakCallingPE.sh
+cd ${SCRIPTDIR}/
+./ATACSeq/peakCallingPE.sh
 
 ## generate QC metrics
 module purge
