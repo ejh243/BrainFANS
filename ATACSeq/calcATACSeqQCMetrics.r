@@ -22,12 +22,11 @@ bpparam("SerialParam")
 setwd(dataDir) ## change to directory where aligned files (bam) and peaks (narrowPeaks) can be found ## will search for all within this folder
 
 ### Create Sample Sheet
-bamReads<-list.files(".", pattern = "_depDup_q30.bam", recursive = TRUE)
-bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
-bamIDs<-unlist(lapply(strsplit(bamReads, "/"), tail, n = 1))
-bamIDs<-gsub("_trimmed_depDup_q30.bam", "", bamIDs)
+bamReads<-list.files(alignedDir, pattern = "_depDup_q30.bam", recursive = TRUE)
+bamReads<-bamReads[endsWith(bamReads, "_depDup_q30.bam")]
+bamIDs<-gsub("_depDup_q30.bam", "", bamReads)
 
-tissue<-unlist(lapply(strsplit(bamIDs, "_"),tail, n = 1))
+tissue<-unlist(lapply(lapply(strsplit(bamIDs, "-"),tail, n = 1), substr, 1,1))
 
 pe<-"Paired"
 
@@ -70,13 +69,11 @@ for(each in histFiles[-1]){
 	
 	hist.data<-full_join(hist.data, tmp.dat, by = "count")
 }
-
-
 colnames(hist.data)[-1]<-fileNames
 
 ## use ATACseqQC to calculate additional metrics
 
-
+setwd(alignedDir)
 ## some functions can be applied as lists
 histDupReads<-lapply(gsub("_depDup_q30", "_sorted", sampleSheet$bamReads),readsDupFreq) ## only makes sens to run on bam file from aligner (i.e no filtering!)
 libComplexValues<-lapply(histDupReads, estimateLibComplexity)

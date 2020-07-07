@@ -17,43 +17,22 @@ bpparam("SerialParam")
 setwd(dataDir) ## change to directory where aligned files (bam) and peaks (narrowPeaks) can be found ## will search for all within this folder
 
 ### Create Sample Sheet
-Peaks<-list.files(".", pattern = ".narrowPeak", recursive = TRUE)
-#Peaks<-Peaks[startsWith(Peaks, "H")]
-bamReads<-list.files(".", pattern = "_depDup_q30.bam", recursive = TRUE)
-#bamReads<-bamReads[startsWith(bamReads, "H")]
-bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
-bamIDs<-unlist(lapply(strsplit(bamReads, "/"), tail, n = 1))
-bamIDs<-gsub("_trimmed_depDup_q30.bam", "", bamIDs)
-peakIDs<-unlist(lapply(strsplit(Peaks, "/"), tail, n = 1))
-peakIDs<-gsub("_trimmed_depDup_q30_peaks.narrowPeak", "", peakIDs)
+Peaks<-list.files(peakDir, pattern = ".broadPeak", recursive = TRUE)
+peakIDs<-gsub("_depDup_q30.bam_peaks.broadPeak", "", Peaks)
+bamReads<-list.files(alignedDir, pattern = "_depDup_q30.bam", recursive = TRUE)
+bamReads<-bamReads[endsWith(bamReads, "_depDup_q30.bam")]
+bamIDs<-gsub("_depDup_q30.bam", "", bamReads)
 
 
 sampleIDs<-intersect(bamIDs, peakIDs)
-indexB<-NULL
-indexP<-NULL
-indexS<-NULL
-repN<-NULL
 
-for(each in sampleIDs){
-	tmp.b<-which(bamIDs == each)
-	tmp.p<-which(peakIDs == each)
-	if(length(tmp.b) == length(tmp.p)){
-		indexB<-c(indexB, tmp.b)
-		indexP<-c(indexP, tmp.p)
-		repN<-c(repN, 1:length(tmp.b))
-		indexS<-c(indexS, rep(each, length(tmp.b)))
-	} else {
-		print(paste("Can't find matching BAM and PEAK files for", each))
-	}
-	
-}
-
-
-tissue<-unlist(lapply(strsplit(peakIDs, "_"),tail, n = 1))
+tissue<-substr(unlist(lapply(strsplit(sampleIDs, "-"),tail, n = 1)), 1,1)
 
 pe<-"Paired"
 
-sampleSheet<-data.frame(SampleID = indexS, Tissue=tissue[indexP], Factor="ATAC", Replicate=repN, ReadType = pe, bamReads = bamReads[indexB], Peaks = Peaks[indexP], stringsAsFactors = FALSE)
+sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor="ATAC", Replicate=1, 
+ReadType = pe, bamReads = paste(alignedDir, bamReads[match(sampleIDs, bamIDs)], sep = "/"), 
+Peaks = paste(peakDir, Peaks[match(sampleIDs, peakIDs)], sep = "/"), stringsAsFactors = FALSE)
 
 write.csv(sampleSheet, "SampleSheetForATACSeqQC.csv") ## overwrites existing samples sheet
 

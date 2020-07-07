@@ -1,7 +1,7 @@
 ---
 title: 'ATACSeq Data QC Report: Pilot'
 author: "Eilis Hannon"
-date: "13th March 2020"
+date: "24th June 2020"
 output: html_document
 ---
 
@@ -25,8 +25,8 @@ library(ChIPpeakAnno)
 ```
 
 ```{r loadDat, echo = FALSE, message = FALSE,results='hide'}
-setwd(dataDir)
-sampleSheet<-read.csv("SampleSheetForATACSeqQC.csv", stringsAsFactors = FALSE, row.names = 1)
+setwd(alignedDir)
+sampleSheet<-read.csv(paste(dataDir, "SampleSheetForATACSeqQC.csv", sep = "/"), stringsAsFactors = FALSE, row.names = 1)
 
 ## check if data already loaded and saved
 if(file.exists("ATACSeqQCObject_1.rdata")){
@@ -34,7 +34,7 @@ if(file.exists("ATACSeqQCObject_1.rdata")){
 } else{
 	print("QC data  1 not found")
 }
-
+setwd(dataDir)
 if(file.exists("ATACSeqQCObject_2.rdata")){
 	load("ATACSeqQCObject_2.rdata")
 } else{
@@ -44,11 +44,11 @@ if(file.exists("ATACSeqQCObject_2.rdata")){
 fileNames<-colnames(hist.data)[-1]
 
 lineCol<-brewer.pal(length(fileNames), "Set1")
-
-fastqcStats<-read.table("multiqc_data/multiqc_fastqc.txt", sep = "\t", header = TRUE)
+setwd(alignedDir)
+fastqcStats<-read.table(paste(dataDir, "multiqc_data/multiqc_fastqc.txt", sep = "/"), sep = "\t", header = TRUE)
 bowtieStats<-read.table("multiqc_data/multiqc_bowtie2.txt", sep = "\t", header = TRUE)
 bamStats<-lapply(sub("_depDup_q30.bam", "_statsperchr.txt", sampleSheet$bamReads), read.table)
-endcodeQC<-matrix(data = unlist(lapply(gsub("_depDup_q30.bam", ".nodup.pbc.qc", sampleSheet$bamReads), read.table)), ncol = 7, byrow = TRUE)
+endcodeQC<-matrix(data = unlist(lapply(paste0("ENCODEMetrics", gsub(alignedDir, "", gsub("_depDup_q30.bam", ".nodup.pbc.qc", sampleSheet$bamReads))), read.table)), ncol = 7, byrow = TRUE)
 
 ```
 
@@ -56,25 +56,38 @@ This report provides a summary of an ATAC-seq experiement from the resulting seq
 
 This report makes use of the quality control metrics generated as part of that pipeline, 2 R packages [ATACseqQC R package](https://bioconductor.org/packages/release/bioc/html/ATACseqQC.html) and [ChIPQC R package](http://bioconductor.org/packages/release/bioc/html/ChIPQC.html) as well as other tools such as [BBMap](https://sourceforge.net/projects/bbmap/) bbcountunique.sh tool. 
 
-## 1. Data summary
+## Overview
+
+To provide an overall summary here is a table of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
+
+```{r}
+stats.tmp<-cbind(fastqcStats[match(paste0(sampleSheet$SampleID, "_r1"), fastqcStats$Sample), "Total.Sequences"], fastqcStats[match(paste0(sampleSheet$SampleID, "_r2"), fastqcStats$Sample), "Total.Sequences"], reads(dat),unlist(lapply(peaks(dat), length)))
+
+colnames(stats.tmp)<-c("Reads (R1)", "Reads (R2)", "Filtered Aligned Reads", "Peaks")
+
+kable(stats.tmp)
 
 
-### 1.1 Sequencing data summary
+```
 
-Below is a table summarising the raw sequencing data we received. 
+## 1. Sequencing
+
+### 1.1 Data summary
+
 
 ```{r, results = "asis", echo = FALSE, message = FALSE}
 
 
 ## get stats for r1
-r1_dat<-fastqcStats[match(paste0(sampleSheet$SampleID, "_r1"), fastqcStats$Sample), c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")]
+r1_index<-match(sampleSheet$SampleID, unlist(lapply(strsplit(as.character(fastqcStats$Sample), "_"), head,n = 1)))
+r1_dat<-fastqcStats[r1_index, c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")]
 
 colnames(r1_dat)<-c("nReads", "Mean(length)", "Range(length)", "%GC", "%Distinct")
 
 ## if paired end get stats for r2
 r2_dat<-matrix(data = "NA", nrow = nrow(r1_dat), ncol = ncol(r1_dat))
 if(sum(sampleSheet$ReadType == "Paired") > 0){
-	r2_dat[which(sampleSheet$ReadType == "Paired"),]<-as.matrix(fastqcStats[match(paste0(sampleSheet$SampleID[which(sampleSheet$ReadType == "Paired")], "_r2"), fastqcStats$Sample),c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")])
+	r2_dat<-fastqcStats[-r1_index,c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")]
 }
 colnames(r2_dat)<-c("nReads", "Mean(length)", "Range(length)", "%GC", "%Distinct")
 
@@ -86,13 +99,17 @@ kable(cbind(r1_dat, r2_dat), digits = 2, row.names = FALSE) %>%
 
 ```
 
+In total there were `r sum(c(r1_dat[,1], r2_dat[,1]))/1000000` million reads generated across these samples, with a mean of 
+`r signif(mean(c(r1_dat[,1], r2_dat[,1]))/1000000,3)` million per sample (SD = `r signif(sd(c(r1_dat[,1], r2_dat[,1]))/1000000,3)` million).
+
+
 ## 1.2 Estimate Library Complexity
 
 A good ATAC-seq experiment will capture enrichment at a broad range of genomic locations. The number of distinct or unique reads in an indicator of the diversity or complexity of the data. If the sample does not contain sufficient DNA and/or you over-sequence, you will simply be repeatedly sequencing PCR duplicates of a restricted pool of distinct DNA fragments. This is known a low-complexity library and is not desirable.  
 
 Complexity can be assesed at two points from both the raw sequencing reads and the aligned reads. In this section we will assess the number of unique reads as the total number of reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. 
 
-```{r, plotUniquenessCurve, echo = FALSE, fig.height = 6, fig.width = 8, fig.caption = "Figure 1: Line graph of number of unique reads (y-axis) as number of reads (x-axis) increases.", message = FALSE,results='hide'}
+```{r, plotUniquenessCurve, echo = FALSE, fig.height = 6, fig.width = 8, fig.caption = "Figure 1: Line graph of number of unique reads (y-axis) as number of reads (x-axis) increases.", message = FALSE,results='hide', fig.align = "center"}
 ## plot uniqueness curves
 ## calc percentage duplicates as sequencing increases
 perc.dup<-(hist.data[,1] - hist.data[,-1])/hist.data[,1]*100
@@ -115,7 +132,7 @@ To characterise the curve for each sample, we fitted a [monod function](https://
 
 
 
-```{r, fitMonodCurve, echo = FALSE, fig.width = 6, fig.height = 6, fig.caption = "Plot of number of unique reads against total number of reads", message = FALSE,results='hide', include = FALSE}
+```{r, fitMonodCurve, echo = FALSE, fig.width = 6, fig.height = 6, fig.caption = "Plot of number of unique reads against total number of reads", message = FALSE,results='hide', include = FALSE, fig.align = "center"}
 
 ### fit monod function for each sample
 
@@ -157,7 +174,7 @@ for(i in 1:nrow(sampleSheet)){
 
 Figure 2 below compares the estimated parameters for the fitted Monod functions across the samples. Library complexity is indicated by the x axis, where higher values reflect increased complexity, and sequencing sufficiency is indicated by the y axis where values > 1 mean that we are past the fast growing point and < 1 means the amount of unique reads is still growing. 
 
-```{r, summarizeMonodFit, echo = FALSE, fig.width = 6, fig.height = 6, fig.caption = "Figure 2: Scatterplot of library complexity against sequencing efficiency",results='hide'}
+```{r, summarizeMonodFit, echo = FALSE, fig.width = 6, fig.height = 6, fig.caption = "Figure 2: Scatterplot of library complexity against sequencing efficiency",results='hide', fig.align = "center"}
 
 #plot(monodPars/100000)
 
@@ -177,7 +194,7 @@ abline(h = 1, lty = 2)
 
 ### 2.1 Summary of alignment (pre-filtering)
 
-The table below summarises the alignment rate and number of mapped reads per sample, before and after filtering. While general convention is a unique mapping rate over 80% is typical for a successful ATAC-seq experiment, ENCODE would require that the percentage of mapped reads, should be greater than 95%, though values >80% may be acceptable.  
+The table below summarises the alignment rate and number of mapped reads per sample, before and after filtering. While general convention is a unique mapping rate over 80% is typical for a successful ATAC-seq experiment, ENCODE would require that the percentage of mapped reads, should be greater than 95%, though values >80% may be acceptable. In the table below the rows in red highlight samples with mapping rate < 80%.  
 
 ```{r, echo = FALSE, fig.width = 6, fig.height = 6}
 
@@ -198,9 +215,13 @@ kable(bowtieStats, digits = 2) %>%
 
 ### 2.1 Duplicate reads
 
-Because of the PCR amplification, there might be read duplicates (different reads mapping to exactly the same genomic region) from overamplification of some regions. As the Tn5 insertion is random within an accessible region, we do not expect to see fragments with the same coordinates. We consider such fragments to be PCR duplicates.
+Because of the PCR amplification, there might be read duplicates (different reads mapping to exactly the same genomic region) from overamplification of some regions. As the Tn5 insertion is random within an accessible region, we do not expect to see fragments with the same coordinates. We consider such fragments to be PCR duplicates.The histogram below shows the distribution of duplication rates based on aligned reads. 
 
 
+```{r, echo = FALSE, fig.width = 5, fig.height = 5, fig.align = "center"}
+hist((1-endcodeQC[,5])*100, xlab = "% duplicate", ylab = "nSamples", main = "")
+
+```
 
 ### 2.2 Mitochondrial genome
 
