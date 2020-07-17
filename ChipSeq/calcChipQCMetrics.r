@@ -14,11 +14,11 @@ setwd(dataDir) ## change to directory where aligned files (bam) and peaks (narro
 Peaks<-list.files(peakDir, pattern = ".narrowPeak", recursive = TRUE)
 bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE)
 bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
-sampleIDs<-intersect(unlist(lapply(strsplit(Peaks, "_"), head, n = 1)), gsub("_sorted.bam", "", bamReads))
-tissue<-unlist(lapply(strsplit(sampleIDs, "Chip"), head, n = 1))
+sampleIDs<-intersect(gsub("_peaks.narrowPeak", "", Peaks), gsub("_sorted.bam", "", bamReads))
+tissue<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1))
 pe<-"Paired"
 
-peakIndex<-match(sampleIDs, unlist(lapply(strsplit(Peaks, "_"), head, n = 1)))
+peakIndex<-match(sampleIDs, gsub("_peaks.narrowPeak", "", Peaks))
 
 sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor="H3K27ac", Replicate=1, ReadType = pe, bamReads = paste(alignedDir, bamReads, sep = "/"), Peaks = paste(peakDir, Peaks[peakIndex],sep = "/"), stringsAsFactors = FALSE)
 
