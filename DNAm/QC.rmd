@@ -6,7 +6,7 @@ params:
   config: NA
 ---
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = TRUE)
+knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = FALSE)
 ```
 ```{r setup, include=FALSE}
 library(bigmelon)
@@ -414,6 +414,7 @@ These correlations can be visualised in the following heatmap, where the colours
 ```{r,dupHeatmap, echo = FALSE, fig.width = 15, fig.height = 15}
 	### heatmap of snp cor
 	if("Indidivual.ID" %in% colnames(plotCols)){
+		
 		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID, RowSideColors = plotCols$Indidivual.ID, labCol = "", labRow = "", margins = c(1,1), main = "All")
 	} else {
 		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1), main = "All")

@@ -2,6 +2,8 @@
 ## compare effects of normalisation across all samples and within cell type.
 ## use metrics from original wateRmelon paper to do comparision
 
+args<-commandArgs(trailingOnly = TRUE)
+source(args[1])
 
 library(bigmelon)
 
@@ -26,9 +28,15 @@ matOut<-matrix(data = NA, nrow = 3,ncol = 3)
 rownames(matOut)<-c("raw", "normTog", "normSep")
 colnames(matOut)<-c("iDMR", "genki", "seabi")
 
-matOut[1,2]<-mean(genki(rawbetas))
-matOut[2,2]<-mean(genki(normbetas))
-matOut[3,2]<-mean(genki(celltypenormbeta))
+if(length( grep("rs", rownames(rawbetas))) > 0){
+	matOut[1,2]<-mean(genki(rawbetas))
+}
+if(length( grep("rs", rownames(normbetas))) > 0){
+	matOut[2,2]<-mean(genki(normbetas))
+}
+if(length( grep("rs", rownames(celltypenormbeta))) > 0){
+	matOut[3,2]<-mean(genki(celltypenormbeta))
+}
 
 
 ## filter to common probes
@@ -60,7 +68,7 @@ pheno<-QCmetrics
 qualDat.tog<-qual(rawbetas, normbetas)
 qualDat.sep<-qual(rawbetas, celltypenormbeta)
 
-cellCols<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray") ## assumes celltypes are order alphabetically
+cellCols<-c("orange", "darkblue", "darkmagenta", "deeppink", "darkgray") ## assumes celltypes are order alphabetically
 
 
 ## look at normalisation effects

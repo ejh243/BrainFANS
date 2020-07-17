@@ -1,6 +1,7 @@
 ## collate output of imputation server, convert vcf files to plink and filter variants on INFO score
+cd ${IMPUTATION}
 cd All
-for i in {7..22}
+for i in {1..22}
 do
    ## identify variants with rsq > 0.3 to keep
    gzip -cd  chr$i.info.gz | awk '{if($7 > 0.3) print $1,$7}' > chr$i.keep

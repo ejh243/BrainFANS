@@ -25,7 +25,7 @@ if(snpCheck){
 	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
 	colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
 }
-rownames(QCSum)<-rownames(QCmetrics)
+rownames(QCSum)<-QCmetrics$Basename
 QCSum<-cbind(QCSum, rowSums(QCSum, na.rm = TRUE) == rowSums(!is.na(QCSum)))
 colnames(QCSum)[ncol(QCSum)]<-"passS2"
 
@@ -125,7 +125,7 @@ save(betas.scores, mahDistPCA, file = paste0(qcOutFolder,"WithinCellPCAValues.rd
 
 ## add outcome to qc summary
 
-sampleSheet<-sampleSheet[rownames(QCSum),]
+sampleSheet<-sampleSheet[match(rownames(QCSum), sampleSheet$Basename),]
 QCSum<-cbind(QCSum, sampleSheet$predLabelledCellType)
 colnames(QCSum)[ncol(QCSum)]<-"predLabelledCellType"
 

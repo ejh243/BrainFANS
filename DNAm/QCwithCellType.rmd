@@ -47,7 +47,7 @@ if(length(grep("rs", rownames(rawbetas))) > 0){
   rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
 }
 
-sample_anno<-sampleSheet[,c("Age","Sex", "Cell.type") %in% colnames(sampleSheet)]
+sample_anno<-sampleSheet[,c("Age","Sex", "Cell.type")[c("Age","Sex", "Cell.type") %in% colnames(sampleSheet)]]
 if("Age" %in% colnames(sample_anno)){
   sample_anno$Age<-as.numeric(sample_anno$Age)
 }
