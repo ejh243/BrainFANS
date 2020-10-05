@@ -14,6 +14,11 @@ do
 
 done
 
+## run in all samples for unified peak set
+TAGFILES=$(ls ${ALIGNEDDIR}/*.tn5.tagAlign.gz)
+macs2 callpeak -t ${TAGFILES[@]} --outdir ${PEAKDIR} -n AllFractions -f BED -g 2.9e9  -B --keep-dup all --shift 100 --extsize 200 --nomodel --broad
+
+
 ## run MACS2 differential analysis to compare peaks between cell fractions
 
 d1=$(grep "total tags in treatment" ${PEAKDIR}/N_peaks.xls | cut --delim=" " -f 6)

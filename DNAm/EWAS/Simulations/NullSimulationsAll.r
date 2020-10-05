@@ -38,10 +38,11 @@ library(lmtest)
 library(doParallel)
 
 nSim<-10
-nChunk<-10
+
 
 args<-commandArgs(trailingOnly = TRUE)
 source(args[1])
+nChunk<-args[2]
 
 setwd(dataDir)
 
@@ -62,24 +63,22 @@ clusterExport(cl, list("runEWAS", "lmer", "pdata.frame", "plm", "vcovHC", "coeft
 
 
 ## first randomly assign cases control status, do we see inflation?
-for(chunk in nChunk){
-	allSim<-NULL
-	for(simNum in 1:nSim){
-		status<-rep(0,nrow(pheno))
+allSim<-NULL
+for(simNum in 1:nSim){
+	status<-rep(0,nrow(pheno))
 
-		for(centre in unique(pheno$Tissue.Centre)){
-			ids<-unique(pheno$Indidivual.ID[which(pheno$Tissue.Centre == centre)])
-			cases<-sample(ids, floor(length(ids)/2))
-			status[pheno$Indidivual.ID %in% cases]<-1
-		}
-		status<-as.factor(status)
-		outtab<-foreach(i=1:nrow(celltypenormbeta), .combine = "cbind") %dopar% runEWAS(celltypenormbeta[i,], pheno, status)
-		outtab<-t(outtab)
-
-		rownames(outtab)<-rownames(celltypenormbeta)
-		colnames(outtab)<-c(paste("LM", c("ME", "Int"), sep = "_"),paste("MLM", c("ME", "Int"), sep = "_"),paste("CRR", c("ME", "Int"), sep = "_"))
-		allSim<-cbind(allSim, outtab)
+	for(centre in unique(pheno$Tissue.Centre)){
+		ids<-unique(pheno$Indidivual.ID[which(pheno$Tissue.Centre == centre)])
+		cases<-sample(ids, floor(length(ids)/2))
+		status[pheno$Indidivual.ID %in% cases]<-1
 	}
+	status<-as.factor(status)
+	outtab<-foreach(i=1:nrow(celltypenormbeta), .combine = "cbind") %dopar% runEWAS(celltypenormbeta[i,], pheno, status)
+	outtab<-t(outtab)
 
-	save(allSim, file = paste0("nullSimulations_Chunk", chunk, ".rdata"))
+	rownames(outtab)<-rownames(celltypenormbeta)
+	colnames(outtab)<-c(paste("LM", c("ME", "Int"), sep = "_"),paste("MLM", c("ME", "Int"), sep = "_"),paste("CRR", c("ME", "Int"), sep = "_"))
+	allSim<-cbind(allSim, outtab)
 }
+
+save(allSim, file = paste0("nullSimulations_Chunk", nChunk, ".rdata"))

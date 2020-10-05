@@ -49,7 +49,7 @@ library(doParallel)
 
 args<-commandArgs(trailingOnly = TRUE)
 source(args[1])
-
+nChunk<-args[2]
 setwd(dataDir)
 
 load(normData)
@@ -70,90 +70,89 @@ cellTypes<-unique(pheno$Cell.type)
 
 ## use chunks to save intermitant results in case script does not complete
 nSim<-10
-nChunk<-10
+
 nSig.options<-c(10,100,1000)
 propCS.options<-seq(0,1,0.1)
 sigEffect<-0.05
-for(chunk in nChunk){
-	sumSim<-matrix(data = NA, nrow = nSim*length(nSig.options)*length(propCS.options), ncol = 2+(6*6))
-	colnames(sumSim)<-c("nProbes", "nCTspecific", paste("LM_ME", c("TotSig", "nTruePos", "nFalsePos","nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-	paste("LM_Int", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-	paste("MLM_ME", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-	paste("MLM_Int", c("TotSig", "nTruePos", "nFalsePos","nTruePosCS", "nFalsePosCS",  "lambda"), sep = "_"),
-	paste("CRR_ME", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-	paste("CRR_Int", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"))
 
-	rowNum<-1
-	for(simNum in 1:nSim){
-		## randomly select samples to be cases, fix so numbers per brain bank match actual
-		status<-rep(0,nrow(pheno))
-		for(centre in unique(pheno$Tissue.Centre)){
-			ids<-unique(pheno$Indidivual.ID[which(pheno$Tissue.Centre == centre)])
-			cases<-sample(ids, floor(length(ids)/2))
-			status[pheno$Indidivual.ID %in% cases]<-1
-		}
-		status<-as.factor(status)
-		
-		## First run the null EWAS for this simulation
-		outtab.null<-foreach(i=1:nrow(celltypenormbeta), .combine = "rbind") %dopar% runEWAS(celltypenormbeta[i,], pheno, status)
-		## Second only need to retest sites affects are induced at as non significiant probes are unaltered		
-		for(nSig in nSig.options){
-			for(propCS in propCS.options){
-				sumSim[rowNum,1]<-nSig
-				sumSim[rowNum,2]<-floor(nSig*propCS)
-				## randomly select significant probes
-				sigProbes<-sample(1:nrow(celltypenormbeta), nSig)
+sumSim<-matrix(data = NA, nrow = nSim*length(nSig.options)*length(propCS.options), ncol = 2+(6*6))
+colnames(sumSim)<-c("nProbes", "nCTspecific", paste("LM_ME", c("TotSig", "nTruePos", "nFalsePos","nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
+paste("LM_Int", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
+paste("MLM_ME", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
+paste("MLM_Int", c("TotSig", "nTruePos", "nFalsePos","nTruePosCS", "nFalsePosCS",  "lambda"), sep = "_"),
+paste("CRR_ME", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
+paste("CRR_Int", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"))
 
-				## create matrix with effects to add to sample profiles
-				diffs<-rnorm(nrow(pheno)*nSig, sigEffect, 0.005) ## sample effects for each sample
-				diffs<-matrix(data = diffs, nrow = nSig, byrow = TRUE)
-				diffs[,which(status == 0)]<-0
-				
-				## make some of these effects cell type specific
-				if(propCS > 0){
-					ctSpecific<-sample(1:nSig, floor(nSig*propCS))
-					for(each in ctSpecific){
-						# randomly select cell type to be significant in
-						selectCT<-sample(cellTypes, 1)
-						## set other cell types to have no effects
-						diffs[each, !pheno$Cell.type %in% selectCT]<-0
-					}
-					ctSpecific<-sigProbes[ctSpecific]
-				} else {
-					ctSpecific<-NULL
-				}				
+rowNum<-1
+for(simNum in 1:nSim){
+	## randomly select samples to be cases, fix so numbers per brain bank match actual
+	status<-rep(0,nrow(pheno))
+	for(centre in unique(pheno$Tissue.Centre)){
+		ids<-unique(pheno$Indidivual.ID[which(pheno$Tissue.Centre == centre)])
+		cases<-sample(ids, floor(length(ids)/2))
+		status[pheno$Indidivual.ID %in% cases]<-1
+	}
+	status<-as.factor(status)
+	
+	## First run the null EWAS for this simulation
+	outtab.null<-foreach(i=1:nrow(celltypenormbeta), .combine = "rbind") %dopar% runEWAS(celltypenormbeta[i,], pheno, status)
+	## Second only need to retest sites affects are induced at as non significiant probes are unaltered		
+	for(nSig in nSig.options){
+		for(propCS in propCS.options){
+			sumSim[rowNum,1]<-nSig
+			sumSim[rowNum,2]<-floor(nSig*propCS)
+			## randomly select significant probes
+			sigProbes<-sample(1:nrow(celltypenormbeta), nSig)
 
-				## create matrix of betas with induced effects
-				testbetas<-celltypenormbeta[sigProbes,]+diffs
-
-				outtab.sig<-foreach(i=1:nrow(testbetas), .combine = "rbind") %dopar% runEWAS(testbetas[i,], pheno, status)
-				
-				## merge signif results with null results to generate summary statistics
-				outtab.sim<-outtab.null
-				outtab.sim[sigProbes,]<-outtab.sig
-				
-				sumSim[rowNum,2+seq(1,6*6, 6)]<-colSums(outtab.sim < 9e-8)
-				sumSim[rowNum,3+seq(1,6*6, 6)]<-colSums(outtab.sim[sigProbes,] < 9e-8)
-				sumSim[rowNum,4+seq(1,6*6, 6)]<-colSums(outtab.sim[-sigProbes,] < 9e-8)
-				## handle quirk of R converting 1 row matrix to vector!!
-				if(length(ctSpecific) > 2){
-					sumSim[rowNum,5+seq(1,6*6, 6)]<-colSums(outtab.sim[ctSpecific,] < 9e-8)
-					sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[-ctSpecific,] < 9e-8)
-				} else {
-					if(length(ctSpecific) == 1){
-						sumSim[rowNum,5+seq(1,6*6, 6)]<-as.numeric(outtab.sim[ctSpecific,] < 9e-8)
-						sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[-ctSpecific,] < 9e-8)
-					} else{
-						sumSim[rowNum,5+seq(1,6*6, 6)]<-NA
-						sumSim[rowNum,6+seq(1,6*6, 6)]<-NA
-					}
+			## create matrix with effects to add to sample profiles
+			diffs<-rnorm(nrow(pheno)*nSig, sigEffect, 0.005) ## sample effects for each sample
+			diffs<-matrix(data = diffs, nrow = nSig, byrow = TRUE)
+			diffs[,which(status == 0)]<-0
+			
+			## make some of these effects cell type specific
+			if(propCS > 0){
+				ctSpecific<-sample(1:nSig, floor(nSig*propCS))
+				for(each in ctSpecific){
+					# randomly select cell type to be significant in
+					selectCT<-sample(cellTypes, 1)
+					## set other cell types to have no effects
+					diffs[each, !pheno$Cell.type %in% selectCT]<-0
 				}
-							
-				sumSim[rowNum,7+seq(1,6*6, 6)]<-apply(outtab.sim, 2, estlambda)
-				rowNum<-rowNum+1
+				ctSpecific<-sigProbes[ctSpecific]
+			} else {
+				ctSpecific<-NULL
+			}				
+
+			## create matrix of betas with induced effects
+			testbetas<-celltypenormbeta[sigProbes,]+diffs
+
+			outtab.sig<-foreach(i=1:nrow(testbetas), .combine = "rbind") %dopar% runEWAS(testbetas[i,], pheno, status)
+			
+			## merge signif results with null results to generate summary statistics
+			outtab.sim<-outtab.null
+			outtab.sim[sigProbes,]<-outtab.sig
+			
+			sumSim[rowNum,2+seq(1,6*6, 6)]<-colSums(outtab.sim < 9e-8)
+			sumSim[rowNum,3+seq(1,6*6, 6)]<-colSums(outtab.sim[sigProbes,] < 9e-8)
+			sumSim[rowNum,4+seq(1,6*6, 6)]<-colSums(outtab.sim[-sigProbes,] < 9e-8)
+			## handle quirk of R converting 1 row matrix to vector!!
+			if(length(ctSpecific) > 2){
+				sumSim[rowNum,5+seq(1,6*6, 6)]<-colSums(outtab.sim[ctSpecific,] < 9e-8)
+				sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[-ctSpecific,] < 9e-8)
+			} else {
+				if(length(ctSpecific) == 1){
+					sumSim[rowNum,5+seq(1,6*6, 6)]<-as.numeric(outtab.sim[ctSpecific,] < 9e-8)
+					sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[-ctSpecific,] < 9e-8)
+				} else{
+					sumSim[rowNum,5+seq(1,6*6, 6)]<-NA
+					sumSim[rowNum,6+seq(1,6*6, 6)]<-NA
+				}
 			}
+						
+			sumSim[rowNum,7+seq(1,6*6, 6)]<-apply(outtab.sim, 2, estlambda)
+			rowNum<-rowNum+1
 		}
 	}
-
-	save(sumSim, file = paste0("nSigSimulateTrueEffects_Chunk", chunk, ".rdata"))
 }
+
+save(sumSim, file = paste0("nSigSimulateTrueEffects_Chunk", nChunk, ".rdata"))
