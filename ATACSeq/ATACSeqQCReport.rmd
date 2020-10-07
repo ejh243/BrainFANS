@@ -1,13 +1,15 @@
 ---
 title: 'ATACSeq Data QC Report: Pilot'
 author: "Eilis Hannon"
-date: "24th June 2020"
+date: "`r Sys.Date()`"
 output: html_document
+params:
+  configFile: config.r
 ---
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE,results='hide'}
 
-source("config.r")
+source(configFile) ## contains paths to files
 
 library(ChIPQC)
 library(knitr)
@@ -25,17 +27,18 @@ library(ChIPpeakAnno)
 ```
 
 ```{r loadDat, echo = FALSE, message = FALSE,results='hide'}
-setwd(alignedDir)
-sampleSheet<-read.csv(paste(dataDir, "SampleSheetForATACSeqQC.csv", sep = "/"), stringsAsFactors = FALSE, row.names = 1)
+setwd(dataDir)
+## as sample sheet is date stamped this might not work:
+sampleSheet<-read.csv(paste0("SampleSheetForATACSeqQC", format(Sys.time(), "%d%b%Y"), ".csv"), stringsAsFactors = FALSE, row.names = 1)
 
 ## check if data already loaded and saved
-if(file.exists("ATACSeqQCObject_1.rdata")){
+if(file.exists(paste0(setwd(dataDir),"/QCOutput/ATACSeqQCObject_1.rdata"))){
 	load("ATACSeqQCObject_1.rdata")
 } else{
 	print("QC data  1 not found")
 }
 setwd(dataDir)
-if(file.exists("ATACSeqQCObject_2.rdata")){
+if(file.exists(paste0(setwd(dataDir),"/QCOutput/ATACSeqQCObject_2.rdata"))){
 	load("ATACSeqQCObject_2.rdata")
 } else{
 	print("QC data  2 not found")
@@ -45,10 +48,48 @@ fileNames<-colnames(hist.data)[-1]
 
 lineCol<-brewer.pal(length(fileNames), "Set1")
 setwd(alignedDir)
-fastqcStats<-read.table(paste(dataDir, "multiqc_data/multiqc_fastqc.txt", sep = "/"), sep = "\t", header = TRUE)
-bowtieStats<-read.table("multiqc_data/multiqc_bowtie2.txt", sep = "\t", header = TRUE)
+
+folders<-unique(sampleSheet$DataFolder)
+mqcFileNames<-NULL
+for(entry in folders){
+  mqcFileNames<-c(mqcFileNames ,list.files(paste0(dataDir, "/",entry), pattern = "multiqc_fastqc.txt", recursive = TRUE, full.names = TRUE))
+}
+fastqcStats<-NULL
+for(entry in mqcFileNames){
+  tmp<-read.table(entry, sep = "\t", header = TRUE)
+  if(!is.null(fastqcStats) && ncol(tmp) != ncol(fastqcStats)){
+    sharedCols<-intersect(colnames(tmp), colnames(fastqcStats))
+    tmp<-tmp[,sharedCols]
+    fastqcStats<-fastqcStats[,sharedCols]
+  }
+  fastqcStats<-rbind(fastqcStats, tmp)
+}
+fastqcStats<-unique(fastqcStats)
+
+
+bowtieFileNames<-NULL
+for(entry in folders){
+  bowtieFileNames<-c(bowtieFileNames ,list.files(paste0(alignedDir, entry), pattern = "multiqc_bowtie2.txt", recursive = TRUE, full.names = TRUE))
+}
+bowtieStats<-NULL
+for(entry in bowtieFileNames){
+  tmp<-read.table(entry, sep = "\t", header = TRUE)
+  if(!is.null(bowtieStats) && ncol(tmp) != ncol(bowtieStats)){
+    sharedCols<-intersect(colnames(tmp), colnames(bowtieStats))
+    tmp<-tmp[,sharedCols]
+    bowtieStats<-bowtieStats[,sharedCols]
+  }
+  bowtieStats<-rbind(bowtieStats, tmp)
+}
+
+
+##load summary of reads per chr in bam file
 bamStats<-lapply(sub("_depDup_q30.bam", "_statsperchr.txt", sampleSheet$bamReads), read.table)
-endcodeQC<-matrix(data = unlist(lapply(paste0("ENCODEMetrics", gsub(alignedDir, "", gsub("_depDup_q30.bam", ".nodup.pbc.qc", sampleSheet$bamReads))), read.table)), ncol = 7, byrow = TRUE)
+
+## load ENCODE QC metrics
+eqcFileNames<-list.files(pattern="pbc.qc", recursive = TRUE)
+eqcFileNames<-eqcFileNames[unlist(sapply(sampleSheet$SampleID, grep, eqcFileNames))]
+endcodeQC<-matrix(data = unlist(lapply(eqcFileNames, read.table)), ncol = 7, byrow = TRUE)
 
 ```
 
@@ -61,7 +102,9 @@ This report makes use of the quality control metrics generated as part of that p
 To provide an overall summary here is a table of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
 
 ```{r}
-stats.tmp<-cbind(fastqcStats[match(paste0(sampleSheet$SampleID, "_r1"), fastqcStats$Sample), "Total.Sequences"], fastqcStats[match(paste0(sampleSheet$SampleID, "_r2"), fastqcStats$Sample), "Total.Sequences"], reads(dat),unlist(lapply(peaks(dat), length)))
+r1_index<-match(paste0(sampleSheet$SampleID, "_r1"), fastqcStats$Sample)
+r2_index<-match(paste0(sampleSheet$SampleID, "_r2"), fastqcStats$Sample)
+stats.tmp<-cbind(fastqcStats[r1_index, "Total.Sequences"], fastqcStats[r2_index, "Total.Sequences"], reads(dat),unlist(lapply(peaks(dat), length)))
 
 colnames(stats.tmp)<-c("Reads (R1)", "Reads (R2)", "Filtered Aligned Reads", "Peaks")
 
@@ -79,15 +122,14 @@ kable(stats.tmp)
 
 
 ## get stats for r1
-r1_index<-match(sampleSheet$SampleID, unlist(lapply(strsplit(as.character(fastqcStats$Sample), "_"), head,n = 1)))
+
 r1_dat<-fastqcStats[r1_index, c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")]
 
 colnames(r1_dat)<-c("nReads", "Mean(length)", "Range(length)", "%GC", "%Distinct")
 
 ## if paired end get stats for r2
-r2_dat<-matrix(data = "NA", nrow = nrow(r1_dat), ncol = ncol(r1_dat))
 if(sum(sampleSheet$ReadType == "Paired") > 0){
-	r2_dat<-fastqcStats[-r1_index,c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")]
+	r2_dat<-fastqcStats[r2_index,c("Total.Sequences", "avg_sequence_length", "Sequence.length", "X.GC", "total_deduplicated_percentage")]
 }
 colnames(r2_dat)<-c("nReads", "Mean(length)", "Range(length)", "%GC", "%Distinct")
 

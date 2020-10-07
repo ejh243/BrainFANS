@@ -3,7 +3,10 @@
 ## in part based on this vignette: https://bioconductor.org/packages/release/bioc/vignettes/ATACseqQC/inst/doc/ATACseqQC.html
 ## the interpretation (provide in the rmd) is inspired by: https://galaxyproject.github.io/training-material/topics/epigenetics/tutorials/atac-seq/tutorial.html#filtering-mapped-reads & https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-1929-3
 
-source("config.r") ## contains paths to files
+args <- commandArgs()
+configFile<-args[6]
+
+source(configFile) ## contains paths to files
 
 library(dplyr)
 library(ChIPQC)
@@ -24,21 +27,40 @@ setwd(dataDir) ## change to directory where aligned files (bam) and peaks (narro
 ### Create Sample Sheet
 bamReads<-list.files(alignedDir, pattern = "_depDup_q30.bam", recursive = TRUE)
 bamReads<-bamReads[endsWith(bamReads, "_depDup_q30.bam")]
-bamIDs<-gsub("_depDup_q30.bam", "", bamReads)
 
-tissue<-unlist(lapply(lapply(strsplit(bamIDs, "-"),tail, n = 1), substr, 1,1))
+folder<-unlist(lapply(strsplit(bamReads,"/"), head, n = 1))
+## extract sample ID, remove folder
+## NB assume sample name is first part of basename of filename
+bamIDs<-unlist(lapply(strsplit(gsub("_trimmed", "", gsub("_depDup_q30.bam", "", bamReads)),"/"), tail, n = 1))
+
+tissue<-substr(unlist(lapply(strsplit(gsub("-", "_", gsub("_trimmed", "", gsub("_depDup_q30.bam", "", bamReads))), "_"), tail, n = 1)), 1,1)
+## extract sequencing project ID
+projectID<-unlist(lapply(strsplit(bamIDs,"_"), head, n = 1))
+## should be numeric,if not - Source Biosciences processed
+projectID<-as.numeric(projectID)
+## individual ID
+indID<-unlist(lapply(lapply(strsplit(bamIDs,"_"), head, n = 2), tail,n = 1))
 
 pe<-"Paired"
 
-sampleSheet<-data.frame(SampleID = bamIDs, Tissue=tissue, Factor="ATAC", ReadType = pe, bamReads = bamReads, stringsAsFactors = FALSE)
+## find peaks files 
+Peaks<-list.files(peakDir, pattern = ".broadPeak", recursive = TRUE)
+Peaks<-Peaks[sapply(bamIDs, grep, Peaks)]
 
-#write.csv(sampleSheet, "SampleSheetForATACSeqQC.csv")
+
+sampleSheet<-data.frame(SampleID = bamIDs, IndividualID = indID, Tissue=tissue, Factor="ATAC", ReadType = pe, bamReads = bamReads, Peaks = Peaks, ExeterSeqProject=projectID, DataFolder = folder, stringsAsFactors = FALSE)
+
+write.csv(sampleSheet, paste0("QCOutput/SampleSheetForATACSeqQC", format(Sys.time(), "%d%b%Y"), ".csv"))
 
 ## load uniqueness info
+## 
 histFiles<-list.files(pattern = "_hist.txt", recursive = TRUE)
-fileNames<-gsub("_trimmed_r1.fq.gz_hist.txt", "", histFiles)
+fileNames<-unlist(lapply(strsplit(histFiles, "/"), tail, n = 1))
 fileNames<-gsub("_trimmed_hist.txt", "", fileNames)
-fileNames<-gsub("11_trimmed/", "", fileNames)
+fileNames<-gsub("_hist.txt", "", fileNames)
+## ensure sample IDs match
+histFiles<-histFiles[match(bamIDs, fileNames)]
+fileNames<-fileNames[match(bamIDs, fileNames)]
 
 hist.data<-read.table(histFiles[1])
 if(ncol(hist.data) == 7){
@@ -143,5 +165,10 @@ for(i in 1:nrow(sampleSheet)){
 }
 
 
-save(hist.data, histDupReads, libComplexValues, fragSizeHist, pt.collate, nfr.collate, sigs.collate, tsse.collate, file = "ATACSeqQCObject_1.rdata")
+save(hist.data, histDupReads, libComplexValues, fragSizeHist, pt.collate, nfr.collate, sigs.collate, tsse.collate, file = paste0(setwd(dataDir),"/QCOutput/ATACSeqQCObject_1.rdata"))
 
+## for some additional QC metrics run chipQC package. 
+
+dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
+
+save(dat, file = paste0(setwd(dataDir), "/QCOutput/ATACSeqQCObject_2.rdata"))
