@@ -43,6 +43,11 @@ if(file.exists(paste0(setwd(dataDir),"/QCOutput/ATACSeqQCObject_2.rdata"))){
 } else{
 	print("QC data  2 not found")
 }
+if(file.exists(paste0(setwd(dataDir),"/QCOutput/ATACSeqQCObject_3.rdata"))){
+	load("ATACSeqQCObject_3.rdata")
+} else{
+	print("QC data  3 not found")
+}
 
 fileNames<-colnames(hist.data)[-1]
 

@@ -1,22 +1,18 @@
 #!/bin/sh
-#PBS -V # export all environment variables to the batch job.
-#PBS -q sq # submit to the serial queue
-#PBS -l walltime=72:00:00 # Maximum wall time for the job.
-#PBS -l feature=highmem # High Memory
-#PBS -A Research_Project-MRC190311 # research project to submit under. 
-#PBS -l procs=1 # specify number of processors.
-#PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e LogFiles/ChipAlignmentPE.err # error file
-#PBS -o LogFiles/ChipAlignmentPE.log # output file
+#SBATCH --export=ALL # export all environment variables to the batch job.
+#SBATCH -p mrcq # submit to the serial queue
+#SBATCH --time=150:00:00 # Maximum wall time for the job.
+#SBATCH -A Research_Project-MRC190311 # research project to submit under. 
+#SBATCH --nodes=1 # specify number of nodes.
+#SBATCH --ntasks-per-node=16 # specify number of processors per node
+#SBATCH --mail-type=END # send email at job completion 
+#SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
+#SBATCH --error=LogFiles/ChipAlignmentPE.err # error file
+#SBATCH --output=LogFiles/ChipAlignmentPE.log # output file
+#SBATCH --job-name=ChipAlignmentPE
 
 ## needs to be executed from the scripts folder
 
-## Output some useful job information
-
-echo PBS: working directory is $PBS_O_WORKDIR
-echo PBS: job identifier is $PBS_JOBID
-echo PBS: job name is $PBS_JOBNAME
-echo PBS: current home directory is $PBS_O_HOME
 
 ## print start date and time
 echo Job started on:
@@ -27,24 +23,31 @@ date -u
 ## NOTE: Do not store confidential information in this file use the config file
 ######
 
-cd $PBS_O_WORKDIR
-#cd ${SCRIPTDIR}
-source ./ChipSeq/config.txt
+echo "Changing Folder to: "
+echo $SLURM_SUBMIT_DIR
+
+cd $SLURM_SUBMIT_DIR
+
+####### 
+## NOTE: Do not store confidential information in this file use the config file
+######
+
+source ./ChipSeq/config.exeter
 
 ## run fastqc
 module load FastQC 
-fastqc ${DATADIRPE}/*q.gz
+#fastqc ${DATADIRPE}/*q.gz
 
 ## rn fastp
 module load fastp
 cd ${DATADIRPE}
 mkdir -p 11_trimmed
 mkdir -p 11_trimmed/fastp_reports/
-R1Files=($(ls *R1*q.gz))
+R1Files=($(ls *[rR]1*q.gz))
 for f in ${R1Files[@]};	
 do	
 	## find both paired files
-	sampleName=${f/_*}
+	sampleName=${f/[rR]*}
 	if [ ! -f 11_trimmed/fastp_reports/${sampleName}_fastp.json ]	
 	then
 		pairedFiles=($(ls ${sampleName}*.gz))
@@ -71,6 +74,7 @@ module purge ## had conflict issues if this wasn't run first
 module load Bowtie2
 module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
+module load BEDTools
 #module load Java
 cd ${SCRIPTDIR}/ChipSeq/
 ./alignmentPE.sh ## by using ./ rather than sh executes script in current session and can make use of variables alredy declared.

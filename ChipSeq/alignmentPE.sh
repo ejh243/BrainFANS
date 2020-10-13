@@ -18,7 +18,7 @@ for f in ${FQFILES[@]};
 do	
   echo "Aligning"" ${f}"	
   fileName=$(basename ${f})
-  sampleName=${fileName/.[rR]*}
+  sampleName=${fileName/_[rR]*}
   pairedFiles=($(ls 11_trimmed/${sampleName}*.gz))
   f1=${pairedFiles[0]}
   f2=${pairedFiles[1]}
@@ -45,11 +45,11 @@ do
     ## remove reads with q < 30 nb 
     samtools view -q 30 -h ${ALIGNEDDIR}/${sampleName}_depDuplicated.bam > ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam
   fi
-  if [ ! -f ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz ]		
-  then	
+  #if [ ! -f ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz ]		
+  #then	
     # Create BEDPE file
-    samtools sort -n ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam ${ALIGNEDDIR}/${sampleName}.filt.nmsrt
-    bedtools bamtobed -bedpe -mate1 -i ${ALIGNEDDIR}/${sampleName}.filt.nmsrt | gzip -nc > ${ALIGNEDDIR}/${sampleName}.bedpe.gz
-    zcat ${ALIGNEDDIR}/${sampleName}.bedpe.gz | awk 'BEGIN{OFS="\t"}{printf "%s\t%s\t%s\tN\t1000\t%s\n%s\t%s\t%s\tN\t1000\t%s\n",$1,$2,$3,$9,$4,$5,$6,$10}' | gzip -nc > ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz
-  fi
+    #samtools sort -n ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam -o ${ALIGNEDDIR}/${sampleName}.filt.nmsrt
+    #bedtools bamtobed -bedpe -mate1 -i ${ALIGNEDDIR}/${sampleName}.filt.nmsrt | gzip -nc > ${ALIGNEDDIR}/${sampleName}.bedpe.gz
+    #zcat ${ALIGNEDDIR}/${sampleName}.bedpe.gz | awk 'BEGIN{OFS="\t"}{printf "%s\t%s\t%s\tN\t1000\t%s\n%s\t%s\t%s\tN\t1000\t%s\n",$1,$2,$3,$9,$4,$5,$6,$10}' | gzip -nc > ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz
+  #fi
 done	

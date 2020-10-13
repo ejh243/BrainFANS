@@ -25,7 +25,7 @@ bpparam("SerialParam")
 setwd(dataDir) ## change to directory where aligned files (bam) and peaks (narrowPeaks) can be found ## will search for all within this folder
 
 ### Create Sample Sheet
-bamReads<-list.files(alignedDir, pattern = "_depDup_q30.bam", recursive = TRUE)
+bamReads<-list.files(alignedDir, pattern = "_depDup_q30.bam", recursive = TRUE, full.names = TRUE)
 bamReads<-bamReads[endsWith(bamReads, "_depDup_q30.bam")]
 
 folder<-unlist(lapply(strsplit(bamReads,"/"), head, n = 1))
@@ -44,11 +44,11 @@ indID<-unlist(lapply(lapply(strsplit(bamIDs,"_"), head, n = 2), tail,n = 1))
 pe<-"Paired"
 
 ## find peaks files 
-Peaks<-list.files(peakDir, pattern = ".broadPeak", recursive = TRUE)
+Peaks<-list.files(peakDir, pattern = ".broadPeak", recursive = TRUE, full.names = TRUE)
 Peaks<-Peaks[sapply(bamIDs, grep, Peaks)]
 
 
-sampleSheet<-data.frame(SampleID = bamIDs, IndividualID = indID, Tissue=tissue, Factor="ATAC", ReadType = pe, bamReads = bamReads, Peaks = Peaks, ExeterSeqProject=projectID, DataFolder = folder, stringsAsFactors = FALSE)
+sampleSheet<-data.frame(SampleID = bamIDs, IndividualID = indID, Tissue=tissue, Factor="ATAC", ReadType = pe, bamReads = bamReads, Peaks = Peaks, PeakCaller = "narrow",ExeterSeqProject=projectID, DataFolder = folder, stringsAsFactors = FALSE)
 
 write.csv(sampleSheet, paste0("QCOutput/SampleSheetForATACSeqQC", format(Sys.time(), "%d%b%Y"), ".csv"))
 
@@ -93,6 +93,10 @@ for(each in histFiles[-1]){
 }
 colnames(hist.data)[-1]<-fileNames
 
+save(hist.data, file = paste0(setwd(dataDir),"/QCOutput/ATACSeqQCObject_1.rdata"))
+
+rm(hist.data)
+
 ## use ATACseqQC to calculate additional metrics
 
 setwd(alignedDir)
@@ -101,11 +105,15 @@ histDupReads<-lapply(gsub("_depDup_q30", "_sorted", sampleSheet$bamReads),readsD
 libComplexValues<-lapply(histDupReads, estimateLibComplexity)
 fragSizeHist<-fragSizeDist(sampleSheet$bamReads, sampleSheet$SampleID)
 
+save(histDupReads, libComplexValues, fragSizeHist, file = paste0(dataDir,"/QCOutput/ATACSeqQCObject_2.rdata"))
+rm(c(histDupReads, libComplexValues, fragSizeHist))
+
+
 txs <- transcripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
 genome <- getBSgenome("BSgenome.Hsapiens.UCSC.hg38")
-seqlev<-"chr1"
+seqlev<-"chr22"
 
-txs.chr1<- txs[seqnames(txs) %in% seqlev]
+txs.chr22<- txs[seqnames(txs) %in% seqlev]
 TSS <- promoters(txs, upstream=0, downstream=1)
 TSS <- unique(TSS)
 NTILE <- 51
@@ -118,22 +126,26 @@ tsse.collate<-list(length = nrow(sampleSheet))
 sigs.collate<-list(length = nrow(sampleSheet))
 
 for(i in 1:nrow(sampleSheet)){
+	print(paste("Running Sample:", i))
 	bamfile<-sampleSheet$bamReads[i]
 	bamDat <- readBamFile(bamfile, asMates=TRUE, bigFile=TRUE)
-	shiftedBamfile <- gsub("alignedData","shifted",  bamfile)
+	shiftedBamfile <- gsub("\\.bam","_shifted\\.bam",  bamfile)
 	
 	## adjust the start sites of the reads, by default, all reads aligning to the positive strand are offset by +4bp, and all reads aligning to the negative strand are offset by -5bp.
 	## save output for peak calling
 	bamDat.shift <- shiftGAlignmentsList(bamDat)
+	## save shidted reads as useful for downstream analysis
+	export(bamDat.shift, shiftedBamfile)
 	## calculate promotor/transcript score
 	pt.collate[[i]] <- PTscore(bamDat.shift, txs)
 	## calculate Nucleosome Free Regions (NFR) score
 	nfr.collate[[i]] <- NFRscore(bamDat.shift, txs)
 	# Transcription Start Site (TSS) Enrichment Score
 	tsse.collate[[i]] <- TSSEscore(bamDat.shift, txs)
+
 	# Split reads NB time consuming step so filter to single chr? ## also quick if exclude conservation matching
 	objs <- splitGAlignmentsByCut(bamDat.shift, outPath="splitted",
-                 txs=txs.chr1, genome=genome,
+                 txs=txs.chr22, genome=genome,
                  conservation=phastCons100way.UCSC.hg38)
 				 
 	bamfiles <- file.path("splitted",
@@ -165,10 +177,15 @@ for(i in 1:nrow(sampleSheet)){
 }
 
 
-save(hist.data, histDupReads, libComplexValues, fragSizeHist, pt.collate, nfr.collate, sigs.collate, tsse.collate, file = paste0(setwd(dataDir),"/QCOutput/ATACSeqQCObject_1.rdata"))
+save(pt.collate, nfr.collate, sigs.collate, tsse.collate, file = paste0(dataDir,"/QCOutput/ATACSeqQCObject_3.rdata"))
+
+rm(c(pt.collate, nfr.collate, sigs.collate, tsse.collate))
 
 ## for some additional QC metrics run chipQC package. 
 
 dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
 
-save(dat, file = paste0(setwd(dataDir), "/QCOutput/ATACSeqQCObject_2.rdata"))
+save(dat, file = paste0(dataDir, "/QCOutput/ATACSeqQCObject_4.rdata"))
+
+
+write.csv(sampleSheet, paste0("QCOutput/SampleSheetForATACSeqQC", format(Sys.time(), "%d%b%Y"), ".csv"))
