@@ -111,9 +111,9 @@ rm(c(histDupReads, libComplexValues, fragSizeHist))
 
 txs <- transcripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
 genome <- getBSgenome("BSgenome.Hsapiens.UCSC.hg38")
-seqlev<-"chr22"
+seqlev<-"chr1"
 
-txs.chr22<- txs[seqnames(txs) %in% seqlev]
+txs.chr1<- txs[seqnames(txs) %in% seqlev]
 TSS <- promoters(txs, upstream=0, downstream=1)
 TSS <- unique(TSS)
 NTILE <- 51
@@ -128,14 +128,15 @@ sigs.collate<-list(length = nrow(sampleSheet))
 for(i in 1:nrow(sampleSheet)){
 	print(paste("Running Sample:", i))
 	bamfile<-sampleSheet$bamReads[i]
+	bamfile<-gsub("\\.bam", "_chr1\\.bam", bamfile)
 	bamDat <- readBamFile(bamfile, asMates=TRUE, bigFile=TRUE)
 	shiftedBamfile <- gsub("\\.bam","_shifted\\.bam",  bamfile)
 	
 	## adjust the start sites of the reads, by default, all reads aligning to the positive strand are offset by +4bp, and all reads aligning to the negative strand are offset by -5bp.
 	## save output for peak calling
 	bamDat.shift <- shiftGAlignmentsList(bamDat)
-	## save shidted reads as useful for downstream analysis
-	export(bamDat.shift, shiftedBamfile)
+	## save shifted reads as useful for downstream analysis
+	#export(bamDat.shift, shiftedBamfile)
 	## calculate promotor/transcript score
 	pt.collate[[i]] <- PTscore(bamDat.shift, txs)
 	## calculate Nucleosome Free Regions (NFR) score

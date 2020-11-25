@@ -3,19 +3,27 @@
 ## calls peaks across all samples for each fraction
 ## parameter choices guided by this post: https://github.com/taoliu/MACS/issues/331
 
+ALIGNEDDIR=$1
+PEAKDIR=$2
+
+echo "Started Peak calling script"
+
+echo ${ALIGNEDDIR}
+echo ${PEAKDIR}
 
 mkdir -p ${PEAKDIR}
 FRACTIONS=(N S T)
 
 for type in ${FRACTIONS[@]};
 do
-	TAGFILES=$(ls ${ALIGNEDDIR}/*.tn5.tagAlign.gz | grep "ATAC-"${type})
+	TAGFILES=$(ls ${ALIGNEDDIR}/*/*.tn5.tagAlign.gz | grep -E '\-'${type}\|'_'${type})
+	echo "Number of " ${type} " files found for alignment:"" ""${#TAGFILES[@]}"""
 	macs2 callpeak -t ${TAGFILES[@]} --outdir ${PEAKDIR} -n ${type} -f BED -g 2.9e9  -B --keep-dup all --shift 100 --extsize 200 --nomodel --broad
 
 done
 
 ## run in all samples for unified peak set
-TAGFILES=$(ls ${ALIGNEDDIR}/*.tn5.tagAlign.gz)
+TAGFILES=$(ls ${ALIGNEDDIR}/*/*.tn5.tagAlign.gz)
 macs2 callpeak -t ${TAGFILES[@]} --outdir ${PEAKDIR} -n AllFractions -f BED -g 2.9e9  -B --keep-dup all --shift 100 --extsize 200 --nomodel --broad
 
 
