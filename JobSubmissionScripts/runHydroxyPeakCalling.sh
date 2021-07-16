@@ -1,37 +1,37 @@
 #!/bin/sh
-#PBS -V # export all environment variables to the batch job.
-#PBS -q sq # submit to the serial queue
-#PBS -l walltime=24:00:00 # Maximum wall time for the job.
-#PBS -A Research_Project-MRC190311 # research project to submit under. 
-#PBS -l procs=1 # specify number of processors.
-#PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e LogFiles/5hmCPeakCalling.err # error file
-#PBS -o LogFiles/5hmCPeakCalling.log # output file
+#SBATCH --export=ALL # export all environment variables to the batch job.
+#SBATCH -p mrcq # submit to the serial queue
+#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH -A Research_Project-MRC190311 # research project to submit under. 
+#SBATCH --nodes=1 # specify number of nodes.
+#SBATCH --ntasks-per-node=16 # specify number of processors per node
+#SBATCH --mail-type=END # send email at job completion 
+#SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
+#SBATCH --error=LogFiles/CEGX5hmCPeakingCalling.err # error file
+#SBATCH --output=LogFiles/CEGX5hmCPeakingCalling.log # output file
+#SBATCH --job-name=CEGX5hmCPeakingCalling
 
-## Output some useful job information
-
-echo PBS: working directory is $PBS_O_WORKDIR
-echo PBS: job identifier is $PBS_JOBID
-echo PBS: job name is $PBS_JOBNAME
-echo PBS: current home directory is $PBS_O_HOME
 
 ## print start date and time
 echo Job started on:
 date -u
 
+## needs to be executed from the scripts folder
+echo "Changing Folder to: "
+echo $SLURM_SUBMIT_DIR
+
+cd $SLURM_SUBMIT_DIR
 
 source hydroxy/CGEX/config.txt
 
-## index bamfiles
-BAMFILES=($(ls ${ALIGNEDDIR}/*_L00.bml.GRCh38.karyo.deduplicated.bam))
-module load SAMtools
-for f in ${BAMFILES[@]}
-do
-	samtools index ${f}
-done
+cd ${SCRIPTDIR}/hydroxy/CGEX/
+module load R/3.6.3-foss-2020a
 
+Rscript createSampleListsForPeakCalling.r config.r 
+
+module purge
 module load MACS2
 
-cd ${SCRIPTDIR}/hydroxy/CGEX/
-./macsPeakCalling.sh
+
+./macsPeakCallingBySampleType.sh
 
