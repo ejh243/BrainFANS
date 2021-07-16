@@ -33,5 +33,5 @@ module purge
 module load MACS2
 
 
-./macsPeakCallingBySampleType.sh
+sh ./macsPeakCallingBySampleType.sh
 
