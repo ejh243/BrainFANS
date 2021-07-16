@@ -7,6 +7,7 @@
 
 library(bigmelon)
 library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 library(IlluminaHumanMethylationEPICmanifest)
 
 setwd(dataDir)
@@ -25,8 +26,8 @@ if(file.exists(gdsFile)){
 	## if any missing add to existing gds
 	if(length(sampToLoad) > 0){
 		print(paste(length(sampToLoad), " samples to load"))
-		## load each file from sampleSheet and add to gds file
 		setwd("iDats")
+		## load each file from sampleSheet and add to gds file
 		for(each in sampToLoad){
 			gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = ""))
 		}
@@ -35,7 +36,7 @@ if(file.exists(gdsFile)){
 	print(paste("Creating gds file:", gdsFile))
 	setwd("iDats")
 	for(each in sampToLoad){
-			gfile <- iadd(bar = each, gds = paste("../", gdsFile, sep = ""))
+			gfile <- iadd(bar = each, gds = paste("../../../", gdsFile, sep = ""))
 		}
 }	
 
@@ -45,6 +46,9 @@ if(file.exists(gdsFile)){
 
 
 ## update feature data
+library(minfi)
+
+print("Updating Feature data")
 
 annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
 all <- minfi:::.availableAnnotation(annoObj)$defaults
@@ -71,6 +75,7 @@ add.gdsn(gfile, 'pData', val = data.frame(lapply(as.data.frame(sampleSheet), as.
 setwd(dataDir)
 ## create back up
 
+print("Creating backup of gds file...")
  f <- createfn.gds(gsub("\\.gds", "_backup.gds", gdsFile))
  for(node in ls.gdsn(gfile)){
 	copyto.gdsn(node = f, source = index.gdsn(gfile, node), name = node)
