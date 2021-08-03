@@ -10,7 +10,7 @@
 #SBATCH --output=LogFiles/ATAQAlignment-%A_%a.o
 #SBATCH --error=LogFiles/ATAQAlignment-%A_%a.e
 #SBATCH --job-name=ATAQAlignment-%A_%a.e
-#SBATCH --array=0-40%40 ## runs 19 jobs with 10 at any one time
+#SBATCH --array=0-295%40 ## runs 19 jobs with 40 at any one time
 
 ## print start date and time
 echo Job started on:
@@ -47,6 +47,8 @@ echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""
 
 sample=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
 sampleName=$(basename ${sample%_[rR]*})
+## later samples have an additional _S[num] in the file name need to remove
+sampleName=${sampleName%_S[0-9]*}
 
 ## run sequencing QC and trimming on fastq files		
 module load FastQC 

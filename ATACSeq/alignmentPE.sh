@@ -20,7 +20,6 @@ sampleName=${sampleName%_S[0-9]*}
 echo "Processing" ${sampleName}
 
 ## need trimmed files for alignment
-FOLDERTRIM=${FOLDER/01_raw_reads/11_trimmed}
 
 ## filename format changed sometime r1_trimmed sometimes trimmed_r1
 if ls ${FOLDERTRIM}/${sampleName}*[rR]1*_trimmed.f* 1> /dev/null 2>&1;
