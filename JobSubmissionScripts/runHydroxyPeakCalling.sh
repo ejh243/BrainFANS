@@ -35,3 +35,15 @@ module load MACS2
 
 sh ./macsPeakCallingBySampleType.sh
 
+## filter peaks to exclude those that overlap blacklist regions from hg38
+
+module purge
+module load BEDTools
+
+sh ./filterPeaksBlacklistRegions.sh
+
+## create consensous peak set
+
+sh ./createConsensousPeakSet.sh
+
+
