@@ -60,14 +60,15 @@ if [ ! -s ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt ]
 	echo "removing MT chr"
 	samtools view -b ${ALIGNEDDIR}/${sampleName}_sorted.bam ${CHR[@]} > ${ALIGNEDDIR}/${sampleName}_noMT.bam	
 
-	## remove duplicates
-	echo "removing duplicates"
-	java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${ALIGNEDDIR}/${sampleName}_noMT.bam O=${ALIGNEDDIR}/${sampleName}_depDuplicated.bam M=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
-	  
 	## remove reads with q < 30;only keep properly paired reads; exclude reads marked as pcr optical duplicate, or secondary alignment
 	echo "filtering aligned reads"
-	samtools view -f 0x2 -b -F 0x400 -F 0x100 -q 30 -h ${ALIGNEDDIR}/${sampleName}_depDuplicated.bam > ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam
-	rm ${ALIGNEDDIR}/${sampleName}_depDuplicated.bam
+	samtools view -f 0x2 -b -F 0x400 -F 0x100 -q 30 -h ${ALIGNEDDIR}/${sampleName}_noMT.bam > ${ALIGNEDDIR}/${sampleName}_q30.bam
+
+	## remove duplicates
+	echo "removing duplicates"
+	java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${ALIGNEDDIR}/${sampleName}_q30.bam O=${ALIGNEDDIR}/${sampleName}_depDup_q30.bam M=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
+	  
+	rm ${ALIGNEDDIR}/${sampleName}_q30.bam
 	rm ${ALIGNEDDIR}/${sampleName}_noMT.bam
 
 	samtools index ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam
