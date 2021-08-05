@@ -31,7 +31,7 @@ echo ${f2}
 echo "Output written to " ${FASTQCDIR}
 
 cd ${FOLDER}  
-#fastqc ${f1} ${f2} -o ${FASTQCDIR}
+fastqc ${f1} ${f2} -o ${FASTQCDIR}
 
 ## run fastp if not already run
 echo "Running FASTP"
