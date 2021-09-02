@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH --time=150:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
@@ -27,23 +27,30 @@ source hydroxy/CGEX/config.txt
 cd ${SCRIPTDIR}/hydroxy/CGEX/
 module load R/3.6.3-foss-2020a
 
-Rscript createSampleListsForPeakCalling.r config.r 
+#Rscript createSampleListsForPeakCalling.r config.r 
 
+## run peak calling with MACS2
 module purge
 module load MACS2
 
 
 sh ./macsPeakCallingBySampleType.sh
 
-## filter peaks to exclude those that overlap blacklist regions from hg38
+## run peak calling with EPIC2
+module purge
+module load Miniconda2
+source activate epic2
+sh ./epic2PeakCallingBySampleType.sh
+source deactivate epic2
 
+
+## filter peaks to exclude those that overlap blacklist regions from hg38
 module purge
 module load BEDTools
 
 sh ./filterPeaksBlacklistRegions.sh
 
 ## create consensous peak set
-
 sh ./createConsensousPeakSet.sh
 
 
