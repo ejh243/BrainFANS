@@ -1,0 +1,38 @@
+This readme explains the content of the scripts for running the ATAC analysis pipeline
+
+#### Data pre-processing:
+
+1. sbatch JobSubmissionScripts/batchRunATACAlignment.sh <config.txt>
+
+This script searchs within raw data folders for all fastq files
+Then submits a batch script to process one sample
+	* executes ATACSeq/qcRawData.sh
+		* finds paired fastq files
+		* runs fastqc
+		* runs fastp
+		
+		
+	* executes ATACSeq/alignmentPE.sh 
+
+	* executes ATACSeq/calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
+	
+	
+2. progressReport.sh  <config.txt>
+This script identifies how many samples have been successful at each stage of the processing pipeline and for each fastq file, how far through the process it has progressed.
+
+3. sbatch JobSubmissionScripts/batchRunATACPeakCalling.sh <config.txt>
+This script searchs within aligned data folders for all bam files
+Then submits a batch script to process one sample
+	* executes shiftAlignedReadsPE.sh 
+		* 
+	* executes peakCallingPE.sh
+		* which runs MAC peak calling with shifted tagAlign files and with BAM files and paired end reads
+	* executes 
+
+3. collateSumStats.r 
+
+#### Misc data preprocessing
+
+mergeFastq.sh
+Where a sample was procesed multiple times, the fastq files are merged. 
+ 

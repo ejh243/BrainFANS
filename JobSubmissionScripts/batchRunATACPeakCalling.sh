@@ -10,7 +10,7 @@
 #SBATCH --output=LogFiles/ATAQPeakCalling-%A_%a.o
 #SBATCH --error=LogFiles/ATAQPeakCalling-%A_%a.e
 #SBATCH --job-name=ATAQPeakCalling-%A_%a.e
-#SBATCH --array=0-295%40 ## runs 19 jobs with 40 at any one time
+#SBATCH --array=0-295%20 ## runs 19 jobs with 20 at any one time
 
 
 ## print start date and time
@@ -36,7 +36,7 @@ BAMFILES=($(ls *_depDup_q30.bam))
 
 echo "Number of bam files found for alignment:"" ""${#BAMFILES[@]}"""	
 
-sample=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
+sample=${BAMFILES[${SLURM_ARRAY_TASK_ID}]}
 sampleName=$(basename ${sample%_depDup_q30.bam})
 
 ## shift reads for peak calling
@@ -60,3 +60,9 @@ module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 module load BEDTools
 cd ${SCRIPTDIR}/
 ./ATACSeq/peakCallingPE.sh ${sampleName}
+
+module purge
+module load Java
+cd ${SCRIPTDIR}/
+./ATACSeq/peakCallingHMMRATAC.sh ${sampleName}
+

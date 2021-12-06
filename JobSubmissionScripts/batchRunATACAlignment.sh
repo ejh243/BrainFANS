@@ -7,10 +7,10 @@
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
-#SBATCH --output=LogFiles/ATAQAlignment-%A_%a.o
-#SBATCH --error=LogFiles/ATAQAlignment-%A_%a.e
-#SBATCH --job-name=ATAQAlignment-%A_%a.e
-#SBATCH --array=0-295%40 ## runs 19 jobs with 40 at any one time
+#SBATCH --output=LogFiles/ATAC/ATACAlignment-%A_%a.o
+#SBATCH --error=LogFiles/ATAC/ATACAlignment-%A_%a.e
+#SBATCH --job-name=ATACAlignment-%A_%a.e
+#SBATCH --array=0-419%50 
 
 ## print start date and time
 echo Job started on:
@@ -38,24 +38,28 @@ RAWDATADIR=($(find . -name '01_raw_reads'))
 FQFILES=()
 for FOLDER in ${RAWDATADIR[@]}
 do 	
-    echo "Processing folder: "
-	echo ${FOLDER}
-	FQFILES+=($(find ${FOLDER} -name '*[rR]1*q.gz')) ## this command searches for all fq files within
+	if [ ${FOLDER} != FastqParts ]
+	then 
+		echo "Processing folder: "
+		echo ${FOLDER}
+		FQFILES+=($(find ${FOLDER} -name '*[rR]1*q.gz')) ## this command searches for all fq files within
+	fi
 done
 
 echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""	
 
-sample=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
-sampleName=$(basename ${sample%_[rR]*})
+
+toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
+sampleID=$(basename ${toProcess%_[rR]*})
 ## later samples have an additional _S[num] in the file name need to remove
-sampleName=${sampleName%_S[0-9]*}
+sampleID=${sampleID%_S[0-9]*}
 
 ## run sequencing QC and trimming on fastq files		
 module load FastQC 
 module load fastp
 
 cd ${SCRIPTDIR}
-sh ./ATACSeq/qcRawData.sh ${sample}  
+sh ./ATACSeq/qcRawData.sh ${toProcess}  
 
 ## run alignment and post processing on sample
 module purge ## had conflict issues if this wasn't run first
@@ -64,7 +68,7 @@ module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
 
 cd ${SCRIPTDIR}
-sh ./ATACSeq/alignmentPE.sh ${sample}
+sh ./ATACSeq/alignmentPE.sh ${toProcess}
 
 module purge
 module load SAMtools
@@ -73,7 +77,7 @@ module load BEDTools
 export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
 
 
-mkdir -p ENCODEMetrics
+#mkdir -p ENCODEMetrics
 
 cd ${SCRIPTDIR}
-./ATACSeq/calcENCODEQCMetricsPE.sh ${sampleName}_sorted_chr1.bam
+./ATACSeq/calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam

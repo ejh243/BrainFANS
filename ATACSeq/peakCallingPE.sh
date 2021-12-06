@@ -1,6 +1,8 @@
 ## Written by Eilis
-## Uses shifted tagAlign files
-## calls peaks per sample
+## Uses MACs in two methods
+## 1. with shifted tagAlign files
+## 2. using BAM files and paired end reads
+## calls peaks per sample for QC purposes
 ## parameter choices guided by this post: https://github.com/taoliu/MACS/issues/331
 
 cd ${ALIGNEDDIR}
@@ -24,3 +26,4 @@ bedtools intersect -v -a ${PEAKDIR}/MACS/ShiftedTagAlign/${sampleName}_peaks.bro
 bedtools intersect -v -a ${PEAKDIR}/MACS/BAMPE/${sampleName}_peaks.broadPeak -b ${BLACKLIST} \
   | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
   | grep -P 'chr[\dXY]+[ \t]'  | gzip -nc > ${PEAKDIR}/MACS/BAMPE/${sampleName}.broadPeak.filt.gz
+  
