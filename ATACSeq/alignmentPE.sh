@@ -41,7 +41,7 @@ if [ ! -s ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt ]
 	echo "Running alignment for"" ${sampleName}"
 	date -u	
 	## alignment
-	bowtie2  -p 10 -X 1000 -k ${multimap} -x ${REFGENOME}/genome -1 ${FOLDERTRIM}/${f1} -2 ${FOLDERTRIM}/${f2} -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
+	bowtie2  -p 10 -X 2000 -k ${multimap} -x ${REFGENOME}/genome -1 ${FOLDERTRIM}/${f1} -2 ${FOLDERTRIM}/${f2} -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
 
 	## convert to sam files, sort and index
 	echo "converting to sam file, sorting and indexing"

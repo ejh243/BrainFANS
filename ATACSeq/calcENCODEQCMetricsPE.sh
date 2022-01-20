@@ -7,8 +7,8 @@
 ## Remove PCR duplicates (using Picard’s MarkDuplicates or FixSeq)
 
 ## requires a (r1) fastq file provided on the command line 
-## cacluclates sequencing qc metrics and trimming of fastq files
-
+## calculates sequencing qc metrics and trimming of fastq files
+ 
 RAW_BAM_FILE=$1 
 
 echo "Calculating ENCODE QC metrics"
@@ -16,6 +16,8 @@ echo Job started on:
 date -u
 ## input: Raw BAM file ${RAW_BAM_FILE}, multimap variable (defined in config file)
 cd ${ALIGNEDDIR}
+
+mkdir -p ENCODEMetrics
 
 # =============================
 # Remove  unmapped, mate unmapped
@@ -100,8 +102,8 @@ date -u
 PBC_FILE_QC="${FINAL_BAM_PREFIX}.pbc.qc"
 # TotalReadPairs [tab] DistinctReadPairs [tab] OneReadPair [tab] TwoReadPairs [tab] NRF=Distinct/Total [tab] PBC1=OnePair/Distinct [tab] PBC2=OnePair/TwoPair
 
-samtools sort -n ${FILT_BAM_FILE} -o ${OFPREFIX}.srt.tmp.bam
-bedtools bamtobed -bedpe -i ${OFPREFIX}.srt.tmp.bam | awk 'BEGIN{OFS="\t"}{print $1,$2,$4,$6,$9,$10}' | grep -v 'chrM' | sort | uniq -c | awk 'BEGIN{mt=0;m0=0;m1=0;m2=0} ($1==1){m1=m1+1} ($1==2){m2=m2+1} {m0=m0+1} {mt=mt+$1} END{printf "%d\t%d\t%d\t%d\t%f\t%f\t%f\n",mt,m0,m1,m2,m0/mt,m1/m0,m1/m2}' > ${PBC_FILE_QC}
+bedtools bamtobed -bedpe -i ${OFPREFIX}.srt.tmp.bam | awk 'BEGIN{OFS="\t"}{print $1,$2,$4,$6,$9,$10}' | grep -v 'chrM' | sort | uniq -c | awk 'BEGIN{mt=0;m0=0;m1=0;m2=0} ($1==1){m1=m1+1} ($1==2){m2=m2+1} {m0=m0+1} {mt=mt+$1} END{if (mt > 0) {printf "%d\t%d\t%d\t%d\t%f\t%f\t%f\n",mt,m0,m1,m2,m0/mt,m1/m0,m1/m2} else printf "%d\t%d\t%d\t%d\t%s\t%s\t%s\n",mt,m0,m1,m2,NA,NA,NA }'  > ${PBC_FILE_QC}
+
 rm ${OFPREFIX}.srt.tmp.bam
 rm ${FILT_BAM_FILE}
 

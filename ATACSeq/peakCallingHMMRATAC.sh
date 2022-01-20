@@ -9,8 +9,13 @@ mkdir -p ${PEAKDIR}/HMMRATAC
 ## create file paths from sample name
 ## requires sorted bam file with index from paired end data
 sampleName=$1
-BAM=${sampleName}_depDup_q30.bam
+BAM=${sampleName}_depDup_q30.bam # nb should be identical to ${sampleName}.filt.nmsrt.nodup.bam used for MACS
 INDEX=${sampleName}_depDup_q30.bam.bai
 
 
-java -jar ${HMMRATAC} -b ${BAM} -i ${INDEX} -g ${GENOMESIZE} -e ${BLACKLIST} -o ${PEAKDIR}/HMMRATAC/${sampleName}
+java -jar ${HMMRATAC} -b ${BAM} -i ${INDEX} -g ${GENOMESIZE}  -o ${PEAKDIR}/HMMRATAC/${sampleName}
+
+## exclude peaks aligned to blacklist regions
+bedtools intersect -v -a ${PEAKDIR}/HMMRATAC/${sampleName}_peaks.gappedPeak -b ${BLACKLIST} \
+  | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
+  | grep -P 'chr[\dXY]+[ \t]'  | gzip -nc > ${PEAKDIR}/HMMRATAC/${sampleName}.gappedPeak.filt.gz

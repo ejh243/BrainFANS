@@ -1,17 +1,16 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=18:00:00 # Maximum wall time for the job.
+#SBATCH --time=24:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
-#SBATCH --output=LogFiles/ATAQPeakCalling-%A_%a.o
-#SBATCH --error=LogFiles/ATAQPeakCalling-%A_%a.e
-#SBATCH --job-name=ATAQPeakCalling-%A_%a.e
-#SBATCH --array=0-295%20 ## runs 19 jobs with 20 at any one time
-
+#SBATCH --output=LogFiles/ATAC/ATACPeakCalling-%A_%a.o
+#SBATCH --error=LogFiles/ATAC/ATACPeakCalling-%A_%a.e
+#SBATCH --job-name=ATACPeakCalling-%A_%a.e
+#SBATCH --array=0-410%40 
 
 ## print start date and time
 echo Job started on:
@@ -47,7 +46,7 @@ module load SAMtools
 module load R/3.6.3-foss-2020a
 
 cd ${SCRIPTDIR}
-./ATACSeq/shiftAlignedReadsPE.sh ${sampleName}
+#./ATACSeq/shiftAlignedReadsPE.sh ${sampleName}
 
 date -u
 echo "Reads shifted"
@@ -59,10 +58,16 @@ module purge
 module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 module load BEDTools
 cd ${SCRIPTDIR}/
-./ATACSeq/peakCallingPE.sh ${sampleName}
+#./ATACSeq/peakCallingPE.sh ${sampleName}
 
 module purge
 module load Java
 cd ${SCRIPTDIR}/
-./ATACSeq/peakCallingHMMRATAC.sh ${sampleName}
+#sh ./ATACSeq/peakCallingHMMRATAC.sh ${sampleName}
+
+module purge
+module load BEDTools
+module load SAMtools
+
+sh ./ATACSeq/calcFrip.sh ${sampleName}
 

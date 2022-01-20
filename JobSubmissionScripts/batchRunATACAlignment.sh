@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=18:00:00 # Maximum wall time for the job.
+#SBATCH --time=24:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
@@ -10,7 +10,7 @@
 #SBATCH --output=LogFiles/ATAC/ATACAlignment-%A_%a.o
 #SBATCH --error=LogFiles/ATAC/ATACAlignment-%A_%a.e
 #SBATCH --job-name=ATACAlignment-%A_%a.e
-#SBATCH --array=0-419%50 
+#SBATCH --array=0-410%50 
 
 ## print start date and time
 echo Job started on:
@@ -37,16 +37,16 @@ RAWDATADIR=($(find . -name '01_raw_reads'))
 ## create array of all fastq files
 FQFILES=()
 for FOLDER in ${RAWDATADIR[@]}
-do 	
-	if [ ${FOLDER} != FastqParts ]
-	then 
-		echo "Processing folder: "
-		echo ${FOLDER}
-		FQFILES+=($(find ${FOLDER} -name '*[rR]1*q.gz')) ## this command searches for all fq files within
-	fi
+do     
+    if [ ${FOLDER} != FastqParts ]
+    then 
+        echo "Processing folder: "
+        echo ${FOLDER}
+        FQFILES+=($(find ${FOLDER} -name '*[rR]1*q.gz')) ## this command searches for all fq files within
+    fi
 done
 
-echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""	
+echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""    
 
 
 toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
@@ -54,7 +54,7 @@ sampleID=$(basename ${toProcess%_[rR]*})
 ## later samples have an additional _S[num] in the file name need to remove
 sampleID=${sampleID%_S[0-9]*}
 
-## run sequencing QC and trimming on fastq files		
+## run sequencing QC and trimming on fastq files        
 module load FastQC 
 module load fastp
 
@@ -73,11 +73,10 @@ sh ./ATACSeq/alignmentPE.sh ${toProcess}
 module purge
 module load SAMtools
 module load picard/2.6.0-Java-1.8.0_131
-module load BEDTools
+module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version to avoid conflict
 export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
+export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/SAMstats/bin/"
 
-
-#mkdir -p ENCODEMetrics
 
 cd ${SCRIPTDIR}
-./ATACSeq/calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
+sh ./ATACSeq/calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam

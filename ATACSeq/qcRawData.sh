@@ -31,7 +31,7 @@ echo ${f2}
 echo "Output written to " ${FASTQCDIR}
 
 cd ${FOLDER}  
-fastqc ${f1} ${f2} -o ${FASTQCDIR}
+fastqc ${f1} ${f2} -t 8 -o ${FASTQCDIR}
 
 ## run fastp if not already run
 echo "Running FASTP"
@@ -43,7 +43,6 @@ echo "Looking for trimmed files in" ${FOLDERTRIM}
 if [ ! -s ${FOLDERTRIM}/fastp_reports/${sampleName}_fastp.json ]	
 then
   echo "Trimmed fastq not found so trimming"
-  ## trim adapters only do not trim based on quality
   fastp --detect_adapter_for_pe --length_required=27 --thread=8 --in1=${f1} --in2=${f2} --out1=${FOLDERTRIM}/${outf1} --out2=${FOLDERTRIM}/${outf2} --html=${FOLDERTRIM}/fastp_reports/${sampleName}_fastp.html --json=${FOLDERTRIM}/fastp_reports/${sampleName}_fastp.json
 fi
 
