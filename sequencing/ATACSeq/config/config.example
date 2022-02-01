@@ -1,0 +1,29 @@
+## Sequencing data filepaths
+
+export DATADIR=/gpfs/project_name
+export RAWDATADIR=${DATADIR}/1_raw
+export FASTQCDIR=${RAWDATADIR}/fastqc
+export TRIMDIR=${DATADIR}/2_trimmed
+export ALIGNEDDIR=${DATADIR}/3_aligned
+export PEAKDIR=${DATADIR}/4_calledPeaks
+
+## Reference data filepaths
+export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index
+export BLACKLIST=/gpfs/mrc0/projects/Research_Project-MRC190311/references/ATAQSeq/hg38.blacklist.bed.gz
+export UCSCRef=/gpfs/mrc0/projects/Research_Project-MRC190311/references/UCSC/
+export GENOMESIZE=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/genome.info
+
+
+## Software/script filepaths
+export SCRIPTDIR=/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing
+export PICARD=/gpfs/ts0/shared/software/picard/2.6.0-Java-1.8.0_131
+export UCSCUtils=/gpfs/mrc0/projects/Research_Project-MRC190311/software/UCSCutilities
+export BBMAP=/gpfs/mrc0/projects/Research_Project-MRC190311/software/bbmap
+export PHANTOMPEAK=/gpfs/mrc0/projects/Research_Project-MRC190311/software/phantompeakqualtools/
+export HMMRATAC=/gpfs/mrc0/projects/Research_Project-MRC190311/software/HMMRATAC_V1.2.10_exe.jar
+
+## conda filepaths
+export ENVDIR=/lustre/home/ejh243/.conda/envs/encodeqc
+
+## parameters
+export multimap=4
