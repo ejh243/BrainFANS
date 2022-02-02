@@ -1,0 +1,68 @@
+This readme explains the content of the scripts for running the ATAC analysis pipeline
+
+#### Data pre-processing:
+
+1. sbatch --array=<number of batch jobs> JobSubmissionScripts/batchRunATACAlignment.sh <config.txt>
+
+This script searchs within raw data folders for all fastq files
+Then submits a batch script to process one sample
+	* executes fastqc.sh
+
+	* executes fastp.sh
+		
+	* executes ATACSeq/preprocessing/2_alignmentPE.sh 
+
+	* executes ATACSeq/preprocessing/3_calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
+	
+2. sbatch --array=<number of batch jobs> JobSubmissionScripts/batchCalcATACQCMetrics.sh <aligned dir>
+This script uses the ATACseqQC R package to generate the fragment distribution and calculate some summary statistics. It splits the samples into groups of 10 to run in parallel.
+	* executes ATACSeq/preprocessing/4_fragmentDistribution.r
+
+3. sbatch --array=<number of batch jobs> JobSubmissionScripts/batchRunATACPeakCalling.sh <config.txt>
+This script searchs within aligned data folders for all bam files
+Then submits a batch script to process one sample
+	* executes ATACSeq/preprocessing/5_shiftAlignedReadsPE.sh 
+		* takes a filtered bam file converts to a tagalign file, calculate CC scores and shifts reads ready for peak calling
+	* executes ATACSeq/preprocessing/6_samplePeaks.sh
+		* which runs MAC peak calling with shifted tagAlign files and with BAM files and paired end reads
+		* it then filters the peaks to exclude those that overlap with blacklisted regions
+	* executes ATACSeq/preprocessing/7_calcFrip.sh 
+		* calculates fraction of reads in peaks for each set of peaks
+	
+4. sbatch JobSubmissionScripts/collateATACStage1QCMetrics.sh  <config.txt>
+This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment. It also runs the following utility scripts.
+	* executes ATACSeq/preprocessing/8_progressReport.sh 
+		* identifies how many samples have been successful at each stage of the processing pipeline and for each fastq file, how far through the process it has progressed.
+	* executes ATACSeq/preprocessing/9_countMTReads.sh
+		* collates counts of the number of reads aligned to MT chromosome
+	* executes ATACSeq/preprocessing/10_collateFlagStatOutput.sh 
+		* collates flagstat summary of aligned sorted reads.
+
+
+5. collateSumStats.r 
+
+6. peak calling per sample type
+
+7. idr analysis against sample peaks
+
+8. pca analysis of peaks 
+
+#### Misc data preprocessing
+
+mergeFastq.sh
+Where a sample was procesed multiple times, the fastq files are merged. 
+
+#### OUTPUT files
+
+| Script | Filename | Description | Downstream processing |
+| ------ | -------- | ----------- | --------------------- |
+| fastqc.sh | * | FastQC report | Input for QC summary |
+| fastp.sh | *_trimmed.f*q | Trimmed raw sequence file output from fastp input | Input for alignment |
+| 2_alignmentPE.sh | ${ALIGNEDDIR}/*_statsperchr.txt | Counts of number of reads mapped to each chromosome before any filtering | Input to CountMTReads.sh |
+| 2_alignmentPE.sh | ${ALIGNEDDIR}/*_sorted.bam | Aligned reads, sorted and indexed | Input to calcATACQCMetrics.r |
+| 2_alignmentPE.sh | ${ALIGNEDDIR}/*_sorted_chr1.bam | Aligned chr 1 reads, sorted and indexed | Input to calcENCODEQCMetricsPE.sh |
+| 2_alignmentPE.sh | 
+${ALIGNEDDIR}/*_dupMetrics.txt | Output of Picard with duplication statistics | ? |
+| 2_alignmentPE.sh | ${ALIGNEDDIR}/*_depDup_q30.bam | Aligned reads with MT chr, low quality (q < 30),improperly paired reads, pcr optical duplicates, secondardy alignments excluded, sorted and indexed  | Input to peak calling |
+| 2_alignmentPE.sh | ${ALIGNEDDIR}/*_postFilter_statsperchr.txt | Counts of number of reads mapped to each chromosome after filtering  |  |
+ 
