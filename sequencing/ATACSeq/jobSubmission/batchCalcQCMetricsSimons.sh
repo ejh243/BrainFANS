@@ -5,14 +5,16 @@
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
-#SBATCH --mail-type=END # send email at job completion 
+#SBATCH --mail-type=END # send email at job completion
+#SBATCH --mail-user=e.m.walker@exeter.ac.uk # email me at job completion
 #SBATCH --output=ATACSeq/logFiles/calcATACQC-%A_%a.o
 #SBATCH --error=ATACSeq/logFiles/calcATACQC-%A_%a.e
 #SBATCH --job-name=calcATACQC-%A_%a
 
+
 ## print start date and time
 echo Job started on:
-date -u
+  date -u
 
 ## load config file provided on command line when submitting job
 echo "Loading config file: "
@@ -26,4 +28,3 @@ Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/4_fragmentDistribution.r ${ALIGNEDDIR
 ## move log files into a folder
 mkdir -p ATACSeq/logFiles/${SLURM_ARRAY_JOB_ID}
 mv ATACSeq/logFiles/calcATACQC-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${SLURM_ARRAY_JOB_ID}
-

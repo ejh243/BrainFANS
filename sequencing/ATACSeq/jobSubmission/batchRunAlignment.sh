@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=ATACSeq/logFiles/ATAC/ATACAlignment-%A_%a.o
-#SBATCH --error=ATASeq/logFiles/ATAC/ATACAlignment-%A_%a.e
+#SBATCH --error=ATACSeq/logFiles/ATAC/ATACAlignment-%A_%a.e
 #SBATCH --job-name=ATACAlignment-%A_%a.e
 
 ## print start date and time
@@ -77,5 +77,5 @@ then
 fi
 
 ## move log files into a folder
-mkdir -p LogFiles/ATAC/${SLURM_ARRAY_JOB_ID}
-mv LogFiles/ATAC/ATACAlignment-${SLURM_ARRAY_JOB_ID}* LogFiles/ATAC/${SLURM_ARRAY_JOB_ID}
+mkdir -p logFiles/${SLURM_ARRAY_JOB_ID}
+mv logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* logFiles/${SLURM_ARRAY_JOB_ID}
