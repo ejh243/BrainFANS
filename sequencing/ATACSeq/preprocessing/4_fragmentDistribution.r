@@ -43,10 +43,10 @@ aQCSampleNames<-gsub("_depDup_q30.bam", "", basename(aQCFiles))
 ## filter to subset of samples
 index<-c(1:10)+(batchNum*10)
 ## if number of samples is not a function of ten adjust index
-index<-index[index %in% 1:nrow(processSum)]
+index<-index[index %in% 1:length(aQCFiles)]
 nSamples <- length(index)
 	
-if(length(aFiles) > 0){
+if(length(aQCFiles) > 0){
 
 	## create summary of fragment size using filtered aligned files
 	fragSizeHist<-fragSizeDist(aQCFiles, aQCSampleNames)
@@ -55,7 +55,7 @@ if(length(aFiles) > 0){
 	## convert to ratios of nucleosomefree, mono, bi, tri etc
 	propNucleosomes<-lapply(fragSizeNorm,calcNucleoProps)
 	propNucleosomes<-matrix(data = unlist(propNucleosomes), ncol = 5, byrow = TRUE)
-	rownames(propNucleosomes)<-processSum$SampleID
+	rownames(propNucleosomes)<-aQCSampleNames
 	
 	## test for multimodality
 	diptestStats<-cbind(unlist(lapply(fragSizeNorm, function(y) { dip.test(y)$statistic })), unlist(lapply(fragSizeNorm, function(y) { dip.test(y)$p.value })))

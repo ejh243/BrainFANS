@@ -83,7 +83,8 @@ if [ ! -s ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt ]
 	## remove duplicates
 	echo "removing duplicates"
 	java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${ALIGNEDDIR}/${sampleName}_q30.bam O=${ALIGNEDDIR}/${sampleName}_depDup_q30.bam M=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
-	  
+	
+ 
 	rm ${ALIGNEDDIR}/${sampleName}_q30.bam
 	rm ${ALIGNEDDIR}/${sampleName}_noMT.bam
 

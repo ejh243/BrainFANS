@@ -39,11 +39,5 @@ echo "Output written to " ${FASTQCDIR}
 cd ${RAWDATADIR}  
 fastqc ${f1} ${f2} -t 8 -o ${FASTQCDIR}
 
-#If fastqc is finished on all files then run MultiQC 
-if [ `expr ${SLURM_ARRAY_TASK_ID} + 1` = "${#FQFILES[@]}" ]
-then 
-  echo "Running MultiQC on all files"
-  multiqc ./*_fastqc.zip -o ${RAWDATADIR}
-fi
 
-echo "FASTQC and MultiQC complete"
+echo "FASTQC complete"
