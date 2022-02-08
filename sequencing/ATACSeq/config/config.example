@@ -12,7 +12,7 @@ export GENODIR=/gpfs/mrc0/projects/Research_Project-MRC190311/SNPArray/mrcbrain/
 ## Reference data filepaths
 export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index
 export GENOMEFASTA=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta/
-export KGREF = /gpfs/mrc0/projects/Research_Project-MRC190311/references/1000G/
+export KGREF=/gpfs/mrc0/projects/Research_Project-MRC190311/references/1000G/
 export BLACKLIST=/gpfs/mrc0/projects/Research_Project-MRC190311/references/ATAQSeq/hg38.blacklist.bed.gz
 export UCSCRef=/gpfs/mrc0/projects/Research_Project-MRC190311/references/UCSC/
 export GENOMESIZE=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/genome.info
