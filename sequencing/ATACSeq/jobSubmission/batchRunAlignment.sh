@@ -14,7 +14,6 @@
 echo Job started on:
 date -u
 
-#----------------------------------------------------------------#
 ## load config file provided on command line when submitting job
 echo "Loading config file: "
 echo $1
@@ -44,7 +43,7 @@ then
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
-#----------------------------------------------------------------#
+
 ## create array of all fastq files
 cd ${RAWDATADIR}
 FQFILES=($(find . -name '*[rR]1*q.gz')) ## this command searches for all fq files within
@@ -56,7 +55,7 @@ sampleID=$(basename ${toProcess%_[rR]*})
 ## later samples have an additional _S[num] in the file name need to remove
 sampleID=${sampleID%_S[0-9]*}
 
-#----------------------------------------------------------------#
+
 ## if number of flags is 1 (config.txt), then run all steps
 if [ ${all} == 1 ] || [[ ${step} =~ 'FASTQC' ]]
 then
@@ -104,7 +103,7 @@ then
     sh ./ATACSeq/preprocessing/3_calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
 fi
 
-#----------------------------------------------------------------#
+
 ## move log files into a folder
 mkdir -p logFiles/${SLURM_ARRAY_JOB_ID}
 mv logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* logFiles/${SLURM_ARRAY_JOB_ID}
