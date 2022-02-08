@@ -18,6 +18,31 @@ date -u
 echo "Loading config file: "
 echo $1
 source ./$1 
+all=$#
+
+## if working in the development branch, load specified config.dev file
+if [[ $2 =~ 'config.dev' ]]
+then
+    echo "Loading development config file:  "
+    echo $2
+    source ./$2
+
+    step=$3
+    all=1 #set to 1 to ensure if step flag is blank all steps are run
+else
+    step=$2
+fi
+
+## check script directory
+echo 'Script directory is: ' ${SCRIPTDIR}
+
+
+## check step method matches required options and exit if not
+if [[ ! $step =~ "FASTQC" ]] && [[ ! $step =~ "TRIM" ]] && [[ ! $step =~ "ALIGN" ]] && [[ ! $step =~ "ENCODE" ]] &&[[ ! $step == '' ]];
+then 
+    { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+fi
+
 
 ## create array of all fastq files
 cd ${RAWDATADIR}
@@ -30,7 +55,9 @@ sampleID=$(basename ${toProcess%_[rR]*})
 ## later samples have an additional _S[num] in the file name need to remove
 sampleID=${sampleID%_S[0-9]*}
 
-if [ $# = 1 ] || [[ $2 =~ 'FASTQC' ]]
+
+## if number of flags is 1 (config.txt), then run all steps
+if [ ${all} == 1 ] || [[ ${step} =~ 'FASTQC' ]]
 then
     ## run sequencing QC and trimming on fastq files        
     module load FastQC 
@@ -39,7 +66,7 @@ then
     sh ./preScripts/fastqc.sh ${toProcess}  
 fi
 
-if [ $# = 1 ] || [[ $2 =~ 'TRIM' ]]
+if [ ${all} == 1 ] || [[ ${step} =~ 'TRIM' ]]
 then
     module purge
     module load fastp
@@ -48,7 +75,7 @@ then
     sh ./preScripts/fastp.sh ${toProcess} 
 fi
 
-if [ $# = 1 ] || [[ $2 =~ 'ALIGN' ]]
+if [ ${all} == 1 ] || [[ ${step} =~ 'ALIGN' ]]
 then
     ## run alignment and post processing on sample
     module purge ## had conflict issues if this wasn't run first
@@ -60,7 +87,7 @@ then
     sh ./ATACSeq/preprocessing/2_alignmentPE.sh ${toProcess}
 fi
 
-if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
+if [ ${all} == 1 ] || [[ ${step} =~ 'ENCODE' ]]
 then
     module purge
     module load SAMtools
@@ -75,6 +102,7 @@ then
     cd ${SCRIPTDIR}
     sh ./ATACSeq/preprocessing/3_calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
 fi
+
 
 ## move log files into a folder
 mkdir -p logFiles/${SLURM_ARRAY_JOB_ID}
