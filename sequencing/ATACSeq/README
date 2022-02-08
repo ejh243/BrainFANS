@@ -41,6 +41,10 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
 
 5. collateSumStats.r 
 
+6.
+
+7. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchFormatSexChrs.sh <config file>
+
 6. peak calling per sample type
 
 7. idr analysis against sample peaks
