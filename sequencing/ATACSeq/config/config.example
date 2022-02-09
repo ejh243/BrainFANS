@@ -7,6 +7,7 @@ export FASTQCDIR=${RAWDATADIR}/fastqc
 export TRIMDIR=${DATADIR}/2_trimmed
 export ALIGNEDDIR=${DATADIR}/3_aligned
 export PEAKDIR=${DATADIR}/4_calledPeaks
+export PEAKCOUNTS=${DATADIR}/5_countPeaks
 export GENODIR=/gpfs/mrc0/projects/Research_Project-MRC190311/SNPArray/mrcbrain/3_imputed/ImputationOutput/All
 
 ## Reference data filepaths
@@ -14,6 +15,8 @@ export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch3
 export GENOMEFASTA=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta/
 export KGREF=/gpfs/mrc0/projects/Research_Project-MRC190311/references/1000G/
 export BLACKLIST=/gpfs/mrc0/projects/Research_Project-MRC190311/references/ATAQSeq/hg38.blacklist.bed.gz
+export PAR=/gpfs/mrc0/projects/Research_Project-MRC190311/references/ATAQSeq/hg38.pseudoautosomal.regions.bed
+export XCHRBED=/gpfs/mrc0/projects/Research_Project-MRC190311/references/GeneLists/XChrGenes.bed
 export UCSCRef=/gpfs/mrc0/projects/Research_Project-MRC190311/references/UCSC/
 export GENOMESIZE=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/genome.info
 
@@ -26,6 +29,7 @@ export BBMAP=/gpfs/mrc0/projects/Research_Project-MRC190311/software/bbmap
 export PHANTOMPEAK=/gpfs/mrc0/projects/Research_Project-MRC190311/software/phantompeakqualtools/
 export HMMRATAC=/gpfs/mrc0/projects/Research_Project-MRC190311/software/HMMRATAC_V1.2.10_exe.jar
 export VERIFYBAMID=/gpfs/mrc0/projects/Research_Project-MRC190311/software/verifyBamID_1.1.3/verifyBamID/bin/verifyBamID
+export PLINK=/gpfs/mrc0/projects/Research_Project-MRC190311/software/plink1.90
 
 ## conda filepaths
 export ENVDIR=/lustre/home/ejh243/.conda/envs/encodeqc
