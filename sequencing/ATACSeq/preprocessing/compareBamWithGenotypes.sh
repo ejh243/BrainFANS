@@ -1,8 +1,11 @@
-# prepare bam file for comparision with verifyBamID
+# prepare bam file for comparison with verifyBamID
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/formatBamForVerifyBamID.sh <bam file>
+# sh ./ATACSeq/preprocessing/compareBamWithGenotypes.sh <sample Name> <vcf id>
+# where <sample name> is the prefix for the atac bam file
+# <vcf id> is the ID within the vcf file for that sample
 # script needs to be executed from <git repo>/sequencing/
+
 
 ## REQUIRES the following variables in config file
 # ALIGNEDDIR, GENOMEFASTA, KGREF
@@ -12,6 +15,7 @@
 
 ## INPUT
 # sorted bam file
+# vcf file from SNP chip data
 
 ## OUTPUT
 #
