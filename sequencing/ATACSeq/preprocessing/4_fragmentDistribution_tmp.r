@@ -46,6 +46,7 @@ index<-c(1:10)+(batchNum*10)
 index<-index[index %in% 1:length(aQCFiles)]
 nSamples <- length(index)
 	
+
 if(length(aQCFiles) > 0){
 
 	## create summary of fragment size using filtered aligned files
