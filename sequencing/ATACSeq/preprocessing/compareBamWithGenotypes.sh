@@ -23,6 +23,7 @@ mkdir -p baseRecalibrate
 
 sampleName=$1
 vcfid=$2
+vcfid="${vcfid%"${vcfid##*[![:space:]]}"}" 
 
 if [[ "${vcfid}" != "#N/A" ]]
 then 
@@ -38,11 +39,11 @@ then
     fi
 
     ## mark duplicates only
-    #java -jar $EBROOTPICARD/picard.jar  MarkDuplicates INPUT=${bamfile} OUTPUT=baseRecalibrate/${sampleName}_dedup.bam METRICS_FILE=baseRecalibrate/${sampleName}_metrics.txt     
+    java -jar $EBROOTPICARD/picard.jar  MarkDuplicates INPUT=${bamfile} OUTPUT=baseRecalibrate/${sampleName}_dedup.bam METRICS_FILE=baseRecalibrate/${sampleName}_metrics.txt     
 
 
     ## add read group
-    #java -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
+    java -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
            I=baseRecalibrate/${sampleName}_dedup.bam \
            O=baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
            RGID=${projectID} \
@@ -54,16 +55,16 @@ then
     rm baseRecalibrate/${sampleName}_dedup.bam
 
     ##index
-    #samtools index baseRecalibrate/${sampleName}_dedup_rglabelled.bam
+    samtools index baseRecalibrate/${sampleName}_dedup_rglabelled.bam
 
     # recalibrate bases in bam files
-    #gatk BaseRecalibrator \
+    gatk BaseRecalibrator \
         -R ${GENOMEFASTA} \
         -I baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
         --known-sites ${KGREF}/1000G_omni2.5.hg38.vcf.gz \
         -O baseRecalibrate/${sampleName}_recal_data.table
 
-    #gatk ApplyBQSR \
+    gatk ApplyBQSR \
        -R ${GENOMEFASTA} \
        -I baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
        --bqsr-recal-file baseRecalibrate/${sampleName}_recal_data.table \
@@ -73,7 +74,7 @@ then
 
     mkdir -p genotypeConcordance
 
-    ${VERIFYBAMID} --vcf ${GENODIR}/ImputationOutput/All/verifyBamID.vcf.gz --bam baseRecalibrate/${sampleName}_baserecal.bam --out genotypeConcordance/${sampleName} --verbose --ignoreRG --smID ${vcfid}
+    ${VERIFYBAMID} --vcf ${GENODIR}/ImputationOutput/All/verifyBamID.vcf.gz --bam baseRecalibrate/${sampleName}_baserecal.bam --out genotypeConcordance/${sampleName} --verbose --ignoreRG --smID ${vcfid} --best
 
 else
 
