@@ -1,4 +1,0 @@
-this should be there with rw prvilege for all
-
-ok lets try again7
-that worked better2
