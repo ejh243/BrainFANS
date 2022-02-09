@@ -103,7 +103,7 @@ then
 
 	cd ${SCRIPTDIR}
 	echo "8. Changing to script directory: " ${SCRIPTDIR} ##
-	sh ./WGBS/preprocessing/2_trim.sh ${toProcess}  
+	sh ./preScripts/trimGalore.sh ${toProcess}  
 
 	echo "9. Finished Trim Galore on: " ##
 	echo ${sampleID} ##
