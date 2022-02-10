@@ -6,14 +6,16 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=LogFiles/ATAC/ATACQCSummary
-#SBATCH --error=LogFiles/ATAC/ATACQCSummary
+#SBATCH --output=ATACSeq/logFiles/ATACQCSummary-%A.o
+#SBATCH --error=ATACSeq/logFiles/ATACQCSummary-%A.e
 #SBATCH --job-name=ATACQCSummary
 
 
 ## print start date and time
 echo Job started on:
 date -u
+
+FOLDER=${RAWDATADIR} ##to remove after permission gained on 8_progressReport.sh
 
 ## load config file provided on command line when submitting job
 echo "Loading config file: "
@@ -22,7 +24,7 @@ source ./$1
 
 module load MultiQC
 ## use multiqc to collate QC output statistics
-
+'''
 mkdir -p ${FASTQCDIR}/multiqc
 cd ${FASTQCDIR}/
 multiqc . -f -o ${FASTQCDIR}/multiqc
@@ -30,12 +32,14 @@ multiqc . -f -o ${FASTQCDIR}/multiqc
 mkdir -p ${ALIGNEDDIR}/multiqc
 cd ${ALIGNEDDIR}/
 multiqc . -f -o ${ALIGNEDDIR}/multiqc
-
+'''
 ## run other bespoke utilty scripts to collate other QC metrics
 cd ${SCRIPTDIR}/
 
 ./ATACSeq/preprocessing/8_progressReport.sh 
-./ATACSeq/preprocessing/9_countMTReads.sh 
-./ATACSeq/preprocessing/10_collateFlagStatOutput.sh 
+#./ATACSeq/preprocessing/9_countMTReads.sh 
+#./ATACSeq/preprocessing/10_collateFlagStatOutput.sh 
 
-
+## move log files into a folder
+mkdir -p ATACSeq/logFiles/${USER}
+mv ATACSeq/logFiles/ATACQCSummary-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${USER}
