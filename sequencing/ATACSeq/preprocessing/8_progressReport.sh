@@ -68,7 +68,7 @@ do
     
 	## create filename for paired fastq file
     f2=$(basename $(ls ${RAWDATADIR}/${sampleName}*[rR]2*q.gz))    
-    echo -n ${sampleName},${FOLDER}, ${f1},${f2}, >> ${METADIR}/SummariseSampleProcessingProgress.csv
+    echo -n ${sampleName},${RAWDATADIR},$(basename ${f1}),${f2}, >> ${METADIR}/SummariseSampleProcessingProgress.csv
     
     if [ ! -s ${FASTQCDIR}/${sampleName}*[rR]1*fastqc.zip ]
     then
