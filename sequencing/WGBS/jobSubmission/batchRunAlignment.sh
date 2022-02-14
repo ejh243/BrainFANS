@@ -67,7 +67,7 @@ then
 fi
 
 
-## check if file containing list of sample IDs exists:
+## check if file containing list of sample IDs exists and if so:
 if test -f ${METADIR}/samples.txt;
 then 
 	## create an array from the file
@@ -90,14 +90,13 @@ then
 	
 	if [ ${all} == 1 ] || [[ ${step} =~ 'FASTQC' ]]
 	then
-		## run sequencing QC and trimming on fastq files		
+		## run sequencing QC on fastq files		
 		module load FastQC/0.11.5-Java-1.7.0_80
 		module load MultiQC
-		##module load fastp
-
+	
 		cd ${SCRIPTDIR}
 		echo "8. Changing to script directory: " ${SCRIPTDIR} ##
-		sh ./WGBS/preprocessing/1_fastqc.sh ${toProcess[0]}  
+		sh ./WGBS/preprocessing/1_fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}
 		echo "9. Finished fastqc on: " ##
 		echo ${sampleID} ##
 	fi
@@ -109,7 +108,7 @@ then
 
 		cd ${SCRIPTDIR}
 		echo "8. Changing to script directory: " ${SCRIPTDIR} ##
-		sh ./preScripts/trimGalore.sh ${toProcess[0]}    
+		sh ./preScripts/trimGalore.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
 
 		echo "9. Finished Trim Galore on: " ##
 		echo ${sampleID} ##
@@ -121,11 +120,11 @@ then
 		module load Bismark
 
 		cd ${SCRIPTDIR}
-		sh ./WGBS/preprocessing/3_alignment.sh ${toProcess[0]}  
+		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID} ${toProcess[0]}   
 	fi
 
-	mkdir -p WGBS/logFiles/WGBSalign_${SLURM_ARRAY_JOB_ID}
-	mv WGBS/logFiles/WGBSalign-${SLURM_ARRAY_JOB_ID}* WGBS/logFiles/WGBSalign_${SLURM_ARRAY_JOB_ID}
+	mkdir -p WGBS/logFiles/${USER}
+	mv WGBS/logFiles/WGBSalign-${SLURM_ARRAY_JOB_ID}* WGBS/logFiles/${USER}
 	
 else
 	echo "File list not found"

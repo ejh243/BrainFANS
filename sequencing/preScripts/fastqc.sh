@@ -19,17 +19,14 @@
 # fastqc reports for each fastq file
 # multiqc on total fastqc output
 
-f=$1
+f1=$(basename $1)
+f2=$(basename $2)
+sampleName=$3
 
 ## extract sample name from filename
-f1=$(basename $f)
-sampleName=${f1%_[rR][12]*} ## sample name is everything before either r1 or R1
 echo "Processing" ${sampleName}
 
-## create filename for paired fastq file
-f2=$(basename $(ls ${RAWDATADIR}/${sampleName}*[rR]2*q.gz))
-
-  ## run fastqc
+## run fastqc
 echo "Running FASTQC on"
 echo ${f1}
 echo ${f2}
