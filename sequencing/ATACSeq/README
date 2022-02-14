@@ -2,7 +2,9 @@ This readme explains the content of the scripts for running the ATAC analysis pi
 
 #### Data pre-processing:
 
-1. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchRunAlignment.sh <config.txt>
+1. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchRunAlignment.sh <config.txt> [<config.dev>] [<STEPS>]
+
+Parameters in [] are optional.
 
 This script searchs within raw data folders for all fastq files
 Then submits a batch script to process one sample
@@ -14,9 +16,15 @@ Then submits a batch script to process one sample
 
 	* executes ATACSeq/preprocessing/3_calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
 	
-2. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchCalcQCMetrics.sh <aligned dir>
+	-optional- 
+
+	[<config.dev>] specifies a different script directory for working on development git branches. It should be the second flag. If specified it will overwrite the main config $SCRIPTDIR variable. 
+
+	[<STEPS>] option of either FASTQC, TRIM or ALIGN. The first runs only fastqc on the samples, the second trims and the latter runs only the alignment. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run all steps. 
+
+2. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchCalcQCMetrics.sh 
 This script uses the ATACseqQC R package to generate the fragment distribution and calculate some summary statistics. It splits the samples into groups of 10 to run in parallel.
-	* executes ATACSeq/preprocessing/4_fragmentDistribution.r
+	* executes ATACSeq/preprocessing/4_fragmentDistribution.r <aligned dir> <config.txt>
 
 3. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchRunPeakCalling.sh <config.txt>
 This script searchs within aligned data folders for all bam files
