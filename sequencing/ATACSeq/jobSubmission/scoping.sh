@@ -29,7 +29,7 @@ echo "Project name: " $(basename ${DATADIRPE})
 
 dir=(${SCRIPTDIR} ${RAWDATADIR} ${FASTQCDIR} ${FOLDERTRIM} ${ALIGNEDDIR} ${PEAKDIR})
 type=("SCRIPT" "DATA" "FASTQC" "TRIMMED" "ALIGNED" "PEAK CALLED")
-pattern=('' '*[_.]*1.*q.gz' '*_fastqc.zip' '*trimmed*q.gz' '*depDup_q30.bam' '*')
+pattern=('' '*[rR]1*q.gz' '*_fastqc.zip' '*trimmed*q.gz' '*depDup_q30.bam' '*')
 
 ## SCRIPTDIR and RAWDATADIR should be checked for existence and correct file number in RAWDATADIR
 for x in {0..1}

@@ -25,27 +25,14 @@ cd $SLURM_SUBMIT_DIR
 echo "2. Loading config file: "
 echo $1
 source ./$1 
-all=$#
 
-## if working in the development branch, load specified config.dev file
-if [[ $2 =~ 'config.dev' ]]
-then
-    echo "Loading development config file:  "
-    echo $2
-    source ./$2
-
-    step=$3
-    all=1 #set to 1 to ensure if step flag is blank all steps are run
-else
-    step=$2
-fi
 
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
 
 ## check step method matches required options and exit if not
-if [[ ! $step =~ "FASTQC" ]] && [[ ! $step =~ "TRIM" ]] && [[ ! $step =~ "ALIGN" ]] && [[ ! $step == '' ]];
+if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] && [[ ! $2 == '' ]];
 then 
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
@@ -82,7 +69,7 @@ toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
 sampleID=$(basename ${toProcess%_*}) ##rm [rR]
 echo "7. Current sample: " ${sampleID} ##
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'FASTQC' ]]
+if [ ${all} == 1 ] || [[ $2 =~ 'FASTQC' ]]
 then
 	## run sequencing QC and trimming on fastq files		
 	module load FastQC/0.11.5-Java-1.7.0_80
@@ -96,7 +83,7 @@ then
 	echo ${sampleID} ##
 fi
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'TRIM' ]]
+if [ ${all} == 1 ] || [[ $2 =~ 'TRIM' ]]
 then
 	module purge
 	module load Trim_Galore
@@ -109,7 +96,7 @@ then
 	echo ${sampleID} ##
 fi
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'ALIGN' ]]
+if [ ${all} == 1 ] || [[ $2 =~ 'ALIGN' ]]
 then
 	module purge
 	module load Bismark
