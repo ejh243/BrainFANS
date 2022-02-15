@@ -1,51 +1,69 @@
 ## format files for use with Michegan Imputation Server
-cd ${DATADIR}/SNPdata/Merged
+
+## EXECUTION
+# sh SNPArray/preprocessing/4_formatForimputation.sh <population> <SNP ref file>
+# where 
+# <population > is 3 letter code for super population state ALL for no subsetting by population
+# <SNP ref file> is an input file of 
+# script needs to be executed from <git repo>/array/
+
+## REQUIRES the following variables in config file
+# PROCESSDIR, IMPUTEDIR, FILEPREFIX
+
+## REQUIRES the following software
+# plink, perl,
+
+## INPUT
+#  # binary plink files following prelim QC
+
+## OUTPUT
+# vcf files split by chr for upload to michegan imputation server
+
+population=$1
+refFile=$2
+
+cd ${IMPUTEDIR}/
 
 mkdir -p ImputationInput
 
 cd ImputationInput
 
-mkdir -p All
-mkdir -p EUR
+mkdir -p ${population}
+
 
 
 ## use tool to check data prior to upload https://www.well.ox.ac.uk/~wrayner/tools/
-## for all use 1000G
-cd All/
+## for All use 1000G
+cd ${population}/
 
-cp ../../SCZ2_QCd.bim .
-cp ../../SCZ2_QCd.bed .
-cp ../../SCZ2_QCd.fam .
+## subset samples
+if [ $population != "ALL" ]
+then
+    ${PLINK}/plink --bfile ${PROCESSDIR}/${FILEPREFIX}_QCd --keep ${PROCESSDIR}/${population}Samples.txt --maf 0.05 --out ${FILEPREFIX}_QCd_${population} --make-bed
+else
+	cp ${PROCESSDIR}/${FILEPREFIX}_QCd.bim ${FILEPREFIX}_QCd_${population}.bim
+	cp ${PROCESSDIR}/${FILEPREFIX}_QCd.bed ${FILEPREFIX}_QCd_${population}.bed
+	cp ${PROCESSDIR}/${FILEPREFIX}_QCd.fam ${FILEPREFIX}_QCd_${population}.fam
+fi
 
 ## liftover to hg19 for imputation
-
-${PLINK}/plink --bfile SCZ2_QCd --update-map ${REF}GSAArray/liftoverhg19.txt 3 --make-bed --out SCZ2_QCd_hg19
+${PLINK}/plink --bfile ${FILEPREFIX}_QCd_${population} --update-map ${GSAREF}liftoverhg19.txt 3 --make-bed --out ${FILEPREFIX}_QCd_hg19
 
 ## for HRC check tool need freq file
-${PLINK}/plink --bfile SCZ2_QCd_hg19 --freq --out SCZ2_QCd_hg19_freq
-perl ${KINGPATH}/HRC-1000G-check-bim.pl -b SCZ2_QCd_hg19.bim -f SCZ2_QCd_hg19_freq.frq -r ${KGG}/1000GP_Phase3_combined.legend -g
+${PLINK}/plink --bfile ${FILEPREFIX}_QCd_hg19 --freq --out ${FILEPREFIX}_QCd_hg19_freq
+
+if [[ $(basename ${refFile}) == HRC* ]] ;
+then
+perl ${KINGPATH}/HRC-1000G-check-bim.pl -b ${FILEPREFIX}_QCd_hg19.bim -f ${FILEPREFIX}_QCd_hg19_freq.frq -r ${refFile} -g --hrc
+else 
+perl ${KINGPATH}/HRC-1000G-check-bim.pl -b ${FILEPREFIX}_QCd_hg19.bim -f ${FILEPREFIX}_QCd_hg19_freq.frq -r ${refFile} -g --1000g
+fi
+
+
 sed -i 's=plink=${PLINK}/plink=g' Run-plink.sh
 sh Run-plink.sh
 #for file in *.vcf; do awk '{if($0 !~ /^#/) print "chr"$0; else print $0}' ${file} > with_chr_${file}; vcf-sort with_chr_${file} | bgzip -c > ${file}.gz;done
 for file in *.vcf; do vcf-sort ${file} | bgzip -c > ${file}.gz;done
 rm *.vcf
-rm SCZ2_QCd*.*[^gz]
+rm ${FILEPREFIX}_QCd*.*[^gz]
 
-
-
-## for EUR use HRC
-cd ../EUR
-${PLINK}/plink --bfile ../../SCZ2_QCd --keep ../../EURSamples.txt --maf 0.05 --out SCZ2_QCd_EUR --make-bed
-${PLINK}/plink --bfile SCZ2_QCd_EUR --update-map ${REF}GSAArray/liftoverhg19.txt 3 --make-bed --out SCZ2_QCd_EUR_hg19
-${PLINK}/plink --bfile SCZ2_QCd_EUR_hg19 --freq --out SCZ2_QCd_hg19_EUR_freq
-
-perl ${KINGPATH}/HRC-1000G-check-bim.pl -b SCZ2_QCd_EUR_hg19.bim -f SCZ2_QCd_hg19_EUR_freq.frq -r ${KGG}/../HRC/HRC.r1-1.GRCh37.wgs.mac5.sites.tab -h
-
-sed -i 's=plink=${PLINK}/plink=g' Run-plink.sh
-sh Run-plink.sh
-
-#for file in *.vcf; do awk '{if($0 !~ /^#/) print "chr"$0; else print $0}' ${file} > with_chr_${file}; vcf-sort with_chr_${file} | bgzip -c > ${file}.gz;done
-for file in *.vcf; do vcf-sort ${file} | bgzip -c > ${file}.gz;done
-
-rm *.vcf
-rm SCZ2_QCd*.*[^gz]
