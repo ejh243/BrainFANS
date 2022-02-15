@@ -18,27 +18,15 @@ date -u
 echo "Loading config file: "
 echo $1
 source ./$1 
-all=$#
 
-## if working in the development branch, load specified config.dev file
-if [[ $2 =~ 'config.dev' ]]
-then
-    echo "Loading development config file:  "
-    echo $2
-    source ./$2
 
-    step=$3
-    all=1 #set to 1 to ensure if step flag is blank all steps are run
-else
-    step=$2
-fi
 
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
 
 ## check step method matches required options and exit if not
-if [[ ! $step =~ "FASTQC" ]] && [[ ! $step =~ "TRIM" ]] && [[ ! $step =~ "ALIGN" ]] && [[ ! $step =~ "ENCODE" ]] &&[[ ! $step == '' ]];
+if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] && [[ ! $2 =~ "ENCODE" ]] &&[[ ! $2 == '' ]];
 then 
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
@@ -57,7 +45,7 @@ sampleID=${sampleID%_S[0-9]*}
 
 
 ## if number of flags is 1 (config.txt), then run all steps
-if [ ${all} == 1 ] || [[ ${step} =~ 'FASTQC' ]]
+if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
 then
     ## run sequencing QC and trimming on fastq files        
     module load FastQC 
@@ -66,7 +54,7 @@ then
     sh ./preScripts/fastqc.sh ${toProcess}  
 fi
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'TRIM' ]]
+if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
 then
     module purge
     module load fastp
@@ -75,7 +63,7 @@ then
     sh ./preScripts/fastp.sh ${toProcess} 
 fi
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'ALIGN' ]]
+if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
 then
     ## run alignment and post processing on sample
     module purge ## had conflict issues if this wasn't run first
@@ -87,7 +75,7 @@ then
     sh ./ATACSeq/preprocessing/2_alignmentPE.sh ${toProcess}
 fi
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'ENCODE' ]]
+if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
 then
     module purge
     module load SAMtools
