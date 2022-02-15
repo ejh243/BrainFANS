@@ -17,19 +17,15 @@ calcPopDist<-function(dat.pca, ref){
 args<-commandArgs(TRUE)
 
 setwd(args[1])
-refFolder<-args[2]
-subset<-args[3] ## use , to separate multiple files
+prefix<-args[2]
+refFolder<-args[3]
+
+subset<-args[4] ## use , to separate multiple files
 
 
-if(!is.na(subset)){
-	subset = unlist(strsplit(subset, ","))
-	#print(subset)
-	keepFiles<-sapply(subset, read.table, simplify=FALSE)
-	
-}
 
 
-pcas<-read.table("mergedw1000G.pca.eigenvec", stringsAsFactors = FALSE)
+pcas<-read.table(paste0(prefix, "_mergedw1000G.pca.eigenvec"), stringsAsFactors = FALSE)
 KGped<-read.table(paste(refFolder, "/20130606_g1k.ped", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t")
 popInfo<-read.table(paste(refFolder, "/PopInfo.txt", sep = ""), stringsAsFactors = FALSE, header = TRUE, sep = "\t") ## table made from 1000G website
 
@@ -40,6 +36,17 @@ popInfo<-popInfo[match(popInfo$Population.Code,levels(as.factor(KGped$Population
 KGped<-cbind(KGped,popInfo$Super.Population.Code[match(KGped$Population, popInfo$Population.Code)])
 colnames(KGped)[ncol(KGped)]<-"SuperPopulation"
 nSuperPops<-length(table(KGped$SuperPopulation))
+
+if(!is.na(subset)){
+	subset = unlist(strsplit(subset, ","))
+	#print(subset)
+	keepFiles<-sapply(subset, read.table, simplify=FALSE)
+	
+} else {
+	#keepFiles<-list()
+	#keepFiles[[1]]<-pcas[,1]
+}
+
 
 
 ptType<-c(20,3)[as.factor(is.na(KGped[,1]))]
@@ -55,7 +62,7 @@ plot(pcas[,3], pcas[,6], xlab = "PC1", ylab = "PC4", pch = ptType, col = ptCol)
 plot(0,1,type = "n", axes = FALSE, xlab = "", ylab = "")
 legend("center", pch = 16, col = rainbow(nPops), levels(as.factor(KGped$Population)), cex = 1.5, ncol = 3)
 
-if(length(args) > 2){
+if(length(args) > 4){
 	for(each in subset){
 		par(mfrow = c(2,2))
 		filterIndex<-which(pcas[,1] %in% keepFiles[[each]][,1] | !is.na(KGped[,1]))
@@ -82,7 +89,7 @@ plot(pcas[,3], pcas[,6], xlab = "PC1", ylab = "PC4", pch = ptType, col = ptCol)
 plot(0,1,type = "n", axes = FALSE, xlab = "", ylab = "")
 legend("center", pch = 16, col = rainbow(nSuperPops), levels(as.factor(KGped$SuperPopulation)), cex = 1.5)
 
-if(length(args) > 2){
+if(length(args) > 4){
 	for(each in subset){
 		
 		filterIndex<-which(pcas[,1] %in% keepFiles[[each]][,1] | !is.na(KGped[,1]))
@@ -102,7 +109,7 @@ dev.off()
 
 
 ## for each super population calculate cluster medians
-
+print("Calculating population means")
 nMatches<-rep(NA,20) 
 for(nPCs in 2:20){
 	pop.medians<-apply(pcas[,-c(1:2)][,1:nPCs], 2,aggregate, by = list(KGped$SuperPopulation), median)
@@ -111,8 +118,6 @@ for(nPCs in 2:20){
 	pop.medians<-pop.medians[,seq(2,nPCs*2,2)]
 
 	## for each individual compare to each super population and find most similar
-
-
 	popDistsAll<-apply(pcas[,-c(1:2)][,1:nPCs], 1, calcPopDist, pop.medians)
 	popDistsAll<-t(popDistsAll)
 	predPop<-colnames(popDistsAll)[apply(popDistsAll, 1, which.min)]
@@ -120,6 +125,8 @@ for(nPCs in 2:20){
 	compTrue<-table(predPop, KGped$SuperPopulation)
 	nMatches[nPCs]<-sum(diag(compTrue))
 }
+
+
 pdf("SelectOptimalnPCsForPopulationPrediction.pdf")
 plot(1:20,nMatches/sum(!is.na(KGped$SuperPopulation))*100, xlab = "nPCs", ylab = "Percentage Correct")
 dev.off()
@@ -144,12 +151,14 @@ par(mfrow = c(1,2))
 boxplot(qsPred ~ KGped$SuperPopulation, col = rainbow(5), xlab = "Known populations")
 boxplot(qsPred ~ predPop, col = rainbow(5), xlab = "Predicted populations")
 dev.off()
+
 ## can define thresholds for each population based on 1000 genomes samples
 #pop99<-aggregate(popDistsAll, by = list(KGped$SuperPopulation), quantile, 0.95)
 #pop99Thres<-diag(as.matrix(pop99[,-1]))
 #names(pop99Thres)<-colnames(popDistsAll)
 #table(apply(popDistsAll, 1, min) < pop99Thres[predPop],as.factor(predPop))
 
+print("Plotting predicted populations")
 
 ptCol<-rainbow(nSuperPops)[as.factor(predPop)]
 pdf("PCAplotwith1KGpredictedPopulations.pdf", width = 10, height = 10)
@@ -164,7 +173,7 @@ points(pcas[which(ptType == 20),3], pcas[which(ptType == 20),4], pch = 20, col =
 plot(pcas[,3], pcas[,4], xlab = "PC1", ylab = "PC2", type = "n")
 points(pcas[which(ptType == 3),3], pcas[which(ptType == 3),4], pch = 3, col = ptCol[which(ptType == 3)])
 
-if(length(args) > 2){
+if(length(args) > 4){
 	for(each in subset){
 		layout(matrix(c(1,2,3,4), ncol = 2), widths = c(3,3,3,0.75))
 		filterIndex<-which(pcas[,1] %in% keepFiles[[each]][,1] | !is.na(KGped[,1]))
@@ -194,7 +203,7 @@ outPred<-outPred[which(ptType == 3),]
 write.csv(table(outPred$predPop), "TablePredictedPopulations.csv")
 write.csv(outPred, "PredictedPopulations.csv", quote = FALSE, row.names = FALSE)
 
-if(length(args) > 2){
+if(length(args) > 4){
 	for(each in subset){
 		fileName<-tail(unlist(strsplit(each, "/")), n = 1)
 		outPred.tmp<-outPred[which(outPred[,1] %in% keepFiles[[each]][,1]),]
