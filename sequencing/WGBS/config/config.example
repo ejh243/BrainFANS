@@ -7,7 +7,7 @@ export TRIMDIR=${DATADIR}/2_trimmed
 export ALIGNEDDIR=${DATADIR}/3_aligned
 
 ## Software/script filepaths
-export SCRIPTDIR=/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing
+export SCRIPTDIR=${SLURM_SUBMIT_DIR}
 export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta
 export CHROMHMM=/gpfs/mrc0/projects/Research_Project-MRC190311/software/ChromHMM
 
