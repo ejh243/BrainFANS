@@ -35,12 +35,20 @@ do
 done
 
 ## X chr extract peaks nearest XIST and FIRRE
+
 bedtools closest -a ${XCHRBED} -b ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr/chrX_peaks.broadPeak > ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr/chrX.broadPeak.filt
 
 ## Y chr exclude peaks overlapping psuedoautosomal regions
 bedtools intersect -v -a ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr/chrY_peaks.broadPeak -b ${PAR} \
 	  | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
 	  | grep -P 'chr[\dXY]+[ \t]' > ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr/chrY.broadPeak.filt
+=======
+
+## Y chr exclude peaks overlapping psuedoautosomal regions
+	bedtools intersect -v -a ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr/${chr}_peaks.broadPeak -b ${PAR} \
+	  | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
+	  | grep -P 'chr[\dXY]+[ \t]' > ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr/${chr}.broadPeak.filt
+
 
 rm ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr/${chr}_peaks.broadPeak
 
