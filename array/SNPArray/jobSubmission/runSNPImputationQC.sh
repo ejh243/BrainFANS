@@ -9,19 +9,11 @@
 #PBS -o LogFiles/QCImputation.log # output file
 
 
-## Output some useful job information
-
-echo PBS: working directory is $PBS_O_WORKDIR
-echo PBS: job identifier is $PBS_JOBID
-echo PBS: job name is $PBS_JOBNAME
-echo PBS: current home directory is $PBS_O_HOME
 
 ## print start date and time
 echo Job started on:
 date -u
 
-
-cd $PBS_O_WORKDIR
 
 ####### 
 
@@ -29,18 +21,22 @@ cd $PBS_O_WORKDIR
 
 ######
 
-source ./SNPdata/config.txt
-IMPUTATION=${DATADIR}/SNPdata/Merged/ImputationOutput
+source ./$1
 
-cd ${IMPUTATION}
-module load R
-Rscript ../../../scripts/SNPdata/summarizeImputation.r All/ ${KGG}/1000GP_Phase3_combined.legend ALL
-Rscript ../../../scripts/SNPdata/summarizeImputation.r EUR/ ${KGG}/../HRC/HRC.r1-1.GRCh37.wgs.mac5.sites.tab AF
+
+cd ${IMPUTEDIR}/Output
+
+module load R/3.5.1-foss-2018b-Python-2.7.15
+
+Rscript SNPArray/preprocessing/5_summarizeImputation.r All/ ${KGG}/1000GP_Phase3_combined.legend ALL
+Rscript SNPArray/preprocessing/5_summarizeImputation.r EUR/ ${KGG}/../HRC/HRC.r1-1.GRCh37.wgs.mac5.sites.tab AF
 
 module purge
 module load VCFtools
 
-sh combinedImputationOutput.sh
+## combine imputation output separately for ALL and EUR versions
+sh SNPArray/preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/Output/All
+sh SNPArray/preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/Output/EUR
 
 ## print end date and time
 echo Job finished:
