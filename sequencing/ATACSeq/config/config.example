@@ -1,5 +1,4 @@
 ## Sequencing data filepaths
-
 export DATADIR=/gpfs/project_name
 export METADIR=${DATADIR}/0_metadata
 export RAWDATADIR=${DATADIR}/1_raw
