@@ -22,7 +22,9 @@ Then submits a batch script to process one sample
 
 	[<STEPS>] option of either FASTQC, TRIM or ALIGN. The first runs only fastqc on the samples, the second trims and the latter runs only the alignment. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run all steps. 
 
-2. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchCalcQCMetrics.sh 
+
+2. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchCalcQCMetrics.sh  <config.txt>
+
 This script uses the ATACseqQC R package to generate the fragment distribution and calculate some summary statistics. It splits the samples into groups of 10 to run in parallel.
 	* executes ATACSeq/preprocessing/4_fragmentDistribution.r <aligned dir> <config.txt>
 
@@ -52,6 +54,14 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
 6.
 
 7. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchFormatSexChrs.sh <config file>
+	* executes ./ATACSeq/preprocessing/subsetSexChrs.sh for all samples that pass stage 1 filtering
+		* performs variant calling on the X chromosome
+		* subsets tagalign files to X and Y chromosome reads
+		
+8. sbatch ATACSeq/jobSubmission/sexCheck.sh
+	* executes ATACSeq/preprocessing/sexChrPeaks.sh which performs peak calling on the sex chromomes, filter and read counts
+	* collates X chr variants calling and recalls genotypes jointly
+	* collates the three different sex checks and reports the output,
 
 6. peak calling per sample type
 
