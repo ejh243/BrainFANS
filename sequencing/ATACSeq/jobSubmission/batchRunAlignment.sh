@@ -20,7 +20,6 @@ echo $1
 source ./$1 
 
 
-
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 

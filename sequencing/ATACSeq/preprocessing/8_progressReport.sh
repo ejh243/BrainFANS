@@ -58,7 +58,7 @@ echo "Number of MACS2 peak files (paired end) found " $(ls ${PEAKDIR}/MACS/BAMPE
 
 ## check for individual samples
 ## save output in txt file
-echo "SampleID,DataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,FilteredAligned,ENCODEMetrics,MACS2Peaks1,MACS2Peaks2" > ${METADIR}/SummariseSampleProcessingProgress.csv
+echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS2Peaks1,MACS2Peaks2" > ${METADIR}/SummariseSampleProcessingProgress.csv
 for f1 in ${FQFILES[@]}
 do 
     sampleName=$(basename ${f1%_[rR][12]*}) ## sample name is everything before either r1 or R1
@@ -121,9 +121,9 @@ do
     
     if [ ! -s ${PEAKDIR}/MACS/BAMPE/${sampleName}_peaks.broadPeak.filt ]
     then
-        echo "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo "N" >> ${METADIR}/SummariseSampleProcessingProgress.csv
     else
-        echo "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo "Y" >> ${METADIR}/SummariseSampleProcessingProgress.csv
     fi
   
 done

@@ -1,0 +1,14 @@
+This readme explains the content of the scripts for running the ATAC analysis pipeline
+It assumes the idat files have been processed through Genome Studio and exported as plink format
+For CNV calling it assumes that the log R and B allele ration have been exported. 
+
+submit from the <>/array folder 
+
+#### Data pre-processing:
+
+1. sbatch SNPArray/jobSubmission/runSNPQC.sh <config file>
+Executes the following scripts
+	1_QC.sh performs basic QC of samples and variants
+	2_CheckEthnicity.sh takes QCd SNP data, merges with 1000 genomes, classifies samples to super populations
+	3_CheckRelatedness.sh 
+	4_formatForImputation.sh prepares QC'd data for imputation via Michegan imputation server

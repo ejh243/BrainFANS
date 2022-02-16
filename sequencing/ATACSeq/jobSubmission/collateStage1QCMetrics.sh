@@ -15,7 +15,6 @@
 echo Job started on:
 date -u
 
-FOLDER=${RAWDATADIR} ##to remove after permission gained on 8_progressReport.sh
 
 ## load config file provided on command line when submitting job
 echo "Loading config file: "
@@ -36,8 +35,8 @@ multiqc . -f -o ${ALIGNEDDIR}/multiqc
 ## run other bespoke utilty scripts to collate other QC metrics
 cd ${SCRIPTDIR}/
 
-./ATACSeq/preprocessing/8_progressReport.sh 
-#./ATACSeq/preprocessing/9_countMTReads.sh 
+#./ATACSeq/preprocessing/8_progressReport.sh 
+./ATACSeq/preprocessing/9_countMTReads.sh 
 #./ATACSeq/preprocessing/10_collateFlagStatOutput.sh 
 
 ## move log files into a folder

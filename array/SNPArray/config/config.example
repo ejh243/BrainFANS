@@ -1,0 +1,21 @@
+## data paths
+export FILEPREFIX= ## filename of initial binary plink files that will be appended to all other output
+export DATADIR= ## project folder
+export METADIR=${DATADIR}/0_metadata
+export RAWDATADIR=${DATADIR}/1_raw # where plink files should be found
+export PROCESSDIR=${DATADIR}/2_processed
+export IMPUTEDIR=${DATADIR}/3_imputed
+export CNVDIR=${DATADIR}/4_cnvs
+
+## Reference data filepaths
+export KGG= # path to plink files for 1000 genomes
+export EPICREF= # folder with text file of EPIC SNP probe rs ids
+export GSAREF= # folder with GSA mnifest files
+
+## Software/script filepaths (where not on the command line)
+export SCRIPTDIR=${SLURM_SUBMIT_DIR}
+export PENNCNVPATH=
+export KINGPATH=
+export PLINK=
+export GCTA=
+
