@@ -10,19 +10,21 @@
 #SBATCH --error=logFiles/ATAC/%u/sexCheck-%A_%a.e
 #SBATCH --job-name=sexCheck-%A_%a.e
 
-## call peaks for sex chromosomes
+## call peaks for sex chromosomes & do read counts in these peaks
 
-## read counts in sex chromosomes
+module load MACS2
+module load BEDTools
 
-
+sh ./ATACSeq/preprocessing/12_sexChrPeaks.sh
 
 ## merge chr X variants
 
 ## create sample map to merge into single dataset
+## base on samples from which we have called variants
 cd ${ALIGNEDDIR}
+ls SNPs/*_chrX.gvcf 
 
-
-awk '{print $1,"SNPs/" $1 "_chrX.gvcf"}' ${METADIR}/matchedVCFIDs.txt > SNPs/cohort.sample_map
+awk '{print $1, "SNPs/" $1 "_chrX.gvcf"}' ${METADIR}/matchedVCFIDs.txt > SNPs/cohort.sample_map
 
 mkdir tmp 
 
@@ -38,7 +40,3 @@ gatk GenotypeGVCFs \
     -R ${GENOMEFASTA} \
     -V gendb://SNPs/gatkDB \
     -O SNPs/mergedSamples.chrX.vcf	   
-
-$PLINK/plink --vcf SNPs/mergedSamples.chrX.vcf --split-x b37 --make-bed --out SNPs/atacChrX --double-id
-$PLINK/plink --bfile SNPs/atacChrX --check-sex --maf 0.05 --out atacChrX
-

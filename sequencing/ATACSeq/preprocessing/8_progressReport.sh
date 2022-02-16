@@ -46,7 +46,7 @@ echo "Number of filtered aligned files found " $(ls ${ALIGNEDDIR}/*_postFilter_s
 
 find ${ALIGNEDDIR}/ENCODEMetrics/ -size  0 -print -delete
 
-echo "Number of ENCODE QC metric output files found " $(ls ${ALIGNEDDIR}/ENCODEMetrics/*chr1*.pbc.qc | wc -l)
+echo "Number of ENCODE QC metric output files found " $(ls ${ALIGNEDDIR}/ENCODEMetrics/*.pbc.qc | wc -l)
 
 
 ## check for peak calling output
@@ -105,7 +105,7 @@ do
         echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/ENCODEMetrics/${sampleName}*chr1*.pbc.qc ]
+    if [ ! -s ${ALIGNEDDIR}/ENCODEMetrics/${sampleName}*.pbc.qc ]
     then
         echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
     else
