@@ -1,5 +1,5 @@
 ## Sequencing data filepaths
-export DATADIR=/gpfs/project_name
+export DATADIR=/gpfs/Research_Project-MRC190311/ATACSeq/<project_name>
 export METADIR=${DATADIR}/0_metadata
 export RAWDATADIR=${DATADIR}/1_raw
 export FASTQCDIR=${RAWDATADIR}/fastqc
@@ -21,7 +21,7 @@ export GENOMESIZE=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch
 
 
 ## Software/script filepaths
-export SCRIPTDIR=/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing
+export SCRIPTDIR=${SLURM_SUBMIT_DIR}
 export PICARD=/gpfs/ts0/shared/software/picard/2.6.0-Java-1.8.0_131
 export UCSCUtils=/gpfs/mrc0/projects/Research_Project-MRC190311/software/UCSCutilities
 export BBMAP=/gpfs/mrc0/projects/Research_Project-MRC190311/software/bbmap
@@ -31,7 +31,7 @@ export VERIFYBAMID=/gpfs/mrc0/projects/Research_Project-MRC190311/software/verif
 export PLINK=/gpfs/mrc0/projects/Research_Project-MRC190311/software/plink1.90
 
 ## conda filepaths
-export ENVDIR=/lustre/home/ejh243/.conda/envs/encodeqc
+export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc
 
 ## parameters
 export multimap=4
