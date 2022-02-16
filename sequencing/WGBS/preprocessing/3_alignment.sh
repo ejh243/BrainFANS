@@ -34,4 +34,3 @@ bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2
 
 echo "Alignment and post filtering complete"
 date -u
-
