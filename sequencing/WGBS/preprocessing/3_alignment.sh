@@ -8,13 +8,13 @@
 
 f1=$(basename $1)
 sampleName=$2
-cd ${FOLDERTRIM}
+cd ${TRIMDIR}
 
 ## need trimmed files for alignment
 
 ## filename format changed by trimgalore to be val_1 and val_2 (not _trimmed)
-f1=$(basename $(ls ${FOLDERTRIM}/${sampleName}*_val_1*.f*)) 
-f2=$(basename $(ls ${FOLDERTRIM}/${sampleName}*_val_2*.f*)) 
+f1=$(basename $(ls ${TRIMDIR}/${sampleName}*_val_1*.f*)) 
+f2=$(basename $(ls ${TRIMDIR}/${sampleName}*_val_2*.f*)) 
 
 
 echo "Found trimmed files:"
