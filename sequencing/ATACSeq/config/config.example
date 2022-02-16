@@ -31,7 +31,7 @@ export VERIFYBAMID=/gpfs/mrc0/projects/Research_Project-MRC190311/software/verif
 export PLINK=/gpfs/mrc0/projects/Research_Project-MRC190311/software/plink1.90
 
 ## conda filepaths
-export ENVDIR=/lustre/home/ejh243/.conda/envs/encodeqc
+export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc
 
 ## parameters
 export multimap=4
