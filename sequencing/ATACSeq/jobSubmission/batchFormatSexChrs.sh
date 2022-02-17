@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=logFiles/%u/formatSexChr-%A_%a.o
-#SBATCH --error=logFiles/%u/formatSexChr-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/%u/formatSexChr-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/formatSexChr-%A_%a.e
 #SBATCH --job-name=formatSexChr-%A_%a.e
 
 ## print start date and time
