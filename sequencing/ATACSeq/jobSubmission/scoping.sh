@@ -25,7 +25,7 @@ source ./$1
 ## Check downstream directories 
 echo "Checking directories, number of files and pipeline stage: "
 
-echo "Project name: " $(basename ${DATADIRPE})
+echo "Project name: " $(basename ${DATADIR})
 
 dir=(${SCRIPTDIR} ${RAWDATADIR} ${FASTQCDIR} ${FOLDERTRIM} ${ALIGNEDDIR} ${PEAKDIR})
 type=("SCRIPT" "DATA" "FASTQC" "TRIMMED" "ALIGNED" "PEAK CALLED")
