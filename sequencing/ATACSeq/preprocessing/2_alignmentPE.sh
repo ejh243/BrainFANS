@@ -86,6 +86,9 @@ if [ ! -s ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt ]
 
 	samtools index ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam
 	samtools idxstats ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam > ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt
+else
+	{ echo "Aligned file found so not aligning"; exit 1;}
+
 fi
 
 echo "Alignment and post filtering complete"
