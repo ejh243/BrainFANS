@@ -102,8 +102,10 @@ then
 
     ## move log files into a folder
     mkdir -p ATACSeq/logFiles/${USER}
-    mv ATACSeq/logFiles/ATACAlignment-%A_${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${USER}
+    mv ATACSeq/logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${USER}
 
 else
     echo "File list not found"
 fi
+
+echo 'EXIT CODE: ' $?
