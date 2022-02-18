@@ -71,7 +71,7 @@ then
     module load picard/2.6.0-Java-1.8.0_131
 
     cd ${SCRIPTDIR}
-    sh ./ATACSeq/preprocessing/2_alignmentPE.sh ${toProcess}
+    sh ./ATACSeq/preprocessing/2_alignment.sh ${toProcess}
 fi
 
 if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
@@ -87,7 +87,7 @@ then
     source activate encodeqc
 
     cd ${SCRIPTDIR}
-    sh ./ATACSeq/preprocessing/3_calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
+    sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
 fi
 
 echo 'EXITCODE: ' $?
