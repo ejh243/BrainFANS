@@ -81,7 +81,7 @@ then
         module load picard/2.6.0-Java-1.8.0_131
 
         cd ${SCRIPTDIR}
-        sh ./ATACSeq/preprocessing/2_alignmentPE.sh ${sampleID} ${toProcess[0]}
+        sh ./ATACSeq/preprocessing/2_alignmentPE.sh ${sampleID} 
     fi
 
     if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]

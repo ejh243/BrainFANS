@@ -19,9 +19,10 @@
 # fastqc reports for each fastq file
 # multiqc on total fastqc output
 
-f1=$(basename $1)
-f2=$(basename $2)
-sampleName=$3
+sampleName=$1
+f1=$(basename $2)
+f2=$(basename $3)
+
 
 ## extract sample name from filename
 echo "Processing" ${sampleName}

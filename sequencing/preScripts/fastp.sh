@@ -19,10 +19,9 @@
 # trimmed file
 # trimming report 
 
-
-f1=$(basename $1)
-f2=$(basename $2)
-sampleName=$3
+sampleName=$1
+f1=$(basename $2)
+f2=$(basename $3)
 
 cd ${RAWDATADIR}
 
