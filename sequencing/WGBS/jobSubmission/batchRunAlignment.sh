@@ -66,7 +66,7 @@ echo "SLURM_ARRAY_TASK_ID is: " "${SLURM_ARRAY_TASK_ID}"
 
 toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
 sampleID=$(basename ${toProcess%_*}) ##rm [rR]
-echo "7. Current sample: " ${sampleID} ##
+echo "Current sample: " ${sampleID} 
 
 if [ ${all} == 1 ] || [[ $2 =~ 'FASTQC' ]]
 then
@@ -76,9 +76,10 @@ then
 	##module load fastp
 
 	cd ${SCRIPTDIR}
-	echo "8. Changing to script directory: " ${SCRIPTDIR} ##
+	echo "Changing to script directory: " ${SCRIPTDIR} 
 	sh ./WGBS/preprocessing/1_fastqc.sh ${toProcess}  
-	echo "9. Finished fastqc on: " ##
+
+	echo "Finished fastqc on: " 
 	echo ${sampleID} ##
 fi
 
@@ -88,11 +89,11 @@ then
 	module load Trim_Galore
 
 	cd ${SCRIPTDIR}
-	echo "8. Changing to script directory: " ${SCRIPTDIR} ##
+	echo "Changing to script directory: " ${SCRIPTDIR} 
 	sh ./preScripts/trimGalore.sh ${toProcess}  
 
-	echo "9. Finished Trim Galore on: " ##
-	echo ${sampleID} ##
+	echo "Finished Trim Galore on: " 
+	echo ${sampleID} 
 fi
 
 if [ ${all} == 1 ] || [[ $2 =~ 'ALIGN' ]]

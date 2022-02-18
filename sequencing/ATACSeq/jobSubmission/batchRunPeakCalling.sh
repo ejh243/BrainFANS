@@ -75,7 +75,9 @@ then
 	
 fi
 
+echo 'EXITCODE: ' $?
 
 ## move log files into a folder
-mkdir -p LogFiles/ATAC/${SLURM_ARRAY_JOB_ID}
-mv LogFiles/ATAC/ATACPeakCalling-${SLURM_ARRAY_JOB_ID}* LogFiles/ATAC/${SLURM_ARRAY_JOB_ID}
+cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv ATACPeakCalling-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/

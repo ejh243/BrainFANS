@@ -6,9 +6,9 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --error=ChIPSeq/logFiles/ChipAlignmentPE-%A_%a.e # error file
-#SBATCH --output=ChIPSeq/logFiles/ChipAlignmentPE-%A_%a.o # output file
-#SBATCH --job-name=ChipAlignmentPE
+#SBATCH --error=ChIPSeq/logFiles/%u/ChIPAlignment-%A_%a.e # error file
+#SBATCH --output=ChIPSeq/logFiles/%u/ChIPAlignment-%A_%a.o # output file
+#SBATCH --job-name=ChIPAlignment
 
 ## print start date and time
 echo Job started on:
@@ -24,35 +24,22 @@ cd $SLURM_SUBMIT_DIR
 echo "Loading config file: "
 echo $1
 source ./$1
-all=$#
 
-## if working in the development branch, load specified config.dev file
-if [[ $2 =~ 'config.dev' ]]
-then
-    echo "Loading development config file:  "
-    echo $2
-    source ./$2
-
-    step=$3 #as the last flag will be the steps to run flag
-    all=1 #set to 1 to ensure if step flag is blank all steps are run
-else
-    step=$2
-fi
 
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
 
 ## check step method matches required options and exit if not
-if [[ ! $step =~ "FASTQC" ]] && [[ ! $step =~ "TRIM" ]] && [[ ! $step =~ "ALIGN" ]] &&[[ ! $step == '' ]];
+if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] &&[[ ! $2 == '' ]];
 then 
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
 
 echo "Changing Folder to Data directory "
-echo ${DATADIRPE}
-cd ${DATADIRPE}
+echo ${DATADIR}
+cd ${DATADIR}
 
 ## find all R1 fastq files
 FQFILES=()
@@ -65,10 +52,10 @@ echo "SLURM_ARRAY_TASK_ID is: " "${SLURM_ARRAY_TASK_ID}"
 
 toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
 sampleName=$(basename ${toProcess%.*.fastq.gz}) ##rm [rR]
-echo "Current sample: " ${sampleName} ##
+echo "Current sample: " ${sampleName} 
 
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'FASTQC' ]]
+if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
 then
 	## run sequencing QC on fastq files		
 	module load FastQC/0.11.5-Java-1.7.0_80
@@ -76,25 +63,29 @@ then
 	module load fastp
 
 	cd ${SCRIPTDIR}
-	echo "8. Changing to script directory: " ${SCRIPTDIR} ##
+	echo "Changing to script directory: " ${SCRIPTDIR} 
 	sh ./preScripts/fastqc.sh ${toProcess}  
 
-	echo "9. Finished fastqc on: " ##
-	echo ${sampleID} ##
+	echo "Finished fastqc on: " 
+	echo ${sampleID} 
 fi
 
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'TRIM' ]]
+if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
 then
     module purge
     module load fastp
 	
     cd ${SCRIPTDIR}
+    echo "Changing to script directory: " ${SCRIPTDIR} ##
     sh ./preScripts/fastp.sh ${toProcess} 
+
+    echo "Finished trim on: "
+    echo ${sampleID}
 fi
 
 
-if [ ${all} == 1 ] || [[ ${step} =~ 'ALIGN' ]]
+if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
 then
 	module purge ## had conflict issues if this wasn't run first
 	module load Bowtie2
@@ -106,3 +97,9 @@ then
 	sh ./ChIPSeq/preprocessing/2_alignment.sh ${toProcess} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
 fi
 
+echo 'EXITCODE: ' $?
+
+## move log files into a folder
+cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv ChIPAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
