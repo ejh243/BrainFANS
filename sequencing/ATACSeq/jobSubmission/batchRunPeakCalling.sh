@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=LogFiles/ATAC/ATACPeakCalling-%A_%a.o
-#SBATCH --error=LogFiles/ATAC/ATACPeakCalling-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/ATACPeakCalling-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/ATACPeakCalling-%A_%a.e
 #SBATCH --job-name=ATACPeakCalling-%A_%a.e
 
 ## print start date and time
@@ -40,7 +40,7 @@ then
 	echo "Shifting reads"
 
 	cd ${SCRIPTDIR}
-	./ATACSeq/preprocessing/5_shiftAlignedReadsPE.sh ${sampleName}
+	./ATACSeq/preprocessing/5_shiftAlignedReads.sh ${sampleName}
 
 	date -u
 	echo "Reads shifted"
@@ -54,7 +54,7 @@ then
 	module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 	module load BEDTools
 	cd ${SCRIPTDIR}/
-	./ATACSeq/preprocessing/6_samplePeaksPE.sh ${sampleName}
+	./ATACSeq/preprocessing/6_samplePeaks.sh ${sampleName}
 	
 	date -u
 	echo "Peaks called"
