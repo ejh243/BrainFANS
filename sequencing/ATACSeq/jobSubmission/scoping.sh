@@ -5,8 +5,8 @@
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=1 # specify number of processors per node
-#SBATCH --output=ATACSeq/logFiles/scoping-%A.o
-#SBATCH --error=ATACSeq/logFiles/scoping-%A.e
+#SBATCH --output=ATACSeq/logFiles/%u/scoping-%A.o
+#SBATCH --error=ATACSeq/logFiles/%u/scoping-%A.e
 
 
 # This script should check paths to directories, number of files to cross-reference with sample number,
@@ -89,6 +89,6 @@ module unload Anaconda3
 ##module load R/3.6.3-foss-2020a
 
 ## move log files into a folder
-mkdir -p ATACSeq/logFiles/${USER}
-mv ATACSeq/logFiles/scoping* ATACSeq/logFiles/${USER}
-
+cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv scoping-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/

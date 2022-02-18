@@ -40,3 +40,5 @@ gatk GenotypeGVCFs \
     -R ${GENOMEFASTA} \
     -V gendb://SNPs/gatkDB \
     -O SNPs/mergedSamples.chrX.vcf	   
+
+echo 'EXITCODE: ' $?

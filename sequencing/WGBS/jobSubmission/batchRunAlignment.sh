@@ -6,23 +6,22 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=WGBS/logFiles/WGBSalign-%A_%a.o
-#SBATCH --error=WGBS/logFiles/WGBSalign-%A_%a.e
-#SBATCH --job-name=WGBSalign-%A_%a.e
-
+#SBATCH --output=WGBS/logFiles/%u/WGBSAlignment-%A_%a.o
+#SBATCH --error=WGBS/logFiles/%u/WGBSAlignment-%A_%a.e
+#SBATCH --job-name=WGBSAlignment-%A_%a.e
 
 ## print start date and time
 echo Job started on:
 date -u
 	
 ## needs to be executed from the scripts folder
-echo "1. Changing Folder to: "
+echo "Changing Folder to: "
 echo $SLURM_SUBMIT_DIR
 
 cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
-echo "2. Loading config file: "
+echo "Loading config file: "
 echo $1
 source ./$1 
 
@@ -67,7 +66,7 @@ echo "SLURM_ARRAY_TASK_ID is: " "${SLURM_ARRAY_TASK_ID}"
 
 toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
 sampleID=$(basename ${toProcess%_*}) ##rm [rR]
-echo "7. Current sample: " ${sampleID} ##
+echo "Current sample: " ${sampleID} 
 
 if [ ${all} == 1 ] || [[ $2 =~ 'FASTQC' ]]
 then
@@ -77,9 +76,10 @@ then
 	##module load fastp
 
 	cd ${SCRIPTDIR}
-	echo "8. Changing to script directory: " ${SCRIPTDIR} ##
+	echo "Changing to script directory: " ${SCRIPTDIR} 
 	sh ./WGBS/preprocessing/1_fastqc.sh ${toProcess}  
-	echo "9. Finished fastqc on: " ##
+
+	echo "Finished fastqc on: " 
 	echo ${sampleID} ##
 fi
 
@@ -89,11 +89,11 @@ then
 	module load Trim_Galore
 
 	cd ${SCRIPTDIR}
-	echo "8. Changing to script directory: " ${SCRIPTDIR} ##
+	echo "Changing to script directory: " ${SCRIPTDIR} 
 	sh ./preScripts/trimGalore.sh ${toProcess}  
 
-	echo "9. Finished Trim Galore on: " ##
-	echo ${sampleID} ##
+	echo "Finished Trim Galore on: " 
+	echo ${sampleID} 
 fi
 
 if [ ${all} == 1 ] || [[ $2 =~ 'ALIGN' ]]
@@ -105,7 +105,9 @@ then
 	sh ./WGBS/preprocessing/3_alignment.sh ${toProcess}
 fi
 
-mkdir -p WGBS/logFiles/WGBSalign_${SLURM_ARRAY_JOB_ID}
-mv WGBS/logFiles/WGBSalign-${SLURM_ARRAY_JOB_ID}* WGBS/logFiles/WGBSalign_${SLURM_ARRAY_JOB_ID}
+echo 'EXITCODE: ' $?
 
-
+## move log files into a folder
+cd ${SCRIPTDIR}/WGBS/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv WGBSAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/

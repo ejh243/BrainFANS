@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=LogFiles/ATAC/%u/verifyBAMID-%A_%a.o
-#SBATCH --error=LogFiles/ATAC/%u/verifyBAMID-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.e
 #SBATCH --job-name=verifyBAMID-%A_%a.e
 
 ## print start date and time
@@ -32,7 +32,9 @@ IDS=($(head -n 22 ${METADIR}/matchedVCFIDs.txt | tail -1))
 
 sh ./ATACSeq/preprocessing/compareBamWithGenotypes.sh ${IDS[@]}
 
+echo 'EXITCODE: ' $?
 
 ## move log files into a folder
-mkdir -p logFiles/ATAC/$USER/${SLURM_ARRAY_JOB_ID}
-mv logFiles/ATAC/$USER/verifyBAMID-${SLURM_ARRAY_JOB_ID}* logFiles/ATAC/$USER/${SLURM_ARRAY_JOB_ID}
+cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv verifyBAMID-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
