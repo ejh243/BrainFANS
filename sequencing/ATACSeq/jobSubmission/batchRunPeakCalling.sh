@@ -40,7 +40,7 @@ then
 	echo "Shifting reads"
 
 	cd ${SCRIPTDIR}
-	./ATACSeq/preprocessing/5_shiftAlignedReadsPE.sh ${sampleName}
+	./ATACSeq/preprocessing/5_shiftAlignedReads.sh ${sampleName}
 
 	date -u
 	echo "Reads shifted"
@@ -54,7 +54,7 @@ then
 	module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 	module load BEDTools
 	cd ${SCRIPTDIR}/
-	./ATACSeq/preprocessing/6_samplePeaksPE.sh ${sampleName}
+	./ATACSeq/preprocessing/6_samplePeaks.sh ${sampleName}
 	
 	date -u
 	echo "Peaks called"
