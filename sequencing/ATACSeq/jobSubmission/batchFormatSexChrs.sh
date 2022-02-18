@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=logFiles/ATAC/%u/formatSexChr-%A_%a.o
-#SBATCH --error=logFiles/ATAC/%u/formatSexChr-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/%u/formatSexChr-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/formatSexChr-%A_%a.e
 #SBATCH --job-name=formatSexChr-%A_%a.e
 
 ## print start date and time
@@ -29,6 +29,9 @@ sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/Stage1Samples.txt | tail
 
 sh ./ATACSeq/preprocessing/11_subsetSexChrs.sh ${sampleName}
 
+echo 'EXITCODE: ' $?
+
 ## move log files into a folder
-mkdir -p logFiles/ATAC/$USER/${SLURM_ARRAY_JOB_ID}
-mv logFiles/ATAC/$USER/formatSexChr-${SLURM_ARRAY_JOB_ID}* logFiles/ATAC/$USER/${SLURM_ARRAY_JOB_ID}/
+cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv formatSexChr-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/

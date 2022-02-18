@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=ATACSeq/logFiles/calcATACQC-%A_%a.o
-#SBATCH --error=ATACSeq/logFiles/calcATACQC-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/%u/calcATACQC-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/calcATACQC-%A_%a.e
 #SBATCH --job-name=calcATACQC-%A_%a
 
 ## print start date and time
@@ -23,7 +23,9 @@ module load R/3.6.3-foss-2020a
 
 Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/4_fragmentDistribution.r ${ALIGNEDDIR} ${SLURM_ARRAY_TASK_ID} 
 
-## move log files into a folder
-mkdir -p ATACSeq/logFiles/${SLURM_ARRAY_JOB_ID}
-mv ATACSeq/logFiles/calcATACQC-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${SLURM_ARRAY_JOB_ID}
+echo 'EXITCODE: ' $?
 
+## move log files into a folder
+cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv calcATACQC-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/

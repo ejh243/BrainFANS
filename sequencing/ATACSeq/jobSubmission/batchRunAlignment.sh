@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=ATACSeq/logFiles/ATACAlignment-%A_%a.o
-#SBATCH --error=ATACSeq/logFiles/ATACAlignment-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/%u/ATACAlignment-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/ATACAlignment-%A_%a.e
 #SBATCH --job-name=ATACAlignment-%A_%a.e
 
 ## print start date and time
@@ -41,7 +41,7 @@ toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
 sampleID=$(basename ${toProcess%_[rR]*})
 ## later samples have an additional _S[num] in the file name need to remove
 sampleID=${sampleID%_S[0-9]*}
-
+echo "Current sample: " ${sampleName} 
 
 ## if number of flags is 1 (config.txt), then run all steps
 if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
@@ -90,7 +90,10 @@ then
     sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
 fi
 
+echo 'EXITCODE: ' $?
+
 
 ## move log files into a folder
-mkdir -p ATACSeq/logFiles/${USER}
-mv ATACSeq/logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${USER}
+cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv ATACAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/

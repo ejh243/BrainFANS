@@ -1,4 +1,4 @@
-This readme explains the content of the scripts for running the WGBS analysis pipeline
+This readme explains the content of the scripts for running the ChIP analysis pipeline
 
 	REQUISITES:
 		Scripts submitted from the scripts/sequencing folder.
@@ -9,7 +9,7 @@ This readme explains the content of the scripts for running the WGBS analysis pi
 
 1. scoping.sh
 
-2. sbatch --array=<number of batch jobs> WGBS/jobSubmissionScripts/batchRunAlignment.sh <config.txt> [<STEPS>]
+2. sbatch --array=<number of batch jobs> ChIPSeq/jobSubmissionScripts/batchRunAlignment.sh <config.txt> [<STEPS>]
 
 Parameters in [] are optional.
 
@@ -24,12 +24,8 @@ Parameters in [] are optional.
 		* executes preScripts/trimGalore.sh
 			* runs trim galore
 
-		* executes WGBS/preprocessing/2_alignment.sh 
+		* executes ChIPSeq/preprocessing/2_alignment.sh 
 
-	-optional-
-	
+	-optional- 
+
 	[<STEPS>] option of either FASTQC, TRIM or ALIGN. The first runs only fastqc on the samples, the second trims and the latter runs only the alignment. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run the whole script. 
-
-
-
-

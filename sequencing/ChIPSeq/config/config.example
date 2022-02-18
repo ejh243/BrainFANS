@@ -1,5 +1,5 @@
 ## Sequencing data filepaths
-export DATADIR=/gpfs/mrc0/projects/Research_Project-MRC190311/WGBS/<project_name>
+export DATADIR=/gpfs/mrc0/projects/Research_Project-MRC190311/ChIPSeq/<project_name>
 
 export METADIR=${DATADIR}/0_metadata
 export RAWDATADIR=${DATADIR}/1_raw
@@ -13,4 +13,4 @@ export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch3
 export CHROMHMM=/gpfs/mrc0/projects/Research_Project-MRC190311/software/ChromHMM
 
 ## conda filepaths
-export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc
+export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc 
