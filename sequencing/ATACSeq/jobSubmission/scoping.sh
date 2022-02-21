@@ -12,7 +12,8 @@
 # This script should check paths to directories, number of files to cross-reference with sample number,
 # and necessary package installation for batchRunATACAlignment.sh to run.
 # It should be submitted from the scripts directory with the config file to be used with the job submission
-# script batchRunATACAlignment.sh <config.txt>
+# script batchRunATACAlignment.sh 
+# sbatch ../general/jobSubmission/scoping.sh <config.txt>
 
 ## print start date and time
 echo Job started on:
@@ -27,35 +28,40 @@ echo "Checking directories, number of files and pipeline stage: "
 
 echo "Project name: " $(basename ${DATADIR})
 
-dir=(${SCRIPTDIR} ${RAWDATADIR} ${FASTQCDIR} ${FOLDERTRIM} ${ALIGNEDDIR} ${PEAKDIR})
-type=("SCRIPT" "DATA" "FASTQC" "TRIMMED" "ALIGNED" "PEAK CALLED")
-pattern=('' '*[rR]1*q.gz' '*_fastqc.zip' '*trimmed*q.gz' '*depDup_q30.bam' '*')
+dir=(${RAWDATADIR} ${FASTQCDIR} ${TRIMDIR} ${ALIGNEDDIR} ${PEAKDIR})
+type=("DATA" "FASTQC" "TRIMMED" "ALIGNED" "PEAK CALLED")
+pattern=('*q.gz' '*_fastqc.zip' '*q.gz' '*depDup_q30.bam' '*')
 
-## SCRIPTDIR and RAWDATADIR should be checked for existence and correct file number in RAWDATADIR
-for x in {0..1}
-do 
-	if [ ! -d ${dir[x]} ]
-	then 
-		echo ${dir[x]} "does not exist"
-	else
-		echo ${type[x]} "directory:" ${dir[x]}
-		if [ ${dir[x]} = ${RAWDATADIR} ] 
-		then 
-			FILES+=($(find ${RAWDATADIR} -name "${pattern[x]}")) ## this command searches for all fq files within
-			echo "Number of read_1.fq.gz files found for alignment:"" ""${#FILES[@]}"""
-		fi
-	fi
-done
+
+## Check that the metadata directory exists and contains the sample list with correct number
+if [ ! -d ${METADIR} ]
+then
+	echo 'METADATA directory does not exist'
+	exit 1
+elif  test -f ${METADIR}/samples.txt; then
+	mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
+	echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
+else
+	echo 'samples.txt file does not exist in METADIR'
+fi
+
 
 ## Remaining downstream directories should be created if not in existence and number of files reported to assess pipeline stage
-for (( x=2; x<${#dir[@]}; x++ ))
+for (( x=0; x<${#dir[@]}; x++ ))
 do
-	if [ -d ${dir[x]} ] 
+	if [ -d ${dir[x]} ] #if directory exists
 	then 
 		echo ${type[x]} "directory:" ${dir[x]}
-		FILES=()		
-		FILES+=($(find ${dir[x]} -name "${pattern[x]}"))
+		FILES=()
+		for i in ${SAMPLEIDS[@]}
+		do 
+			FILES+=($(find ${dir[x]} -maxdepth 1 -name "${i}${pattern[x]}"))
+			#echo ${FILES[@]}
+		done
 		echo "Number of" ${type[x]} "files: " ${#FILES[@]}
+	elif [ ${dir[x]} = $RAWDATADIR ]; then ##
+		echo ${dir[x]} "directory does not exist"
+		exit 1
 	else 
 		echo "Creating directory: " ${dir[x]}
 		mkdir -p ${dir[x]} 
@@ -63,7 +69,7 @@ do
 done
 
 
-## Check that the SAMstats environment exists
+## Check that the SAMstats environment exists and create it if not
 
 echo "Checking that SAMstats environment is set up and SAMstats is installed"
 
@@ -81,8 +87,6 @@ else
 	source deactivate
 	echo "ENCODEQC environment has been created and SAMstats installed"
 fi
-
-module unload Anaconda3
 
 ## Check R packages are installed
 
