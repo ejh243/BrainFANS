@@ -23,11 +23,19 @@ echo "Running progress report"
 
 ## create array of all fastq files
 cd ${RAWDATADIR}
-FQFILES=($(find . -name '*[rR]1*q.gz')) ## this command searches for all fq files within
+
+if test -f ${METADIR}/samples.txt;
+then 
+    ## create an array from the file
+    mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
+else
+    exit 1
+fi
+
 
 ### First count number of output files for each part of the pipeline
 
-echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""    
+echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 
 ## check for FASTQC output
 ## NB two files per sample
@@ -58,26 +66,30 @@ echo "Number of MACS2 peak files (paired end) found " $(ls ${PEAKDIR}/MACS/BAMPE
 
 ## check for individual samples
 ## save output in txt file
-echo "SampleID,DataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,FilteredAligned,ENCODEMetrics,MACS2Peaks1,MACS2Peaks2" > ${METADIR}/SummariseSampleProcessingProgress.csv
-for f1 in ${FQFILES[@]}
+echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS2Peaks1,MACS2Peaks2" > ${METADIR}/SummariseSampleProcessingProgress.csv
+for sampleName in ${SAMPLEIDS[@]}
 do 
-    sampleName=$(basename ${f1%_[rR][12]*}) ## sample name is everything before either r1 or R1
-    ## later samples have an additional _S[num] in the file name need to remove
-    sampleName=${sampleName%_S[0-9]*}
+    toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${sampleName}'*'))
+    
+    ## sort the toProcess array so that R1 and R2 are consecutive 
+    IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
+    toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
+    unset IFS 
+
     echo "Processing" ${sampleName}
+    f1=$(basename ${toProcess[0]}) 
+    f2=$(basename ${toProcess[1]})
+
+    echo -n ${sampleName},${RAWDATADIR}, ${f1},${f2}, >> ${METADIR}/SummariseSampleProcessingProgress.csv
     
-	## create filename for paired fastq file
-    f2=$(basename $(ls ${RAWDATADIR}/${sampleName}*[rR]2*q.gz))    
-    echo -n ${sampleName},${FOLDER}, ${f1},${f2}, >> ${METADIR}/SummariseSampleProcessingProgress.csv
-    
-    if [ ! -s ${FASTQCDIR}/${sampleName}*[rR]1*fastqc.zip ]
+    if [ ! -s ${FASTQCDIR}/${f1%%.*}*fastqc.zip ]
     then
         echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
     else
         echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${FASTQCDIR}/${sampleName}*[rR]2*fastqc.zip ]
+    if [ ! -s ${FASTQCDIR}/${f2%%.*}*fastqc.zip ]
     then
         echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
     else
