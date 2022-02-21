@@ -36,73 +36,84 @@ then
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
+echo "Changing Folder to Data directory "
+echo ${RAWDATADIR}
 
-echo "3. Changing Folder to Data directory "
-echo ${DATADIR}
+cd ${RAWDATADIR}
 
-cd ${DATADIR}
-## find all folders with fastq files in
 
 ## if raw data directory is empty, download files from ENA with specified ftp list
-if [ -z "$(ls -A ${DATADIR})" ]; 
+if [ -z "$(ls -A ${RAWDATADIR})" ]; 
 then
    echo "Downloading files"
    ACCLIST=${METADIR}/file*
-   python ${SCRIPTDIR}preprocessing/ftp_url.py $ACCLIST #generate ena download list
+   python ${SCRIPTDIR}/preprocessing/ftp_url.py $ACCLIST #generate ena download list
    cd ${SCRIPTDIR}
    sh ./WGBS/preprocessing/_getENA.sh  
 fi
 
-## create array of all fastq files
-cd ${DATADIR}
-FQFILES=()
-FQFILES+=($(find . -name '*[_rR]1*q.gz')) ## this command searches for all fq files within 
-echo ${FQFILES}
 
+## check if file containing list of sample IDs exists and if so:
+if test -f ${METADIR}/samples.txt;
+then 
+	## create an array from the file
+	mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
+	echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 
-echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""	
+	sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
+	## find the file name in RAWDATADIR
+	toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
+	
+	## sort the toProcess array so that R1 and R2 are consecutive 
+	IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
+	toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
+	unset IFS 
 
-echo "SLURM_ARRAY_TASK_ID is: " "${SLURM_ARRAY_TASK_ID}"
+	echo "R1 file found is: " $( basename ${toProcess[0]} )
+	echo ${toProcess[0]}
 
-toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
-sampleID=$(basename ${toProcess%_*}) ##rm [rR]
-echo "Current sample: " ${sampleID} 
+	echo "Current sample: " ${sampleID} ##
+	
+	if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
+	then
+		## run sequencing QC on fastq files		
+		module load FastQC/0.11.5-Java-1.7.0_80
+		module load MultiQC
+	
+		cd ${SCRIPTDIR}
+		echo "Changing to script directory: " ${SCRIPTDIR} ##
+		sh ./WGBS/preprocessing/1_fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}
+		echo "Finished fastqc on: " ##
+		echo ${sampleID} ##
+	fi
 
-if [ ${all} == 1 ] || [[ $2 =~ 'FASTQC' ]]
-then
-	## run sequencing QC and trimming on fastq files		
-	module load FastQC/0.11.5-Java-1.7.0_80
-	module load MultiQC
-	##module load fastp
+	if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
+	then
+		module purge
+		module load Trim_Galore
 
-	cd ${SCRIPTDIR}
-	echo "Changing to script directory: " ${SCRIPTDIR} 
-	sh ./WGBS/preprocessing/1_fastqc.sh ${toProcess}  
+		cd ${SCRIPTDIR}
+		echo "Changing to script directory: " ${SCRIPTDIR} ##
+		sh ./preScripts/trimGalore.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
 
-	echo "Finished fastqc on: " 
-	echo ${sampleID} ##
-fi
+		echo "Finished Trim Galore on: " ##
+		echo ${sampleID} ##
+	fi
 
-if [ ${all} == 1 ] || [[ $2 =~ 'TRIM' ]]
-then
-	module purge
-	module load Trim_Galore
+	if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
+	then
+		module purge
+		module load Bismark
 
-	cd ${SCRIPTDIR}
-	echo "Changing to script directory: " ${SCRIPTDIR} 
-	sh ./preScripts/trimGalore.sh ${toProcess}  
+		cd ${SCRIPTDIR}
+		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID} ${toProcess[0]}   
+	fi
 
-	echo "Finished Trim Galore on: " 
-	echo ${sampleID} 
-fi
-
-if [ ${all} == 1 ] || [[ $2 =~ 'ALIGN' ]]
-then
-	module purge
-	module load Bismark
-
-	cd ${SCRIPTDIR}
-	sh ./WGBS/preprocessing/3_alignment.sh ${toProcess}
+	mkdir -p WGBS/logFiles/${USER}
+	mv WGBS/logFiles/WGBSalign-${SLURM_ARRAY_JOB_ID}* WGBS/logFiles/${USER}
+	
+else
+	echo "File list not found"
 fi
 
 echo 'EXITCODE: ' $?
@@ -111,3 +122,4 @@ echo 'EXITCODE: ' $?
 cd ${SCRIPTDIR}/WGBS/logFiles/${USER}
 mkdir -p ${SLURM_ARRAY_JOB_ID}
 mv WGBSAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
+

@@ -6,19 +6,15 @@
 ## shifts read prior to peak calling
 
 
-f=$1 
-cd ${FOLDERTRIM}
-
-## extract sample names
-FOLDER=$(dirname ${f})
-f1=$(basename $f)
-sampleName=${f1%_*1.*} ##rm [rR] add 1*
+f1=$(basename $1)
+sampleName=$2
+cd ${TRIMDIR}
 
 ## need trimmed files for alignment
 
 ## filename format changed by trimgalore to be val_1 and val_2 (not _trimmed)
-f1=$(basename $(ls ${FOLDERTRIM}/${sampleName}*_val_1*.f*)) ##rm [rR]
-f2=$(basename $(ls ${FOLDERTRIM}/${sampleName}*val_2*.f*)) ##rm [rR]
+f1=$(basename $(ls ${TRIMDIR}/${sampleName}*_val_1*.f*)) 
+f2=$(basename $(ls ${TRIMDIR}/${sampleName}*_val_2*.f*)) 
 
 
 echo "Found trimmed files:"
