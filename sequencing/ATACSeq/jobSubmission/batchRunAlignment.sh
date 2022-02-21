@@ -80,6 +80,8 @@ then
         module load SAMtools
         module load picard/2.6.0-Java-1.8.0_131
 
+        showquota Research_Project-MRC190311
+
         cd ${SCRIPTDIR}
         sh ./ATACSeq/preprocessing/2_alignmentPE.sh ${sampleID} 
     fi

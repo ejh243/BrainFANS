@@ -16,41 +16,27 @@ echo Job started on:
 date -u
 	
 ## needs to be executed from the scripts folder
-echo "1. Changing Folder to: "
+echo "Changing Folder to: "
 echo $SLURM_SUBMIT_DIR
 
 cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
-echo "2. Loading config file: "
+echo "Loading config file: "
 echo $1
 source ./$1 
-all=$#
-
-## if working in the development branch, load specified config.dev file
-if [[ $2 =~ 'config.dev' ]]
-then
-    echo "Loading development config file:  "
-    echo $2
-    source ./$2
-
-    step=$3
-    all=1 #set to 1 to ensure if step flag is blank all steps are run
-else
-    step=$2
-fi
 
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
 
 ## check step method matches required options and exit if not
-if [[ ! $step =~ "FASTQC" ]] && [[ ! $step =~ "TRIM" ]] && [[ ! $step =~ "ALIGN" ]] && [[ ! $step == '' ]];
+if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] && [[ ! $2 == '' ]];
 then 
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
-echo "3. Changing Folder to Data directory "
+echo "Changing Folder to Data directory "
 echo ${RAWDATADIR}
 
 cd ${RAWDATADIR}
@@ -88,33 +74,33 @@ then
 
 	echo "Current sample: " ${sampleID} ##
 	
-	if [ ${all} == 1 ] || [[ ${step} =~ 'FASTQC' ]]
+	if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
 	then
 		## run sequencing QC on fastq files		
 		module load FastQC/0.11.5-Java-1.7.0_80
 		module load MultiQC
 	
 		cd ${SCRIPTDIR}
-		echo "8. Changing to script directory: " ${SCRIPTDIR} ##
+		echo "Changing to script directory: " ${SCRIPTDIR} ##
 		sh ./WGBS/preprocessing/1_fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}
-		echo "9. Finished fastqc on: " ##
+		echo "Finished fastqc on: " ##
 		echo ${sampleID} ##
 	fi
 
-	if [ ${all} == 1 ] || [[ ${step} =~ 'TRIM' ]]
+	if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
 	then
 		module purge
 		module load Trim_Galore
 
 		cd ${SCRIPTDIR}
-		echo "8. Changing to script directory: " ${SCRIPTDIR} ##
+		echo "Changing to script directory: " ${SCRIPTDIR} ##
 		sh ./preScripts/trimGalore.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
 
-		echo "9. Finished Trim Galore on: " ##
+		echo "Finished Trim Galore on: " ##
 		echo ${sampleID} ##
 	fi
 
-	if [ ${all} == 1 ] || [[ ${step} =~ 'ALIGN' ]]
+	if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
 	then
 		module purge
 		module load Bismark
