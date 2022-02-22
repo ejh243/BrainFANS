@@ -14,8 +14,8 @@ f1=$(basename $f)
 sampleName=${f1%.*.fastq.gz} ##rm [rR] add 1*
 echo "Processing" ${sampleName}
 
-f1=$(basename $(ls ${FOLDERTRIM}/${sampleName}*1_trimmed*.f*)) ##rm [rR]
-f2=$(basename $(ls ${FOLDERTRIM}/${sampleName}*2_trimmed*.f*)) ##rm [rR]
+f1=$(basename $(ls ${TRIMDIR}/${sampleName}*1_trimmed*.f*)) ##rm [rR]
+f2=$(basename $(ls ${TRIMDIR}/${sampleName}*2_trimmed*.f*)) ##rm [rR]
 
 cd ${ALIGNEDDIR}	
 echo "Aligning"" ${sampleName}"	
@@ -24,12 +24,12 @@ echo "Aligning"" ${sampleName}"
 if [ ! -f ${sampleName}_hist.txt ]		
 then
   ## count uniqueness
-  ${BBMAP}/bbcountunique.sh in=${FOLDERTRIM}/${f1} in2=${FOLDERTRIM}/${f2} out=${sampleName}_hist.txt interval=5000 overwrite=true cumulative=true count=t
+  ${BBMAP}/bbcountunique.sh in=${TRIMDIR}/${f1} in2=${TRIMDIR}/${f2} out=${sampleName}_hist.txt interval=5000 overwrite=true cumulative=true count=t
 fi	
 
 if [ ! -f ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam ]		
 then
-  cd ${FOLDERTRIM}
+  cd ${TRIMDIR}
   bowtie2 -x ${REFGENOME}/genome -1 ${f1} -2 ${f2} -p ${NTHREADS} -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
 
   ## convert to sam file, sort and index

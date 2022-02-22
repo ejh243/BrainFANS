@@ -1,7 +1,7 @@
 ## converts filtered bam file to a tagalign file, calculates CC scores and shifts reads ready for peak calling adapted from (https://www.encodeproject.org/pipelines/ENCPL792NWO/)
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/2_alignmentPE.sh <fastq file>
+# sh ./ATACSeq/preprocessing/2_alignment.sh <fastq file>
 # where 
 # <fastq file> is the path to the "R1" fastq files which are expected to be compressed, and have either r1 or R1 in the filename
 # script needs to be executed from <git repo>/sequencing/

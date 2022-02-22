@@ -19,18 +19,13 @@
 # trimmed file
 # trimming report 
 
-
-f=$1
+sampleName=$1
+f1=$(basename $2)
+f2=$(basename $3)
 
 cd ${RAWDATADIR}
 
-## extract sample name from filename
-f1=$(basename $f)
-sampleName=${f1%_[rR][12]*} ## sample name is everything before either r1 or R1
 echo "Processing" ${sampleName}
-
-## create filename for paired fastq file
-f2=$(basename $(ls ${RAWDATADIR}/${sampleName}*[rR]2*q.gz))
 
 ## create output filenames
 outf1=${f1/.f/_trimmed.f}

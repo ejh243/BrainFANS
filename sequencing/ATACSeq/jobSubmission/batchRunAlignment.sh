@@ -31,69 +31,84 @@ then
 fi
 
 
-## create array of all fastq files
-cd ${RAWDATADIR}
-FQFILES=($(find . -name '*[rR]1*q.gz')) ## this command searches for all fq files within
+## check if file containing list of sample IDs exists and if so:
+if test -f ${METADIR}/samples.txt;
+then 
+    ## create an array from the file
+    mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
+    echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 
-echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""    
+    sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
+    ## find the file name in RAWDATADIR
+    toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
+    
+    ## sort the toProcess array so that R1 and R2 are consecutive 
+    IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
+    toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
+    unset IFS 
 
-toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
-sampleID=$(basename ${toProcess%_[rR]*})
-## later samples have an additional _S[num] in the file name need to remove
-sampleID=${sampleID%_S[0-9]*}
-echo "Current sample: " ${sampleName} 
+    echo "R1 file found is: " $( basename ${toProcess[0]} )
+    echo ${toProcess[0]}
 
-## if number of flags is 1 (config.txt), then run all steps
-if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
-then
-    ## run sequencing QC and trimming on fastq files        
-    module load FastQC 
+    echo "Current sample: " ${sampleID} ##
 
-    cd ${SCRIPTDIR}
-    sh ./preScripts/fastqc.sh ${toProcess}  
+
+    ## if number of flags is 1 (config.txt), then run all steps
+    if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
+    then
+        ## run sequencing QC and trimming on fastq files        
+        module load FastQC 
+
+        cd ${SCRIPTDIR}
+        sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
+    fi
+
+    if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
+    then
+        module purge
+        module load fastp
+    	
+        cd ${SCRIPTDIR}
+        sh ./preScripts/fastp.sh ${sampleID} ${toProcess[0]} ${toProcess[1]} 
+    fi
+
+    if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
+    then
+        ## run alignment and post processing on sample
+        module purge ## had conflict issues if this wasn't run first
+        module load Bowtie2/2.3.4.2-foss-2018b
+        module load SAMtools
+        module load picard/2.6.0-Java-1.8.0_131
+
+        showquota Research_Project-MRC190311
+
+        cd ${SCRIPTDIR}
+        sh ./ATACSeq/preprocessing/2_alignment.sh ${sampleID} 
+    fi
+
+    if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
+    then
+        module purge
+        module load SAMtools
+        module load picard/2.6.0-Java-1.8.0_131
+        module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version to avoid conflict
+        export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
+
+        ## load conda env for samstats
+        module load Anaconda3
+        source activate encodeqc
+
+        cd ${SCRIPTDIR}
+        sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
+    fi
+
+    ## move log files into a folder
+    mkdir -p ATACSeq/logFiles/${USER}
+    mv ATACSeq/logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${USER}
+
+else
+    echo "File list not found"
 fi
 
-if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
-then
-    module purge
-    module load fastp
-	
-    cd ${SCRIPTDIR}
-    sh ./preScripts/fastp.sh ${toProcess} 
-fi
+echo 'EXIT CODE: ' $?
 
-if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
-then
-    ## run alignment and post processing on sample
-    module purge ## had conflict issues if this wasn't run first
-    module load Bowtie2/2.3.4.2-foss-2018b
-    module load SAMtools
-    module load picard/2.6.0-Java-1.8.0_131
-
-    cd ${SCRIPTDIR}
-    sh ./ATACSeq/preprocessing/2_alignment.sh ${toProcess}
-fi
-
-if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
-then
-    module purge
-    module load SAMtools
-    module load picard/2.6.0-Java-1.8.0_131
-    module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version to avoid conflict
-    export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
-
-    ## load conda env for samstats
-    module load Anaconda3
-    source activate encodeqc
-
-    cd ${SCRIPTDIR}
-    sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
-fi
-
-echo 'EXITCODE: ' $?
-
-
-## move log files into a folder
-cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
-mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv ATACAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
