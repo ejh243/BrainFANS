@@ -5,9 +5,9 @@
 ## excludes duplicates, mt reads, only keeps properly paired reads
 ## shifts read prior to peak calling
 
+sampleName=$1
 
-f1=$(basename $1)
-sampleName=$2
+echo "Changing to trimmed directory" $TRIMDIR
 cd ${TRIMDIR}
 
 ## need trimmed files for alignment

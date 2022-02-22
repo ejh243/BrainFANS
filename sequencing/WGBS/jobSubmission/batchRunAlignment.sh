@@ -106,7 +106,7 @@ then
 		module load Bismark
 
 		cd ${SCRIPTDIR}
-		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID} ${toProcess[0]}   
+		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID}
 	fi
 
 	mkdir -p WGBS/logFiles/${USER}
