@@ -39,5 +39,4 @@ echo "Output written to " ${FASTQCDIR}
 cd ${RAWDATADIR}  
 fastqc ${f1} ${f2} -t 8 -o ${FASTQCDIR}
 
-
 echo "FASTQC complete"

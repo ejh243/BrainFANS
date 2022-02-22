@@ -55,7 +55,8 @@ then
     module load Bowtie2/2.3.4.2-foss-2018b
     module load SAMtools
     module load picard/2.6.0-Java-1.8.0_131
-
+    export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
+	
     cd ${SCRIPTDIR}
     sh ./ATACSeq/preprocessing/2_alignment.sh ${toProcess}
 fi
@@ -64,18 +65,17 @@ if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
 then
     module purge
     module load SAMtools
-    module load picard/2.6.0-Java-1.8.0_131
-    module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version to avoid conflict
-    export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
+    module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
 
     ## load conda env for samstats
     module load Anaconda3
     source activate encodeqc
 
     cd ${SCRIPTDIR}
-    sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
+    sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}
 fi
 
 ## move log files into a folder
-mkdir -p logFiles/${SLURM_ARRAY_JOB_ID}
-mv logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* logFiles/${SLURM_ARRAY_JOB_ID}
+cd ${SCRIPTDIR}
+mkdir -p ATACSeq/logFiles/${SLURM_ARRAY_JOB_ID}
+mv ATACSeq/logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${SLURM_ARRAY_JOB_ID}

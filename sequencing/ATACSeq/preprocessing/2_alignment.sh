@@ -52,7 +52,7 @@ echo ${f1}
 echo ${f2}
 
 ## checks if last file exists and is not empty
-if [ ! -s ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt ]	
+if [ ! -s ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]	
 	then
 	echo "Running alignment for"" ${sampleName}"
 	date -u	
@@ -68,28 +68,38 @@ if [ ! -s ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt ]
 	rm ${ALIGNEDDIR}/${sampleName}.bam
 	rm ${ALIGNEDDIR}/${sampleName}.sam
 
-	## extract chr1 for calculation of ENCODE metrics
-	echo "extracting chr 1 for ENCODE metrics calculations"
-	samtools view -b ${ALIGNEDDIR}/${sampleName}_sorted.bam chr1 > ${ALIGNEDDIR}/${sampleName}_sorted_chr1.bam
-	
 	## remove reads from MT and other random chrs
 	echo "removing MT chr"
 	samtools view -b ${ALIGNEDDIR}/${sampleName}_sorted.bam ${CHR[@]} > ${ALIGNEDDIR}/${sampleName}_noMT.bam	
 
-	## remove reads with q < 30;only keep properly paired reads; exclude reads marked as pcr optical duplicate, or secondary alignment
+	# remove reads with q < 30, unmapped, mate unmapped, secondary alignment, reads failing platform
+	# only keep properly paired reads
+	# Obtain name sorted BAM file
 	echo "filtering aligned reads"
-	samtools view -f 0x2 -b -F 0x400 -F 0x100 -q 30 -h ${ALIGNEDDIR}/${sampleName}_noMT.bam > ${ALIGNEDDIR}/${sampleName}_q30.bam
-
-	## remove duplicates
-	echo "removing duplicates"
-	java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${ALIGNEDDIR}/${sampleName}_q30.bam O=${ALIGNEDDIR}/${sampleName}_depDup_q30.bam M=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
+    samtools view -F 524 -f 2  -q 30 -u ${ALIGNEDDIR}/${sampleName}_noMT.bam | samtools sort -n /dev/stdin -o ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam
+    samtools view -h ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam | $(which assign_multimappers.py) -k $multimap --paired-end | samtools fixmate -r /dev/stdin ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
 	
- 
-	rm ${ALIGNEDDIR}/${sampleName}_q30.bam
+	# Remove orphan reads (pair was removed)
+	# and read pairs mapping to different chromosomes
+	# Obtain position sorted BAM
+	samtools view -F 1804 -f 2 -u ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam | samtools sort /dev/stdin -o ${ALIGNEDDIR}/${sampleName}.filt.bam
+	
+	rm ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
+	rm ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam
 	rm ${ALIGNEDDIR}/${sampleName}_noMT.bam
+	rm ${ALIGNEDDIR}/${sampleName}_sorted.bam
+	
+   # Mark duplicates
+   java -Xmx4G -jar $EBROOTPICARD/picard.jar MarkDuplicates INPUT=${ALIGNEDDIR}/${sampleName}.filt.bam OUTPUT=${ALIGNEDDIR}/${sampleName}.filt.dupmark.bam METRICS_FILE=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt VALIDATION_STRINGENCY=LENIENT ASSUME_SORTED=true REMOVE_DUPLICATES=false
+   
+   rm ${ALIGNEDDIR}/${sampleName}.filt.bam
 
-	samtools index ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam
-	samtools idxstats ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam > ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt
+   # Remove duplicates
+   samtools view -F 1804 -f 2 -b ${ALIGNEDDIR}/${sampleName}.filt.dupmark.bam > ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam
+   
+   # Index Final BAM file
+   samtools index ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam
+	
 fi
 
 echo "Alignment and post filtering complete"
