@@ -16,7 +16,7 @@
 #
 
 ## OUTPUT
-# ${PEAKDIR}/QCoutput/FRIP_*.csv
+# ${PEAKDIR}/QCOutput/FRIP_*.csv
 
 
 cd ${ALIGNEDDIR}/ENCODEMetrics/
