@@ -30,11 +30,16 @@ echo Starting peak calling at:
 date -u
 
 module load MACS2
+module load BEDTools
+module load SAMtools
 module load Miniconda2
 source activate epic2
 
 ##  run peak calling on each sample and calulate FRIP
 ./DNAhydroxy/preprocessing/1_samplePeaks.sh ${sampleID}
+
+module purge
+module load SAMtools
 
 ## extract sex chromosome for sex check
 ./DNAhydroxy/preprocessing/2_extractSexChr.sh ${sampleID}
