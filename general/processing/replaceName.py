@@ -10,8 +10,8 @@ def replaceName(old, new, files):
             phrase to replace with
             list of files to find an replace within 
     '''
-    if '.' not in old:
-        print("Phrase to replace does not appear to be a filename. Please include the file extension")
+    if ('.' not in old) or ('/' not in old):
+        print("Phrase to replace does not appear to be a filename. Please include the file extension or directory / at the end")
         sys.exit()
     files=files[0].split('\n')
     for infile in files:
