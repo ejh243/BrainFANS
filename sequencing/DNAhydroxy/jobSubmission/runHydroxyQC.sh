@@ -6,7 +6,6 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
 #SBATCH --error=LogFiles/CEGX5hmCQC.err # error file
 #SBATCH --output=LogFiles/CEGX5hmCQC.log # output file
 #SBATCH --job-name=CEGX5hmCQC
@@ -17,35 +16,19 @@
 echo Job started on:
 date -u
 
-## needs to be executed from the scripts folder
-
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
-
-cd $SLURM_SUBMIT_DIR
-
 ## load config parameters
-source hydroxy/CGEX/config.txt
+source $1
 
-echo Starting peak calling at:
-date -u
+module load MACS2
+module load Miniconda2
+source activate epic2
+module load HTSeq
 
-module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
+##  call peaks on sex chromosomes across all samples and do peak quanitification
+./sexChrPeaks.sh
 
-cd hydroxy/CGEX/
-
-## For QC purposes first run peak calling on each sample
-./macsPeakCalling.sh
-
-## Calc QC metrics
-
-## need indexed bamfiles
-BAMFILES=($(ls ${ALIGNEDDIR}/*_L00.bml.GRCh38.karyo.deduplicated.bam))
-module load SAMtools
-for f in ${BAMFILES[@]}
-do
-	samtools index ${f}
-done
+## calculate reads in gene body
+./geneBodyCounts.sh 
 
 ## Run QC report
 module load Pandoc/2.5

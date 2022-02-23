@@ -23,12 +23,12 @@ echo "Changing Folder to Data directory "
 echo ${ALIGNEDDIR}
 
 cd ${ALIGNEDDIR}
-BAMFILES=($(ls *_depDup_q30.bam))
+BAMFILES=($(ls *.filt.nodup.bam))
 
 echo "Number of bam files found for alignment:"" ""${#BAMFILES[@]}"""	
 
 sample=${BAMFILES[${SLURM_ARRAY_TASK_ID}]}
-sampleName=$(basename ${sample%_depDup_q30.bam})
+sampleName=$(basename ${sample%.filt.nodup.bam})
 
 
 if [ $# = 1 ] || [[ $2 =~ 'SHIFT' ]]

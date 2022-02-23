@@ -20,14 +20,15 @@
 # multiqc on total fastqc output
 
 f=$1
-
+cd ${RAWDATADIR} 
+ 
 ## extract sample name from filename
 f1=$(basename $f)
 sampleName=${f1%_[rR][12]*} ## sample name is everything before either r1 or R1
 echo "Processing" ${sampleName}
 
 ## create filename for paired fastq file
-f2=$(basename $(ls ${RAWDATADIR}/${sampleName}*[rR]2*q.gz))
+f2=$(ls ${sampleName}*[rR]2*q.gz)
 
   ## run fastqc
 echo "Running FASTQC on"
@@ -36,7 +37,7 @@ echo ${f2}
 
 echo "Output written to " ${FASTQCDIR}
 
-cd ${RAWDATADIR}  
+
 fastqc ${f1} ${f2} -t 8 -o ${FASTQCDIR}
 
 echo "FASTQC complete"

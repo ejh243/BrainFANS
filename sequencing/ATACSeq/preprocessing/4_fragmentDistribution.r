@@ -37,8 +37,8 @@ library(diptest)
 library(ptest)
 
 ## get filepaths of aligned QC'd bam file
-aQCFiles<-list.files(alignedDir, pattern = "_depDup_q30.bam$", recursive = TRUE, full.names = TRUE)
-aQCSampleNames<-gsub("_depDup_q30.bam", "", basename(aQCFiles))
+aQCFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam$", recursive = TRUE, full.names = TRUE)
+aQCSampleNames<-gsub(".filt.nodup.bam", "", basename(aQCFiles))
 
 ## filter to subset of samples
 index<-c(1:10)+(batchNum*10)

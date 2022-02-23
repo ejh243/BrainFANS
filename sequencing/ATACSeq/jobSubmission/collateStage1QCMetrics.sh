@@ -27,6 +27,10 @@ mkdir -p ${FASTQCDIR}/multiqc
 cd ${FASTQCDIR}/
 multiqc . -f -o ${FASTQCDIR}/multiqc
 
+## remove redundant html files
+rm -f *.html
+rm -f ${TRIMDIR}/fastp_reports/*.html
+
 mkdir -p ${ALIGNEDDIR}/multiqc
 cd ${ALIGNEDDIR}/
 multiqc . -f -o ${ALIGNEDDIR}/multiqc
