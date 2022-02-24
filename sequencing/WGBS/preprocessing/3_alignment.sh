@@ -23,7 +23,7 @@ echo ${f2}
 
 ## checks if last file exists and is not empty
 
-echo "Running alignment for"" ${sampleName}"
+echo "Running alignment for" ${sampleName}
 date -u	
 ## alignment
 bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2

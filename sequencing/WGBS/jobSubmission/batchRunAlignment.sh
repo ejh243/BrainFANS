@@ -109,6 +109,8 @@ then
 		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID}
 	fi
 
+	echo 'EXITCODE: ' $?
+	
 	mkdir -p WGBS/logFiles/${USER}
 	mv WGBS/logFiles/WGBSalign-${SLURM_ARRAY_JOB_ID}* WGBS/logFiles/${USER}
 	
@@ -116,7 +118,7 @@ else
 	echo "File list not found"
 fi
 
-echo 'EXITCODE: ' $?
+
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/WGBS/logFiles/${USER}
