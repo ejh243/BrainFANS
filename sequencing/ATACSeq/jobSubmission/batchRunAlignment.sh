@@ -17,7 +17,7 @@ date -u
 ## load config file provided on command line when submitting job
 echo "Loading config file: "
 echo $1
-source ./$1 
+source $1 
 
 
 ## check script directory
@@ -72,43 +72,38 @@ then
         sh ./preScripts/fastp.sh ${sampleID} ${toProcess[0]} ${toProcess[1]} 
     fi
 
-    if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
-    then
-        ## run alignment and post processing on sample
-        module purge ## had conflict issues if this wasn't run first
-        module load Bowtie2/2.3.4.2-foss-2018b
-        module load SAMtools
-        module load picard/2.6.0-Java-1.8.0_131
+	if [ $# = 1 ] || [[ $2 =~ 'ALIGN' ]]
+	then
+		## run alignment and post processing on sample
+		module purge ## had conflict issues if this wasn't run first
+		module load Bowtie2/2.3.4.2-foss-2018b
+		module load SAMtools
+		module load picard/2.6.0-Java-1.8.0_131
+		export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
+		
+		cd ${SCRIPTDIR}
+		sh ./ATACSeq/preprocessing/2_alignment.sh ${sampleID}
+	fi
 
-        showquota Research_Project-MRC190311
-
-        cd ${SCRIPTDIR}
-        sh ./ATACSeq/preprocessing/2_alignment.sh ${sampleID} 
-    fi
-
-    if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
-    then
-        module purge
-        module load SAMtools
-        module load picard/2.6.0-Java-1.8.0_131
-        module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version to avoid conflict
-        export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
-
+	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
+	then
+		module purge
+		module load SAMtools
+		module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
         ## load conda env for samstats
         module load Anaconda3
         source activate encodeqc
 
         cd ${SCRIPTDIR}
-        sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
+        sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}
     fi
 
     ## move log files into a folder
-    mkdir -p ATACSeq/logFiles/${USER}
-    mv ATACSeq/logFiles/ATACAlignment-${SLURM_ARRAY_JOB_ID}* ATACSeq/logFiles/${USER}
+    mkdir -p ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+    mv ATACSeq/logFiles/${USER}/ATACAlignment-${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
 
 else
     echo "File list not found"
 fi
 
 echo 'EXIT CODE: ' $?
-

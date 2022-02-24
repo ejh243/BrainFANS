@@ -74,7 +74,8 @@ then
        --bqsr-recal-file baseRecalibrate/${sampleName}_recal_data.table \
        -O baseRecalibrate/${sampleName}_baserecal.bam
        
-    rm baseRecalibrate/${sampleName}_dedup_rglabelled.bam
+    rm baseRecalibrate/${sampleName}_dedup_rglabelled.bam*
+	rm baseRecalibrate/${sampleName}_recal_data.table
 
     mkdir -p genotypeConcordance
 

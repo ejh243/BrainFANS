@@ -1,7 +1,7 @@
 ## Performs peak calling for sex chr using shifted tagAlign files 
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/subsetSexChrs.sh <sampleName>
+# sh ./ATACSeq/preprocessing/11_subsetSexChrs.sh <sampleName>
 # where 
 # <sampleName> is the file prefix
 # script needs to be executed from <git repo>/sequencing/
