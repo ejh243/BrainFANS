@@ -7,7 +7,7 @@ This readme explains the content of the scripts for running the ATAC analysis pi
 
 #### Data pre-processing:
 
-1. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchRunAlignment.sh <config.txt> [<STEPS>]
+1. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchRunAlignment.sh <project-name> [<STEPS>]
 
 Parameters in [] are optional.
 
@@ -20,6 +20,8 @@ Then submits a batch script to process one sample
 	* executes ATACSeq/preprocessing/2_alignmentPE.sh 
 
 	* executes ATACSeq/preprocessing/3_calcENCODEQCMetricsPE.sh ${sampleID}_sorted_chr1.bam
+	
+	<project-name> the name of the project folder in the main data type data directory
 	
 	-optional- 
 
