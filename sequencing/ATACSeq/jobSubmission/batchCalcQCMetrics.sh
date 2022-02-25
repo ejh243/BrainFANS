@@ -27,6 +27,8 @@ export PROJECT=$1
 source ./ATACSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
 
+mkdir -p ${ALIGNEDDIR}/QCOutput
+
 module load R/3.6.3-foss-2020a
 
 Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/4_fragmentDistribution.r ${ALIGNEDDIR} ${SLURM_ARRAY_TASK_ID} 
