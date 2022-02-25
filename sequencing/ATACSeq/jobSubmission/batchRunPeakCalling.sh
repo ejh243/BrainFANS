@@ -77,6 +77,8 @@ then
 	module load BEDTools
 	module load SAMtools
 
+	mkdir -p ${PEAKDIR}/QCOutput
+
 	sh ./ATACSeq/preprocessing/7_calcFrip.sh ${sampleName}
 	date -u
 	echo "FRIP calculated called"
