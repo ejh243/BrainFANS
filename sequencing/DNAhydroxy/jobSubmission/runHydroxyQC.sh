@@ -22,13 +22,17 @@ source $1
 module load MACS2
 module load Miniconda2
 source activate epic2
-module load HTSeq
+module load Subread
+module load BEDTools
 
-##  call peaks on sex chromosomes across all samples and do peak quanitification
-./sexChrPeaks.sh
+##  call peaks on sex chromosomes across all samples and do peak quantification
+sh DNAhydroxy/preprocessing/3_sexChrPeaks.sh
+
+module purge
+module load Subread
 
 ## calculate reads in gene body
-./geneBodyCounts.sh 
+./4_geneBodyCounts.sh 
 
 ## Run QC report
 module load Pandoc/2.5

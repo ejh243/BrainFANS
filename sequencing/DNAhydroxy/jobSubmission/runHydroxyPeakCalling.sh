@@ -6,9 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
-#SBATCH --error=LogFiles/CEGX5hmCPeakingCalling.err # error file
-#SBATCH --output=LogFiles/CEGX5hmCPeakingCalling.log # output file
+#SBATCH --error=DNAhydroxy/logFiles/CEGX5hmCPeakingCalling.err # error file
+#SBATCH --output=DNAhydroxy/logFiles/CEGX5hmCPeakingCalling.log # output file
 #SBATCH --job-name=CEGX5hmCPeakingCalling
 
 
@@ -22,12 +21,12 @@ echo $SLURM_SUBMIT_DIR
 
 cd $SLURM_SUBMIT_DIR
 
-source hydroxy/CGEX/config.txt
+source $1
 
 cd ${SCRIPTDIR}/hydroxy/CGEX/
 module load R/3.6.3-foss-2020a
 
-#Rscript createSampleListsForPeakCalling.r config.r 
+Rscript createSampleListsForPeakCalling.r config.r 
 
 ## run peak calling with MACS2
 module purge
