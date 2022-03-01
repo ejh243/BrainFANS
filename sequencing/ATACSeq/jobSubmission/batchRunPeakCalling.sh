@@ -17,7 +17,7 @@ date -u
 ## load config file provided on command line when submitting job
 echo "Loading config file: "
 echo $1
-source ./$1 
+source $1 
 
 echo "Changing Folder to Data directory "
 echo ${ALIGNEDDIR}

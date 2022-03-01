@@ -51,15 +51,14 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
 
 6.
 
-7. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchFormatSexChrs.sh <config file>
+7. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchFormatSexChrs.sh <project ID>
 	* executes ./ATACSeq/preprocessing/subsetSexChrs.sh for all samples that pass stage 1 filtering
-		* performs variant calling on the X chromosome
 		* subsets tagalign files to X and Y chromosome reads
+	* requires a file in METADATA folder called Stage1Samples.txt which lists the samples to be included for sex check
 		
-8. sbatch ATACSeq/jobSubmission/sexCheck.sh
+8. sbatch ATACSeq/jobSubmission/sexCheck.sh  <project ID>
 	* executes ATACSeq/preprocessing/sexChrPeaks.sh which performs peak calling on the sex chromomes, filter and read counts
-	* collates X chr variants calling and recalls genotypes jointly
-	* collates the three different sex checks and reports the output,
+	* collates the three different sex checks and reports the output
 	
 6. peak calling per sample type
 

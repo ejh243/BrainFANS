@@ -1,11 +1,15 @@
 #!/bin/sh
-#PBS -V # export all environment variables to the batch job.
-#PBS -q mrcq # submit to the serial queue
-#PBS -l walltime=10:00:00 # Maximum wall time for the job.
-#PBS -A Research_Project-MRC190311 # research project to submit under. 
-#PBS -l procs=1 # specify number of processors.
-#PBS -e LogFiles/QCSNPdata.err # error file
-#PBS -o LogFiles/QCSNPdata.log # output file
+#SBATCH --export=ALL # export all environment variables to the batch job.
+#SBATCH -p mrcq # submit to the serial queue
+#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH -A Research_Project-MRC190311 # research project to submit under. 
+#SBATCH --nodes=1 # specify number of nodes.
+#SBATCH --ntasks-per-node=16 # specify number of processors per node
+#SBATCH --mail-type=END # send email at job completion 
+#SBATCH --output=SNPArray/logFiles/SNPQC.o
+#SBATCH --error=SNPArray/logFiles/SNPQC.e
+#SBATCH --job-name=SNPQC
+
 
 
 ## print start date and time
@@ -19,7 +23,7 @@ date -u
 ######
 
 
-source ./$1
+source $1
 
 
 

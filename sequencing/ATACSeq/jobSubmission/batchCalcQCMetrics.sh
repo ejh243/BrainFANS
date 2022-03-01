@@ -17,7 +17,7 @@ date -u
 ## load config file provided on command line when submitting job
 echo "Loading config file: "
 echo $1
-source ./$1
+source $1
 
 module load R/3.6.3-foss-2020a
 

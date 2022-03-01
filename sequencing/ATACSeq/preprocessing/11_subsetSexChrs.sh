@@ -25,23 +25,6 @@
 sampleName=$1
 
 cd ${ALIGNEDDIR}/
-
-mkdir -p SNPs
-
-## variant calling by sample on X chromosome
-## filter bam file to x chromosome
-samtools view -b baseRecalibrate/${sampleName}_baserecal.bam chrX > baseRecalibrate/${sampleName}_baserecal_chrX.bam
-
-samtools index baseRecalibrate/${sampleName}_baserecal_chrX.bam
-
-gatk HaplotypeCaller \
--I baseRecalibrate/${sampleName}_baserecal_chrX.bam \
--R ${GENOMEFASTA} \
--O SNPs/${sampleName}_chrX.gvcf \
--ERC GVCF 
-
-rm baseRecalibrate/${sampleName}_baserecal_chrX*
-
 # for peak calling on sex chr, subset tagalign files
 tagalign=${sampleName}.tn5.tagAlign.gz
 

@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=logFiles/ATAC/%u/formatSexChr-%A_%a.o
-#SBATCH --error=logFiles/ATAC/%u/formatSexChr-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/%u/formatSexChr-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/formatSexChr-%A_%a.e
 #SBATCH --job-name=formatSexChr-%A_%a.e
 
 ## print start date and time
@@ -15,12 +15,17 @@ echo Job started on:
 date -u
 
 ## load config file provided on command line when submitting job
-echo "Loading config file: "
-echo $1
-source $1  
+echo "Loading config file for project: " $1
+export PROJECT=$1
+
+source ./ATACSeq/config/config.txt 
+echo "Project directory is: " $DATADIR
+
+
+## check script directory
+echo 'Script directory is: ' ${SCRIPTDIR}
 
 ## reformat bam file
-module load GATK
 module load SAMtools
 
 ## load sample to process from text file
