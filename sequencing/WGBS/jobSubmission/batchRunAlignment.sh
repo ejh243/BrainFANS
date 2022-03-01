@@ -21,9 +21,11 @@ echo $SLURM_SUBMIT_DIR
 cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
-echo "Loading config file: "
-echo $1
-source ./$1 
+echo "Loading config file for project: " $1
+export PROJECT=$1
+
+source ./WGBS/config/config.txt 
+echo "Project directory is: " $DATADIR
 
 
 ## check script directory
@@ -109,6 +111,8 @@ then
 		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID}
 	fi
 
+	echo 'EXITCODE: ' $?
+	
 	mkdir -p WGBS/logFiles/${USER}
 	mv WGBS/logFiles/WGBSalign-${SLURM_ARRAY_JOB_ID}* WGBS/logFiles/${USER}
 	
@@ -116,7 +120,7 @@ else
 	echo "File list not found"
 fi
 
-echo 'EXITCODE: ' $?
+
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/WGBS/logFiles/${USER}

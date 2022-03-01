@@ -66,5 +66,5 @@ if(length(aQCFiles) > 0){
 	colnames(periodTestStats)<-c("obsStat", "p.value", "freq")
 	
 
-	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(alignedDir, "/QCoutput/FragmentDistribution_Batch", batchNum, ".rdata"))
+	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(alignedDir, "/QCOutput/FragmentDistribution_Batch", batchNum, ".rdata"))
 }

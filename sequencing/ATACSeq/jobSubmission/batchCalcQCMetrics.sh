@@ -13,11 +13,21 @@
 ## print start date and time
 echo Job started on:
 date -u
+	
+## needs to be executed from the scripts folder
+echo "Changing Folder to: "
+echo $SLURM_SUBMIT_DIR
 
-## load config file provided on command line when submitting job
-echo "Loading config file: "
-echo $1
-source ./$1
+cd $SLURM_SUBMIT_DIR
+
+
+echo "Loading config file for project: " $1
+export PROJECT=$1
+
+source ./ATACSeq/config/config.txt 
+echo "Project directory is: " $DATADIR
+
+mkdir -p ${ALIGNEDDIR}/QCOutput
 
 module load R/3.6.3-foss-2020a
 

@@ -4,8 +4,8 @@
 #PBS -l walltime=10:00:00 # Maximum wall time for the job.
 #PBS -A Research_Project-MRC190311 # research project to submit under. 
 #PBS -l procs=1 # specify number of processors.
-#PBS -e LogFiles/QCSNPdata.err # error file
-#PBS -o LogFiles/QCSNPdata.log # output file
+#PBS -e SNPArray/logFiles/QCSNPdata.err # error file
+#PBS -o SNPArray/logFiles/QCSNPdata.log # output file
 
 
 ## print start date and time

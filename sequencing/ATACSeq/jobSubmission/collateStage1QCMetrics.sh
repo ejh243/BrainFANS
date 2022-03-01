@@ -10,16 +10,22 @@
 #SBATCH --error=ATACSeq/logFiles/%u/ATACQCSummary-%A.e
 #SBATCH --job-name=ATACQCSummary
 
-
 ## print start date and time
 echo Job started on:
 date -u
+	
+## needs to be executed from the scripts folder
+echo "Changing Folder to: "
+echo $SLURM_SUBMIT_DIR
 
+cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
-echo "Loading config file: "
-echo $1
-source ./$1 
+echo "Loading config file for project: " $1
+export PROJECT=$1
+
+source ./ATACSeq/config/config.txt 
+echo "Project directory is: " $DATADIR
 
 module load MultiQC
 ## use multiqc to collate QC output statistics
