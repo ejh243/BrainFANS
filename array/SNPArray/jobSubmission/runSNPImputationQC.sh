@@ -1,12 +1,14 @@
 #!/bin/sh
-#PBS -V # export all environment variables to the batch job.
-#PBS -q sq # submit to the serial queue
-#PBS -l walltime=10:00:00 # Maximum wall time for the job.
-#PBS -A Research_Project-MRC190311 # research project to submit under. 
-#PBS -l procs=1 # specify number of processors.
-#PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e LogFiles/QCImputation.err # error file
-#PBS -o LogFiles/QCImputation.log # output file
+#SBATCH --export=ALL # export all environment variables to the batch job.
+#SBATCH -p mrcq # submit to the serial queue
+#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH -A Research_Project-MRC190311 # research project to submit under. 
+#SBATCH --nodes=1 # specify number of nodes.
+#SBATCH --ntasks-per-node=16 # specify number of processors per node
+#SBATCH --mail-type=END # send email at job completion 
+#SBATCH --output=SNPArray/logFiles/QCImputation.o
+#SBATCH --error=SNPArray/logFiles/QCImputation.e
+#SBATCH --job-name=QCImputation
 
 
 
@@ -21,22 +23,23 @@ date -u
 
 ######
 
-source ./$1
+source $1
 
 
-cd ${IMPUTEDIR}/Output
+cd ${IMPUTEDIR}/ImputationOutput
 
-module load R/3.5.1-foss-2018b-Python-2.7.15
+module load R/3.6.3-foss-2020a
 
-Rscript SNPArray/preprocessing/5_summarizeImputation.r All/ ${KGG}/1000GP_Phase3_combined.legend ALL
-Rscript SNPArray/preprocessing/5_summarizeImputation.r EUR/ ${KGG}/../HRC/HRC.r1-1.GRCh37.wgs.mac5.sites.tab AF
+Rscript ${SCRIPTDIR}/preprocessing/5_summarizeImputation.r All/ ${KGG}/1000GP_Phase3_combined.legend ALL
+Rscript ${SCRIPTDIR}/preprocessing/5_summarizeImputation.r EUR/ ${KGG}/../HRC/HRC.r1-1.GRCh37.wgs.mac5.sites.tab AF
 
 module purge
 module load VCFtools
+cd ${SCRIPTDIR}
 
 ## combine imputation output separately for ALL and EUR versions
-sh SNPArray/preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/Output/All
-sh SNPArray/preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/Output/EUR
+sh preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/All
+sh preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/EUR
 
 ## print end date and time
 echo Job finished:

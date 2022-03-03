@@ -27,8 +27,11 @@ export PROJECT=$1
 source ./ATACSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
 
+## check script directory
+echo 'Script directory is: ' ${SCRIPTDIR}
+
+
 ## reformat bam file
-module load GATK
 module load SAMtools
 
 ## load sample to process from text file
