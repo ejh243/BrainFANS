@@ -6,9 +6,9 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=logFiles/ATAC/%u/sexCheck-%A_%a.o
-#SBATCH --error=logFiles/ATAC/%u/sexCheck-%A_%a.e
-#SBATCH --job-name=sexCheck-%A_%a.e
+#SBATCH --output=ATACSeq/logFiles/%u/sexCheck-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/sexCheck-%A_%a.e
+#SBATCH --job-name=sexCheck
 
 ## call peaks for sex chromosomes & do read counts in these peaks
 

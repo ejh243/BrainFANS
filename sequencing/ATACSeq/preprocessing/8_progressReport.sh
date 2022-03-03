@@ -16,7 +16,7 @@
 # -
 
 ## OUTPUT
-# ${METADIR}/SummariseSampleProcessingProgress.csv
+# ${METADIR}/summariseSampleProcessingProgress.csv
 
 
 echo "Running progress report"
@@ -47,7 +47,7 @@ echo "Number of fastp reports found " $(ls ${TRIMDIR}/fastp_reports/*.json | wc 
 ## check for bowtie output
 echo "Number of Bowtie reports found " $(ls ${ALIGNEDDIR}/*.bowtie.log | wc -l)
 
-echo "Number of filtered aligned files found " $(ls ${ALIGNEDDIR}/*_postFilter_statsperchr.txt | wc -l)
+echo "Number of filtered aligned files found " $(ls ${ALIGNEDDIR}/*.filt.nodup.bam | wc -l)
 
 ## check for output of ENCODE QC metrics calculation
 ## first delete empty files 
@@ -59,14 +59,14 @@ echo "Number of ENCODE QC metric output files found " $(ls ${ALIGNEDDIR}/ENCODEM
 
 ## check for peak calling output
 
-echo "Number of MACS2 peak files (shifted tag align) found " $(ls ${PEAKDIR}/MACS/ShiftedTagAlign/*_peaks.broadPeak | wc -l)
+echo "Number of MACS2 peak files (shifted tag align) found " $(ls ${PEAKDIR}/MACS/ShiftedTagAlign/*.broadPeak.filt | wc -l)
 
-echo "Number of MACS2 peak files (paired end) found " $(ls ${PEAKDIR}/MACS/BAMPE/*_peaks.broadPeak | wc -l)
+echo "Number of MACS2 peak files (paired end) found " $(ls ${PEAKDIR}/MACS/BAMPE/*.broadPeak.filt | wc -l)
 
 
 ## check for individual samples
 ## save output in txt file
-echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS2Peaks1,MACS2Peaks2" > ${METADIR}/SummariseSampleProcessingProgress.csv
+echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS2Peaks1,MACS2Peaks2" > ${METADIR}/summariseSampleProcessingProgress.csv
 
 for sampleName in ${SAMPLEIDS[@]}
 do 
@@ -81,63 +81,63 @@ do
     f1=$(basename ${toProcess[0]}) 
     f2=$(basename ${toProcess[1]})
 
-    echo -n ${sampleName},${RAWDATADIR}, ${f1},${f2}, >> ${METADIR}/SummariseSampleProcessingProgress.csv
+    echo -n ${sampleName},${RAWDATADIR}, ${f1},${f2}, >> ${METADIR}/summariseSampleProcessingProgress.csv
 
     
     if [ ! -s ${FASTQCDIR}/${f1%%.*}*fastqc.zip ]
     then
-        echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
     if [ ! -s ${FASTQCDIR}/${f2%%.*}*fastqc.zip ]
     then
-        echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
 
     if [ ! -s ${TRIMDIR}/fastp_reports/${sampleName}*.json ]
     then
-        echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
     if [ ! -s ${ALIGNEDDIR}/${sampleName}.bowtie.log ]
     then
-        echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}_postFilter_statsperchr.txt ]
+    if [ ! -s ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]
     then
-        echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
     if [ ! -s ${ALIGNEDDIR}/ENCODEMetrics/${sampleName}*.pbc.qc ]
     then
-        echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${PEAKDIR}/MACS/ShiftedTagAlign/${sampleName}_peaks.broadPeak.filt ]
+    if [ ! -s ${PEAKDIR}/MACS/ShiftedTagAlign/${sampleName}.broadPeak.filt ]
     then
-        echo -n "N," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y," >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${PEAKDIR}/MACS/BAMPE/${sampleName}_peaks.broadPeak.filt ]
+    if [ ! -s ${PEAKDIR}/MACS/BAMPE/${sampleName}.broadPeak.filt ]
     then
-        echo "N" >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo "Y" >> ${METADIR}/SummariseSampleProcessingProgress.csv
+        echo "Y" >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
   
 done
