@@ -43,65 +43,77 @@ echo "Changing Folder to Data directory "
 echo ${DATADIR}
 cd ${DATADIR}
 
-## find all R1 fastq files
-FQFILES=()
-FQFILES+=($(find . -name '*1.*q.gz')) ## this command searches for all fq files within ## rm [rR] add *_*1.*
-echo ${FQFILES}
+## check if file containing list of sample IDs exists and if so:
+if test -f ${METADIR}/samples.txt;
+then 
+    ## create an array from the file
+    mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
+    echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 
-echo "Number of R1 .fq.gz files found for alignment:"" ""${#FQFILES[@]}"""	
+    sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
+    ## find the file name in RAWDATADIR
+    toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
+    
+    ## sort the toProcess array so that R1 and R2 are consecutive 
+    IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
+    toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
+    unset IFS 
 
-echo "SLURM_ARRAY_TASK_ID is: " "${SLURM_ARRAY_TASK_ID}"
+    echo "R1 file found is: " $( basename ${toProcess[0]} )
+    echo ${toProcess[0]}
 
-toProcess=${FQFILES[${SLURM_ARRAY_TASK_ID}]}
-sampleName=$(basename ${toProcess%.*.fastq.gz}) ##rm [rR]
-echo "Current sample: " ${sampleName} 
+    echo "Current sample: " ${sampleID} ##
 
+   ## if number of flags is 1 (config.txt), then run all steps
+    if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
+    then
+        ## run sequencing QC and trimming on fastq files        
+        module load FastQC 
 
-if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
-then
-	## run sequencing QC on fastq files		
-	module load FastQC/0.11.5-Java-1.7.0_80
-	module load MultiQC
-	module load fastp
+        cd ${SCRIPTDIR}
+        sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
+    fi
 
-	cd ${SCRIPTDIR}
-	echo "Changing to script directory: " ${SCRIPTDIR} 
-	sh ./preScripts/fastqc.sh ${toProcess}  
+    if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
+    then
+        module purge
+        module load fastp
+    	
+        cd ${SCRIPTDIR}
+        sh ./preScripts/fastp.sh ${sampleID} ${toProcess[0]} ${toProcess[1]} 
+    fi
 
-	echo "Finished fastqc on: " 
-	echo ${sampleID} 
+	if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
+	then
+		module purge ## had conflict issues if this wasn't run first
+		module load Bowtie2
+		module load SAMtools
+		module load picard/2.6.0-Java-1.8.0_131
+		module load BEDTools
+		module load Java
+		cd ${SCRIPTDIR}
+		sh ./ChIPSeq/preprocessing/2_alignment.sh ${sampleID} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
+	fi
+
+	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
+	then
+		module purge
+		module load SAMtools
+		module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
+        ## load conda env for samstats
+        module load Anaconda3
+        source activate encodeqc
+
+        cd ${SCRIPTDIR}
+        sh ./ChIPSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}
+    fi
+
+	echo 'EXITCODE: ' $?
+
+	## move log files into a folder
+	cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
+	mkdir -p ${SLURM_ARRAY_JOB_ID}
+	mv ChIPAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
+else
+	echo 'File list not found'
 fi
-
-
-if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
-then
-    module purge
-    module load fastp
-	
-    cd ${SCRIPTDIR}
-    echo "Changing to script directory: " ${SCRIPTDIR} ##
-    sh ./preScripts/fastp.sh ${toProcess} 
-
-    echo "Finished trim on: "
-    echo ${sampleID}
-fi
-
-
-if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
-then
-	module purge ## had conflict issues if this wasn't run first
-	module load Bowtie2
-	module load SAMtools
-	module load picard/2.6.0-Java-1.8.0_131
-	module load BEDTools
-	module load Java
-	cd ${SCRIPTDIR}
-	sh ./ChIPSeq/preprocessing/2_alignment.sh ${toProcess} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
-fi
-
-echo 'EXITCODE: ' $?
-
-## move log files into a folder
-cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
-mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv ChIPAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
