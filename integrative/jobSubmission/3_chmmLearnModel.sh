@@ -11,6 +11,7 @@
 #SBATCH --job-name=learnModel
 
 # This performs learnmodel on merged binarisation files 
+# to be submitted from <repo> as sbatch --array=1-_ integrative/jobSubmission/3_chmmLearnModel.sh 
 
 ## print start date and time
 echo Job started on:
