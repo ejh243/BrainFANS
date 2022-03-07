@@ -68,6 +68,9 @@ then
 	echo "removing MT chr"
 	samtools view -b ${ALIGNEDDIR}/${sampleName}_sorted.bam ${CHR[@]} > ${ALIGNEDDIR}/${sampleName}_noMT.bam	
 
+	## get sum stats prior to filtering
+	samtools stats ${ALIGNEDDIR}/${sampleName}_noMT.bam	> ${ALIGNEDDIR}/QCOutput/${sampleName}_noMT.stats	
+
 	# remove reads with q < 30, unmapped, mate unmapped, secondary alignment, reads failing platform
 	# only keep properly paired reads
 	# Obtain name sorted BAM file
@@ -95,6 +98,9 @@ then
    
    # Index Final BAM file
    samtools index ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam
+   
+   ## get sum stats post to filtering
+   samtools stats ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam	> ${ALIGNEDDIR}/QCOutput/${sampleName}filt.nodup.stats
 else
 	{ echo "Aligned file found so not aligning"; exit 1;}
 fi

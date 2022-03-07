@@ -1,5 +1,5 @@
 ## Sequencing data filepaths
-export DATADIR=/gpfs/mrc0/projects/Research_Project-MRC190311/ATACSeq/<project_name>
+export DATADIR=/gpfs/mrc0/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}
 
 export METADIR=${DATADIR}/0_metadata
 export RAWDATADIR=${DATADIR}/1_raw

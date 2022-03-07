@@ -28,10 +28,10 @@ Then submits a batch script to process one sample
 	[<STEPS>] option of either FASTQC, TRIM, ALIGN or ENCODE. The first runs only fastqc on the samples, the second trims, the third runs only the alignment and the last calculates the ENCODE QC metrics. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run all steps. 
 
 
-2. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchCalcQCMetrics.sh  <project-name>
+2. sbatch --array=<number of batch jobs/10> ATACSeq/jobSubmission/batchCalcQCMetrics.sh  <project-name>
 
-This script uses the ATACseqQC R package to generate the fragment distribution and calculate some summary statistics. It splits the samples into groups of 10 to run in parallel.
-	* executes ATACSeq/preprocessing/4_fragmentDistribution.r <aligned dir> <config.txt>
+This script uses the ATACseqQC R package to generate the fragment distribution and calculate some summary statistics. It splits the samples into groups of 10 to run in parallel, so batch number should be the number of samples divided by 10.
+	* executes ATACSeq/preprocessing/4_fragmentDistribution.r <aligned dir> <array-number>
 
 3. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchRunPeakCalling.sh <project-name>
 This script searchs within aligned data folders for all bam files
@@ -58,15 +58,15 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
 
 6.
 
-7. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchFormatSexChrs.sh <project-name>
+
+7. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchFormatSexChrs.sh <project ID>
+
 	* executes ./ATACSeq/preprocessing/subsetSexChrs.sh for all samples that pass stage 1 filtering
-		* performs variant calling on the X chromosome
 		* subsets tagalign files to X and Y chromosome reads
+	* requires a file in METADATA folder called Stage1Samples.txt which lists the samples to be included for sex check
 		
-8. sbatch ATACSeq/jobSubmission/sexCheck.sh
+8. sbatch ATACSeq/jobSubmission/sexCheck.sh  <project ID>
 	* executes ATACSeq/preprocessing/sexChrPeaks.sh which performs peak calling on the sex chromomes, filter and read counts
-	* collates X chr variants calling and recalls genotypes jointly
-	* collates the three different sex checks and reports the output,
 
 6. peak calling per sample type
 

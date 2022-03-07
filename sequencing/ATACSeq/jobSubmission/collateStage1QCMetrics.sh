@@ -27,31 +27,38 @@ export PROJECT=$1
 source ./ATACSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
 
-module load MultiQC
-## use multiqc to collate QC output statistics
 
-mkdir -p ${FASTQCDIR}/multiqc
-cd ${FASTQCDIR}/
-multiqc . -f -o ${FASTQCDIR}/multiqc
+if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
+then 
+	module load MultiQC
+	## use multiqc to collate QC output statistics
 
-## remove redundant html files
-rm -f *.html
-rm -f ${TRIMDIR}/fastp_reports/*.html
+	mkdir -p ${FASTQCDIR}/multiqc
+	cd ${FASTQCDIR}/
+	multiqc . -f -o ${FASTQCDIR}/multiqc
 
-mkdir -p ${ALIGNEDDIR}/multiqc
-cd ${ALIGNEDDIR}/
-multiqc . -f -o ${ALIGNEDDIR}/multiqc
+	## remove redundant html files
+	rm -f *.html
+	rm -f ${TRIMDIR}/fastp_reports/*.html
 
-## run other bespoke utilty scripts to collate other QC metrics
-cd ${SCRIPTDIR}/
+	mkdir -p ${ALIGNEDDIR}/multiqc
+	cd ${ALIGNEDDIR}/
+	multiqc . -f -o ${ALIGNEDDIR}/multiqc
+fi
 
-./ATACSeq/preprocessing/8_progressReport.sh 
-./ATACSeq/preprocessing/9_countMTReads.sh 
-./ATACSeq/preprocessing/10_collateFlagStatOutput.sh 
+if [ $# = 1 ] || [[ $2 =~ 'COLLATE' ]]
+then
+	## run other bespoke utilty scripts to collate other QC metrics
+	cd ${SCRIPTDIR}/
+
+	./ATACSeq/preprocessing/8_progressReport.sh 
+	./ATACSeq/preprocessing/9_countMTReads.sh 
+	./ATACSeq/preprocessing/10_collateFlagStatOutput.sh 
+fi
 
 echo 'EXITCODE: ' $?
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
-mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv ATACQCSummary-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
+mkdir -p ${SLURM_JOB_ID}
+mv ATACQCSummary-${SLURM_JOB_ID}* ${SLURM_JOB_ID}/

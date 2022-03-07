@@ -6,9 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
-#SBATCH --error=LogFiles/CEGX5hmCPeakingCalling.err # error file
-#SBATCH --output=LogFiles/CEGX5hmCPeakingCalling.log # output file
+#SBATCH --error=DNAhydroxy/logFiles/CEGX5hmCPeakingCalling.err # error file
+#SBATCH --output=DNAhydroxy/logFiles/CEGX5hmCPeakingCalling.log # output file
 #SBATCH --job-name=CEGX5hmCPeakingCalling
 
 
@@ -16,41 +15,33 @@
 echo Job started on:
 date -u
 
-## needs to be executed from the scripts folder
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
 
-cd $SLURM_SUBMIT_DIR
+source $1
 
-source hydroxy/CGEX/config.txt
-
-cd ${SCRIPTDIR}/hydroxy/CGEX/
 module load R/3.6.3-foss-2020a
 
-#Rscript createSampleListsForPeakCalling.r config.r 
+cd ${SCRIPTDIR}
+Rscript DNAhydroxy/preprocessing/5_createSampleListsForPeakCalling.r ${DATADIR} 
 
 ## run peak calling with MACS2
 module purge
 module load MACS2
+module load BEDTools
 
+mkdir -p ${PEAKDIR}/MACS2
 
-sh ./macsPeakCallingBySampleType.sh
+sampleSets=($(ls ${METADIR}/sampleLists/PeakCallingInputFiles*))
+
+sh DNAhydroxy/preprocessing/6_macsPeakCallingBySampleType.sh ${sampleSets[${SLURM_ARRAY_TASK_ID}]}
 
 ## run peak calling with EPIC2
 module purge
 module load Miniconda2
 source activate epic2
-sh ./epic2PeakCallingBySampleType.sh
+mkdir -p ${PEAKDIR}/EPIC2
+
+sh DNAhydroxy/preprocessing/7_epic2PeakCallingBySampleType.sh ${sampleSets[${SLURM_ARRAY_TASK_ID}]}
 source deactivate epic2
 
-
-## filter peaks to exclude those that overlap blacklist regions from hg38
-module purge
-module load BEDTools
-
-sh ./filterPeaksBlacklistRegions.sh
-
-## create consensous peak set
-sh ./createConsensousPeakSet.sh
 
 
