@@ -2,21 +2,23 @@
 ## format files for use with Michegan Imputation Server
 
 ## EXECUTION
-# sh SNPArray/preprocessing/3_CheckRelatedness.sh 
+# sh SNPArray/preprocessing/6_combineImputationOutput.sh <imputation output directory>
 # where 
+# <imputation output directory> is the folder where the output vcf and dose files from imputation are located, with one file per chr
 # script needs to be executed from <git repo>/array/
+# 
 
 ## REQUIRES the following variables in config file
 # PROCESSDIR, IMPUTEDIR, FILEPREFIX
 
 ## REQUIRES the following software
-# plink, perl,
+# plink, vcftools
 
 ## INPUT
-#  # binary plink files following prelim QC
+#  vcf and dose files from imputation
 
 ## OUTPUT
-# vcf files split by chr for upload to michegan imputation server
+# plink files 
 
 
 cd $1
@@ -60,13 +62,11 @@ rm chr*.keep
 
 ## update sex in fam file run hwe filter
 awk '{split($1,a,"_"); print $1,$2,a[1]"_"a[2],a[3]}' ${FILEPREFIX}_rsq0.3.fam > UpdateIDs.txt
-${PLINK}/plink --bfile ${FILEPREFIX}_rsq0.3 --update-ids UpdateIDs.txt --make-bed --out ${FILEPREFIX}_rsq0.3_1 
-${PLINK}/plink --bfile ${FILEPREFIX}_rsq0.3_1 --update-sex ../../UpdateSex.txt --hwe 0.00001 --make-bed --out ${FILEPREFIX}_rsq0.3_QCd 
+${PLINK}/plink --bfile ${FILEPREFIX}_rsq0.3 --update-ids UpdateIDs.txt --make-bed --out ${FILEPREFIX}_rsq0.3_QCd 
 
 rm ${FILEPREFIX}_rsq0.3.b*
 rm ${FILEPREFIX}_rsq0.3.fam
-rm ${FILEPREFIX}_rsq0.3_1.b*
-rm ${FILEPREFIX}_rsq0.3_1.fam
+
 
 ## recalculate PCs
 # LD prune
