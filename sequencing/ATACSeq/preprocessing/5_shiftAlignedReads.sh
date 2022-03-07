@@ -40,6 +40,7 @@ bedtools bamtobed -i ${sampleName}.filt.nodup.bam | awk 'BEGIN{OFS="\t"}{$4="N";
 ## requires name sorted bam file
 samtools sort -n ${sampleName}.filt.nodup.bam > ${sampleName}.filt.nodup.nmsrt.bam
 bedtools bamtobed -bedpe -mate1 -i ${sampleName}.filt.nodup.nmsrt.bam | gzip -c > ${sampleName}.filt.nodup.nmsrt.bedpe.gz
+rm ${sampleName}.filt.nodup.nmsrt.bam
 
 # =================================
 # Subsample tagAlign file
