@@ -8,12 +8,12 @@
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.o
 #SBATCH --error=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.e
-#SBATCH --job-name=verifyBAMID-%A_%a.e
-
+#SBATCH --job-name=verifyBAMID
 ## print start date and time
 echo Job started on:
 date -u
-	
+JOBNAME="verifyBAMID"
+
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: "
 echo $SLURM_SUBMIT_DIR
@@ -45,4 +45,4 @@ echo 'EXITCODE: ' $?
 ## move log files into a folder
 cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
 mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv verifyBAMID-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
+mv ATACAlignment-${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}

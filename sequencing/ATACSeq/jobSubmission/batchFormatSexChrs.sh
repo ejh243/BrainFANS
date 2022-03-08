@@ -8,11 +8,12 @@
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=ATACSeq/logFiles/%u/formatSexChr-%A_%a.o
 #SBATCH --error=ATACSeq/logFiles/%u/formatSexChr-%A_%a.e
-#SBATCH --job-name=formatSexChr-%A_%a.e
+#SBATCH --job-name=formatSexChr
 
 ## print start date and time
 echo Job started on:
 date -u
+JOBNAME="formatSexChr"
 	
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: "
@@ -36,7 +37,7 @@ module load SAMtools
 
 ## load sample to process from text file
 
-sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/Stage1Samples.txt | tail -1))
+sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/stage1Samples.txt | tail -1))
 
 sh ./ATACSeq/preprocessing/11_subsetSexChrs.sh ${sampleName}
 
@@ -45,4 +46,5 @@ echo 'EXITCODE: ' $?
 ## move log files into a folder
 cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
 mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv formatSexChr-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
+mv ATACAlignment-${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}
+

@@ -13,6 +13,7 @@
 ## print start date and time
 echo Job started on:
 date -u
+JOBNAME="ATACAlignment"
     
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: "
