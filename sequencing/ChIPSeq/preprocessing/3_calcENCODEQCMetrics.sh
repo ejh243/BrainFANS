@@ -8,7 +8,7 @@
 
 sampleName=$1 
 
-echo "Calculating ENCODE QC metrics"
+echo "Calculating ENCODE QC metrics on:" ${sampleName}
 echo Job started on:
 date -u
 

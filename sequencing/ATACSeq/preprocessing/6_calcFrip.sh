@@ -1,7 +1,7 @@
 ## calculates number of reads within peaks for sample level peaks
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/7_calcFrip.sh <sampleName>
+# sh ./ATACSeq/preprocessing/6_calcFrip.sh <sampleName>
 # where 
 # <sampleName> is the file prefix
 # script needs to be executed from <git repo>/sequencing/

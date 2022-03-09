@@ -13,6 +13,7 @@
 ## print start date and time
 echo Job started on:
 date -u
+JOBNAME="ChIPAlignment"
 	
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: "
@@ -33,9 +34,9 @@ echo 'Script directory is: ' ${SCRIPTDIR}
 
 
 ## check step method matches required options and exit if not
-if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] &&[[ ! $2 == '' ]];
+if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] && [[ ! $2 =~ "ENCODE" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
 
@@ -98,22 +99,24 @@ then
 	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
 	then
 		module purge
-		module load SAMtools
-		module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
         ## load conda env for samstats
         module load Anaconda3
         source activate encodeqc
+        module load SAMtools
+        module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
+        module load Java
+        module load picard/2.6.0-Java-1.8.0_131
 
         cd ${SCRIPTDIR}
         sh ./ChIPSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}
     fi
 
 	echo 'EXITCODE: ' $?
-
+cd
 	## move log files into a folder
 	cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
 	mkdir -p ${SLURM_ARRAY_JOB_ID}
-	mv ChIPAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
+	mv ${JOBNAME}-${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}/
 else
 	echo 'File list not found'
 fi

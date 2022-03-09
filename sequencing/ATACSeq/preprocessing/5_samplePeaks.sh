@@ -4,7 +4,7 @@
 
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/6_samplePeaks.sh <sampleName>
+# sh ./ATACSeq/preprocessing/5_samplePeaks.sh <sampleName>
 # where 
 # <sampleName> is the sample specific file prefix
 # script needs to be executed from <git repo>/sequencing/

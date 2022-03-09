@@ -23,7 +23,7 @@ source ./$1
 
 module load R/3.6.3-foss-2020a
 
-Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/4_fragmentDistribution.r ${ALIGNEDDIR} ${SLURM_ARRAY_TASK_ID} 
+Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/3_fragmentDistribution.r ${ALIGNEDDIR} ${SLURM_ARRAY_TASK_ID} 
 
 ## move log files into a folder
 mkdir -p ATACSeq/logFiles/${SLURM_ARRAY_JOB_ID}

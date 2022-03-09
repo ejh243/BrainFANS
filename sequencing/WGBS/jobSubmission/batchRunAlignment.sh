@@ -13,6 +13,7 @@
 ## print start date and time
 echo Job started on:
 date -u
+
 	
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: "
@@ -78,15 +79,11 @@ then
 	
 	if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
 	then
-		## run sequencing QC on fastq files		
-		module load FastQC/0.11.5-Java-1.7.0_80
-		module load MultiQC
-	
-		cd ${SCRIPTDIR}
-		echo "Changing to script directory: " ${SCRIPTDIR} ##
-		sh ./WGBS/preprocessing/1_fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}
-		echo "Finished fastqc on: " ##
-		echo ${sampleID} ##
+		## run sequencing QC on fastq files		     
+      module load FastQC 
+
+      cd ${SCRIPTDIR}
+      sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]} 
 	fi
 
 	if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
@@ -108,7 +105,7 @@ then
 		module load Bismark
 
 		cd ${SCRIPTDIR}
-		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID}
+		sh ./WGBS/preprocessing/1_alignment.sh ${sampleID}
 	fi
 
 	echo 'EXITCODE: ' $?
@@ -125,5 +122,5 @@ fi
 ## move log files into a folder
 cd ${SCRIPTDIR}/WGBS/logFiles/${USER}
 mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv WGBSAlignment-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}/
+mv ATACAlignment-${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}
 

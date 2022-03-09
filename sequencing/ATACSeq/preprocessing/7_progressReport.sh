@@ -2,7 +2,7 @@
 ## then searches specifically for each sample to identify what is missing
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/8_progressReport.sh
+# sh ./ATACSeq/preprocessing/7_progressReport.sh
 # assumes config file has been loaded
 # script needs to be executed from <git repo>/sequencing/
 
