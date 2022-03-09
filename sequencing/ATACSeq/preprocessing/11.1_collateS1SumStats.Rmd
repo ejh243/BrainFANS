@@ -8,7 +8,7 @@ params:
 
 ```{r setup, include=FALSE}
 args = as.numeric(commandArgs(trailingOnly=TRUE))
-args[1]<-"rizzardi"
+args[1]<-"MRC"
 
 ## load config variables
 project<-args[1]
