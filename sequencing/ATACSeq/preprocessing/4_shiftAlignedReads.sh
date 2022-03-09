@@ -1,7 +1,7 @@
 ## converts filtered bam file to a tagalign file, calculates CC scores and shifts reads ready for peak calling adapted from (https://www.encodeproject.org/pipelines/ENCPL792NWO/)
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/5_shiftAlignedReads.sh <sample name>
+# sh ./ATACSeq/preprocessing/4_shiftAlignedReads.sh <sample name>
 # where 
 # <sample name> is the sample specific prefix
 # script needs to be executed from <git repo>/sequencing/
