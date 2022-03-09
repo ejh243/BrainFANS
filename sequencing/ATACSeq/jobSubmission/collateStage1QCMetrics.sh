@@ -51,9 +51,9 @@ then
 	## run other bespoke utilty scripts to collate other QC metrics
 	cd ${SCRIPTDIR}/
 
-	./ATACSeq/preprocessing/8_progressReport.sh 
-	./ATACSeq/preprocessing/9_countMTReads.sh 
-	./ATACSeq/preprocessing/10_collateFlagStatOutput.sh 
+	./ATACSeq/preprocessing/7_progressReport.sh 
+	./ATACSeq/preprocessing/8_countMTReads.sh 
+	./ATACSeq/preprocessing/9_collateFlagStatOutput.sh 
 fi
 
 
@@ -63,7 +63,7 @@ then
 	cd ${SCRIPTDIR}/
 
 	module load R/3.6.3-foss-2020a
-	Rscript ATACSeq/preprocessing/11.1_collateS1SumStats.rmd ${PROJECT}
+	Rscript ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd ${PROJECT}
 fi
 
 shift #move command line arguments so that $1 is no longer project but step
@@ -76,7 +76,7 @@ then
 	shift
 
 	module load R/3.6.3-foss-2020a
-	Rscript ATACSeq/preprocessing/11.2_filterOnS1SumStats.r ${PROJECT} $@ #all remaining cmd line arguments
+	Rscript ATACSeq/preprocessing/10.2_filterOnS1SumStats.r ${PROJECT} $@ #all remaining cmd line arguments
 fi
 
 echo 'EXITCODE: ' $?

@@ -79,15 +79,11 @@ then
 	
 	if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
 	then
-		## run sequencing QC on fastq files		
-		module load FastQC/0.11.5-Java-1.7.0_80
-		module load MultiQC
-	
-		cd ${SCRIPTDIR}
-		echo "Changing to script directory: " ${SCRIPTDIR} ##
-		sh ./WGBS/preprocessing/1_fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}
-		echo "Finished fastqc on: " ##
-		echo ${sampleID} ##
+		## run sequencing QC on fastq files		     
+      module load FastQC 
+
+      cd ${SCRIPTDIR}
+      sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]} 
 	fi
 
 	if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
@@ -109,7 +105,7 @@ then
 		module load Bismark
 
 		cd ${SCRIPTDIR}
-		sh ./WGBS/preprocessing/3_alignment.sh ${sampleID}
+		sh ./WGBS/preprocessing/1_alignment.sh ${sampleID}
 	fi
 
 	echo 'EXITCODE: ' $?
