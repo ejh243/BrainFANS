@@ -90,7 +90,7 @@ then
 		export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
 		
 		cd ${SCRIPTDIR}
-		sh ./ATACSeq/preprocessing/2_alignment.sh ${sampleID}
+		sh ./ATACSeq/preprocessing/1_alignment.sh ${sampleID}
 	fi
 
 	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
@@ -103,7 +103,7 @@ then
         source activate encodeqc
 
         cd ${SCRIPTDIR}
-        sh ./ATACSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}
+        sh ./ATACSeq/preprocessing/2_calcENCODEQCMetrics.sh ${sampleID}
     fi
 
     ## move log files into a folder

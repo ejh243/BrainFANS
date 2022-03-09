@@ -50,7 +50,7 @@ then
 	echo "Shifting reads"
 
 	cd ${SCRIPTDIR}
-	./ATACSeq/preprocessing/5_shiftAlignedReads.sh ${sampleName}
+	./ATACSeq/preprocessing/4_shiftAlignedReads.sh ${sampleName}
 
 	date -u
 	echo "Reads shifted"
@@ -64,7 +64,7 @@ then
 	module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 	module load BEDTools
 	cd ${SCRIPTDIR}/
-	./ATACSeq/preprocessing/6_samplePeaks.sh ${sampleName}
+	./ATACSeq/preprocessing/5_samplePeaks.sh ${sampleName}
 	
 	date -u
 	echo "Peaks called"
@@ -82,7 +82,7 @@ then
 	mkdir -p ${PEAKDIR}/QCOutput
 
 	cd ${SCRIPTDIR}/
-	sh ./ATACSeq/preprocessing/7_calcFrip.sh ${sampleName}
+	sh ./ATACSeq/preprocessing/6_calcFrip.sh ${sampleName}
 	date -u
 	echo "FRIP calculated called"
 	

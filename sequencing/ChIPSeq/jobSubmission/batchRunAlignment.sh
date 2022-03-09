@@ -96,15 +96,16 @@ then
 		sh ./ChIPSeq/preprocessing/2_alignment.sh ${sampleID} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
 	fi
 
-	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
-	then
-		module purge
+    if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
+    then
+        module purge
         ## load conda env for samstats
         module load Anaconda3
         source activate encodeqc
         module load SAMtools
         module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
         module load Java
+        module load picard/2.6.0-Java-1.8.0_131
 
         cd ${SCRIPTDIR}
         sh ./ChIPSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}
