@@ -8,7 +8,7 @@ params:
 
 ```{r setup, include=FALSE}
 args = as.numeric(commandArgs(trailingOnly=TRUE))
-args[1]<-"rizzardi"
+##args[1]<-"rizzardi"
 ## load config variables
 project<-args[1]
 source("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
