@@ -6,8 +6,8 @@
 #SBATCH --nodes=5 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=integrative/logFiles/mergeBinary-%A.o
-#SBATCH --error=integrative/logFiles/mergeBinary-%A.e
+#SBATCH --output=integrative/chromHMM/logFiles/mergeBinary-%A.o
+#SBATCH --error=integrative/chromHMM/logFiles/mergeBinary-%A.e
 #SBATCH --job-name=mergeBinary
 
 
@@ -25,7 +25,7 @@ echo $SLURM_SUBMIT_DIR
 
 cd $SLURM_SUBMIT_DIR
 echo 'Loading config file'
-source ./integrative/config/config.txt
+source ./integrative/chromHMM/config/config.txt
 
 ##shift # Cause all of the positional parameters $2 to $n to be renamed $1 to $(n-1), and $1 to be lost.
 

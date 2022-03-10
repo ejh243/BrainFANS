@@ -1,9 +1,0 @@
-## Sequencing data filepaths
-export PROJDIR=/gpfs/mrc0/projects/Research_Project-MRC190311
-
-export CHROMDIR=/gpfs/mrc0/projects/Research_Project-MRC190311/ChromHmm
-export MERGEDIR=${CHROMDIR}/binarisedMerge
-export MODELDIR=${CHROMDIR}/modelOutput
-
-## Software/script filepaths
-export CHROMHMM=/gpfs/mrc0/projects/Research_Project-MRC190311/software/ChromHMM

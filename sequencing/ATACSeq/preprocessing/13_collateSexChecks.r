@@ -27,7 +27,7 @@ yPeaksWide = yPeaks %>%
   spread(V4, V11)
   
 xPeaksWide$YTot<-rowSums(yPeaksWide[,-1])
-xPeaksWide$sex<-sampleSheet$gender[match(gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V17), sampleSheet$sampleID)]
+xPeaksWide$sex<-sampleSheet$sex[match(gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V17), samsbatcpleSheet$sampleID)]
  
 
 ## determine threshold as a line to bisect the two groups 
@@ -52,7 +52,7 @@ a2 <- ggplot(xPeaksWide, aes(x=XIST, y=YTot, color=sex)) +
   geom_point() + 
   labs(
     x = "Counts in XIST associated peak",
-    y = "Counts across all Y chr peaks"
+    y = "Counts across all X chr peaks"
   ) + theme_bw() + geom_abline(intercept = 0, slope = thresX)
 
 figa<-ggarrange(a1, a2,  

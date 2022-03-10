@@ -6,8 +6,8 @@
 #SBATCH --nodes=5 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=integrative/logFiles/binarise-%A_%a.o
-#SBATCH --error=integrative/logFiles/binarise-%A_%a.e
+#SBATCH --output=integrative/chromHMM/logFiles/binarise-%A_%a.o
+#SBATCH --error=integrative/chromHMM/logFiles/binarise-%A_%a.e
 #SBATCH --job-name=binarise-%A_%a
 
 # This performs binarisation on aligned (and shifted for ATAC) bam files (pre peak calling)
@@ -25,8 +25,7 @@ echo $SLURM_SUBMIT_DIR
 cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
-echo "Loading config file: "
-echo $1
+echo "Loading config file for project: " $1
 source ./$1
 fileType=$2
 
