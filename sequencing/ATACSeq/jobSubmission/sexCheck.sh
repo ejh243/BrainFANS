@@ -23,15 +23,17 @@ echo "Project directory is: " $DATADIR
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
-## call peaks for sex chromosomes & do read counts in these peaks
 
-module load MACS2
-module load BEDTools
+if [ ! -d ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr ]
+then
+	## call peaks for sex chromosomes & do read counts in these peaks
 
+	module load MACS2
+	module load BEDTools
+	sh ./ATACSeq/preprocessing/12_sexChrPeaks.sh
+fi
 
-
-sh ./ATACSeq/preprocessing/12_sexChrPeaks.sh
-
+module purge
 module load R/3.6.3-foss-2020a
 Rscript ATACSeq/preprocessing/13_collateSexChecks.r ${DATADIR}/
 

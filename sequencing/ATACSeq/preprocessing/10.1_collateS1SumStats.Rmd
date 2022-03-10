@@ -1,0 +1,344 @@
+---
+title: "Collate Stage 1 Summary Statistics"
+date: "`r Sys.Date()`"
+output: html_document
+params:
+  configFile: ATACSeq/config/config.r
+---
+
+```{r setup, include=FALSE}
+args = as.numeric(commandArgs(trailingOnly=TRUE))
+##args[1]<-"rizzardi"
+## load config variables
+project<-args[1]
+source("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
+# load packages
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(vioplot)
+library(corrplot)
+##library(ggplot2)
+## create colourblind friendly palette
+colorBlindGrey8   <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
+                       "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+This report provides a summary of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment and filtering (and peak calling steps). The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines] (https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. The pipeline is still under development.
+
+```{r loadDat, echo = FALSE, message = FALSE, results='hide'}
+# METADATA
+pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+## PROGRESS SUMMARY
+processSum <- read.csv(paste0(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
+## MULTIQC
+fastqc<-read.table(paste0(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+## MITOCHONDRIAL READS
+readCounts<-read.table(paste0(alignedDir, "/countMTReads.txt"), fill = TRUE, skip = 1)
+## ALIGNMENT STATISTICS
+alignQC<-read.table(paste0(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+## ENCODE METRICS
+flagstat<-read.csv(paste0(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
+## FRIP
+fripFiles <- list.files(paste0(peakDir, "/QCOutput"), pattern = "FRIP")
+#----------------------------------------------------------------------#
+# WRANGLE DATA
+#----------------------------------------------------------------------#
+## a. METADATA
+## check metadata is in the correct format
+# METADATA REQUIREMENTS:
+# essential columns: "sampleID",  "cohort", "fraction", "experiment", "individualID"
+# samples can be identified as unique from sampleID, cohort, fraction and individualID
+missingCol<-setdiff(c("sequencingBatch", "sampleID",  "cohort", "fraction", "experiment", "individualID"), colnames(pheno))
+if (length(missingCol) != 0 ) {
+  if ("sequencingBatch" %in% missingCol){
+    pheno$sequencingBatch<-pheno$cohort
+  } else {
+    warning('Incorrect column names. Missing column(s): ', missingCol)
+  }
+}
+## exclude duplicates from metadata
+dups<-names(which(table(paste(pheno$individualID, pheno$fraction, pheno$tissue, sep = "_")) > 1))
+pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","cohort","fraction","individualID", "tissue"), colnames(pheno))])
+pheno$sequencingRuns<-1
+pheno$sequencingRuns[match(dups, paste(pheno$individualID, pheno$fraction, pheno$tissue, sep = "_"))]<-2
+#sequencingRuns is not used anywhere else?? 
+table(pheno$fraction)
+## b. PROGRESS SUMMARY
+## sort if processSum$sampleID is not equivalent to pheno$sampleID
+processSum$sampleName<-gsub("^[[:digit:]]...._", "", gsub("_S[[:digit:]]+$", "", processSum$sampleID))
+index<-match(pheno$sampleID, processSum$sampleName)
+index[is.na(index)]<-match(pheno$sampleID[is.na(index)], processSum$sampleName)
+processSum <- processSum[index,]
+## c. MULTIQC
+## wrangle multiqc stats to retain important columns
+colsKeep<-c("Total.Sequences","total_deduplicated_percentage", "Sequences.flagged.as.poor.quality")
+mergeStats<-cbind(fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep], fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep])
+## d. MITOCHONDRIAL READS
+readCountsDeDup<-readCounts[grep("_postFilter_statsperchr.txt", readCounts$V1),]
+readCountsMT<-readCounts[grep("_postFilter_statsperchr.txt", readCounts$V1, invert = TRUE),]
+readCountsMT$V1<-gsub("_statsperchr.txt", "", readCountsMT$V1)
+readCountsDeDup$V1<-gsub("_postFilter_statsperchr.txt", "", readCountsDeDup$V1)
+readCountsMT<-readCountsMT[match(processSum$sampleID, readCountsMT$V1),]
+readCountsDeDup<-readCountsDeDup[match(processSum$sampleID, readCountsDeDup$V1),]
+mergeStats<-cbind(mergeStats, readCountsMT$V2/readCountsMT$V3*100)
+colnames(mergeStats)[ncol(mergeStats)]<-"PercentMTReads"
+## e. ALIGNMENT QC
+aIndex<-match(processSum$sampleName, gsub("^[[:digit:]]...._", "", gsub("\\.bowtie", "", alignQC$Sample)))
+mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "paired_total")])
+## f. ENCODE METRICS
+## load flagstat metrics calculated as part of encode qc pipeline
+flagstat<-flagstat[match(processSum$sampleID, flagstat$V1),]
+files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = ".pbc.qc")
+eMetrics<-NULL
+for(each in files){
+  tmp<-read.table(paste0(alignedDir, "/ENCODEMetrics/", each))
+  eMetrics<-rbind(eMetrics, tmp)
+}
+eMetrics
+colnames(eMetrics)<-c("TotalReadPairs","DistinctReadPairs","OneReadPair","TwoReadPairs","NRF","PBC1","PBC2")
+#eIndex<-match(processSum$sampleID, gsub("_sorted_chr1.bam.nodup.pbc.qc", "", files))
+#eMetrics<-eMetrics[eIndex,]
+mergeStats<-cbind(mergeStats,eMetrics)
+## 6. FRIP
+if ( length(fripFiles) != 0 ) {
+  fripStats<-read.csv(paste0(peakDir, "/QCOutput/", fripFiles[1]))
+  for(each in fripFiles[-1]){
+    fripStats<-rbind(fripStats, read.csv(paste0(peakDir, "/QCOutput/", each)))
+  }
+  
+  fripStats<-fripStats[match(processSum$sampleID, fripStats$SampleName),]
+} else { warning('FRIP stats do not appear to have been calculated') }
+fripStats$FripMACS2TagAlign <- fripStats$MACS2TagAlignPeaks/fripStats$BAMTotalReads
+fripStats$FripMACS2PE <- fripStats$MACS2PEPeaks/fripStats$BAMTotalReads
+#----------------------------------------------------------------------#
+# COUNT SAMPLES
+#----------------------------------------------------------------------#
+## count number of samples with X million reads
+readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, 10^6)
+nSamples<-matrix(data = NA, nrow = length(readThres), ncol = length(unique(pheno$sequencingBatch))+1)
+for(i in readThres){
+  nSamples[1+(i/10^6),1] <- sum(mergeStats[,1] > i, na.rm = TRUE)
+  colNum<-2
+  for(each in unique(pheno$sequencingBatch)){
+    nSamples[1+(i/10^6),colNum] <- sum(mergeStats[which(pheno$sequencingBatch == each),1] > i, na.rm = TRUE)
+    colNum<-colNum+1
+  }
+}
+```
+
+## Overview
+
+To provide an overall summary here is a table of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
+
+```{r summary, echo =FALSE}
+kable(mergeStats[,c(1,9)], col.names = c("Raw Reads", "Aligned Reads")) %>%
+  kable_styling(full_width = F, position = "center") 
+```
+## 1. Sequencing
+
+### 1.1 Data summary
+
+In total there were `r sum(c(mergeStats[,1], mergeStats[,4]))/1000000` million reads generated across these samples, with a mean of 
+`r signif(mean(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million).
+
+```{r pressure, fig.align = 'center', echo=FALSE}
+par(mfrow = c(2,2))
+hist(mergeStats[,1], main = "R1", xlab = "Number of Reads", ylab = "Number of Samples", breaks = 100)
+hist(mergeStats[,4], main = "R2", xlab = "Number of Reads", ylab = "Number of Samples", breaks = 100)
+hist(mergeStats[,2], main = "R1", xlab = "% unique reads", ylab = "Number of Samples", breaks = 100)
+hist(mergeStats[,5], main = "R2", xlab = "% unique reads", ylab = "Number of Samples", breaks = 100)
+```
+
+For mammalian studies, authors of the ATAC-seq protocol use a minimum of 50 million non-duplicated, non-mitochondrial mapped reads for open chromatin detection. The ENCODE pipeline recommends a minimum of 25 million for single end and 50 million for paired. In the plot below, median of the data is indicated by the orange line and 50 million and 25 million thresholds by the black lines.
+
+``` {r minReads, fig.align = 'center', echo=FALSE}
+## c. Plot minimum number of reads 
+par(mfrow = c(1,1))
+plot(readThres/10^6, nSamples[,1], type = "l", lwd = 2, xlab = "Minimum number of reads (millions)", ylab = "Number of Samples")
+axis(4, seq(0,100, 20), at = nrow(pheno)*seq(0,1,0.2))
+mtext(side = 4, "% of samples", line = 2)
+abline(v = (25)/0.8, lty = 2)
+abline(v = (50), lty = 2)
+abline(v = median(mergeStats[,1], na.rm = TRUE)/10^6, col = colorBlindGrey8[2], lty = 2)
+# if there is more than one cohort
+if ( ncol(nSamples) > 2 ) {
+  plot(readThres/10^6, nSamples[,2], type = "l", lwd = 2, xlab = "Minimum number of reads (millions)", ylab = "Number of Samples", ylim = c(0,96))
+  abline(v = (25)/0.8, lty = 2)
+  abline(v = (50), lty = 2)
+  abline(v = median(mergeStats[,1], na.rm = TRUE)/10^6, col = colorBlindGrey8[2], lty = 2)
+  for(i in 3:ncol(nSamples)){
+    lines(readThres/10^6, nSamples[,i], lwd = 2)
+  }
+  
+  plot(readThres/10^6, nSamples[,2]/nSamples[1,2]*100, type = "l", lwd = 2, xlab = "Minimum number of reads (millions)", ylab = "% of Samples", ylim = c(0,96))
+  abline(v = (25)/0.8, lty = 2)
+  abline(v = (50), lty = 2)
+  abline(v = median(mergeStats[,1], na.rm = TRUE)/10^6, col = colorBlindGrey8[2], lty = 2)
+  for(i in 3:ncol(nSamples)){
+    lines(readThres/10^6, nSamples[,i]/nSamples[1,i]*100, lwd = 2)
+  }
+}
+```
+
+### 1.2 Estimate Library Complexity
+
+A good ATAC-seq experiment will capture enrichment at a broad range of genomic locations. The number of distinct or unique reads is an indicator of the diversity or complexity of the data. If the sample does not contain sufficient DNA and/or has been over-sequenced, you will simply be repeatedly sequencing PCR duplicates of a restricted pool of distinct DNA fragments. This is known a low-complexity library and is not desirable.  
+
+Complexity can be assessed at two points, from both the raw sequencing reads and the aligned reads. In this section we will assess the number of unique reads as the total number of reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. 
+
+``` {r uniqueReads, fig.align = 'center', echo=FALSE}
+## d. Plot %unique reads against read number
+plot(mergeStats[,1], mergeStats[,2], xlab = "Number of Reads", ylab = "% unique reads", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
+## e. Plot no reads and %unique by sequencing batch
+par(mfrow = c(2, 3))
+vioplot(mergeStats[,1] ~ pheno$sequencingBatch, ylab = "Number of Reads", xlab = "Sequencing Batch")
+vioplot(mergeStats[,1] ~ pheno$fraction, ylab = "Number of Reads", xlab = "Cell fraction")
+vioplot(mergeStats[,1] ~ pheno$cohort, ylab = "Number of Reads", xlab = "Brain bank")
+vioplot(mergeStats[,2] ~ pheno$sequencingBatch, ylab = "% unique reads", xlab = "Sequencing Batch")
+vioplot(mergeStats[,2] ~ pheno$fraction, ylab = "% unique reads", xlab = "Cell fraction")
+vioplot(mergeStats[,2] ~ pheno$cohort, ylab = "% unique reads", xlab = "Brain bank")
+## create object for samples not passing the min read threshold
+lowReadCounts<-pheno[which(mergeStats[,1] < 100*10^6),]
+```
+
+## 2. Alignment
+
+
+### 2.1 Summary of alignment (pre-filtering)
+
+The plot below shows the alignment rate and number of mapped reads per sample. While general convention is a unique mapping rate over 80% is typical for a successful ATAC-seq experiment, ENCODE would require that the percentage of mapped reads should be greater than 95%, though values >80% may be acceptable. In the plot below the red line indicates the 80% threshold, the black indicates the 95%.  
+
+```{r alignment rate, fig.align = 'center', echo = FALSE}
+## a. Plot alignment rate against number of reads
+#pdf(paste0(qcDir, "/ViolinPlotAlignmentStatistics.pdf"), width = 10, height = 10)
+plot(mergeStats[,"paired_total"], mergeStats[,"overall_alignment_rate"], xlab = "Number of Reads", ylab = "Alignment rate", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
+abline(h = 95, lty = 2)
+abline(h = 80, lty = 2)
+```
+
+Figure 
+
+``` {r blank, fig.align = 'center', echo = FALSE}
+## b. Plot alignment rate
+par(mfrow = c(2,3))
+vioplot(mergeStats[,"overall_alignment_rate"] ~ pheno$sequencingBatch, ylab = "Alignment rate", xlab = "Sequencing Batch")
+abline(h = 80, lty = 2)
+vioplot(mergeStats[,"overall_alignment_rate"] ~ pheno$fraction, ylab = "Alignment rate", xlab = "Cell fraction")
+abline(h = 80, lty = 2)
+vioplot(mergeStats[,"overall_alignment_rate"] ~ pheno$cohort, ylab = "Alignment rate", xlab = "Brain bank")
+abline(h = 80, lty = 2)
+## Plot nuumber of aligned reads
+vioplot(mergeStats[,"paired_total"]*mergeStats[,"overall_alignment_rate"]/100 ~ pheno$sequencingBatch, ylab = "Number of aligned reads", xlab = "Sequencing Batch")
+vioplot(mergeStats[,"paired_total"]*mergeStats[,"overall_alignment_rate"]/100 ~ pheno$fraction, ylab = "Number of aligned reads", xlab = "Cell fraction")
+vioplot(mergeStats[,"paired_total"]*mergeStats[,"overall_alignment_rate"]/100 ~ pheno$cohort, ylab = "Number of aligned reads", xlab = "Brain bank")
+```
+
+Figure __. Alignment rate by sequencing batch, cell fraction and brain bank
+
+### 2.2 Mitochondrial genome
+
+It can be a useful QC to assess the number of mitochondrial reads; some ATAC-Seq samples have been reported to be 80% mitochondrial reads. 
+
+``` {r mitochondria, fig.align = 'center', echo = FALSE}
+par(mfrow = c(1,1))
+vioplot(mergeStats$PercentMTReads ~ pheno$cohort, ylab = "Percentage MT Reads", xlab = "Sequencing Batch")
+```
+
+### 2.3 Library Complexity
+
+In this section we will assess the number of unique aligned reads as the number of total reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. NB this will differ slightly to the complexity curves produced earlier as this is based on just the aligned reads.
+
+``` {r dedupreads, fig.align = 'center', echo = FALSE}
+plot(mergeStats[,1], mergeStats$DistinctReadPairs, xlab = "Number of reads", ylab = "Number of distinct aligned reads", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
+```
+
+We will also calculate additional statistics recommended by the ENCODE ATAC-seq pipeline: PCR Bottlenecking Coefficients 1 & 2 (PBC1 & PBC2) and Non-Redundant Fraction (NRF) and compare these to their reference values.
+
+``` {r encode, fig.align = 'center', echo=FALSE}
+par(mfrow = c(3,1))
+hist(eMetrics[,"NRF"], breaks = seq(min(c(eMetrics[,"NRF"], 0.65), na.rm = TRUE), max(c(eMetrics[,"NRF"], 0.95), na.rm = TRUE), length.out = 10), main = "", xlab = "Non-Redundant Fraction (NRF)", ylab = "nSamples")
+abline(v = 0.7, lty = 2)
+abline(v = 0.9, lty = 2)
+mtext("Concerning", at = 0.65, side = 3)
+mtext("Acceptable", at = 0.8, side = 3)
+mtext("Ideal", at = 0.95, side = 3)
+hist(eMetrics[,"PBC1"], breaks = seq(min(c(eMetrics[,"PBC1"], 0.65), na.rm = TRUE), max(c(eMetrics[,"PBC1"], 0.95), na.rm = TRUE), length.out = 10), main = "", xlab = "PCR Bottlenecking Coefficient 1 (PBC1)", ylab = "nSamples")
+abline(v = 0.7, lty = 2)
+abline(v = 0.9, lty = 2)
+mtext("Severe", at = 0.65, side = 3)
+mtext("Moderate", at = 0.8, side = 3)
+mtext("None", at = 0.95, side = 3)
+hist(eMetrics[,"PBC2"], breaks = seq(min(c(eMetrics[,"PBC2"], 0.95), na.rm = TRUE), max(c(eMetrics[,"PBC2"], 3.05), na.rm = TRUE), length.out = 10), main = "", xlab = "PCR Bottlenecking Coefficient 2 (PBC2)", ylab = "nSamples")
+abline(v = 1, lty = 2)
+abline(v = 3, lty = 2)
+mtext("Severe", at = 0.95, side = 3)
+mtext("Moderate", at = 2, side = 3)
+mtext("None", at = 3.05, side = 3)
+```
+
+Correlation matrix of the QC metrics.
+
+``` {r correlation, fig.align = 'center', echo=FALSE}
+## create correlation plot 
+corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)]), rowMeans(mergeStats[,c(3,6)]),
+                     mergeStats$PercentMTReads, mergeStats$overall_alignment_rate,
+                     mergeStats$DistinctReadPairs, mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]) 
+colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
+                            colnames(mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]))
+corMergeStats<- corMergeStats[, colSums(corMergeStats) != 0]
+corrplot.mixed(cor(corMergeStats), order = 'AOE', tl.cex=0.9, tl.col = 'black', upper.col = COL2('PiYG'), lower.col = COL2('PiYG'))
+```
+
+### 2.4 Fragment Size Distribution
+
+ATAC-seq data should be enriched for specific sized fragments, so the distribution of fragment size should show periodicity. Typically there should be a large proportion of reads with fragment length < 100bp indicating nucleosome-free fragments, the plot should then show periodicity of ~ 200bp representing  enrichment of mono-, di-, and tri-nucleosome bound fragments (~200, 400, 600?p, respectively).  In the plot below, a successful ATAC-seq experiment should have a peak at ~50-100bp with a large proportion of reads less than 100 bp, and peaks at 200bp, 400bp, 600bp. If there was no chromatin in the sample the graph would have no periodicity and resemble a poisson distribution with lambda = 1).
+
+``` {r periodicity, fig.align = 'center', echo = FALSE}
+## load ATACQC metrics 
+propNucleosomesAll<-NULL
+filePaths <- list.files(paste0(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch")
+for(each in filePaths){
+  load(paste0(alignedDir,"/QCOutput/", each))
+  propNucleosomesAll<-rbind(propNucleosomesAll, propNucleosomes)
+}
+propNucleosomesAll<-propNucleosomesAll[match(processSum$sampleID, rownames(propNucleosomesAll)),]
+## generate plot
+vioplot(na.omit(propNucleosomesAll), ylab = "Proportion of reads", xlab = "nucleosome", names = c("NFR", "mono","di", "tri", "quad"))
+abline(h=0.5, lty = 2)
+plot(propNucleosomesAll[,2], propNucleosomesAll[,1], pch = 16, xlim = c(0,max(propNucleosomesAll[,2], na.rm = TRUE)), ylim = c(0,1), xlab = "Proportion fragments classed as mono", ylab = "Proportion fragments class as nucleosome free")
+abline(a = 0, b = 1, lty = 2)
+abline(h = 0.9, lty = 2)
+```
+
+### 2.5 Cross-correlation
+
+Normalized Strand Cross-correlation coefficient (NSC):
+A measure of enrichment derived without dependence on prior determination of enriched regions. Forward and reverse strand read coverage signal tracks are computed (number of unique mapping read starts at each base in the genome on the + and - strand counted separately). The forward and reverse tracks are shifted towards and away from each other by incremental distances and for each shift, the Pearson correlation coefficient is computed. In this way, a cross-correlation profile is computed, representing the correlation between forward and reverse strand coverage at different shifts. The highest cross-correlation value is obtained at a strand shift equal to the predominant fragment length in the dataset as a result of clustering/enrichment of relative fixed-size fragments around the binding sites of the target factor or feature.
+
+The NSC is the ratio of the maximal cross-correlation value (which occurs at strand shift equal to fragment length) divided by the background cross-correlation (minimum cross-correlation value over all possible strand shifts). Higher values indicate more enrichment, values less than 1.1 are relatively low NSC scores, and the minimum possible value is 1 (no enrichment). This score is sensitive to technical effects; for example, high-quality antibodies such as H3K4me3 and CTCF score well for all cell types and ENCODE production groups, and variation in enrichment in particular IPs is detected as stochastic variation. This score is also sensitive to biological effects; narrow marks score higher than broad marks (H3K4me3 vs H3K36me3, H3K27me3) for all cell types and ENCODE production groups, and features present in some individual cells, but not others, in a population are expected to have lower scores.
+
+Relative Strand Cross-correlation coefficient (RSC):
+A measure of enrichment derived without dependence on prior determination of enriched regions. Forward and reverse strand read coverage signal tracks are computed (number of unique mapping read starts at each base in the genome on the + and - strand counted separately). The forward and reverse tracks are shifted towards and away from each other by incremental distances and for each shift, the Pearson correlation coefficient is computed. In this way, a cross-correlation profile is computed representing the correlation values between forward and reverse strand coverage at different shifts. The highest cross-correlation value is obtained at a strand shift equal to the predominant fragment length in the dataset as a result of clustering/enrichment of relative fixed-size fragments around the binding sites of the target factor. For short-read datasets (< 100 bp reads) and large genomes with a significant number of non-uniquely mappable positions (e.g., human and mouse), a cross-correlation phantom-peak is also observed at a strand-shift equal to the read length. This read-length peak is an effect of the variable and dispersed mappability of positions across the genome. For a significantly enriched dataset, the fragment length cross-correlation peak (representing clustering of fragments around target sites) should be larger than the mappability-based read-length peak.
+
+The RSC is the ratio of the fragment-length cross-correlation value minus the background cross-correlation value, divided by the phantom-peak cross-correlation value minus the background cross-correlation value. The minimum possible value is 0 (no signal), highly enriched experiments have values greater than 1, and values much less than 1 may indicate low quality.
+
+#fig.align = 'center',
+
+
+## 3. Peak calling
+
+### 3.1 Specificity of reads in peaks
+
+Plot of the fraction of reads in peaks called for that sample. These plots give a good indication of how "enriched" the sample is and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads. According to the ENCODE standard processing pipeline for ATAC-seq the FRiP score should be > 0.3, though values greater than 0.2 are acceptable. 
+Explain shifted tagalign compared to pe.
+
+```{r, echo = FALSE, fig.width = 10, fig.height = 6, fig.cap="Figure X: Barplot of the proportion of reads in called peaks"}
+# plot 
+par(mfrow = c(1, 1))
+vioplot(fripStats$FripMACS2TagAlign, fripStats$FripMACS2PE, ylab = "Fraction reads in peaks", names = c("MACS2: Shifted tagalign", "MACS2: PE"))
+# plot frip against number of peaks
+par(mfrow = c(1,2))
+plot(fripStats$MACS2TagAlignPeaks, fripStats$FripMACS2TagAlign, pch = 16, xlab = 'Number of peaks', ylab = 'Fraction of reads in peaks', main = 'MACS2: Shifted Tagalign', col = colorBlindGrey8[as.factor(pheno$fraction)])
+plot(fripStats$MACS2PEPeaks, fripStats$FripMACS2PE, pch = 16, xlab = 'Number of peaks', ylab = 'Fraction of reads in peaks', main = 'MACS2: PE', col = colorBlindGrey8[as.factor(pheno$fraction)])
+```
