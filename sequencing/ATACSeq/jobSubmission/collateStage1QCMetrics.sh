@@ -63,7 +63,7 @@ then
 	cd ${SCRIPTDIR}/
 
 	module load R/3.6.3-foss-2020a
-	Rscript ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd ${PROJECT}
+	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd', output_file='ATACSeq/preprocessing/output.html', params=list(args=${PROJECT}))"
 fi
 
 shift #move command line arguments so that $1 is no longer project but step

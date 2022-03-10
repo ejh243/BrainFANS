@@ -10,3 +10,10 @@ DNAm/rmdConfig*
 */*/misc/*
 
 */*/config/*.*
+
+*.pdf
+
+JobSubmissionScripts/
+LogFiles/
+SNPdata/
+**/*.log
