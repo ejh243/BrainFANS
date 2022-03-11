@@ -10,6 +10,8 @@
 #SBATCH --error=ATACSeq/logFiles/%u/formatSexChr-%A_%a.e
 #SBATCH --job-name=formatSexChr
 
+#-----------------------------------------------------------------------#
+
 ## print start date and time
 echo Job started on:
 date -u
@@ -31,6 +33,13 @@ echo "Project directory is: " $DATADIR
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+fi
+
+#-----------------------------------------------------------------------#
 
 ## reformat bam file
 module load SAMtools

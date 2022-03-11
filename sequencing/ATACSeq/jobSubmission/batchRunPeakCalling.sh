@@ -8,7 +8,9 @@
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=ATACSeq/logFiles/%u/ATACPeakCalling-%A_%a.o
 #SBATCH --error=ATACSeq/logFiles/%u/ATACPeakCalling-%A_%a.e
-#SBATCH --job-name=ATACPeakCalling-%A_%a.e
+#SBATCH --job-name=ATACPeakCalling
+
+#-----------------------------------------------------------------------#
 
 ## print start date and time
 echo Job started on:
@@ -22,13 +24,19 @@ echo $SLURM_SUBMIT_DIR
 cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
-
 echo "Loading config file for project: " $1
 export PROJECT=$1
 
 source ./ATACSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
 
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+fi
+
+#-----------------------------------------------------------------------#
 
 echo "Changing Folder to Data directory "
 echo ${ALIGNEDDIR}

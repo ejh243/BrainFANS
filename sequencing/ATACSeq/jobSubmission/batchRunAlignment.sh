@@ -8,7 +8,9 @@
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=ATACSeq/logFiles/%u/ATACAlignment-%A_%a.o
 #SBATCH --error=ATACSeq/logFiles/%u/ATACAlignment-%A_%a.e
-#SBATCH --job-name=ATACAlignment-%A_%a.e
+#SBATCH --job-name=ATACAlignment
+
+#-----------------------------------------------------------------------#
 
 ## print start date and time
 echo Job started on:
@@ -16,22 +18,23 @@ date -u
 JOBNAME="ATACAlignment"
     
 ## needs to be executed from the scripts folder
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
-
+echo "Changing Folder to: " $SLURM_SUBMIT_DIR
 cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
 echo "Loading config file for project: " $1
 export PROJECT=$1
-
 source ./ATACSeq/config/config.txt 
+
+## check directories
 echo "Project directory is: " $DATADIR
-
-
-## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+fi
 
 ## check step method matches required options and exit if not
 if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] && [[ ! $2 =~ "ENCODE" ]] &&[[ ! $2 == '' ]];
@@ -39,6 +42,7 @@ then
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
+#-----------------------------------------------------------------------#
 
 ## check if file containing list of sample IDs exists and if so:
 if test -f ${METADIR}/samples.txt;
@@ -117,3 +121,4 @@ else
 fi
 
 echo 'EXIT CODE: ' $?
+

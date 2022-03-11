@@ -9,6 +9,9 @@
 #SBATCH --output=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.o
 #SBATCH --error=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.e
 #SBATCH --job-name=verifyBAMID
+
+#-----------------------------------------------------------------------#
+
 ## print start date and time
 echo Job started on:
 date -u
@@ -26,6 +29,14 @@ export PROJECT=$1
 
 source ./ATACSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
+
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+fi
+
+#-----------------------------------------------------------------------#
 
 ## reformat bam file
 

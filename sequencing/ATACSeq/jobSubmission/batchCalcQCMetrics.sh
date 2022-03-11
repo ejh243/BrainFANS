@@ -8,7 +8,9 @@
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=ATACSeq/logFiles/%u/calcATACQC-%A_%a.o
 #SBATCH --error=ATACSeq/logFiles/%u/calcATACQC-%A_%a.e
-#SBATCH --job-name=calcATACQC-%A_%a
+#SBATCH --job-name=calcATACQC
+
+#-----------------------------------------------------------------------#
 
 ## print start date and time
 echo Job started on:
@@ -22,12 +24,20 @@ echo $SLURM_SUBMIT_DIR
 
 echo "Loading config file for project: " $1
 export PROJECT=$1
-
 source ./ATACSeq/config/config.txt 
+
 echo "Project directory is: " $DATADIR
 
-mkdir -p ${ALIGNEDDIR}/QCOutput
 
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+fi
+
+#-----------------------------------------------------------------------#
+
+mkdir -p ${ALIGNEDDIR}/QCOutput
 
 module load R/3.6.3-foss-2020a
 
