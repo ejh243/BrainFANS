@@ -99,6 +99,7 @@ then
 		module purge
 		module load SAMtools
 		module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
+        
         ## load conda env for samstats
         module load Anaconda3
         source activate encodeqc

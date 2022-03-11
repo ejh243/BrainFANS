@@ -61,9 +61,11 @@ if [ $# = 1 ] || [[ $2 =~ 'SUMMARY' ]]
 then
 	## collate the earlier outputs into a r markdown report
 	cd ${SCRIPTDIR}/
+	echo ${SCRIPTDIR}
 
 	module load R/3.6.3-foss-2020a
-	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd', output_file='ATACSeq/preprocessing/output.html', params=list(args=${PROJECT}))"
+	module load Pandoc
+	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd', output_file=paste0(commandArgs(trailingOnly=T)[1], '/QCOutput/stage1SummaryStats.html'))" "$ALIGNEDDIR" "${SCRIPTDIR}" "$PROJECT" 
 fi
 
 shift #move command line arguments so that $1 is no longer project but step
