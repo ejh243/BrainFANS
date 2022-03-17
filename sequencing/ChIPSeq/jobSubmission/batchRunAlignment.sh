@@ -93,7 +93,7 @@ then
 		module load BEDTools
 		module load Java
 		cd ${SCRIPTDIR}
-		sh ./ChIPSeq/preprocessing/2_alignment.sh ${sampleID} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
+		sh ./ChIPSeq/preprocessing/1_alignment.sh ${sampleID} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
 	fi
 
 	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
@@ -108,7 +108,7 @@ then
         module load picard/2.6.0-Java-1.8.0_131
 
         cd ${SCRIPTDIR}
-        sh ./ChIPSeq/preprocessing/3_calcENCODEQCMetrics.sh ${sampleID}
+        sh ./ChIPSeq/preprocessing/2_calcENCODEQCMetrics.sh ${sampleID}
     fi
 
 	echo 'EXITCODE: ' $?

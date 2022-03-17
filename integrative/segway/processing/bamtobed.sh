@@ -7,7 +7,11 @@ echo "Converting to genomedata format:" $sampleName
 
 bamfile=$( find . -name ${sampleName}'*.bam' )
 
-bedtools bamtobed -i ${bamfile} > ${sampleName}.bed
+if [ ! "$(ls ${sampleName}.bed)" ]
+then
+	bedtools bamtobed -i ${bamfile} > ${sampleName}.bed
+fi
+
 genomedata-load -t ${sampleName}.bed -s ${f1} -s ${f2} ${sampleName}.gnmdata
 
 if [[ $? == 0 ]]

@@ -4,7 +4,7 @@
 #SBATCH --time=25:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=5 # specify number of nodes.
-#SBATCH --ntasks-per-node=16 # specify number of processors per node
+#SBATCH --mem=150G
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=integrative/segway/logFiles/test-%A_%a.o
 #SBATCH --error=integrative/segway/logFiles/test-%A_%a.e
