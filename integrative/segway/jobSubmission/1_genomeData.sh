@@ -23,7 +23,7 @@ cd $SLURM_SUBMIT_DIR
 ## load config file provided on command line when submitting job
 echo "Loading config file for project: " $1
 export PROJECT=$1
-source /lustre/home/jms260/BrainFANS/sequencing/WGBS/config/config.txt
+source /lustre/home/jms260/BrainFANS/sequencing/ATACSeq/config/config.txt
 
 module load Anaconda3
 source activate segway

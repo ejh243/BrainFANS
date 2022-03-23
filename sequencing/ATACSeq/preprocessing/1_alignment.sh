@@ -105,6 +105,9 @@ else
 	{ echo "Aligned file found so not aligning"; exit 1;}
 fi
 
-echo "Alignment and post filtering complete"
-date -u
+
+if [[ $? == 0 ]]
+	then echo "Alignment and post filtering complete"
+	date -u
+fi
 

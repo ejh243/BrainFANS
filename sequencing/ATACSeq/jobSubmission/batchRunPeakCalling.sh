@@ -61,8 +61,10 @@ then
 	cd ${SCRIPTDIR}
 	./ATACSeq/preprocessing/4_shiftAlignedReads.sh ${sampleName}
 
-	date -u
-	echo "Reads shifted"
+	if [[ $? == 0 ]]
+		then date -u
+		echo "Reads shifted"
+	fi
 fi
 
 if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
@@ -75,8 +77,11 @@ then
 	cd ${SCRIPTDIR}/
 	./ATACSeq/preprocessing/5_samplePeaks.sh ${sampleName}
 	
-	date -u
-	echo "Peaks called"
+	if [[ $? == 0 ]]
+		then date -u
+		echo "Peaks called"
+	fi
+	
 	
 fi
 
@@ -92,8 +97,11 @@ then
 
 	cd ${SCRIPTDIR}/
 	sh ./ATACSeq/preprocessing/6_calcFrip.sh ${sampleName}
-	date -u
-	echo "FRIP calculated called"
+
+	if [[ $? == 0 ]]
+		then date -u
+		echo "FRIP calculated called"
+	fi
 	
 fi
 

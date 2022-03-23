@@ -3,24 +3,35 @@
 #SBATCH -p mrcq # submit to the serial queue
 #SBATCH --time=100:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
-#SBATCH --nodes=5 # specify number of nodes.
+#SBATCH --nodes=1 # specify number of nodes.
+#SBATCH --mem=50G
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=general/logFiles/downloadPsych-%A.o
 #SBATCH --error=general/logFiles/downloadPsych-%A.e
 #SBATCH --job-name=downloadPsych
 
+#needs to be submitted with the arguments 
+#sbatch <path/to/script> <project-including-data-type> i.e. WGBS/epiGaba and <syn-password>
+
 ## print start date and time
 echo Job started on:
 date -u
 
-## needs to be executed from the scripts folder
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
+export PROJECT=$1
+echo 'Loading config file for project: ' $PROJECT
+source ./sequencing/BSSeq/config/config.txt
 
-cd $SLURM_SUBMIT_DIR
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+fi
 
+#--------------------------------------------------------------------#
+
+synCode=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/synCodes.txt | tail -1))
 
 module load R/3.6.0-foss-2019a
 
-Rscript general/processing/downloadPsychEncode.r $1
+Rscript general/processing/downloadPsychEncode.r $2 ${synCode} ${RAWDATADIR}

@@ -19,9 +19,11 @@ setwd("/gpfs/mrc0/projects/Research_Project-MRC190311/")
 #files <- synapserutils::syncFromSynapse("syn5691266", path = "Phenotype/EpiMap")
   
 ## EPIGABA
-#files <- synapserutils::syncFromSynapse("syn12033252", path = "ChIPSeq/epiGABA/1_raw") 
-#files <- synapserutils::syncFromSynapse("syn7072866", path = "DNAm/iDats/EpiGABA") 
-#files <- synapserutils::syncFromSynapse("syn4588489", path = "Phenotype/EpiGABA")  
+#files <- synapserutils::syncFromSynapse("syn12033254", path = "ChIPSeq/epiGaba/1_raw") 
+#files <- synapserutils::syncFromSynapse("syn7072866", path = "DNAm/iDats/epiGaba") 
+#files <- synapserutils::syncFromSynapse("syn4588489", path = "Phenotype/epiGaba")  
 #files <- synapserutils::syncFromSynapse("syn12033256", path = "WGBS/epiGaba/1_raw") 
-#files <- synapserutils::syncFromSynapse("syn12033256", path = "oxBS/epiGaba/1_raw") 
-files <- synapserutils::syncFromSynapse("syn4864491", path = "ERRBS/epiGaba/1_raw")
+#files <- synapserutils::syncFromSynapse("syn17096984", path = "oxBS/epiGaba/1_raw") 
+#files <- synapserutils::syncFromSynapse("syn4864491", path = "ERRBS/epiGaba/1_raw")
+
+files <- synGet(args[2], downloadLocation = args[3])

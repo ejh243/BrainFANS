@@ -71,6 +71,8 @@ then
         ## run sequencing QC and trimming on fastq files        
         module load FastQC 
 
+        mkdir -p ${FASTQCDIR}
+
         cd ${SCRIPTDIR}
         sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
     fi
@@ -92,6 +94,9 @@ then
 		module load picard/2.6.0-Java-1.8.0_131
 		module load BEDTools
 		module load Java
+
+        mkdir -p ${ALIGNEDDIR}
+
 		cd ${SCRIPTDIR}
 		sh ./ChIPSeq/preprocessing/1_alignment.sh ${sampleID} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
 	fi
