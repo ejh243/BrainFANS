@@ -14,7 +14,7 @@ rm(list=ls())
 
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
-args[1]<-"rizzardi"
+##args[1]<-"rizzardi"
 
 ## load config variables
 project<-args[1]
@@ -25,14 +25,12 @@ args= as.numeric(args)
 if (length(args)==1) {
   warning("No filtering parameters specified, using default parameters:
           Number of reads > 10 million
-          Alignment rate > 80
+          Alignment rate > 80%
           Number of filtered/aligned reads > 20 million")
   args[2] = 10 #read number
   args[3] = 80 # alignment rate
   args[4] = 20 # aligned/filtered
 }
-
-
 
 
 #----------------------------------------------------------------------#
@@ -244,21 +242,20 @@ fripStats$FripMACS2PE <- fripStats$MACS2PEPeaks/fripStats$BAMTotalReads
 # FILTER SAMPLES
 #----------------------------------------------------------------------#
 
-QCPASS<-cbind(fripStats$BAMTotalReads > args[4]*10^6,
-              mergeStats$overall_alignment_rate > 80, 
-              eMetrics$NRF > 0.7,
-              eMetrics$PBC1 > 0.7,
-              eMetrics$PBC2 > 1,
-              propNucleosomesAll[,2] > 0.2,
-              decreasingProps[,1])
+QCPASS<-cbind(mergeStats$overall_alignment_rate > args[3], #alignment rate 
+              fripStats$BAMTotalReads > args[4]*10^6, #total filtered/aligned reads
+              eMetrics$NRF > 0.7, #encode
+              eMetrics$PBC1 > 0.7, #encode
+              eMetrics$PBC2 > 1, #encode
+              propNucleosomesAll[,2] > 0.15, #>15% fractions mononucleosome 
+              decreasingProps[,1]) #periodicity
 
 keep<-rowSums(QCPASS) == ncol(QCPASS)
-
-names(keep[keep==TRUE])
+length(keep[keep==TRUE])
 
 write.table(names(keep[keep==TRUE]), file = paste0(metaDir, "/stage1QCSamples.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
-length(keep[keep==TRUE])
+
 
 
 
