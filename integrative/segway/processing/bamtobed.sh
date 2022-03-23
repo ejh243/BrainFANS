@@ -5,17 +5,17 @@ f2=$3
 cd ${ALIGNEDDIR}
 echo "Converting to genomedata format:" $sampleName
 
-bamfile=$( find . -name ${sampleName}'*.bam' )
+bamfile=$(basename $( find . -name ${sampleName}'*.bam' ))
 
-if [ ! "$(ls ${sampleName}.bed)" ]
+if [ ! "$(ls ${sampleName}.bed)" ] || [ ! "$(ls ${sampleName}.tagAlign.gz)" ]
 then
 	bedtools bamtobed -i ${bamfile} > ${sampleName}.bed
 fi
 
-genomedata-load -t ${sampleName}.bed -s ${f1} -s ${f2} ${sampleName}.gnmdata
+genomedata-load -s ${f1} -s ${f2} -t ${sampleName}.tagAlign.gz ${sampleName}.gnmdata
 
 if [[ $? == 0 ]]
 then
 	rm ${sampleName}.bed
-	echo 'object generated'
+	echo 'Object generated'
 fi
