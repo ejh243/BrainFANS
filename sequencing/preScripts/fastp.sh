@@ -43,4 +43,6 @@ then
    fastp --detect_adapter_for_pe --length_required=27 --thread=8 --in1=${f1} --in2=${f2} --out1=${TRIMDIR}/${outf1} --out2=${TRIMDIR}/${outf2} --html=${TRIMDIR}/fastp_reports/${sampleName}_fastp.html --json=${TRIMDIR}/fastp_reports/${sampleName}_fastp.json
 fi
 
-echo "fastp complete"
+if [[ $? == 0 ]]
+   then echo "fastp complete"
+fi

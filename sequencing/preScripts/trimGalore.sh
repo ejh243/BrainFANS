@@ -36,3 +36,7 @@ then
   ##default min length 20
   ##clip_R2 used specifically for WGBS read 2 due to end repair reaction introducing methylation biases in PE
 fi
+
+if [[ $? == 0 ]]
+  then echo 'Trim Galore complete'
+fi

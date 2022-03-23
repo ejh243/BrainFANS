@@ -49,5 +49,7 @@ bedtools bamtobed -bedpe -i ${sampleName}.srt.tmp.bam | awk 'BEGIN{OFS="\t"}{pri
 
 rm ${sampleName}.srt.tmp.bam
 
-echo "Library complexity metrics calculated:"
-date -u
+if [[ $? == 0 ]]
+	then echo "Library complexity metrics calculated:"
+	date -u
+fi

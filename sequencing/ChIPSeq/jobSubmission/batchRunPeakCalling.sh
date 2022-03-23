@@ -63,8 +63,10 @@ then
 	cd ${SCRIPTDIR}/
 	./ChIPSeq/preprocessing/3_samplePeaks.sh ${sampleName}
 	
-	date -u
-	echo "Peaks called"
+	if [[ $? == 0 ]]
+		then date -u
+		echo "Peaks called"
+	fi
 	
 fi
 
@@ -80,8 +82,11 @@ then
 
 	cd ${SCRIPTDIR}/
 	sh ./ChIPSeq/preprocessing/6_calcFrip.sh ${sampleName}
-	date -u
-	echo "FRIP calculated called"
+
+	if [[ $? == 0 ]]
+		then date -u
+		echo "FRIP calculated called"
+	fi
 	
 fi
 

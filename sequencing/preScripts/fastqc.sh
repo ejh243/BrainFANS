@@ -38,4 +38,6 @@ echo "Output written to " ${FASTQCDIR}
 
 fastqc ${f1} ${f2} -t 8 -o ${FASTQCDIR}
 
-echo "FASTQC complete"
+if [[ $? == 0 ]]
+	then echo "FASTQC complete"
+fi
