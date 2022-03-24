@@ -37,15 +37,16 @@ bpparam("SerialParam")
 
 ## Create sample sheet
 peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE)
-bamReads<-list.files(alignedDir, pattern = "_depDup_q30.bam", recursive = TRUE)
+bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE)
+bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
 
 # control file and IDs
 bamControl<-bamReads[grep("input", bamReads)]
 controlIDs<- gsub("_depDup_q30.bam", "", bamControl)
 
 # sample files and IDs
-bamReads<-bamReads[grep("input", bamReads, invert = TRUE)]
-sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_depDup_q30.bam", "", bamReads))
+
+sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
 
 # necessary columns
 factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
