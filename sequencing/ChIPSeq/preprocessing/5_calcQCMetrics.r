@@ -45,7 +45,7 @@ bamControl<-bamReads[grep("input", bamReads)]
 controlIDs<- gsub("_depDup_q30.bam", "", bamControl)
 
 # sample files and IDs
-
+bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
 sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
 
 # necessary columns
