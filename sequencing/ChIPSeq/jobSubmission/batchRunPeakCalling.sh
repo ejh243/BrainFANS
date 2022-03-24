@@ -42,17 +42,20 @@ echo "Changing Folder to Data directory "
 echo ${ALIGNEDDIR}
 
 cd ${ALIGNEDDIR}
-BAMFILES=($(ls *_depDup_q30.bam))
 
-echo "Number of bam files found for alignment:"" ""${#BAMFILES[@]}"""	
+sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/samples.txt | tail -1))
 
-sample=${BAMFILES[${SLURM_ARRAY_TASK_ID}]}
-sampleName=$(basename ${sample%_depDup_q30.bam})
-
+if [[ $2 == 'control' ]]
+then 
+	echo 'Control file specified'
+	control=($(head -n `expr ${SLURM_ARRAY_TASK_ID} + 1` ${METADIR}/samples.txt | tail -1))
+	echo $control
+	shift
+fi
 
 if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
-	echo Starting peak calling at:
+	echo "Starting peak calling on" ${sampleName} "at: "
 	date -u
 	module purge
 	module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
@@ -61,11 +64,10 @@ then
 	mkdir -p ${PEAKDIR}
 
 	cd ${SCRIPTDIR}/
-	./ChIPSeq/preprocessing/3_samplePeaks.sh ${sampleName}
+	./ChIPSeq/preprocessing/3_samplePeaks.sh ${sampleName} ${control}
 	
 	if [[ $? == 0 ]]
-		then date -u
-		echo "Peaks called"
+		then echo "Peaks called"
 	fi
 	
 fi
@@ -81,16 +83,16 @@ then
 	mkdir -p ${PEAKDIR}/QCOutput
 
 	cd ${SCRIPTDIR}/
-	sh ./ChIPSeq/preprocessing/6_calcFrip.sh ${sampleName}
+	sh ./ChIPSeq/preprocessing/4_calcFrip.sh ${sampleName}
 
 	if [[ $? == 0 ]]
 		then date -u
-		echo "FRIP calculated called"
+		echo "FRIP calculated"
 	fi
 	
 fi
 
-echo 'EXITCODE: ' $?
+echo "EXITCODE: " $?
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}

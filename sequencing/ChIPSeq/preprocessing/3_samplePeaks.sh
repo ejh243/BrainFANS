@@ -26,9 +26,18 @@
 cd ${ALIGNEDDIR}
 mkdir -p ${PEAKDIR}/MACS
 sampleName=$1
-f=${sampleName}_depDup_q30.bam
 
-macs2 callpeak -t ${f} --outdir ${PEAKDIR} -n ${sampleName} -g 2.9e9  -B 2> ${sampleName}.macs2.log
+if [[ ! -z "$2" ]]
+then 
+  control=$2
+  c=${control}_depDup_q30.bam
+  echo "Control file:" ${c}
+fi
+
+f=${sampleName}_depDup_q30.bam
+echo "Processing:" ${f} 
+
+macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR}/MACS/ -n ${sampleName} -g 2.9e9  -B 2> ${PEAKDIR}/${sampleName}.macs2.log
 
 ## exclude peaks aligned to blacklist regions
 bedtools intersect -v -a ${PEAKDIR}/MACS/${sampleName}_peaks.narrowPeak -b ${BLACKLIST} \
