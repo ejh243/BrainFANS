@@ -1,0 +1,37 @@
+This readme explains the content of the scripts for running the WGBS analysis pipeline
+
+	REQUISITES:
+		Scripts submitted from the scripts/sequencing folder.
+		The ${DATADIR} variable of the config file edited to be specific to the dataset.
+		Users require a username folder in the ATACSeq/logFiles directory.
+		
+#### Data pre-processing:
+
+1. scoping.sh
+
+2. sbatch --array=<number of batch jobs> WGBS/jobSubmissionScripts/batchRunAlignment.sh <project-name> [<STEPS>]
+
+Parameters in [] are optional.
+
+	This script searchs within raw data folders for all fastq files
+	Then submits a batch script to process one set of paired samples at a time
+
+		This script:
+		* executes preScripts/fastqc.sh
+			* finds paired fastq files
+			* runs fastqc
+
+		* executes preScripts/trimGalore.sh
+			* runs trim galore
+
+		* executes WGBS/preprocessing/2_alignment.sh 
+
+	<project-name> the name of the project folder in the main data type data directory
+
+	-optional-
+	
+	[<STEPS>] option of either FASTQC, TRIM or ALIGN. The first runs only fastqc on the samples, the second trims and the latter runs only the alignment. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run the whole script. 
+
+
+
+
