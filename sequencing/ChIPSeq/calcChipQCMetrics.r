@@ -1,5 +1,26 @@
+##---------------------------------------------------------------------#
+##
+## Title: Calculate ChIP-seq QC metrics
+##
+## Purpose of script: to output sample summary QC metrics according to the CHIPQC r package
+##
+## Author: Eilis Hannon
+##
+## Date Created: 2022-03-22
+##
+##---------------------------------------------------------------------#
 
-source("config.r") ## contains paths to files
+## load arguments
+args = commandArgs(trailingOnly=TRUE)
+#args[1]<-"epiGaba"
+
+## load config variables
+project<-args[1]
+source("ChIPSeq/config/config.r")
+
+#----------------------------------------------------------------------#
+# LOAD PACKAGES
+#----------------------------------------------------------------------#
 
 library(ChIPQC)
 library('TxDb.Hsapiens.UCSC.hg38.knownGene')
@@ -8,29 +29,50 @@ register(DoparParam())
 registered() 
 bpparam("SerialParam")
 
-setwd(dataDir) ## change to directory where aligned files (bam) and peaks (narrowPeaks) can be found ## will search for all within this folder
+#----------------------------------------------------------------------#
+# IMPORT AND WRANGLE DATA
+#----------------------------------------------------------------------#
 
-### Create Sample Sheet
-Peaks<-list.files(peakDir, pattern = ".narrowPeak", recursive = TRUE)
-bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE)
-bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
-sampleIDs<-intersect(gsub("_peaks.narrowPeak", "", Peaks), gsub("_sorted.bam", "", bamReads))
-tissue<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1))
+## create Sample Sheet
+peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE)
+bamReads<-list.files(alignedDir, pattern = "_depDup_q30.bam", recursive = TRUE)
+
+#control file and IDs
+bamControl<-bamReads[grep("input", bamReads)]
+controlIDs<- gsub("_depDup_q30.bam", "", bamControl)
+
+#sample files and IDs
+bamReads<-bamReads[grep("input", bamReads, invert = TRUE)]
+sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_depDup_q30.bam", "", bamReads))
+
+
+factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
+  str_extract(., '\\b\\w+$') 
+tissue<-str_extract(sampleIDs, '\\.[A-Z]+') %>%
+  sub('.', '', .)
 pe<-"Paired"
+peakIndex<-match(sampleIDs, gsub(".narrowPeak.filt", "", peaks))
 
-peakIndex<-match(sampleIDs, gsub("_peaks.narrowPeak", "", Peaks))
+sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor=factor, Replicate=1, ReadType = pe, 
+                        bamReads = paste(alignedDir, bamReads, sep = "/"), 
+                        ControlID = controlIDs,
+                        bamControl = paste(alignedDir, bamControl, sep = "/"),
+                        Peaks = paste(peakDir, peaks[peakIndex],sep = "/"), 
+                        PeakCaller = 'macs',
+                        stringsAsFactors = FALSE)
 
-sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor="H3K27ac", Replicate=1, ReadType = pe, bamReads = paste(alignedDir, bamReads, sep = "/"), Peaks = paste(peakDir, Peaks[peakIndex],sep = "/"), stringsAsFactors = FALSE)
+write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"))
 
-write.csv(sampleSheet, paste(dataDir, "SampleSheetForChipQC.csv",sep = "/"))
+
+#----------------------------------------------------------------------#
+# CREATE CHIP QC OBJECT
+#----------------------------------------------------------------------#
 
 dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
-
-save(dat, file = paste(dataDir, "ChIPQCObject.rdata", sep = "/"))
-
-sampleSheet$Peaks<-paste0(peakDir, "/", sampleSheet$Tissue, "_peaks.narrowPeak")
+save(dat, file = paste(peakDir, "QCOutput/ChIPQCObject.rdata", sep = "/"))
 
 
-dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
 
-save(dat, file = paste(dataDir, "ChIPQCObjectFractionPeaks.rdata", sep = "/"))
+#sampleSheet$Peaks<-paste0(peakDir, "/", sampleSheet$Tissue, "_peaks.narrowPeak")
+#dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
+#save(dat, file = paste(dataDir, "ChIPQCObjectFractionPeaks.rdata", sep = "/"))
