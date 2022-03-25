@@ -16,8 +16,8 @@ args = commandArgs(trailingOnly=TRUE)
 
 ## load config variables
 project<-args[1]
-source("ChIPSeq/config/config.r")
 batchNum<-as.numeric(args[2]) ## nb starts from 0
+source("ChIPSeq/config/config.r")
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -40,13 +40,9 @@ bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE) %>%
   sort()
 bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
 
-# control file and IDs
+# bam files
 bamControl<-bamReads[grep("input", bamReads)]
 bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
-
-
-
-
 
 # create sample and control IDs 
 sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
@@ -86,7 +82,7 @@ sampleSheet<- sampleSheet[index,]
 #----------------------------------------------------------------------#
 
 dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
-save(dat, file = paste(peakDir, "QCOutput/ChIPQCObject.rdata", sep = "/"))
+save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_", batchNum, ".rdata"))
 
 
 
