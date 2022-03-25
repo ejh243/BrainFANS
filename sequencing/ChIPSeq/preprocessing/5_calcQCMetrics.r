@@ -17,7 +17,7 @@ args = commandArgs(trailingOnly=TRUE)
 ## load config variables
 project<-args[1]
 source("ChIPSeq/config/config.r")
-batchNum<-as.numeric(args[7]) ## nb starts from 0
+batchNum<-as.numeric(args[2]) ## nb starts from 0
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -33,19 +33,24 @@ bpparam("SerialParam")
 #----------------------------------------------------------------------#
 # IMPORT AND WRANGLE DATA
 #----------------------------------------------------------------------#
-
 ## Create sample sheet
-peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE)
-bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE)
+peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE) %>%
+  sort()
+bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE) %>%
+  sort()
 bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
 
 # control file and IDs
 bamControl<-bamReads[grep("input", bamReads)]
-controlIDs<- gsub("_depDup_q30.bam", "", bamControl)
-
-# sample files and IDs
 bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
+
+
+
+
+
+# create sample and control IDs 
 sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
+controlIDs<- gsub("_depDup_q30.bam", "", bamControl)
 
 # necessary columns
 factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
@@ -60,11 +65,21 @@ sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor=factor, Repl
                         ControlID = controlIDs,
                         bamControl = paste(alignedDir, bamControl, sep = "/"),
                         Peaks = paste(peakDir, peaks[peakIndex],sep = "/"), 
-                        PeakCaller = 'macs',
                         stringsAsFactors = FALSE)
 
-write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"))
+if (batchNum == 0){
+  write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"))
+}
 
+#----------------------------------------------------------------------#
+# SUBSET TO BATCH SUBMIT
+#----------------------------------------------------------------------#
+## filter to subset of samples
+index<-c(1:10)+(batchNum*10)
+## if number of samples is not a function of ten adjust index
+index<-index[index %in% 1:length(peaks)]
+
+sampleSheet<- sampleSheet[index,]
 
 #----------------------------------------------------------------------#
 # CREATE CHIP QC OBJECT
