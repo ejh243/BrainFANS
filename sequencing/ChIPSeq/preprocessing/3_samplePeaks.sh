@@ -24,7 +24,7 @@
 # ${PEAKDIR}/MACS/${sampleName}.narrowPeak.filt
 
 cd ${ALIGNEDDIR}
-mkdir -p ${PEAKDIR}/MACS
+mkdir -p ${PEAKDIR}
 sampleName=$1
 
 if [[ ! -z "$2" ]]
@@ -37,9 +37,9 @@ fi
 f=${sampleName}_depDup_q30.bam
 echo "Processing:" ${f} 
 
-macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR}/MACS/ -n ${sampleName} -g 2.9e9  -B 2> ${PEAKDIR}/${sampleName}.macs2.log
+macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR} -n ${sampleName} -g 2.9e9  -B 2> ${PEAKDIR}/${sampleName}.macs2.log
 
 ## exclude peaks aligned to blacklist regions
-bedtools intersect -v -a ${PEAKDIR}/MACS/${sampleName}_peaks.narrowPeak -b ${BLACKLIST} \
+bedtools intersect -v -a ${PEAKDIR}/${sampleName}_peaks.narrowPeak -b ${BLACKLIST} \
   | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
-  | grep -P 'chr[\dXY]+[ \t]' > ${PEAKDIR}/MACS/${sampleName}.narrowPeak.filt
+  | grep -P 'chr[\dXY]+[ \t]' > ${PEAKDIR}/${sampleName}.narrowPeak.filt

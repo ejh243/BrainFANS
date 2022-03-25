@@ -17,14 +17,13 @@ args = commandArgs(trailingOnly=TRUE)
 ## load config variables
 project<-args[1]
 source("ChIPSeq/config/config.r")
+batchNum<-as.numeric(args[7]) ## nb starts from 0
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
-
 library(ChIPQC)
 library('TxDb.Hsapiens.UCSC.hg38.knownGene')
-library("BiocParallel") 
 library(magrittr)
 library(stringr)
 register(DoparParam())
@@ -45,7 +44,7 @@ bamControl<-bamReads[grep("input", bamReads)]
 controlIDs<- gsub("_depDup_q30.bam", "", bamControl)
 
 # sample files and IDs
-
+bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
 sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
 
 # necessary columns

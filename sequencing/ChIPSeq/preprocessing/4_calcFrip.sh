@@ -40,10 +40,10 @@ fi
 
 ## MACS2 peaks called from bam files with paired end flag
 
-if [ -s ${PEAKDIR}/MACS/${sampleName}.narrowPeak.filt ]
+if [ -s ${PEAKDIR}/${sampleName}.narrowPeak.filt ]
 then
-	echo -n $(wc -l ${PEAKDIR}/MACS/${sampleName}.narrowPeak.filt | cut -f1 -d' '), >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
-	echo $(bedtools sort -i ${PEAKDIR}/MACS/${sampleName}.narrowPeak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNEDDIR}/${bam} -b stdin -ubam | samtools view -c) >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
+	echo -n $(wc -l ${PEAKDIR}/${sampleName}.narrowPeak.filt | cut -f1 -d' '), >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
+	echo $(bedtools sort -i ${PEAKDIR}/${sampleName}.narrowPeak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNEDDIR}/${bam} -b stdin -ubam | samtools view -c) >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
 else
 	echo NA,NA >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
 fi
