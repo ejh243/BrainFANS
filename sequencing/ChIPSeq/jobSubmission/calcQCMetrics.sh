@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=ChIPSeq/logFiles/%u/calcChIPQC-%A.o
-#SBATCH --error=ChIPSeq/logFiles/%u/calcChIPQC-%A.e
+#SBATCH --output=ChIPSeq/logFiles/%u/calcChIPQC-%A_%a.o
+#SBATCH --error=ChIPSeq/logFiles/%u/calcChIPQC-%A_%a.e
 #SBATCH --job-name=calcChIPQC
 
 #-----------------------------------------------------------------------#
@@ -28,17 +28,24 @@ source ./ChIPSeq/config/config.txt
 
 echo "Project directory is: " $DATADIR
 
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+fi
+
+
 #-----------------------------------------------------------------------#
 
 mkdir -p ${PEAKDIR}/QCOutput
 
 module load R/3.6.3-foss-2020a
 
-Rscript ${SCRIPTDIR}/ChIPSeq/preprocessing/5_calcQCMetrics.r ${PROJECT}
+Rscript ${SCRIPTDIR}/ChIPSeq/preprocessing/5_calcQCMetrics.r ${PROJECT} ${SLURM_ARRAY_TASK_ID}
 
 echo 'EXITCODE: ' $?
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
-mkdir -p ${SLURM_JOB_ID}
-mv ${JOBNAME}-${SLURM_JOB_ID}* ${SLURM_JOB_ID}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv ${JOBNAME}-${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}

@@ -7,8 +7,8 @@
 #SBATCH --mem=50G
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=general/logFiles/downloadPsych-%A.o
-#SBATCH --error=general/logFiles/downloadPsych-%A.e
+#SBATCH --output=general/logFiles/downloadPsych-%A-%a.o
+#SBATCH --error=general/logFiles/downloadPsych-%A-%a.e
 #SBATCH --job-name=downloadPsych
 
 #needs to be submitted with the arguments 

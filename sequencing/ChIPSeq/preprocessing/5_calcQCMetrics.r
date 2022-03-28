@@ -60,7 +60,8 @@ sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor=factor, Repl
                         bamReads = paste(alignedDir, bamReads, sep = "/"), 
                         ControlID = controlIDs,
                         bamControl = paste(alignedDir, bamControl, sep = "/"),
-                        Peaks = paste(peakDir, peaks[peakIndex],sep = "/"), 
+                        Peaks = paste(peakDir, peaks[peakIndex],sep = "/"),
+                        PeakCaller='macs',
                         stringsAsFactors = FALSE)
 
 if (batchNum == 0){
