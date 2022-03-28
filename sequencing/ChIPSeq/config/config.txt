@@ -1,0 +1,22 @@
+## Sequencing data filepaths
+export DATADIR=/gpfs/mrc0/projects/Research_Project-MRC190311/ChIPSeq/${PROJECT}
+
+export METADIR=${DATADIR}/0_metadata
+export RAWDATADIR=${DATADIR}/1_raw
+export FASTQCDIR=${RAWDATADIR}/fastqc
+export TRIMDIR=${DATADIR}/2_trimmed
+export ALIGNEDDIR=${DATADIR}/3_aligned
+export PEAKDIR=${DATADIR}/4_calledPeaks
+
+## Software/script filepaths
+export SCRIPTDIR=${SLURM_SUBMIT_DIR}
+export CHROMHMM=/gpfs/mrc0/projects/Research_Project-MRC190311/software/ChromHMM
+export BBMAP=/gpfs/mrc0/projects/Research_Project-MRC190311/software/bbmap
+
+
+## Reference data filepaths
+export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index
+export BLACKLIST=/gpfs/mrc0/projects/Research_Project-MRC190311/references/ChipSeq/hg38.blacklist.bed.gz
+
+## conda filepaths
+export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc 

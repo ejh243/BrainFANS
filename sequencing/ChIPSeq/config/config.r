@@ -9,3 +9,5 @@ alignedDir<-paste0(dir, "/3_aligned")
 peakDir<- paste0(dir, "/4_calledPeaks")
 qcDir<-paste0(alignedDir, "/QCOutput" )
 sampleSheet<-paste0(metaDir, "/sampleSheet.csv")
+
+blacklist<- "/gpfs/mrc0/projects/Research_Project-MRC190311/references/ChipSeq/hg38.blacklist.bed.gz"
