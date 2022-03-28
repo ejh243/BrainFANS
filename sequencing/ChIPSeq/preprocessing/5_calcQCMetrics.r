@@ -13,6 +13,7 @@
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
 #args[1]<-"epiGaba"
+#batchNum<-1
 
 ## load config variables
 project<-args[1]
@@ -82,8 +83,8 @@ sampleSheet<- sampleSheet[index,]
 # CREATE CHIP QC OBJECT
 #----------------------------------------------------------------------#
 
-dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38")
-save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_", batchNum, ".rdata"))
+dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38", blacklist = blacklist)
+save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObjectBl_", batchNum, ".rdata"))
 
 
 
