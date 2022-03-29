@@ -14,7 +14,7 @@ rm(list=ls())
 
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
-##args[1]<-"rizzardi"
+args[1]<-"rizzardi"
 
 ## load config variables
 project<-args[1]

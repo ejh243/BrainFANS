@@ -12,7 +12,7 @@ params:
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE,results='hide'}
 
-source(configFile)
+source("ChIPSeq/config/config.r")
 
 
 library(ChIPQC)
@@ -36,9 +36,9 @@ bpparam("SerialParam")
 
 ```{r loadDat, echo = FALSE, message = FALSE,results='hide',fig.keep='all'}
 setwd(dataDir)
-sampleSheet<-read.csv(paste(dataDir, "SampleSheetForChipQC.csv",sep = "/"), stringsAsFactors = FALSE, row.names = 1)
+sampleSheet<-read.csv(paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"), stringsAsFactors = FALSE, row.names = 1)
 
-load(paste(dataDir, "ChIPQCObject.rdata", sep = "/"))
+load(paste(peakDir, "QCOutput/ChIPQCObject.rdata", sep = "/"))
 ```
 
 

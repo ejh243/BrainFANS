@@ -8,7 +8,8 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-##args[1]<-"rizzardi"
+#project<-"hypothalamus"
+#source("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
 
 ## load config variables
 project<-params$project
@@ -78,16 +79,10 @@ processSum <- processSum[index,]
 colsKeep<-c("Total.Sequences","total_deduplicated_percentage", "Sequences.flagged.as.poor.quality")
 mergeStats<-cbind(fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep], fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep])
 ## d. MITOCHONDRIAL READS
-readCountsDeDup<-readCounts[grep("_postFilter_statsperchr.txt", readCounts$V1),]
-readCountsMT<-readCounts[grep("_postFilter_statsperchr.txt", readCounts$V1, invert = TRUE),]
-readCountsMT$V1<-gsub("_statsperchr.txt", "", readCountsMT$V1)
-readCountsDeDup$V1<-gsub("_postFilter_statsperchr.txt", "", readCountsDeDup$V1)
-readCountsMT<-readCountsMT[match(processSum$sampleID, readCountsMT$V1),]
-readCountsDeDup<-readCountsDeDup[match(processSum$sampleID, readCountsDeDup$V1),]
-mergeStats<-cbind(mergeStats, readCountsMT$V2/readCountsMT$V3*100)
+mergeStats<-cbind(mergeStats, readCounts$V2/readCounts$V3*100)
 colnames(mergeStats)[ncol(mergeStats)]<-"PercentMTReads"
 ## e. ALIGNMENT QC
-aIndex<-match(processSum$sampleName, gsub("^[[:digit:]]...._", "", gsub("\\.bowtie", "", alignQC$Sample)))
+aIndex<-match(processSum$sampleName, gsub("^[[:digit:]]...._", "", gsub("_[^_]+$", "", gsub("\\.bowtie", "", alignQC$Sample))))
 mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "paired_total")])
 ## f. ENCODE METRICS
 ## load flagstat metrics calculated as part of encode qc pipeline
@@ -100,7 +95,7 @@ for(each in files){
 }
 eMetrics
 colnames(eMetrics)<-c("TotalReadPairs","DistinctReadPairs","OneReadPair","TwoReadPairs","NRF","PBC1","PBC2")
-#eIndex<-match(processSum$sampleID, gsub("_sorted_chr1.bam.nodup.pbc.qc", "", files))
+#eIndex<-match(processSum$sampleID, gsub(".pbc.qc", "", files))
 #eMetrics<-eMetrics[eIndex,]
 mergeStats<-cbind(mergeStats,eMetrics)
 ## 6. FRIP
