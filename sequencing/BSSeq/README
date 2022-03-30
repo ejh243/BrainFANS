@@ -9,7 +9,7 @@ This readme explains the content of the scripts for running the WGBS analysis pi
 
 1. scoping.sh
 
-2. sbatch --array=<number of batch jobs> WGBS/jobSubmissionScripts/batchRunAlignment.sh <project-name> [<STEPS>]
+2. sbatch --array=<number of batch jobs> WGBS/jobSubmissionScripts/batchRunAlignment.sh <data-type/project-name> [<STEPS>]
 
 Parameters in [] are optional.
 
@@ -26,7 +26,7 @@ Parameters in [] are optional.
 
 		* executes WGBS/preprocessing/2_alignment.sh 
 
-	<project-name> the name of the project folder in the main data type data directory
+	<data-type/project-name> datatype slash separated from the name of the project folder i.e. WGBS/epiGaba
 
 	-optional-
 	
