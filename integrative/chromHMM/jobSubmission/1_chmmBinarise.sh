@@ -49,7 +49,7 @@ if [[ $fileType == 'BED' ]];
 then
 	echo "Running binarisation on bed files"
 
-	java -mx2400M -jar ${CHROMHMM}/ChromHMM.jar BinarizeBed -b 200 ${CHROMHMM}/CHROMSIZES/hg38.txt ${ALIGNEDDIR} ${METADIR}/cellMarkFileTable.txt ${BINARISEDIR}
+	java -mx2400M -jar ${CHROMHMM}/ChromHMM.jar BinarizeBed -b 200 ${CHROMHMM}/CHROMSIZES/hg38.txt ${ALIGNEDDIR} ${METADIR}/cellMarkBedFile.txt ${BINARISEDIR}
 
 	echo "Finished binarisation"
 fi
@@ -58,7 +58,7 @@ if [[ $fileType == 'BAM' ]];
 then
 	echo "Running binarisation on bam files"
 
-	java -mx2400M -jar ${CHROMHMM}/ChromHMM.jar BinarizeBam -b 200 ${CHROMHMM}/CHROMSIZES/hg38.txt ${ALIGNEDDIR} ${METADIR}/cellMarkFileTable.txt ${BINARISEDIR}
+	java -mx2400M -jar ${CHROMHMM}/ChromHMM.jar BinarizeBam -b 200 ${CHROMHMM}/CHROMSIZES/hg38.txt ${ALIGNEDDIR} ${METADIR}/cellMarkBamFile.txt ${BINARISEDIR}
 
 	echo "Finished binarisation"
 fi
