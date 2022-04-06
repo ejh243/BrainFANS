@@ -47,13 +47,14 @@ bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
 
 # create sample and control IDs 
 sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
-controlIDs<- gsub("_depDup_q30.bam", "", bamControl)
+controlIDs<- gsub("_sorted.bam", "", bamControl)
 
 # necessary columns
 factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
   str_extract(., '\\b\\w+$') 
 tissue<-str_extract(sampleIDs, '\\.[A-Z]+') %>%
-  sub('.', '', .)
+  sub('.', '', .) %>%
+  str_replace(., 'SOX', 'GABA')
 pe<-"Paired"
 peakIndex<-match(sampleIDs, gsub(".narrowPeak.filt", "", peaks))
 
@@ -83,8 +84,8 @@ sampleSheet<- sampleSheet[index,]
 # CREATE CHIP QC OBJECT
 #----------------------------------------------------------------------#
 
-dat<-ChIPQC(sampleSheet, consensus = FALSE, chromosomes = NULL, annotation = "hg38", blacklist = blacklist)
-save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObjectBl_", batchNum, ".rdata"))
+dat<-ChIPQC(sampleSheet, consensus = TRUE, chromosomes = NULL, annotation = "hg38", blacklist = blacklist)
+save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_", batchNum, ".rdata"))
 
 
 
