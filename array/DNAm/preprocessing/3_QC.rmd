@@ -1,22 +1,31 @@
 ---
 title: "DNA methylation Illumina Arrays Quality Control Report"
-author: "E Hannon"
+author: "`r commandArgs(trailingOnly=T)[4]`"
 output: html_document
-params:
-  config: NA
 ---
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = FALSE)
 ```
 ```{r setup, include=FALSE}
+args<-commandArgs(trailingOnly = TRUE)
 library(bigmelon)
 library(gplots)
 library(diptest)
 library(corrplot)
 library(pander)
-source(params$config) ### change the content of this file to to run QC on different set of data
+
+
+
+source(args[3]) ### change the content of this file to run QC with different thresholds
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
+
+dataDir <- args[2]
 setwd(dataDir) 
+
+
+gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
+
 load(qcData)
 
 nSamAll<-nrow(QCmetrics)
@@ -113,19 +122,15 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 **Study:** `r projectTitle`
 
-**Description:** `r projectDescription` 
-
 **Arrays ran by:** `r processedBy`
 
 **Array used:** `r arrayVersion`
 
-**QC done by:** `r qcID`
-
 **Date of QC:** `r format(Sys.Date(), format="%d %B %Y")`
 
-**Sample sheet:** `r sampleFile`
-
 **Sample tissue:** `r tissueType` 
+
+**Project datapath:** `r dataDir`
 
 Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Indidivual.ID))` individuals.
 
@@ -212,7 +217,7 @@ for(i in 2:ncol(plotCols)){
 
 In order to decide a threshold to filter samples by, we will trying fitting a bimodal distribution to the distribution of intensities. The idea here being that there will be a distribution forthe failed samples and a distribution for the passed samples. 
 
-```{r}
+```{r, echo = FALSE}
 library(mixtools)
 mixmdl.m = normalmixEM(QCmetrics$M.median, mu = c(250, 3000), sigma = c(250, 1000))
 mixmdl.u = normalmixEM(QCmetrics$U.median, mu = c(250, 3000), sigma = c(250, 1000))
@@ -451,7 +456,7 @@ Checking if genetically identical samples have the sample Individual ID:
 	  }
 	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Indidivual.ID[errorIndexes], margin = c(10,10))
 	if(length(errorIndexes) > 0){	
-		write.csv(QCmetrics[errorIndexes,], "../../DNAm/QCmetrics/WithinDNAmGeneticMismatches.csv", row.names = FALSE)
+		write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticMismatches.csv"), row.names = FALSE)
 		}
 	}
 
@@ -478,7 +483,7 @@ for(each in unique(QCmetrics$Indidivual.ID)){
 
 if(length(errorIndexes) > 0){
   print("ERROR: samples labelled as the same individual are not geneticaly identical see output file WithinDNAmGeneticErrors.csv for details")
-	write.csv(QCmetrics[errorIndexes,], "../../DNAm/QCmetrics/WithinDNAmGeneticErrors.csv", row.names = FALSE)
+	write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticErrors.csv"), row.names = FALSE)
 } else {
   
   print("All samples labelled as the same individual are geneticaly identical")
@@ -491,13 +496,13 @@ if(length(errorIndexes) > 0){
 Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. Based on these assumptions we can predict male or female from each sex chromosome. 
 
 ```{r, plotSexChromosomeFC, echo = FALSE, fig.width = 6, fig.height=6}
-plot(QCmetrics$x.cp, QCmetrics$y.cp, col = QCmetrics$Sex, xlab = "X chromosome FC", ylab = "Y chromosome FC", pch = 16)
+plot(QCmetrics$x.cp, QCmetrics$y.cp, col = as.factor(QCmetrics$Sex), xlab = "X chromosome FC", ylab = "Y chromosome FC", pch = 16)
 abline(v = 1)
 abline(h = 1, pch = 16)
 
 #plot(QCmetrics$x.cp, QCmetrics$M.median, pch = 16, xlab = "X chromosome FC", ylab = "median M intenisty")
 
-write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex)),], "../../DNAm/QCmetrics/SexMismatches.csv", row.names = FALSE)
+write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex)),], paste0(dataDir, "/2_gds/QCmetrics/SexMismatches.csv"), row.names = FALSE)
 ```
 
 `r sum(!is.na(QCmetrics$Sex))` (`r sum(!is.na(QCmetrics$Sex))/nrow(QCmetrics)*100`%) samples have sex provided in the phenotype file for comparision with predicted sex. 
@@ -535,7 +540,7 @@ nRematch<-sum(!is.na(QCmetrics$genoMatch[QCmetrics$genoCheck < 0.8]))
 
 
 if(nFail > 0){
-	write.csv(QCmetrics[which(QCmetrics$genoCheck < 0.8),], file = "../../DNAm/QCmetrics/CompSNPdataGeneticErrors.csv")
+	write.csv(QCmetrics[which(QCmetrics$genoCheck < 0.8),], file = paste0(dataDir, "/2_gds/QCmetrics/CompSNPdataGeneticErrors.csv"))
 }
 ```
 
@@ -593,7 +598,7 @@ for(i in 2:ncol(plotCols)){
 
 #### Step 10: Detection P values
 
-Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter)` samples are recommended for removal. 
+Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter, na.rm = TRUE)` samples are recommended for removal. 
 
 
 
