@@ -1,21 +1,23 @@
 sampleName=$1
-f1=$2
-f2=$3
+f=$2
 
-cd ${ALIGNEDDIR}
+
+cd ${INDATADIR}
 echo "Converting to genomedata format:" $sampleName
 
-bamfile=$(basename $( find . -name ${sampleName}'*.bam' ))
+#create genomedata object
 
-if [ ! "$(ls ${sampleName}.bed)" ] || [ ! "$(ls ${sampleName}.tagAlign.gz)" ]
-then
-	bedtools bamtobed -i ${bamfile} > ${sampleName}.bed
-fi
+echo 'Load genomedata sequence'
+genomedata-load-seq ${sampleName}.gnmdat ${REFGENOME} --verbose 
 
-genomedata-load -s ${f1} -s ${f2} -t ${sampleName}.tagAlign.gz ${sampleName}.gnmdata
+echo 'Open genomedata trackfile'
+genomedata-open-data ${sampleName}.gnmdat --tracknames high --verbose
+
+echo 'Load genomedata trackfile'
+genomedata-load-data ${sampleName}.gnmdat high < ${f} --verbose
+genomedata-close-data --verbose ${sampleName}.gnmdat
 
 if [[ $? == 0 ]]
 then
-	rm ${sampleName}.bed
 	echo 'Object generated'
 fi

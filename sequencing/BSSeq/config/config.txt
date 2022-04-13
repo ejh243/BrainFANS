@@ -1,5 +1,5 @@
 ## Sequencing data filepaths
-export DATADIR=/gpfs/mrc0/projects/Research_Project-MRC190311/${PROJECT}
+export DATADIR=/lustre/projects/Research_Project-MRC190311/${PROJECT}
 
 export METADIR=${DATADIR}/0_metadata
 export RAWDATADIR=${DATADIR}/1_raw
@@ -8,10 +8,10 @@ export TRIMDIR=${DATADIR}/2_trimmed
 export ALIGNEDDIR=${DATADIR}/3_aligned
 export PEAKDIR=${DATADIR}/4_calledPeaks
 export PEAKCOUNTS=${DATADIR}/5_countPeaks
-export GENODIR=/gpfs/mrc0/projects/Research_Project-MRC190311/SNPArray/mrcbrain/3_imputed/ImputationOutput/All
-export CHROMDIR=/gpfs/mrc0/projects/Research_Project-MRC190311/integrative/chromHMM
+export GENODIR=/lustre/projects/Research_Project-MRC190311/SNPArray/mrcbrain/3_imputed/ImputationOutput/All
+export CHROMDIR=/lustre/projects/Research_Project-MRC190311/integrative/chromHMM
 
 ## Software/script filepaths
 export SCRIPTDIR=${SLURM_SUBMIT_DIR}
-export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta
-export CHROMHMM=/gpfs/mrc0/projects/Research_Project-MRC190311/software/ChromHMM
+export REFGENOME=/lustre/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta
+export CHROMHMM=/lustre/projects/Research_Project-MRC190311/software/ChromHMM

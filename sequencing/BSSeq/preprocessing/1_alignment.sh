@@ -26,7 +26,7 @@ echo ${f2}
 echo "Running alignment for" ${sampleName}
 date -u	
 ## alignment
-bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2
+bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2 -B ${sampleName}
 
 if [[ $? == 0 ]]
 	then echo "Alignment and post filtering complete"

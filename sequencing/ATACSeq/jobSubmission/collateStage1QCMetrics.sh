@@ -49,7 +49,7 @@ fi
 if [ $# = 1 ] || [[ $2 =~ 'COLLATE' ]]
 then
 	## run other bespoke utilty scripts to collate other QC metrics
-	cd ${SCRIPTDIR}/
+	cd ${SCRIPTDIR}
 
 	./ATACSeq/preprocessing/7_progressReport.sh 
 	./ATACSeq/preprocessing/8_countMTReads.sh 
@@ -60,7 +60,7 @@ fi
 if [ $# = 1 ] || [[ $2 =~ 'SUMMARY' ]]
 then
 	## collate the earlier outputs into a r markdown report
-	cd ${SCRIPTDIR}/
+	cd ${SCRIPTDIR}
 	echo ${SCRIPTDIR}
 
 	module load R/3.6.3-foss-2020a
@@ -73,7 +73,7 @@ shift #move command line arguments so that $1 is no longer project but step
 if [[ $1 =~ 'FILTER' ]] #only run this if specified
 then
 	## collate the earlier outputs into a r markdown report
-	cd ${SCRIPTDIR}/
+	cd ${SCRIPTDIR}
 
 	shift
 

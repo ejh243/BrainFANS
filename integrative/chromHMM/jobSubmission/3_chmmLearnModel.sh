@@ -6,12 +6,12 @@
 #SBATCH --nodes=5 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=integrative/logFiles/learnModel-%A_%a.o
-#SBATCH --error=integrative/logFiles/learnModel-%A_%a.e
+#SBATCH --output=integrative/chromHMM/logFiles/learnModel-%A_%a.o
+#SBATCH --error=integrative/chromHMM/logFiles/learnModel-%A_%a.e
 #SBATCH --job-name=learnModel
 
 # This performs learnmodel on merged binarisation files 
-# to be submitted from <repo> as sbatch --array=1-_ integrative/jobSubmission/3_chmmLearnModel.sh 
+# to be submitted from <repo> as sbatch --array=1-_ integrative/chromHMM/jobSubmission/3_chmmLearnModel.sh <project-name>
 
 ## print start date and time
 echo Job started on:
@@ -23,8 +23,9 @@ echo $SLURM_SUBMIT_DIR
 
 cd $SLURM_SUBMIT_DIR
 
-echo 'Loading config file'
-source ./integrative/config/config.txt
+echo 'Loading config file for project: ' $1
+PROJECT=$1
+source ./integrative/chromHMM/config/config.txt
 
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
 then
@@ -40,7 +41,7 @@ module load Java
 
 echo 
 echo 'Learning model'
-java -mx4000M -jar ${CHROMHMM}/ChromHMM.jar LearnModel -p 0 ${MERGEDIR}/2_output ${MODELDIR} ${SLURM_ARRAY_TASK_ID} hg38
+java -mx4000M -jar ${CHROMHMM}/ChromHMM.jar LearnModel -p 0 ${MERGEDIR} ${MODELDIR} ${SLURM_ARRAY_TASK_ID} hg38
 
 if [[ $? == 0 ]]
 then 

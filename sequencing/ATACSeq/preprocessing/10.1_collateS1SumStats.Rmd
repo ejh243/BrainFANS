@@ -142,7 +142,7 @@ kable(mergeStats[,c(1,9)], col.names = c("Raw Reads", "Aligned Reads")) %>%
 In total there were `r sum(c(mergeStats[,1], mergeStats[,4]))/1000000` million reads generated across these samples, with a mean of 
 `r signif(mean(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million).
 
-```{r pressure, fig.align = 'center', dpi = 100, echo=FALSE}
+```{r pressure, fig.align = 'center', dpi = 500, echo=FALSE}
 par(mfrow = c(2,2))
 hist(mergeStats[,1], main = "R1", xlab = "Number of Reads", ylab = "Number of Samples", breaks = 100)
 hist(mergeStats[,4], main = "R2", xlab = "Number of Reads", ylab = "Number of Samples", breaks = 100)
@@ -187,7 +187,7 @@ A good ATAC-seq experiment will capture enrichment at a broad range of genomic l
 
 Complexity can be assessed at two points, from both the raw sequencing reads and the aligned reads. In this section we will assess the number of unique reads as the total number of reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. 
 
-``` {r uniqueReads, fig.align = 'center', dpi = 100, echo=FALSE}
+``` {r uniqueReads, fig.align = 'center', dpi = 500, echo=FALSE}
 ## d. Plot %unique reads against read number
 plot(mergeStats[,1], mergeStats[,2], xlab = "Number of Reads", ylab = "% unique reads", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
 legend('bottomright', legend = c('Total', 'NeuN', 'Sox10', 'Neg'), 
@@ -211,17 +211,18 @@ lowReadCounts<-pheno[which(mergeStats[,1] < 100*10^6),]
 
 The plot below shows the alignment rate and number of mapped reads per sample. While general convention is a unique mapping rate over 80% is typical for a successful ATAC-seq experiment, ENCODE would require that the percentage of mapped reads should be greater than 95%, though values >80% may be acceptable. In the plot below the red line indicates the 80% threshold, the black indicates the 95%.  
 
-```{r alignment rate, fig.align = 'center', dpi = 100, echo = FALSE}
+```{r alignment rate, fig.align = 'center', dpi = 500, echo = FALSE}
 ## a. Plot alignment rate against number of reads
 #pdf(paste0(qcDir, "/ViolinPlotAlignmentStatistics.pdf"), width = 10, height = 10)
 plot(mergeStats[,"paired_total"], mergeStats[,"overall_alignment_rate"], xlab = "Number of Reads", ylab = "Alignment rate", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
 abline(h = 95, lty = 2)
 abline(h = 80, lty = 2, col = colorBlindGrey8[1])
+text(mergeStats[,"paired_total"], mergeStats[,"overall_alignment_rate"], labels = pheno$sampleID)
 ```
 
 Figure 
 
-``` {r blank, fig.align = 'center', dpi = 100, echo = FALSE}
+``` {r blank, fig.align = 'center', dpi = 500, echo = FALSE}
 ## b. Plot alignment rate
 par(mfrow = c(2,3))
 vioplot(mergeStats[,"overall_alignment_rate"] ~ pheno$sequencingBatch, ylab = "Alignment rate", xlab = "Sequencing Batch")

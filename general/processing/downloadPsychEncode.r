@@ -5,7 +5,7 @@ args=commandArgs(trailingOnly=TRUE)
 
 synLogin('ejh243', args[1]) 
  
-setwd("/gpfs/mrc0/projects/Research_Project-MRC190311/")
+setwd("/lustre/projects/Research_Project-MRC190311/")
  
 ## BrainGVEX
 #files <- synapserutils::syncFromSynapse("syn8113123", path = "ATACSeq/RawData/GVEX") 
