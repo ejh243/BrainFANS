@@ -8,8 +8,8 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-#project<-"hypothalamus"
-#source("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
+project<-"ATACSeq/hypothalamus"
+source("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
 
 ## load config variables
 project<-params$project
@@ -152,7 +152,7 @@ hist(mergeStats[,5], main = "R2", xlab = "% unique reads", ylab = "Number of Sam
 
 For mammalian studies, authors of the ATAC-seq protocol use a minimum of 50 million non-duplicated, non-mitochondrial mapped reads for open chromatin detection. The ENCODE pipeline recommends a minimum of 25 million for single end and 50 million for paired. In the plot below, median of the data is indicated by the orange line and 50 million and 25 million thresholds by the black lines.
 
-``` {r minReads, fig.align = 'center', dpi = 100, echo=FALSE}
+``` {r minReads, fig.align = 'center', dpi = 500, echo=FALSE}
 ## c. Plot minimum number of reads 
 par(mfrow = c(1,1))
 plot(readThres/10^6, nSamples[,1], type = "l", lwd = 2, xlab = "Minimum number of reads (millions)", ylab = "Number of Samples")
@@ -190,6 +190,8 @@ Complexity can be assessed at two points, from both the raw sequencing reads and
 ``` {r uniqueReads, fig.align = 'center', dpi = 100, echo=FALSE}
 ## d. Plot %unique reads against read number
 plot(mergeStats[,1], mergeStats[,2], xlab = "Number of Reads", ylab = "% unique reads", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
+legend('bottomright', legend = c('Total', 'NeuN', 'Sox10', 'Neg'), 
+       fill = colorBlindGrey8[as.factor(pheno$fraction)],cex=0.8)
 ## e. Plot no reads and %unique by sequencing batch
 par(mfrow = c(2, 3))
 vioplot(mergeStats[,1] ~ pheno$sequencingBatch, ylab = "Number of Reads", xlab = "Sequencing Batch")
