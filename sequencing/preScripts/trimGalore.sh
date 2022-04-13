@@ -32,5 +32,7 @@ then
 fi
 
 if [[ $? == 0 ]]
-  then echo 'Trim Galore complete'
+then 
+  mv ${sampleName}*report.txt trimGaloreReports
+  echo 'Trim Galore complete'
 fi
