@@ -190,6 +190,8 @@ Complexity can be assessed at two points, from both the raw sequencing reads and
 ``` {r uniqueReads, fig.align = 'center', dpi = 500, echo=FALSE}
 ## d. Plot %unique reads against read number
 plot(mergeStats[,1], mergeStats[,2], xlab = "Number of Reads", ylab = "% unique reads", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
+legend('bottomright', legend = c('Total', 'NeuN', 'Sox10', 'Neg'), 
+       fill = colorBlindGrey8[as.factor(pheno$fraction)],cex=0.8)
 ## e. Plot no reads and %unique by sequencing batch
 par(mfrow = c(2, 3))
 vioplot(mergeStats[,1] ~ pheno$sequencingBatch, ylab = "Number of Reads", xlab = "Sequencing Batch")
