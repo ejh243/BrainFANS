@@ -2,7 +2,7 @@
 ## given the heavy computational burden, QC is split into batches of 10 samples 
 
 ## EXECUTION
-# Rscript ./ATACSeq/preprocessing/4_fragmentDistribution.sh <aligned folder> <batch number>
+# Rscript ./ATACSeq/preprocessing/3_fragmentDistribution.sh <aligned folder> <batch number>
 # where 
 # <aligned folder> is the folder contained aligned, filtered bam files
 # <batch number> is the batch of samples to process
