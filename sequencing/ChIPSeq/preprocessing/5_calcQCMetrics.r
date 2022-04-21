@@ -35,7 +35,7 @@ bpparam("SerialParam")
 # IMPORT AND WRANGLE DATA
 #----------------------------------------------------------------------#
 ## Create sample sheet
-if (file.exists(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))==FALSE){
+if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
   peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE) %>%
     sort()
   bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE) %>%
@@ -70,8 +70,9 @@ if (file.exists(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))==FALSE){
   if (batchNum == 0){
     write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"))
   } 
-} else if (file.exists(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))==TRUE){
-    print('sampleSheet for QC exists')
+} else if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==TRUE){
+  print('Using existing sampleSheet for ChIPQC')
+  sampleSheet<- read.csv(paste0(metaDir,"/sampleSheetForChipQC.csv"), row.names = 1)
 }
 
 #----------------------------------------------------------------------#
