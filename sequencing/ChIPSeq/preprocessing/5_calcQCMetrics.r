@@ -35,39 +35,43 @@ bpparam("SerialParam")
 # IMPORT AND WRANGLE DATA
 #----------------------------------------------------------------------#
 ## Create sample sheet
-peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE) %>%
-  sort()
-bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE) %>%
-  sort()
-bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
-
-# bam files
-bamControl<-bamReads[grep("input", bamReads)]
-bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
-
-# create sample and control IDs 
-sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
-controlIDs<- gsub("_sorted.bam", "", bamControl)
-
-# necessary columns
-factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
-  str_extract(., '\\b\\w+$') 
-tissue<-str_extract(sampleIDs, '\\.[A-Z]+') %>%
-  sub('.', '', .) %>%
-  str_replace(., 'SOX', 'GABA')
-pe<-"Paired"
-peakIndex<-match(sampleIDs, gsub(".narrowPeak.filt", "", peaks))
-
-sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor=factor, Replicate=1, ReadType = pe, 
-                        bamReads = paste(alignedDir, bamReads, sep = "/"), 
-                        ControlID = controlIDs,
-                        bamControl = paste(alignedDir, bamControl, sep = "/"),
-                        Peaks = paste(peakDir, peaks[peakIndex],sep = "/"),
-                        PeakCaller='macs',
-                        stringsAsFactors = FALSE)
-
-if (batchNum == 0){
-  write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"))
+if (file.exists(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))==FALSE){
+  peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE) %>%
+    sort()
+  bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE) %>%
+    sort()
+  bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
+  
+  # bam files
+  bamControl<-bamReads[grep("input", bamReads)]
+  bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
+  
+  # create sample and control IDs 
+  sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
+  controlIDs<- gsub("_sorted.bam", "", bamControl)
+  
+  # necessary columns
+  factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
+    str_extract(., '\\b\\w+$') 
+  tissue<-str_extract(sampleIDs, '\\.[A-Z]+') %>%
+    sub('.', '', .) %>%
+    str_replace(., 'SOX', 'GABA')
+  pe<-"Paired"
+  peakIndex<-match(sampleIDs, gsub(".narrowPeak.filt", "", peaks))
+  
+  sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor=factor, Replicate=1, ReadType = pe, 
+                          bamReads = paste(alignedDir, bamReads, sep = "/"), 
+                          ControlID = controlIDs,
+                          bamControl = paste(alignedDir, bamControl, sep = "/"),
+                          Peaks = paste(peakDir, peaks[peakIndex],sep = "/"),
+                          PeakCaller='macs',
+                          stringsAsFactors = FALSE)
+  
+  if (batchNum == 0){
+    write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"))
+  } 
+} else if (file.exists(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))==TRUE){
+    print('sampleSheet for QC exists')
 }
 
 #----------------------------------------------------------------------#
