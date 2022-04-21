@@ -72,7 +72,7 @@ if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
   } 
 } else if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==TRUE){
   print('Using existing sampleSheet for ChIPQC')
-  sampleSheet<- read.csv(paste0(metaDir,"/sampleSheetForChipQC.csv"), row.names = 1)
+  sampleSheet<- read.csv(paste0(metaDir,"/sampleSheetForChipQC.csv"))
 }
 
 #----------------------------------------------------------------------#
@@ -81,7 +81,7 @@ if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
 ## filter to subset of samples
 index<-c(1:10)+(batchNum*10)
 ## if number of samples is not a function of ten adjust index
-index<-index[index %in% 1:length(sampleSheet)]
+index<-index[index %in% 1:length(rownames(sampleSheet))]
 
 sampleSheet<- sampleSheet[index,]
 
