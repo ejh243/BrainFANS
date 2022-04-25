@@ -1,5 +1,5 @@
 ## Sequencing data filepaths
-dir<- paste0("/gpfs/mrc0/projects/Research_Project-MRC190311/ChIPSeq/", project)
+dir<- paste0("/lustre/projects/Research_Project-MRC190311/ChIPSeq/", project)
 
 metaDir<- paste0(dir, "/0_metadata")
 dataDir<-paste0(dir, "/1_raw")
@@ -10,4 +10,4 @@ peakDir<- paste0(dir, "/4_calledPeaks")
 qcDir<-paste0(alignedDir, "/QCOutput" )
 sampleSheet<-paste0(metaDir, "/sampleSheet.csv")
 
-blacklist<- "/gpfs/mrc0/projects/Research_Project-MRC190311/references/ChipSeq/hg38.blacklist.bed.gz"
+blacklist<- "/lustre/projects/Research_Project-MRC190311/references/ChipSeq/hg38.blacklist.bed.gz"
