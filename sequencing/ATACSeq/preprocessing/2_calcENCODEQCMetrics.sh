@@ -14,6 +14,7 @@
 
 ## INPUT
 # *.filt.nodup.bam aligned, filtered, deduplicated bam file
+# *.filt.dupmark.bam filtered, duplicate-marked bam file
 
 ## OUTPUT
 # *.pbc.qc

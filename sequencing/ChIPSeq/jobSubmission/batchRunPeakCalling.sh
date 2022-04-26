@@ -36,6 +36,8 @@ then
     { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
 fi
 
+echo 'Type of peak to be called: '
+
 #-----------------------------------------------------------------------#
 
 echo "Changing Folder to Data directory "

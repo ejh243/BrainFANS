@@ -17,7 +17,7 @@
 
 ## INPUT
 # shifted tag align file
-#
+# .filt.nodup.bam
 
 ## OUTPUT
 # ${PEAKDIR}/MACS/ShiftedTagAlign/*.broadPeak (and other macs output)

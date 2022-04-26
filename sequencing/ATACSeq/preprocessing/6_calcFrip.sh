@@ -14,7 +14,8 @@
 
 ## INPUT
 # blacklist filtered peak lists
-#
+# shifted tagalign file
+# .filt.nodup.bam
 
 ## OUTPUT
 # ${PEAKDIR}/QCOutput/FRIP_*.csv

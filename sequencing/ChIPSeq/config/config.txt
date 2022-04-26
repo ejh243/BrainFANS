@@ -20,3 +20,6 @@ export BLACKLIST=/gpfs/mrc0/projects/Research_Project-MRC190311/references/ChipS
 
 ## conda filepaths
 export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc 
+
+## parameters
+export multimap=4
