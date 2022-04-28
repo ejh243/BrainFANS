@@ -73,7 +73,6 @@ then
 
 	# remove reads with q < 30, unmapped, mate unmapped, secondary alignment, reads failing platform
 	# only keep properly paired reads
-	# Obtain name sorted BAM file
 	echo "filtering aligned reads"
     samtools view -F 524 -f 2  -q 30 -u ${ALIGNEDDIR}/${sampleName}_noMT.bam | samtools sort -n /dev/stdin -o ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam
     samtools view -h ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam | $(which assign_multimappers.py) -k $multimap --paired-end | samtools fixmate -r /dev/stdin ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam

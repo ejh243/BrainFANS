@@ -1,7 +1,7 @@
 ## calculates ENCODE library complexity metrics (taken from https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit#)
 
 ## EXECUTION
-# sh ./ATACSeq/preprocessing/3_calcENCODEQCMetricsPE.sh <sampleName>
+# sh ./ATACSeq/preprocessing/2_calcENCODEQCMetrics.sh <sampleName>
 # where 
 # <bam file> is the path to a sorted bam file
 # script needs to be executed from <git repo>/sequencing/
