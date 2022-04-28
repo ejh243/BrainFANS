@@ -92,7 +92,7 @@ then
 		module load Bowtie2/2.3.4.2-foss-2018b
 		module load SAMtools
 		module load picard/2.6.0-Java-1.8.0_131
-		export PATH="$PATH:/gpfs/mrc0/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
+		export PATH="$PATH:/lustre/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
 		
 		cd ${SCRIPTDIR}
 		sh ./ATACSeq/preprocessing/1_alignment.sh ${sampleID}
