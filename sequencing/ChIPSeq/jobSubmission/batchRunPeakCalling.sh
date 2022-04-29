@@ -63,8 +63,17 @@ then
 
 	mkdir -p ${PEAKDIR}
 
+	# derive histone mark from sampleSheet file
+	## get column number for mark
+	column=$(awk '$1 == "experiment"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
+
+	echo 'Column number is ' $column
+	## get mark for sample
+	mark=$(cat ${METADIR}/sampleSheet.csv | awk -F"," -v col="$column" /$sampleName/'{print $col}')
+	echo 'Mark is' $mark
+
 	cd ${SCRIPTDIR}/
-	./ChIPSeq/preprocessing/3_samplePeaks.sh ${sampleName} ${control}
+	sh ./ChIPSeq/preprocessing/3_samplePeaks.sh ${mark} ${sampleName} ${control}
 	
 	if [[ $? == 0 ]]
 		then echo "Peaks called"

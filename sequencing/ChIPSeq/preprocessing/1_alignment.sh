@@ -1,8 +1,30 @@
-## Written by Eilis	(edited for batch data by Jessica)
-## Takes trimmed reads and aligns to genome with bowtie2	
-## converts to bam files	
-## excludes duplicates 	
-## output: filtered bam file, tagAlign file (virtual single end), BEDPE file (with read pairs on each line) 
+## Takes trimmed reads for single sample aligns with bowtie2 and filters out duplicates, mt reads, incorrectly paired reads
+
+## EXECUTION
+# sh ./ChIPSeq/preprocessing/1_alignment.sh <fastq file>
+# where 
+# <fastq file> is the path to the "R1" fastq files which are expected to be compressed
+# script needs to be executed from <git repo>/sequencing/
+
+## REQUIRES the following variables in config file
+# RAWDATADIR, TRIMDIR, ALIGNEDDIR, REFGENOME, multimap
+
+## REQUIRES the following software
+# bowtie2, samtools, picard
+
+## INPUT
+# 2 trimmed fastq files
+
+## OUTPUT
+# *_statsperchr.txt
+# *_dupMetrics.txt
+# *_depDup_q30.bam
+# *_postFilter_statsperchr.txt
+# *.filt.nodup.bam
+# *.filt.dupmark.bam
+# *.filt.nodup.bam.bai 
+# *_sorted.bam.bai
+
 
 f=$1
 cd ${DATADIRPE}
@@ -12,46 +34,62 @@ f1=$(basename $f)
 sampleName=${f1%.*.fastq.gz} 
 echo "Processing" ${sampleName}
 
-f1=$(basename $(ls ${TRIMDIR}/${sampleName}*1_trimmed*.f*)) ##rm [rR]
-f2=$(basename $(ls ${TRIMDIR}/${sampleName}*2_trimmed*.f*)) ##rm [rR]
+f1=$(basename $(ls ${TRIMDIR}/${sampleName}*1_trimmed*.f*)) 
+f2=$(basename $(ls ${TRIMDIR}/${sampleName}*2_trimmed*.f*)) 
 
 cd ${ALIGNEDDIR}	
 echo "Aligning"" ${sampleName}"	
 	
-## count uniqueness of fastq files
-#if [ ! -f ${sampleName}_hist.txt ]		
-#then
-#  ## count uniqueness
-#  ${BBMAP}/bbcountunique.sh in=${TRIMDIR}/${f1} in2=${TRIMDIR}/${f2} out=${sampleName}_hist.txt interval=5000 overwrite=true cumulative=true count=t
-#fi	
-
-if [ ! -f ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam ]		
+if [ ! -f ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]		
 then
   cd ${TRIMDIR}
 
+  # Alignment
   bowtie2 -p 10 -x ${REFGENOME}/genome -1 ${f1} -2 ${f2}  -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
 
-  ## convert to sam file, sort and index
+  ## Convert to sam file, sort and index
   samtools view -bSo ${ALIGNEDDIR}/${sampleName}.bam ${ALIGNEDDIR}/${sampleName}.sam
   samtools sort ${ALIGNEDDIR}/${sampleName}.bam > ${ALIGNEDDIR}/${sampleName}_sorted.bam
+
   samtools index ${ALIGNEDDIR}/${sampleName}_sorted.bam
-  rm ${ALIGNEDDIR}/${sampleName}.sam
+  samtools idxstats ${ALIGNEDDIR}/${sampleName}_sorted.bam > ${ALIGNEDDIR}/${sampleName}_statsperchr.txt
   rm ${ALIGNEDDIR}/${sampleName}.bam
-  ## remove duplicates
-  java -jar $EBROOTPICARD/picard.jar MarkDuplicates I=${ALIGNEDDIR}/${sampleName}_sorted.bam O=${ALIGNEDDIR}/${sampleName}_depDuplicated.bam M=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt REMOVE_DUPLICATES=TRUE
+  rm ${ALIGNEDDIR}/${sampleName}.sam
 
-  ## remove reads with q < 30 nb 
-  samtools view -q 30 -h ${ALIGNEDDIR}/${sampleName}_depDuplicated.bam > ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam
+  ## Get sum stats prior to filtering
+  samtools stats ${ALIGNEDDIR}/${sampleName}_sorted.bam > ${ALIGNEDDIR}/QCOutput/${sampleName}_sorted.stats 
 
+  # Remove reads with q < 30, unmapped, mate unmapped, secondary alignment, reads failing platform
+  # only keep properly paired reads
+  # Obtain name sorted bam
+  echo "Filtering aligned reads"
+  samtools view -q 30 -h ${ALIGNEDDIR}/${sampleName}_sorted.bam | samtools sort -n /dev/stdin -o ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam
+  samtools view -h ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam | samtools fixmate -r /dev/stdin ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
+  
+  # Remove orphan reads (pair was removed)
+  # Obtain position sorted BAM
+  samtools view -F 1804 -f 2 -u ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam | samtools sort /dev/stdin -o ${ALIGNEDDIR}/${sampleName}.filt.bam
+
+  rm ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
+  rm ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam
+  rm ${ALIGNEDDIR}/${sampleName}_sorted.bam
+
+  # Mark duplicates
+  java -Xmx4G -jar $EBROOTPICARD/picard.jar MarkDuplicates INPUT=${ALIGNEDDIR}/${sampleName}.filt.bam OUTPUT=${ALIGNEDDIR}/${sampleName}.filt.dupmark.bam METRICS_FILE=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt VALIDATION_STRINGENCY=LENIENT ASSUME_SORTED=true REMOVE_DUPLICATES=false
+  rm ${ALIGNEDDIR}/${sampleName}.filt.bam
+
+  ## Remove duplicates
+  samtools view -F 1804 -f 2 -b ${ALIGNEDDIR}/${sampleName}.filt.dupmark.bam > ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam
+
+  # Index Final BAM file
+  samtools index ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam
+   
+  ## get sum stats post to filtering
+  samtools stats ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam  > ${ALIGNEDDIR}/QCOutput/${sampleName}.filt.nodup.stats
+else
+  { echo "Aligned file found so not aligning"; exit 1;}
 fi
 
-#if [ ! -f ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz ]		
-#then	
-  # Create BEDPE file
-  #samtools sort -n ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam -o ${ALIGNEDDIR}/${sampleName}.filt.nmsrt
-  #bedtools bamtobed -bedpe -mate1 -i ${ALIGNEDDIR}/${sampleName}.filt.nmsrt | gzip -nc > ${ALIGNEDDIR}/${sampleName}.bedpe.gz
-  #zcat ${ALIGNEDDIR}/${sampleName}.bedpe.gz | awk 'BEGIN{OFS="\t"}{printf "%s\t%s\t%s\tN\t1000\t%s\n%s\t%s\t%s\tN\t1000\t%s\n",$1,$2,$3,$9,$4,$5,$6,$10}' | gzip -nc > ${ALIGNEDDIR}/${sampleName}.PE.tagAlign.gz
-#fi
 
 if [[ $? == 0 ]]
   then echo "Finished alignment"

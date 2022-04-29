@@ -8,8 +8,8 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-project<-"ATACSeq/hypothalamus"
-source("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
+#project<-"ATACSeq/hypothalamus"
+#source("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
 
 ## load config variables
 project<-params$project
