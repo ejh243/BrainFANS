@@ -13,7 +13,7 @@
 ## clear the R environment
 rm(list=ls()) 
 ## set working directory
-setwd("/gpfs/mrc0/projects/Research_Project-MRC190311/scripts/sequencing")
+setwd("/lustre/projects/Research_Project-MRC190311/scripts/sequencing")
 
 
 #----------------------------------------------------------------------#

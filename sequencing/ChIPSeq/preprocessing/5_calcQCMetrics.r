@@ -12,8 +12,8 @@
 
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
-#args[1]<-"epiGaba"
-#batchNum<-1
+args[1]<-"epiGaba"
+batchNum<-1
 
 ## load config variables
 project<-args[1]
@@ -36,9 +36,9 @@ bpparam("SerialParam")
 #----------------------------------------------------------------------#
 ## Create sample sheet
 if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
-  peaks<-list.files(peakDir, pattern = ".narrowPeak.filt", recursive = TRUE) %>%
+  peaks<-list.files(peakDir, pattern = "Peak.filt", recursive = TRUE) %>%
     sort()
-  bamReads<-list.files(alignedDir, pattern = "_sorted.bam", recursive = TRUE) %>%
+  bamReads<-list.files(alignedDir, pattern = "filt.nodup.bam", recursive = TRUE) %>%
     sort()
   bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
   
@@ -47,8 +47,8 @@ if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
   bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
   
   # create sample and control IDs 
-  sampleIDs<-intersect(gsub(".narrowPeak.filt", "", peaks), gsub("_sorted.bam", "", bamReads))
-  controlIDs<- gsub("_sorted.bam", "", bamControl)
+  sampleIDs<-intersect(gsub(".narrowPeak.filt|.broadPeak.filt", "", peaks), gsub(".filt.nodup.bam", "", bamReads))
+  controlIDs<- gsub(".filt.nodup.bam", "", bamControl)
   
   # necessary columns
   factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
@@ -57,7 +57,7 @@ if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
     sub('.', '', .) %>%
     str_replace(., 'SOX', 'GABA')
   pe<-"Paired"
-  peakIndex<-match(sampleIDs, gsub(".narrowPeak.filt", "", peaks))
+  peakIndex<-match(sampleIDs, gsub(".narrowPeak.filt|.broadPeak.filt", "", peaks))
   
   sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor=factor, Replicate=1, ReadType = pe, 
                           bamReads = paste(alignedDir, bamReads, sep = "/"), 
