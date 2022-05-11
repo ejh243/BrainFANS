@@ -39,7 +39,7 @@ done
 
 # Merge vcf files into one
 
-vcf-concat chr*_filt.vcf | gzip -c > out.vcf.gz
+vcf-concat chr*_filt.vcf | gzip -c > allchr_filt_rsq_maf.vcf.gz
 
 # Merge them into one plink dataset
 
