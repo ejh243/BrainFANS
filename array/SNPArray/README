@@ -26,3 +26,5 @@ Executes
 	7_combineImputationOutput.sh filters variants to those iwth rsq > 0.3 and maf > 0.01 and collates QC'd, lifted over, imputed output into a single plink file and single vcf file
 	
 #### CNV calling
+
+4. sbatch SNPArray/jobSubmission/runCNVCalling.sh  <config file>
