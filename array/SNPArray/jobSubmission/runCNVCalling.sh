@@ -22,16 +22,16 @@ date -u
 
 source $1
 
-module load Perl/5.26.1-foss-2018a
+module load Perl/5.32.1-GCCcore-10.3.0
 module load R
 
 cd ${DATADIR}/scripts ## all scripts are written to be executed from the scripts folder
 
-sh SNPdata/PennCNV.sh
+sh ${SCRIPTDIR}/preprocessing/8_pennCNV.sh
 echo CNVs called on full sample
 
-cd ${DATADIR}/scripts
-sh SNPdata/FilterCNVCalls.sh
+cd ${SCRIPTDIR}/
+sh preprocessing/9_filterCNVCalls.sh
 
 module load Pandoc
 R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/MRCSCZsamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundAll_SCZSamples.html')"
