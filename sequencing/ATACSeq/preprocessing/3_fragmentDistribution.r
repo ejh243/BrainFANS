@@ -51,7 +51,7 @@ nSamples <- length(index)
 if(nSamples > 0){
 
 	## create summary of fragment size using filtered aligned files
-	fragSizeHist<-fragSizeDist(aQCFiles, aQCSampleNames)
+	fragSizeHist<-fragSizeDist(aQCFiles[index], aQCSampleNames[index])
 		
 	fragSizeNorm <-lapply(fragSizeHist,standardizeValues)
 	## convert to ratios of nucleosomefree, mono, bi, tri etc
