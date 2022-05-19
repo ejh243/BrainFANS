@@ -6,12 +6,14 @@ export RAWDATADIR=${DATADIR}/1_raw
 export FASTQCDIR=${RAWDATADIR}/fastqc
 export TRIMDIR=${DATADIR}/2_trimmed
 export ALIGNEDDIR=${DATADIR}/3_aligned
-export PEAKDIR=${DATADIR}/4_calledPeaks
-export PEAKCOUNTS=${DATADIR}/5_countPeaks
+export METHYLDIR=${DATADIR}/4_methylation
 export GENODIR=/lustre/projects/Research_Project-MRC190311/SNPArray/mrcbrain/3_imputed/ImputationOutput/All
 export CHROMDIR=/lustre/projects/Research_Project-MRC190311/integrative/chromHMM
 
 ## Software/script filepaths
 export SCRIPTDIR=${SLURM_SUBMIT_DIR}
 export REFGENOME=/lustre/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta
+
+#/lustre/projects/Research_Project-MRC190311/references/lambda
+
 export CHROMHMM=/lustre/projects/Research_Project-MRC190311/software/ChromHMM

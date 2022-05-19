@@ -1,9 +1,8 @@
 ## script to process a single sample
-## Requires a raw (r1) fastq file provided on the command line 
+## Requires sample name provided on the command line 
 ## Takes trimmed reads and aligns to genome with bowtie2	
 ## converts to bam files	
-## excludes duplicates, mt reads, only keeps properly paired reads
-## shifts read prior to peak calling
+
 
 sampleName=$1
 
@@ -21,14 +20,23 @@ echo "Found trimmed files:"
 echo ${f1}
 echo ${f2}
 
-## checks if last file exists and is not empty
-
 echo "Running alignment for" ${sampleName}
 date -u	
 ## alignment
-bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2 -B ${sampleName}
+#bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2 --basename ${sampleName} 
+
+
+## deduplicate for WGBS libraries
+cd ${ALIGNEDDIR}
+
+deduplicate_bismark --bam ${sampleName}*pe.bam -p -o nodup
+
+## extract context-dependent methylation
+cd ${ALIGNEDDIR}/nodup
+
+bismark_methylation_extractor -p ${sampleName}*.bam -o ${METHYLDIR} --bedgraph 
 
 if [[ $? == 0 ]]
-	then echo "Alignment and post filtering complete"
+	then echo "Alignment and methylation extraction complete"
 	date -u
 fi

@@ -98,6 +98,9 @@ then
 		module purge
 		module load Bismark
 
+		mkdir -p ${ALIGNEDDIR}/nodup
+		mkdir -p $METHYLDIR
+
 		cd ${SCRIPTDIR}
 		sh ./BSSeq/preprocessing/1_alignment.sh ${sampleID}
 	fi
