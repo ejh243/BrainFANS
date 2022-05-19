@@ -1,20 +1,28 @@
 ---
 title: "Summary of CNVs called with PennCNV"
-author: "Eilis Hannon"
-date: "31st Jan 2020"
-output: html_document
-params:
-  fileName: NULL
-  subset: NULL
+author: "`r commandArgs(trailingOnly=T)[4]`"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
 ---
 
-```{r, echo = FALSE, include = FALSE, message=FALSE}
-fileName <- params$fileName
-subset <- params$subset
+```{r}
+args<-commandArgs(trailingOnly = TRUE)
+fileName <- args[1]
+subset <- args[2]
 
 if(is.null(fileName)){
   quit()
 }
+
+print(fileName)
+
+```
+
+```{r}
 
 findOverlapsMinProp<-function(query, subject, pThres){
 	# function to find overlap between two Granges based on minimum proportion
@@ -35,9 +43,12 @@ library(pander)
 
 dat<-read.table(fileName, stringsAsFactors=FALSE)
 colnames(dat)<-c("Coordinates", "numsnp", "length", "type", "IndividualID", "startsnp", "endsnp", "genes", "V9")
+```
 
+
+```{r}
 ## 
-if(!is.null(subset)){
+if(subset != "NULL"){
   keepList<-read.table(subset, stringsAsFactors = FALSE, header = FALSE, row.names = NULL)
   dat<-dat[dat$IndividualID %in% keepList$V2,]
 }
@@ -207,7 +218,7 @@ kpHeatmap(kp, cov.dup, colors = c("white","blue"), main = "Duplications")
 ```{r, echo = FALSE, message=FALSE}
 
 ## do any overlap known scz cnv loci ## list taken from Rees et al. Br J Psychiatry (merge tables 1 & 2)
-sczLoci<-read.csv("../../References/CNV/SCZ_CNVloci.csv", skip = 1, stringsAsFactors = FALSE)
+sczLoci<-read.csv(file.path(args[3], "SCZ_CNVloci.csv"), skip = 1, stringsAsFactors = FALSE)
 ## filter to those significant in MetaAnalysis
 sczLoci<-sczLoci[which(sczLoci$significantMeta == "*"),]
 sczLoci.hg38.del<-GRanges(sczLoci$hg38[grep("del", sczLoci$Locus)])
@@ -221,7 +232,7 @@ mcols(sczLoci.hg38.dup)$hg38<-sczLoci$hg38[grep("dup", sczLoci$Locus)]
 overlapDel<-findOverlapsMinProp(allCNVs.del, sczLoci.hg38.del, pThres)
 overlapDup<-findOverlapsMinProp(allCNVs.dup, sczLoci.hg38.dup, pThres)
 output<-rbind(data.frame(overlapDel), data.frame(overlapDup))
-write.csv(output, "CNVsoverlappingKnownSCZRiskLoci.csv")
+write.csv(output, file.path(dirname(fileName), "CNVsoverlappingKnownSCZRiskLoci.csv"))
 
 ```
 
@@ -233,7 +244,7 @@ pander(output, caption = "CNVs that overlap published list of CNVs associated wi
 
 ```{r, echo = FALSE, message=FALSE}
 ## do any overlap known ID cnv loci ## list taken from Rees et al. JAMA Psychiatry 2016 (eTable 2)
-idLoci<-read.csv("../../References/CNV/IDCNVLoci.csv", stringsAsFactors = FALSE)
+idLoci<-read.csv(file.path(args[3], "IDCNVLoci.csv"), stringsAsFactors = FALSE)
 idLoci<-idLoci[which(idLoci$hg38 != ""),] ## 1 region I couldn't lift over
 idLoci.hg38.del<-GRanges(idLoci$hg38[grep("del", idLoci$Syndrome)])
 mcols(idLoci.hg38.del)$Locus<-idLoci$Syndrome[grep("del", idLoci$Syndrome)]
@@ -245,7 +256,7 @@ mcols(idLoci.hg38.dup)$hg38<-idLoci$hg38[grep("dup", idLoci$Syndrome)]
 overlapDel<-findOverlapsMinProp(allCNVs.del, idLoci.hg38.del, pThres)
 overlapDup<-findOverlapsMinProp(allCNVs.dup, idLoci.hg38.dup, pThres)
 output<-rbind(data.frame(overlapDel), data.frame(overlapDup))
-write.csv(output, "CNVsoverlappingIDRiskLoci.csv")
+write.csv(output, file.path(dirname(fileName), "CNVsoverlappingIDRiskLoci.csv"))
 ```
 
 The CNVs called in this sample were compared to a published list of CNVs identified as associated with intellectual disability. In this sample `r nrow(output)` individuals had a CNV overlapping the list of `r nrow(idLoci)` CNVs. 
@@ -256,7 +267,7 @@ pander(output, caption = "CNVs called that overlap published list of CNVs associ
 
 ```{r, echo = FALSE, message=FALSE}
 ## do any overlap known pathogenic cnv loci ## list taken from Kendall et al 2017 Biol Psychiatry
-pathLoci<-read.table("../../References/CNV/PathogenicCNVLoci.txt", stringsAsFactors = FALSE, sep = "\t", header = TRUE)
+pathLoci<-read.table(file.path(args[3], "PathogenicCNVLoci.txt"), stringsAsFactors = FALSE, sep = "\t", header = TRUE)
 pathLoci<-pathLoci[which(pathLoci$hg38 != ""),] ## 1 region I couldn't lift over
 pathLoci.hg38.del<-GRanges(pathLoci$hg38[grep("del", pathLoci$CNV.locus)])
 mcols(pathLoci.hg38.del)$Locus<-pathLoci$CNV.locus[grep("del", pathLoci$CNV.locus)]
@@ -270,7 +281,7 @@ pThres<-0.9 ## set as minimum overlap required
 overlapDel<-findOverlapsMinProp(allCNVs.del, pathLoci.hg38.del, pThres)
 overlapDup<-findOverlapsMinProp(allCNVs.dup, pathLoci.hg38.dup, pThres)
 output<-rbind(data.frame(overlapDel), data.frame(overlapDup))
-write.csv(output, "CNVsoverlappingPathogenicCNV.csv")
+write.csv(output, file.path(dirname(fileName), "CNVsoverlappingPathogenicCNV.csv"))
 
 ## do any overlap pathogenic cnv loci
 
