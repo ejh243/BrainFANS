@@ -55,7 +55,7 @@ then
   rm ${PEAKDIR}/${sampleName}_peaks.broadPeak
   rm ${PEAKDIR}/${sampleName}_peaks.xls
   rm ${PEAKDIR}/${sampleName}_peaks.gappedPeak   
-else if [[ ${narrow[*]} =~  ${mark} ]]
+elif [[ ${narrow[*]} =~  ${mark} ]]
 then
   # calculate narrowPeak
   macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR} -n ${sampleName} -g 2.9e9 -q 1e-2 --nomodel --extsize 147 --keep-dup all 2> ${PEAKDIR}/${sampleName}.macs2.log
