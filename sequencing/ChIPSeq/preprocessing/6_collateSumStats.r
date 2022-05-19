@@ -1,10 +1,10 @@
 ##---------------------------------------------------------------------#
 ##
-## Title: 
+## Title: Collate Summary Statistics
 ##
 ## Purpose of script:
 ##
-## Author: 
+## Author: Jessica Shields
 ##
 ## Date Created: 2022-03-25
 ##
@@ -12,6 +12,7 @@
 
 ## clear the R environment
 rm(list=ls()) 
+
 ## set working directory
 setwd("/lustre/projects/Research_Project-MRC190311/scripts/sequencing")
 
@@ -19,7 +20,7 @@ setwd("/lustre/projects/Research_Project-MRC190311/scripts/sequencing")
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
-project='adChip'
+project='epiGaba'
 source("ChIPSeq/config/config.r")
 
 
@@ -44,7 +45,7 @@ bpparam("SerialParam")
 #----------------------------------------------------------------------#
 
 #setwd(dataDir)
-sampleSheet<-read.csv(paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"), stringsAsFactors = FALSE, row.names = 1)
+sampleSheet<-read.csv(paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"), stringsAsFactors = FALSE)
 
 #if combined chipseqQC object does not exist, create it
   if (file.exists(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))==FALSE){
@@ -56,7 +57,7 @@ sampleSheet<-read.csv(paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"), stri
     load(paste(peakDir, "QCOutput", each, sep = "/"))
     datALL<- c(datALL, QCsample(dat))
   }
-  # Create combined chipqcexperiment object
+  # create combined chipqcexperiment object
   dat<- ChIPQC(sampleSheet, samples=datALL)
   save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))
 } else {

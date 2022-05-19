@@ -4,11 +4,22 @@
 
  synLogin("ejh243",args[2]) 
  
- setwd("/gpfs/mrc0/projects/Research_Project-MRC190311/")
+ setwd("/lustre/projects/Research_Project-MRC190311/")
+ 
+toDownload<-read.table("RNASeq/CommonMind/0_metadata/synapseIDs.txt", stringsAsFactors = FALSE)
+
+## batch into chunks
+
+cutPoints<-round(seq(1, nrow(toDownload), length.out = 11))
+
+print(paste("Running batch", args[1])) 
 
 ## CommonMind DLPFC
-  files <- synapserutils::syncFromSynapse("syn18134196", path = "RNASeq/commonMind/1_raw/DLPFC")
-  files <- synapserutils::syncFromSynapse("syn18358503", path = "ATACSeq/commonMind/1_raw/DLPFC", ifcollision="keep.local") 
-
- files <- synapserutils::syncFromSynapse("syn3275213", path = "ATACSeq/commonMind/0_metadata") 
-syn18134196
+if(args[1] > 0){
+	subIndex<-c(cutPoints[as.numeric(args[1])]:cutPoints[as.numeric(args[1])+1])
+	for(each in toDownload[subIndex,1]){
+		files <- synapserutils::syncFromSynapse(each, path = "RNASeq/CommonMind/DLPFC", ifcollision="keep.local")
+	}
+ } else {
+  files <- synapserutils::syncFromSynapse("syn18134197", path = "RNASeq/CommonMind/DLPFC", ifcollision="keep.local")
+ }
