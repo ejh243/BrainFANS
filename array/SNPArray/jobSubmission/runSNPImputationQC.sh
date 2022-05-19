@@ -12,6 +12,7 @@
 
 
 
+
 ## print start date and time
 echo Job started on:
 date -u
@@ -30,16 +31,20 @@ cd ${IMPUTEDIR}/ImputationOutput
 
 module load R/3.6.3-foss-2020a
 
-Rscript ${SCRIPTDIR}/preprocessing/5_summarizeImputation.r All/ ${KGG}/1000GP_Phase3_combined.legend ALL
-Rscript ${SCRIPTDIR}/preprocessing/5_summarizeImputation.r EUR/ ${KGG}/../HRC/HRC.r1-1.GRCh37.wgs.mac5.sites.tab AF
+Rscript ${SCRIPTDIR}/preprocessing/6_summarizeImputation.r All/ ${KGG}/1000GP_Phase3_combined.legend ALL
+Rscript ${SCRIPTDIR}/preprocessing/6_summarizeImputation.r EUR/ ${KGG}/../HRC/HRC.r1-1.GRCh37.wgs.mac5.sites.tab AF
+
+cd ${SCRIPTDIR}
+
+
 
 module purge
 module load VCFtools
-cd ${SCRIPTDIR}
+module load BCFtools
 
 ## combine imputation output separately for ALL and EUR versions
-sh preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/All
-sh preprocessing/6_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/EUR
+sh preprocessing/7_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/All/hg38
+sh preprocessing/7_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/EUR/hg38
 
 ## print end date and time
 echo Job finished:

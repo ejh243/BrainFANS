@@ -36,8 +36,9 @@ library(ATACseqQC)
 library(diptest)
 library(ptest)
 
-## get filepaths of aligned QC'd bam file
-aQCFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam$", recursive = TRUE, full.names = TRUE)
+## get filepaths of aligned indexed QC'd bam file
+aQCFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam.bai$", recursive = TRUE, full.names = TRUE)
+aQCFiles<-gsub(".bai", "", aQCFiles)
 aQCSampleNames<-gsub(".filt.nodup.bam", "", basename(aQCFiles))
 
 ## filter to subset of samples
@@ -45,11 +46,12 @@ index<-c(1:10)+(batchNum*10)
 ## if number of samples is not a function of ten adjust index
 index<-index[index %in% 1:length(aQCFiles)]
 nSamples <- length(index)
+
 	
-if(length(aQCFiles) > 0){
+if(nSamples > 0){
 
 	## create summary of fragment size using filtered aligned files
-	fragSizeHist<-fragSizeDist(aQCFiles, aQCSampleNames)
+	fragSizeHist<-fragSizeDist(aQCFiles[index], aQCSampleNames[index])
 		
 	fragSizeNorm <-lapply(fragSizeHist,standardizeValues)
 	## convert to ratios of nucleosomefree, mono, bi, tri etc
