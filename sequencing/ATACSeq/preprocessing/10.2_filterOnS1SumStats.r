@@ -18,7 +18,7 @@ args[1]<-"rizzardi"
 
 ## load config variables
 project<-args[1]
-source("../config/config.r")
+source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
 
 ## set default if no args supplied
 args= as.numeric(args)

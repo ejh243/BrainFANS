@@ -34,17 +34,17 @@ This report provides a summary of an ATAC-seq experiment from the resulting sequ
 # METADATA
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 ## PROGRESS SUMMARY
-processSum <- read.csv(paste0(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
+processSum <- read.csv(file.path(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
 ## MULTIQC
-fastqc<-read.table(paste0(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+fastqc<-read.table(file.path(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 ## MITOCHONDRIAL READS
-readCounts<-read.table(paste0(alignedDir, "/countMTReads.txt"), fill = TRUE, skip = 1)
+readCounts<-read.table(file.path(alignedDir, "/countMTReads.txt"), fill = TRUE, skip = 1)
 ## ALIGNMENT STATISTICS
-alignQC<-read.table(paste0(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+alignQC<-read.table(file.path(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 ## ENCODE METRICS
-flagstat<-read.csv(paste0(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
+flagstat<-read.csv(file.path(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
 ## FRIP
-fripFiles <- list.files(paste0(peakDir, "/QCOutput"), pattern = "FRIP")
+fripFiles <- list.files(file.path(peakDir, "/QCOutput"), pattern = "FRIP")
 #----------------------------------------------------------------------#
 # WRANGLE DATA
 #----------------------------------------------------------------------#
@@ -72,19 +72,18 @@ pheno$sequencingRuns[match(dups, paste(pheno$individualID, pheno$fraction, pheno
 table(pheno$fraction)
 ## b. PROGRESS SUMMARY
 ## sort if processSum$sampleID is not equivalent to pheno$sampleID
-processSum$sampleName<-gsub("^[[:digit:]]...._", "", gsub("_S[[:digit:]]+$", "", processSum$sampleID))
-index<-match(pheno$sampleID, processSum$sampleName)
-index[is.na(index)]<-match(pheno$sampleID[is.na(index)], processSum$sampleName)
-processSum <- processSum[index,]
+#processSum$sampleName<-gsub("^[[:digit:]]...._", "", gsub("_S[[:digit:]]+$", "", processSum$sampleID))
+processSum <- processSum[match(pheno$sampleID, processSum$sampleID),]
 ## c. MULTIQC
 ## wrangle multiqc stats to retain important columns
 colsKeep<-c("Total.Sequences","total_deduplicated_percentage", "Sequences.flagged.as.poor.quality")
 mergeStats<-cbind(fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep], fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep])
 ## d. MITOCHONDRIAL READS
+readCounts<-readCounts[match(pheno$sampleID, readCounts$V1),]
 mergeStats<-cbind(mergeStats, readCounts$V2/readCounts$V3*100)
 colnames(mergeStats)[ncol(mergeStats)]<-"PercentMTReads"
 ## e. ALIGNMENT QC
-aIndex<-match(processSum$sampleName, gsub("^[[:digit:]]...._", "", gsub("_S[[:digit:]]+$", "", gsub("\\.bowtie", "", alignQC$Sample))))
+aIndex<-match(processSum$sampleID, gsub("\\.bowtie", "", alignQC$Sample))
 mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "paired_total")])
 ## f. ENCODE METRICS
 ## load flagstat metrics calculated as part of encode qc pipeline
@@ -92,13 +91,17 @@ flagstat<-flagstat[match(processSum$sampleID, flagstat$V1),]
 files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = ".pbc.qc")
 eMetrics<-NULL
 for(each in files){
+  
   tmp<-read.table(paste0(alignedDir, "/ENCODEMetrics/", each))
-  eMetrics<-rbind(eMetrics, tmp)
+  if(ncol(tmp) == 7){
+    eMetrics<-rbind(eMetrics, tmp)
+  } else {
+    eMetrics<-rbind(eMetrics, rep(NA, 7))
+  }
 }
-eMetrics
 colnames(eMetrics)<-c("TotalReadPairs","DistinctReadPairs","OneReadPair","TwoReadPairs","NRF","PBC1","PBC2")
-#eIndex<-match(processSum$sampleID, gsub(".pbc.qc", "", files))
-#eMetrics<-eMetrics[eIndex,]
+eIndex<-match(processSum$sampleID, gsub(".pbc.qc", "", files))
+eMetrics<-eMetrics[eIndex,]
 mergeStats<-cbind(mergeStats,eMetrics)
 ## 6. FRIP
 if ( length(fripFiles) != 0 ) {
@@ -289,8 +292,8 @@ corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)])
                      mergeStats$DistinctReadPairs, mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]) 
 colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
                             colnames(mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]))
-corMergeStats<- corMergeStats[, colSums(corMergeStats) != 0]
-corrplot.mixed(cor(corMergeStats), order = 'AOE', tl.cex=0.9, tl.col = 'black', upper.col = COL2('PiYG'), lower.col = COL2('PiYG'))
+corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
+corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black', upper.col = COL2('PiYG'), lower.col = COL2('PiYG'))
 ```
 
 ### 2.4 Fragment Size Distribution

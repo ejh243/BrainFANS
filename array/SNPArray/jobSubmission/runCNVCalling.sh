@@ -23,7 +23,7 @@ date -u
 source $1
 
 module load Perl/5.32.1-GCCcore-10.3.0
-module load R
+module load R/3.6.3-foss-2020a
 
 cd ${DATADIR}/scripts ## all scripts are written to be executed from the scripts folder
 
@@ -34,10 +34,9 @@ cd ${SCRIPTDIR}/
 sh preprocessing/9_filterCNVCalls.sh
 
 module load Pandoc
-R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/MRCSCZsamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundAll_SCZSamples.html')"
-R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/SFARIFoetalSamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundAll_SFARISamples.html')"
-R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/EURonly/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/MRCSCZsamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundEUR_SCZSamples.html')"
-R -e "rmarkdown::render('summarizeCNVCalls.rmd', params = list(fileName = '../../SNPdata/CNV/PennCNVOutput/EURonly/SCZ_GCModel_MergedFiltered_AnnoGencodev29.rawcnv', subset = '../../SNPdata/Merged/SFARIFoetalSamples.txt'), output_file = '../../SNPdata/CNV/SummarizeCNVCallsBackgroundEUR_SFARISamples.html')"
+R -e "rmarkdown::render('preprocessing/10_summarizeCNVCalls.rmd', output_file = 'SummarizeCNVCalls.html')" --args ${CNVDIR}/PennCNVOutput/${FILEPREFIX}_GCModel_MergedFiltered_AnnoGencodev39.rawcnv NULL ${CNVLIST} $USER
+
+mv SummarizeCNVCalls.html ${CNVDIR}PennCNVOutput/${FILEPREFIX}_SummarizeCNVCalls.html
 
 ## print finish date and time
 echo Job finished on:
