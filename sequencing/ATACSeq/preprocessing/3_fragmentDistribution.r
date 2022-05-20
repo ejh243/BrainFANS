@@ -57,7 +57,7 @@ if(nSamples > 0){
 	## convert to ratios of nucleosomefree, mono, bi, tri etc
 	propNucleosomes<-lapply(fragSizeNorm,calcNucleoProps)
 	propNucleosomes<-matrix(data = unlist(propNucleosomes), ncol = 5, byrow = TRUE)
-	rownames(propNucleosomes)<-aQCSampleNames
+	rownames(propNucleosomes)<-aQCSampleNames[index]
 	
 	## test for multimodality
 	diptestStats<-cbind(unlist(lapply(fragSizeNorm, function(y) { dip.test(y)$statistic })), unlist(lapply(fragSizeNorm, function(y) { dip.test(y)$p.value })))
