@@ -255,7 +255,7 @@ ccplot+ scale_colour_brewer(palette = "Set2")
 ccplot+facet_wrap(~Tissue,scales="free_y")
 
 
-plotCC(dat)+
+plotCC(dat, facetBy=c("Tissue","Condition"),colourBy = "Factor")+
   theme_minimal()
 
 

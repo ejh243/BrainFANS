@@ -4,7 +4,7 @@
 ##
 ## Purpose of script: to output sample summary QC metrics according to the CHIPQC r package
 ##
-## Author: Eilis Hannon
+## Author: Jessica Shields
 ##
 ## Date Created: 2022-03-22
 ##
@@ -34,7 +34,7 @@ bpparam("SerialParam")
 #----------------------------------------------------------------------#
 # IMPORT AND WRANGLE DATA
 #----------------------------------------------------------------------#
-## Create sample sheet
+## Create sample sheet for the chipqc input
 if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
   peaks<-list.files(peakDir, pattern = "Peak.filt", recursive = TRUE) %>%
     sort()
@@ -90,7 +90,7 @@ sampleSheet<- sampleSheet[index,]
 #----------------------------------------------------------------------#
 
 dat<-ChIPQC(sampleSheet, consensus = TRUE, chromosomes = NULL, annotation = "hg38", blacklist = blacklist)
-save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_", batchNum, ".rdata"))
+save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_ctrl_", batchNum, ".rdata"))
 
 
 
