@@ -12,8 +12,11 @@
 
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
+<<<<<<< HEAD
+=======
 #args[1]<-"epiGaba"
 #batchNum<-1
+>>>>>>> e6d8709cbe265e69dd697458de440dd3dd2f6d2e
 
 ## load config variables
 project<-args[1]

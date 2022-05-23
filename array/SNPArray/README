@@ -28,3 +28,7 @@ Executes
 #### CNV calling
 
 4. sbatch SNPArray/jobSubmission/runCNVCalling.sh  <config file>
+Executes
+  8_pennCNV.sh takes final report and reformats for Penn CNV and runs CNV callings
+  9_filterCNVCalls.sh performs both CNV and sample filtering of CNV calls and annotates with genes
+  10_summarizeCNVCalls.rmd creates report of CNV calls
