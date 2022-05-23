@@ -303,7 +303,7 @@ ATAC-seq data should be enriched for specific sized fragments, so the distributi
 ``` {r periodicity, fig.align = 'center', echo = FALSE}
 ## load ATACQC metrics 
 propNucleosomesAll<-NULL
-filePaths <- list.files(paste0(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch")
+filePaths <- list.files(file.path(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch")
 for(each in filePaths){
   load(paste0(alignedDir,"/QCOutput/", each))
   propNucleosomesAll<-rbind(propNucleosomesAll, propNucleosomes)
