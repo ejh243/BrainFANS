@@ -4,7 +4,7 @@ date: "`r Sys.Date()`"
 output: html_document
 params:
   project: !r commandArgs(trailingOnly=T)[3]
-  configFile: !r paste0(commandArgs(trailingOnly=T)[2], "/ATACSeq/config/config.r")
+  configFile: !r file.path(commandArgs(trailingOnly=T)[2], "/ATACSeq/config/config.r")
 ---
 
 ```{r setup, include=FALSE}
