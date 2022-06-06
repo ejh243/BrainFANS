@@ -85,7 +85,6 @@ then
 	rm ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
 	rm ${ALIGNEDDIR}/${sampleName}_q30.tmp.nmsrt.bam
 	rm ${ALIGNEDDIR}/${sampleName}_noMT.bam
-	rm ${ALIGNEDDIR}/${sampleName}_sorted.bam
 	
    # Mark duplicates
    java -Xmx4G -jar $EBROOTPICARD/picard.jar MarkDuplicates INPUT=${ALIGNEDDIR}/${sampleName}.filt.bam OUTPUT=${ALIGNEDDIR}/${sampleName}.filt.dupmark.bam METRICS_FILE=${ALIGNEDDIR}/${sampleName}_dupMetrics.txt VALIDATION_STRINGENCY=LENIENT ASSUME_SORTED=true REMOVE_DUPLICATES=false
