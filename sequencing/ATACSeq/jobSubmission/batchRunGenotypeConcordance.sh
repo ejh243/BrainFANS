@@ -47,9 +47,7 @@ module load SAMtools
 # process a line from IDMap file
 IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/matchedVCFIDs.txt | tail -1))
 
-IDS=($(head -n 22 ${METADIR}/matchedVCFIDs.txt | tail -1))
-
-sh ./ATACSeq/preprocessing/compareBamWithGenotypes.sh ${IDS[@]}
+sh ./ATACSeq/preprocessing/14_compareBamWithGenotypes.sh ${IDS[@]}
 
 echo 'EXITCODE: ' $?
 

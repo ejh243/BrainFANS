@@ -29,7 +29,7 @@ sampleName=$1
 vcfid=$2
 vcfid="${vcfid%"${vcfid##*[![:space:]]}"}" 
 
-if [[ "${vcfid}" != "#N/A" ]]
+if [[ "${vcfid}" != "" ]]
 then 
     echo "processing" ${sampleName} "with" ${vcfid}
     bamfile=${sampleName}_sorted.bam
@@ -63,13 +63,13 @@ then
 
     # recalibrate bases in bam files
     gatk BaseRecalibrator \
-        -R ${GENOMEFASTA} \
+        -R ${GENOMEFASTA}/genome.fa \
         -I baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
         --known-sites ${KGREF}/1000G_omni2.5.hg38.vcf.gz \
         -O baseRecalibrate/${sampleName}_recal_data.table
 
     gatk ApplyBQSR \
-       -R ${GENOMEFASTA} \
+       -R ${GENOMEFASTA}/genome.fa \
        -I baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
        --bqsr-recal-file baseRecalibrate/${sampleName}_recal_data.table \
        -O baseRecalibrate/${sampleName}_baserecal.bam
@@ -79,7 +79,7 @@ then
 
     mkdir -p genotypeConcordance
 
-    ${VERIFYBAMID} --vcf ${GENODIR}/ImputationOutput/All/verifyBamID.vcf.gz --bam baseRecalibrate/${sampleName}_baserecal.bam --out genotypeConcordance/${sampleName} --verbose --ignoreRG --smID ${vcfid} --best
+    ${VERIFYBAMID} --vcf ${GENODIR}/hg38/allchr_filt_rsq_maf.vcf.gz --bam baseRecalibrate/${sampleName}_baserecal.bam --out genotypeConcordance/${sampleName} --verbose --ignoreRG --smID ${vcfid} --best
 
 else
 
