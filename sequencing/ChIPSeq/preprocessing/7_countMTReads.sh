@@ -2,7 +2,7 @@
 
 
 ## EXECUTION
-# sh ATACSeq/countMTReads.sh 
+# sh ChIPSeq/countMTReads.sh 
 
 ## REQUIRES the following variables in config file
 # ALIGNEDDIR

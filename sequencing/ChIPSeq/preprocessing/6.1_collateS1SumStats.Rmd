@@ -44,7 +44,7 @@ fastqc<-read.table(paste0(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt")
 ## ALIGNMENT STATISTICS
 alignQC<-read.table(paste0(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 ## ENCODE METRICS
-#flagstat<-read.csv(paste0(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
+flagstat<-read.csv(paste0(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
 ## FRIP
 fripFiles <- list.files(paste0(peakDir, "/QCOutput"), pattern = "FRIP")
 #----------------------------------------------------------------------#
@@ -117,12 +117,29 @@ hist(mergeStats[,2], main = "R1", xlab = "% unique reads", ylab = "Number of Sam
 hist(mergeStats[,5], main = "R2", xlab = "% unique reads", ylab = "Number of Samples", breaks = 100)
 ```
 
+For mammalian studies, a minimum of 50 million non-duplicated, non-mitochondrial mapped reads for open chromatin detection. The ENCODE pipeline recommends a minimum of 25 million for single end and 50 million for paired. In the plot below, median of the data is indicated by the orange line and 50 million and 25 million thresholds by the black lines.
+
+``` {r minReads, fig.align = 'center', dpi = 500, echo=FALSE}
+## c. Plot minimum number of reads 
+par(mfrow = c(1,1))
+plot(readThres/10^6, nSamples[,1], type = "l", lwd = 2, xlab = "Minimum number of reads (millions)", ylab = "Number of Samples")
+axis(4, seq(0,100, 20), at = nrow(pheno)*seq(0,1,0.2))
+mtext(side = 4, "% of samples", line = 2)
+abline(v = (25)/0.8, lty = 2)
+abline(v = (50), lty = 2)
+abline(v = median(mergeStats[,1], na.rm = TRUE)/10^6, col = colorBlindGrey8[2], lty = 2)
+```
+
 ```{r alignment rate, fig.align = 'center', dpi = 500, echo = FALSE}
 ## a. Plot alignment rate against number of reads
 plot(mergeStats[,"paired_total"], mergeStats[,"overall_alignment_rate"], xlab = "Number of Reads", ylab = "Alignment rate", pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)])
 abline(h = 95, lty = 2)
 abline(h = 80, lty = 2, col = "#66C2A5")
 ```
+
+For narrow-peak histone experiments, each replicate should have 20 million usable fragments. For broad-peak histone experiments, each replicate should have 45 million usable fragments. A fragment is defined as the sequencing output corresponding to one location in the genome. If single-ended sequencing is performed, one read is considered a fragment. If paired-ended sequencing is performed, one pair of reads is considered a fragment.
+
+
 
 ## ChIP Signal Distribution and Structure
 

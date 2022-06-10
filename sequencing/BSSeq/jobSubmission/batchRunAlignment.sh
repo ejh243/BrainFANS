@@ -4,7 +4,8 @@
 #SBATCH --time=96:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
-#SBATCH --ntasks-per-node=16 # specify number of processors per node
+#SBATCH --ntasks-per-node=32 # specify number of processors per node
+#SBATCH --cpus-per-task=1
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=BSSeq/logFiles/%u/BSSeqAlignment-%A_%a.o
 #SBATCH --error=BSSeq/logFiles/%u/BSSeqAlignment-%A_%a.e
@@ -38,9 +39,9 @@ then
 fi
 
 ## check step method matches required options and exit if not
-if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] && [[ ! $2 == '' ]];
+if [[ ! $2 =~ "FASTQC" ]] && [[ ! $2 =~ "TRIM" ]] && [[ ! $2 =~ "ALIGN" ]] && [[ ! $2 =~ "ENCODE" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
 #-----------------------------------------------------------------------#
@@ -98,11 +99,22 @@ then
 		module purge
 		module load Bismark
 
-		mkdir -p ${ALIGNEDDIR}/nodup
 		mkdir -p $METHYLDIR
 
 		cd ${SCRIPTDIR}
 		sh ./BSSeq/preprocessing/1_alignment.sh ${sampleID}
+	fi
+
+	if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
+	then
+		module purge
+		module load SAMtools
+		module load BEDTools
+
+		mkdir -p ${ALIGNEDDIR}/ENCODEMetrics
+
+		cd ${SCRIPTDIR}
+		sh ./BSSeq/preprocessing/2_calcQCMetrics.sh ${sampleID}
 	fi
 
 	echo 'EXITCODE: ' $?

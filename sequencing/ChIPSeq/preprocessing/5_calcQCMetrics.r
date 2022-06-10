@@ -10,13 +10,13 @@
 ##
 ##---------------------------------------------------------------------#
 
+## clear the R environment
+rm(list=ls()) 
+
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
-<<<<<<< HEAD
-=======
-#args[1]<-"epiGaba"
-#batchNum<-1
->>>>>>> e6d8709cbe265e69dd697458de440dd3dd2f6d2e
+args[1]<-"epiGaba"
+batchNum<-0
 
 ## load config variables
 project<-args[1]
@@ -29,7 +29,6 @@ source("ChIPSeq/config/config.r")
 library(ChIPQC)
 library('TxDb.Hsapiens.UCSC.hg38.knownGene')
 library(magrittr)
-library(stringr)
 register(DoparParam())
 registered() 
 bpparam("SerialParam")
@@ -39,32 +38,26 @@ bpparam("SerialParam")
 #----------------------------------------------------------------------#
 ## Create sample sheet for the chipqc input
 if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
+  sampleSheet<-read.csv(sampleSheet)
+  
   peaks<-list.files(peakDir, pattern = "Peak.filt", recursive = TRUE) %>%
     sort()
-  bamReads<-list.files(alignedDir, pattern = "filt.nodup.bam", recursive = TRUE) %>%
+  bamReads<-paste(sampleSheet$sampleID, 'filt.nodup.bam') %>%
     sort()
-  bamReads<-bamReads[grep("bai", bamReads, invert = TRUE)]
   
   # bam files
-  bamControl<-bamReads[grep("input", bamReads)]
-  bamReads<- bamReads[grep("input", bamReads, invert=TRUE)]
-  
-  # create sample and control IDs 
-  sampleIDs<-intersect(gsub(".narrowPeak.filt|.broadPeak.filt", "", peaks), gsub(".filt.nodup.bam", "", bamReads))
-  controlIDs<- gsub(".filt.nodup.bam", "", bamControl)
+  bamControl<-paste(sampleSheet$controlID, 'filt.nodup.bam') %>%
+    sort()
   
   # necessary columns
-  factor<-unlist(lapply(strsplit(sampleIDs, "_"), tail, n = 1)) %>%
-    str_extract(., '\\b\\w+$') 
-  tissue<-str_extract(sampleIDs, '\\.[A-Z]+') %>%
-    sub('.', '', .) %>%
-    str_replace(., 'SOX', 'GABA')
+  factor<-sampleSheet$target
+  tissue<-sampleSheet$fraction
   pe<-"Paired"
-  peakIndex<-match(sampleIDs, gsub(".narrowPeak.filt|.broadPeak.filt", "", peaks))
+  peakIndex<-match(sampleSheet$sampleID, gsub(".narrowPeak.filt|.broadPeak.filt", "", peaks))
   
-  sampleSheet<-data.frame(SampleID = sampleIDs, Tissue=tissue, Factor=factor, Replicate=1, ReadType = pe, 
+  sampleSheet<-data.frame(SampleID = sampleSheet$sampleID, Tissue=tissue, Factor=factor, Replicate=1, ReadType = pe, 
                           bamReads = paste(alignedDir, bamReads, sep = "/"), 
-                          ControlID = controlIDs,
+                          ControlID = sampleSheet$controlID,
                           bamControl = paste(alignedDir, bamControl, sep = "/"),
                           Peaks = paste(peakDir, peaks[peakIndex],sep = "/"),
                           PeakCaller='macs',
@@ -73,7 +66,7 @@ if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
   if (batchNum == 0){
     write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"), row.names = FALSE)
   } 
-} else if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==TRUE){
+} else {
   print('Using existing sampleSheet for ChIPQC')
   sampleSheet<- read.csv(paste0(metaDir,"/sampleSheetForChipQC.csv"))
 }
@@ -93,7 +86,7 @@ sampleSheet<- sampleSheet[index,]
 #----------------------------------------------------------------------#
 
 dat<-ChIPQC(sampleSheet, consensus = TRUE, chromosomes = NULL, annotation = "hg38", blacklist = blacklist)
-save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_ctrl_", batchNum, ".rdata"))
+save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_", batchNum, ".rdata"))
 
 
 

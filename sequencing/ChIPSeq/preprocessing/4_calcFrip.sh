@@ -31,7 +31,7 @@ echo -n ${sampleName}, >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
 # count total reads in peak input files
 if [ -s ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]
 then 
-	echo -n $(samtools view -c ${ALIGNEDDIR}/${bam}), >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
+	echo -n $(samtools view -c ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam), >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
 else
 	echo -n NA, >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
 fi
@@ -43,7 +43,7 @@ fi
 if [ -s ${PEAKDIR}/${sampleName}*Peak.filt ]
 then
 	echo -n $(wc -l ${PEAKDIR}/${sampleName}*Peak.filt | cut -f1 -d' '), >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
-	echo $(bedtools sort -i ${PEAKDIR}/${sampleName}*Peak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNEDDIR}/${bam} -b stdin -ubam | samtools view -c) >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
+	echo $(bedtools sort -i ${PEAKDIR}/${sampleName}*Peak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam -b stdin -ubam | samtools view -c) >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
 else
 	echo NA,NA >> ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv
 fi

@@ -235,8 +235,8 @@ for(i in readThres){
 }
 
 ## calculate frip
-fripStats$FripMACS2TagAlign <- fripStats$MACS2TagAlignPeaks/fripStats$BAMTotalReads
-fripStats$FripMACS2PE <- fripStats$MACS2PEPeaks/fripStats$BAMTotalReads
+fripStats$FripMACS2TagAlign <- fripStats$ReadsinMACS2TagAlignPeaks/fripStats$BAMTotalReads
+fripStats$FripMACS2PE <- fripStats$ReadsinMACS2PEPeaks/fripStats$BAMTotalReads
 
 #----------------------------------------------------------------------#
 # FILTER SAMPLES
