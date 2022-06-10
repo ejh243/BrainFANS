@@ -81,6 +81,8 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
 6. sbatch ATACSeq/jobSubmission/sexCheck.sh  <project ID>
 	* executes ATACSeq/preprocessing/sexChrPeaks.sh which performs peak calling on the sex chromomes, filter and read counts
 
+7. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/batchRunGenotypeConcordance.sh <project ID>
+
 7. peak calling per sample type
 
 7. idr analysis against sample peaks

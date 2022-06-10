@@ -24,6 +24,8 @@
 
 sampleName=$1
 
+echo "Processing " ${sampleName}
+
 cd ${ALIGNEDDIR}/
 # for peak calling on sex chr, subset tagalign files
 tagalign=${sampleName}.tn5.tagAlign.gz
