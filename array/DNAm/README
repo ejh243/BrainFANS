@@ -1,23 +1,31 @@
-This readme explains the content of the scripts for running the DNAm analysis pipeline
+This readme explains how to use the scripts for running the DNAm analysis pipeline
 
-	REQUISITES:
-		Scripts submitted from the scripts/array folder.
-		Unix config file located scripts/array/DNAm/config/config.txt that generates the file paths specific to the project 
-		Users require a folder named with their username in the DNAm/logFiles directory 
+REQUISITES:
+	* Scripts submitted from the scripts/array folder
+	* Unix config file located scripts/array/DNAm/config/config.txt that generates the file paths specific to the project 
+	* Users require a folder named with their username in the DNAm/logFiles directory 
+	* A file named sampleSheet.csv in the 0_metadata folder which lists the samples to process 
+	* idats are in the 1_raw folder
+
+OUTPUT:
+	* html QC reports are located in 2_gds/QCmetrics
+	* text file summarising the QC metrics and filtering are located in 2_gds/QCmetrics
 
 #### Data pre-processing:
 
 Parameters in [] are optional.
 
 1. sbatch DNAm/jobSubmission/1_runDNAmQC.sh <project-name> <mkdownConfig>
+	<project-name> the name of the project folder in the DNAm data folder
+	<mkdownConfig> path to txt file with parameters for normalisation and which qc checks to perform. Note needs to be absolute path.
+	
 
-This script assumes there is a sampleSheet.csv within the 0_metadata folders which lists the samples to process and the idats are in 1_raw
 
 	* executes DNAm/preprocessing/1_loadDataGDS.r ${DATADIR}
 	* executes DNAm/preprocessing/2_calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
 	* executes Rscript -e "rmarkdown::render('DNAm/preprocessing/3_QC.rmd', output_file='QC.html')" --args ${DATADIR} <mkdownConfig> $USER
-	<project-name> the name of the project folder in the DNAm data folder
-	<mkdownConfig> path to txt file with parameters for normalisation and which qc checks to perform. Note needs to be absolute path.
+	* executesDNAm/preprocessing/4_clusterCellTypes.r ${DATADIR} <mkdownConfig> 
+	* Rscript -e "rmarkdown::render('DNAm/preprocessing/5_QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} <mkdownConfig> $USER
 	
 
 
