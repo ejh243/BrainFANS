@@ -28,14 +28,13 @@ date -u
 
 cd ${ALIGNEDDIR}
 
-mkdir -p ENCODEMetrics
-
 # =============================
 # Compute average coverage across genome
 # =============================
 #Each replicate should have 30X coverage.
 
-samtools sort ${sampleName}*.bam | bedtools genomecov -ibam stdin | awk '{SUM+=$2 * $3}{ a[$4]++ } END { for (b in a) { TOT+=b } {print SUM/TOT} }' >> ENCODEMetrics/${sampleName}.qc
+samtools sort ${sampleName}*bt2_pe.bam | bedtools genomecov -ibam stdin | \
+	awk '{SUM+=$2 * $3}{ a[$4]++ } END { for (b in a) { TOT+=b } {print SUM/TOT} }' > ENCODEMetrics/${sampleName}.qc
 
 # =============================
 # Conversion efficiency
@@ -45,11 +44,19 @@ samtools sort ${sampleName}*.bam | bedtools genomecov -ibam stdin | awk '{SUM+=$
 var=$( grep 'C methylated in CpG context:' lambdaAlignments/${sampleName}*.txt | awk '{ print $6 }' | rev | cut -c2- | rev )
 echo "100 - $var" | bc >> ENCODEMetrics/${sampleName}.qc
 
-# =============================
-# Compute correlation
-# =============================
-#The CpG quantification should have a Pearson correlation of ≥0.8 for sites with ≥10X coverage.
 
-if [[ ${SLURM_ARRAY_TASK_ID} == ${SLURM_ARRAY_TASK_MAX} ]]
-then
-	
+# =============================
+# Compute correlation part 1
+# =============================
+
+cd $METHYLDIR
+mkdir -p ENCODEMetrics
+
+zcat ${sampleName}*.deduplicated.bismark.cov.gz | grep "chr1	" > ENCODEMetrics/${sampleName}.chr1.cov.bg
+
+if [[ $? == 0 ]]
+	then echo "Part 1 ENCODE metrics calculated"
+	date -u
+fi
+
+

@@ -65,7 +65,7 @@ then
 
 	# derive histone mark from sampleSheet file
 	## get column number for mark
-	column=$(awk '$1 == "experiment"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
+	column=$(awk '$1 == "target"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
 
 	echo 'Column number is ' $column
 	## get mark for sample

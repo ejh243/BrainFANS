@@ -1,22 +1,21 @@
 ## collate flagstat output
 
 ## EXECUTION
-# sh ATACSeq/collateFlagStatOutput.sh 
+# sh ChIPSeq/collateFlagStatOutput.sh 
 # assumes config file has been loaded
 # script needs to be executed from <git repo>/sequencing/
 
 ## REQUIRES the following variables in config file
-# ALIGNEDDIR, PEAKDIR
+# ALIGNEDDIR
 
 ## REQUIRES the following software
-# bedtools, samtools
+# -
 
 ## INPUT
-# blacklist filtered peak lists
-#
+# -
 
 ## OUTPUT
-# ${PEAKDIR}/QCOutput/FRIP_*.csv
+# ${ALIGNEDDIR}/ENCODEMetrics/collateFlagStatMetrics.txt
 
 
 cd ${ALIGNEDDIR}/ENCODEMetrics/

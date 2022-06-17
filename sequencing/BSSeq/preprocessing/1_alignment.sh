@@ -23,18 +23,18 @@ echo ${f2}
 echo "Running alignment for" ${sampleName}
 date -u	
 ## alignment
-#bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2 --basename ${sampleName} 
+bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2 --basename ${sampleName} --parallel
 
 
 ## deduplicate for WGBS libraries
 cd ${ALIGNEDDIR}
-
-deduplicate_bismark --bam ${sampleName}*pe.bam -p -o nodup
+echo 'Deduplicating'
+deduplicate_bismark --bam ${sampleName}*pe.bam -p
 
 ## extract context-dependent methylation
-cd ${ALIGNEDDIR}/nodup
-
-bismark_methylation_extractor -p ${sampleName}*.bam -o ${METHYLDIR} --bedgraph 
+cd ${ALIGNEDDIR}
+echo 'Extracting methylation'
+bismark_methylation_extractor -p ${sampleName}*deduplicated.bam -o ${METHYLDIR} 
 
 if [[ $? == 0 ]]
 	then echo "Alignment and methylation extraction complete"
