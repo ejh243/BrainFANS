@@ -28,8 +28,7 @@ do
    # filter on rsq > 0.3 and MAF > 0.01(https://www.biostars.org/p/205856/)
 	bcftools view -i 'R2>.3 & MAF>0.01' -Ov chr${i}.dose.hg38.vcf.gz > chr${i}_filt.vcf
 	vcftools --vcf chr${i}_filt.vcf --plink --chr chr$i --out chr$i 
-	rm chr${i}_filt.vcf
-   
+	   
    ## convert to bim,bed,fam 
    ${PLINK}/plink --ped chr$i.ped --map chr$i.map --make-bed --out chr${i}_rsq0.3 
    rm chr$i.ped
@@ -40,6 +39,7 @@ done
 # Merge vcf files into one
 
 vcf-concat chr*_filt.vcf | gzip -c > allchr_filt_rsq_maf.vcf.gz
+rm chr*_filt.vcf
 
 # Merge them into one plink dataset
 

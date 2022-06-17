@@ -79,7 +79,7 @@ then
 
     mkdir -p genotypeConcordance
 
-    ${VERIFYBAMID} --vcf ${GENODIR}/hg38/allchr_filt_rsq_maf.vcf.gz --bam baseRecalibrate/${sampleName}_baserecal.bam --out genotypeConcordance/${sampleName} --verbose --ignoreRG --smID ${vcfid} --best
+    ${VERIFYBAMID} --vcf ${GENODIR}/hg38/allchr_filt_rsq_maf.vcf.gz --bam baseRecalibrate/${sampleName}_baserecal.bam --out genotypeConcordance/${sampleName} --ignoreRG --smID ${vcfid} --self
 
 else
 

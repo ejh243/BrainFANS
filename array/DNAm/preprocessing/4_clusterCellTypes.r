@@ -269,6 +269,8 @@ QCmetrics[which(is.na(QCmetrics$withinSDMean)),colnames(QCmetrics.all)]<-QCmetri
 
 #QCSum<-QCSum[,-ncol(QCSum)]
 QCSum<-cbind(QCSum, QCmetrics$passFACS, QCmetrics$passCTCheck,  QCmetrics$passFACS & QCmetrics$passCTCheck)
+## retain TOTAL samples
+QCSum[which(QCSum$Cell.type == "Total" & QCSum$passQCS2 ==TRUE),ncol(QCSum)]<-TRUE
 colnames(QCSum)[(ncol(QCSum)-2):ncol(QCSum)]<-c("passCTCheck", "passFACS", "passQCS3")
 
 write.csv(QCSum, paste0(qcOutFolder,"/passQCStatusStage3AllSamples.csv"))

@@ -46,6 +46,8 @@ Rscript -e "rmarkdown::render('DNAm/preprocessing/5_QCwithinCellType.rmd', outpu
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
 
+Rscript DNAm/preprocessing/6_normalisation.r ${DATADIR}
+
 ## print finish date and time
 echo Job finished on:
 date -u

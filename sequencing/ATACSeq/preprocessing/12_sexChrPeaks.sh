@@ -47,8 +47,12 @@ do
 	
     rm *_peaks.*
 	
-	bedtools intersect -C -filenames -a ${chr}.broadPeak.filt -b ${files[@]} > ${PEAKCOUNTS}/MACS/ShiftedTagAlign/sexChr/${chr}.peakcounts.txt
-    
+	## count reads in peaks
+	touch ${PEAKCOUNTS}/MACS/ShiftedTagAlign/sexChr/${chr}.peakcounts.txt
+	for each in ${files[@]}
+	do
+		bedtools intersect -C -filenames -a ${chr}.broadPeak.filt -b ${each} | awk -v var=${each} '{ print $0, var}' >> ${PEAKCOUNTS}/MACS/ShiftedTagAlign/sexChr/${chr}.peakcounts.txt
+    done
 done
 
   

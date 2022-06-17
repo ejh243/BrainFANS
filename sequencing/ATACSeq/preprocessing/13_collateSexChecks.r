@@ -16,18 +16,18 @@ xPeaks<-read.table(xPeakFile, stringsAsFactors = FALSE)
 yPeaks<-read.table(yPeakFile, stringsAsFactors = FALSE)
 
 
-xPeaks$V17<-basename(xPeaks$V17)
+xPeaks$V18<-basename(xPeaks$V18)
 yPeaks$V10<-basename(yPeaks$V10)
 xPeaksWide = xPeaks %>% 
 	select(V4, V17, V18) %>% 
-  spread(V4, V18)
+  spread(V4, V17)
 
 yPeaksWide = yPeaks %>% 
 	select(V4, V10, V11) %>% 
   spread(V4, V11)
   
 xPeaksWide$YTot<-rowSums(yPeaksWide[,-1])
-xPeaksWide$sex<-sampleSheet$sex[match(gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V17), samsbatcpleSheet$sampleID)]
+xPeaksWide$sex<-sampleSheet$gender[match(gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V18), sampleSheet$sampleID)]
  
 
 ## determine threshold as a line to bisect the two groups 
@@ -64,7 +64,7 @@ dev.off()
 		  
 ## predict sex
 
-sexPredict<-data.frame("sampleID" = gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V17),"LabelledSex" = xPeaksWide$sex, "FIRREratio" = ratioF > thresF,"XISTratio" = ratioX > thresX)
+sexPredict<-data.frame("sampleID" = gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V18),"LabelledSex" = xPeaksWide$sex, "FIRREratio" = ratioF > thresF,"XISTratio" = ratioX > thresX)
 ## TRUE means male
 sexPredict[sexPredict == TRUE]<-"M"
 sexPredict[sexPredict == FALSE]<-"F"
