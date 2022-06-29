@@ -14,11 +14,10 @@ rm(list=ls())
 
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
-args[1]<-"rizzardi"
 
-## load config variables
-project<-args[1]
-source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
+if (length(args)==0){
+  project<-'rizzardi'
+}
 
 ## set default if no args supplied
 args= as.numeric(args)
@@ -32,6 +31,7 @@ if (length(args)==1) {
   args[4] = 20 # aligned/filtered
 }
 
+source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES

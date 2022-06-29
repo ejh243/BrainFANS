@@ -13,7 +13,6 @@ export CHROMDIR=/lustre/projects/Research_Project-MRC190311/integrative/chromHMM
 ## Software/script filepaths
 export SCRIPTDIR=${SLURM_SUBMIT_DIR}
 export REFGENOME=/lustre/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta
-
-#/lustre/projects/Research_Project-MRC190311/references/lambda
+export REFSPIKE=/lustre/projects/Research_Project-MRC190311/references/lambda/
 
 export CHROMHMM=/lustre/projects/Research_Project-MRC190311/software/ChromHMM
