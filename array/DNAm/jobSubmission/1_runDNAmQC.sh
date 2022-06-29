@@ -29,21 +29,24 @@ module load R/3.6.3-foss-2020a
 
 Rscript DNAm/preprocessing/1_loadDataGDS.r ${DATADIR}
 
-mkdir ${GDSDIR}/QCmetrics
+mkdir -p ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/2_calcQCMetrics.r ${DATADIR} ${REFDIR}
 
 Rscript -e "rmarkdown::render('DNAm/preprocessing/3_QC.rmd', output_file='QC.html')" --args ${DATADIR} $2 $USER
 
-## mv markdown repor to correct location
+## mv markdown report to correct location
 mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
 
-Rscript DNAm/preprocessing/4_clusterCellTypes.r ${DATADIR}
+Rscript DNAm/preprocessing/4_clusterCellTypes.r ${DATADIR} $2
 
 
+Rscript -e "rmarkdown::render('DNAm/preprocessing/5_QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} $2 $USER
 
-Rscript -e "rmarkdown::render('QCwithCellType.rmd', params = list(config='rmdConfig.mrc'), output_file='../../DNAm/QCmetrics/QCwithinCellType.html')"
+## mv markdown report to correct location
+mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
 
+Rscript DNAm/preprocessing/6_normalisation.r ${DATADIR}
 
 ## print finish date and time
 echo Job finished on:

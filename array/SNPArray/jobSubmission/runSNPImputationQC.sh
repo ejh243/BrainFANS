@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=SNPArray/logFiles/QCImputation.o
-#SBATCH --error=SNPArray/logFiles/QCImputation.e
+#SBATCH --output=SNPArray/logFiles/%u%/QCImputation.o
+#SBATCH --error=SNPArray/logFiles/%u%/QCImputation.e
 #SBATCH --job-name=QCImputation
 
 
@@ -45,6 +45,9 @@ module load BCFtools
 ## combine imputation output separately for ALL and EUR versions
 sh preprocessing/7_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/All/hg38
 sh preprocessing/7_combineImputationOutput.sh ${IMPUTEDIR}/ImputationOutput/EUR/hg38
+
+## reformat for use with verifyBamID
+sh preprocessing/reformatForVerifyBamID.sh ${IMPUTEDIR}/ImputationOutput/All/hg38
 
 ## print end date and time
 echo Job finished:

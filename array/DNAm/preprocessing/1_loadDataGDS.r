@@ -9,14 +9,14 @@
 args<-commandArgs(trailingOnly = TRUE)
 
 library(bigmelon)
-library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+#library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 library(IlluminaHumanMethylationEPICmanifest)
 library(devtools)
 devtools::load_all(path = "../functionsR")
 
 dataDir <- args[1]
-gdsFile <-paste0(dataDir, "2_gds/raw.gds")
+gdsFile <-file.path(dataDir, "2_gds/raw.gds")
 setwd(dataDir) 
 
 ## load sample sheet
@@ -49,7 +49,7 @@ for(i in 1:length(loadGroups)){
 		sampToLoad <- loadGroups[[i]][!loadGroups[[i]] %in% colnames(gfile)]
 		
 		if(length(sampToLoad) > 0){
-			print(paste("Loading", length(sampToLoad[[i]]), "samples"))
+			print(paste("Loading", length(sampToLoad), "samples"))
 			setwd("1_raw/")
 			for(exprID in sampToLoad){
 				gfile <- iadd(exprID, gds=gdsFile.sub)
@@ -101,19 +101,6 @@ for(i in 1:length(loadGroups)){
 		colnames(sampleSheet.sub)[1]<-"barcode"
 		add.gdsn(gfile, 'pData', val = data.frame(lapply(as.data.frame(sampleSheet.sub), as.character), stringsAsFactors = FALSE), replace = TRUE)
 	}
-
-	## create back up
-	setwd(dataDir)
-	## check if any changes
-	if(newSamples){
-		print("Creating backup of gds file...")
-		 f <- createfn.gds(gsub("\\.gds", "_backup.gds", gdsFile.sub))
-		 for(node in ls.gdsn(gfile)){
-			copyto.gdsn(node = f, source = index.gdsn(gfile, node), name = node)
-		}
-		closefn.gds(f)
-	}
-	
 	## need to close gds file in order to open in another R session
 	closefn.gds(gfile)
 }
@@ -180,10 +167,10 @@ for(node in c("QCmethylated","QCunmethylated")){
 add.gdsn(mergedf, "QCrownames", val = read.gdsn(index.gdsn(gfileList[[1]], "QCrownames")))
 
 ## update history with this merge
-add.gdsn(mergedf, "history", val = data.frame("submitted" = Sys.time(), "finished" = Sys.time(), "command" = paste0("Merged", length(listBetas), " gdsfiles with dimensions (", paste(unlist(lapply(lapply(listBetas, dim), paste, collapse=",")), collapse = "),("), ").")))
+add.gdsn(mergedf, "history", val = data.frame("submitted" = Sys.time(), "finished" = Sys.time(), "command" = paste0("Merged", length(listBetas), " gdsfiles with dimensions (", paste(unlist(lapply(lapply(listBetas, dim), paste, collapse=",")), collapse = "),("), ").")), replace = TRUE)
 
 ## set paths to find sample and row names
-add.gdsn(mergedf, "paths", val = read.gdsn(index.gdsn(gfileList[[1]], "paths")))
+add.gdsn(mergedf, "paths", val = read.gdsn(index.gdsn(gfileList[[1]], "paths")), replace = TRUE)
 
 closefn.gds(mergedf)
 

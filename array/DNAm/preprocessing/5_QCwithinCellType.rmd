@@ -1,0 +1,540 @@
+---
+title: "Brain FANS Project Quality Control within Cell Type"
+author: "`r commandArgs(trailingOnly=T)[4]`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, echo = FALSE, cache = FALSE)
+```
+
+```{r setup, include=FALSE}
+args<-commandArgs(trailingOnly = TRUE)
+library(bigmelon)
+library(pheatmap)
+library(pander)
+library(RColorBrewer)
+library(kableExtra)
+
+
+source(args[3]) ### change the content of this file to run QC with different thresholds
+
+dataDir <- args[2]
+setwd(dataDir) 
+
+
+gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
+qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
+#load(qcData)
+
+gfile<-openfn.gds(gdsFile, readonly = FALSE)
+
+## filter samples
+QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
+load(paste0(dataDir,"/2_gds/QCmetrics/PCAAcrossAllCellTypes.rdata"))
+
+
+QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1)
+passQC<-QCSum$Basename[QCSum[,"passQCS2"]]
+
+nStart<-nrow(QCSum)
+nExclude<-sum(!QCSum[,"passQCS2"])
+
+nCTStart<-table(QCmetrics$Cell.type)
+
+QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
+
+nCTMid<-table(QCmetrics$Cell.type)
+
+ctCounts<-cbind(nCTStart, nCTMid)
+colnames(ctCounts)<-c("Profiled", "PassQCStage1")
+
+rawbetas<-gfile[,, node = "betas"]
+rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
+auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
+rawbetas<-rawbetas[auto.probes,]
+
+cellTypes<-sort(unique(QCmetrics$Cell.type))
+cellCols<-brewer.pal(n = length(cellTypes), name = "Paired")
+cellColsTrans<-rgb(t(col2rgb(cellCols)), max = 255, alpha = 0.5)
+#cellCols<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray", "black", "yellowgreen", "orangered4")
+
+## filter out NAs
+rawbetas<-na.omit(rawbetas)
+
+## filter out SNPs
+if(length(grep("rs", rownames(rawbetas))) > 0){
+  rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
+}
+
+sample_anno<-QCmetrics[,c("Age","Sex", "Cell.type")[c("Age","Sex", "Cell.type") %in% colnames(QCmetrics)]]
+if("Age" %in% colnames(sample_anno)){
+  sample_anno$Age<-as.numeric(sample_anno$Age)
+}
+rownames(sample_anno)<-QCmetrics$Basename
+sigma<-apply(rawbetas, 1, sd)
+
+
+```
+
+# Summary of Quality Control 
+
+After performing quality control (QC) across all samples (n = `r nStart`), `r nExclude`  samples were excluded after stages 1 and 2 of the QC. 
+The third stage of the QC pipeline will look to establish the success of the FACs sorting and check whether samples cluster by their labelled cell type. 
+
+```{r, echo = FALSE}
+
+kbl(ctCounts) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),font_size = 10)
+
+```
+
+
+
+# Quality Control: Clustering of Cell Types
+
+## Initial Visualisation 
+
+First, we will produce a heatmap and hierarchical cluster across all samples that passed stages 1 and 2 of the QC to gauge how cleanly the cell-types are clustering. The following heatmap is on based on 500 most variable autosomal probes (ranked by SD), we will force it to cut the hierarchical cluster into the same number of groups as cell types. 
+
+```{r hclustBefore, fig.width = 15, fig.height = 8, echo = FALSE}
+## initial cluster
+pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],], annotation_col = sample_anno,  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Pre Sample Type Filtering")
+
+
+```
+
+## Principal Component Analysis
+
+We will use principal components to classify samples into cell types and determine if the profile of the sample is representative of the sample it is labelled as. The figure below shows the PCA before any checking of cell type.
+
+```{r PCAbefore, fig.width = 15, fig.height = 8, echo = FALSE}
+par(mfrow = c(1,2))
+par(mar = c(4,4,0.5,0.5))
+plot(betas.scores[,1], betas.scores[,2],col = cellCols[as.factor(QCmetrics$Cell.type)], pch = 16, xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5)
+
+plot(betas.scores[,3], betas.scores[,4],col = cellCols[as.factor(QCmetrics$Cell.type)], pch = 16, xlab = "PC3", ylab = "PC4", cex.axis = 1.5, cex.lab = 1.5)
+
+legend("bottomright", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell.type)))
+
+
+
+
+
+```
+
+
+We will also visualize which axes of variation separate the different cell types. Note that at this stage, we haven't filtered out any incorrectly labelled samples so there may still be some noise.
+
+```{r PCAboxplot,fig.width = 15, fig.height = 15, echo = FALSE}
+par(mfrow = c(3,2))
+par(mar = c(6,4,0.5,0.5))
+par(mgp = c(2,0.75,0))
+for(i in 1:ncol(betas.scores)){
+  
+  boxplot(betas.scores[,i] ~ QCmetrics$Cell.type, col = cellCols, ylab = paste0("PC", i), xlab = "", cex.lab = 1.5, cex.axis = 1.5, xaxt = "n")
+  text(x = 1:length(cellTypes),
+     y = par("usr")[3] - diff(par("usr")[3:4])*0.05,
+     labels = cellTypes,
+     xpd = NA,
+     ## Rotate the labels by 35 degrees.
+     srt = 35,
+     cex = 1.2, adj = 1)
+  
+}
+```
+
+## Confirmation of Cell-type membership
+
+In the following sections we will implement steps to confirm a sample clusters with it's group. As in general the samples cluster by cell type, we can use these data to do an internal prediction of what cell type each sample is most similar to. Given that the principal components parsimoneously capture the relevent axes of cell type variation, we will use them as the basis of this validation. To do this we need to "learn" the typical profile of each cell type. For this process to work we are assuming that a sufficiently high proportion of the samples are labelled correctly. In case there are any samples which are incorrectly labelled, that will distort the average profile, we  will first studentize the values to identify outliers for each cell type. These outliers will then be excluded from the calculation of the average profile for each cell type. 
+
+Below are boxplots of the within cell type studentized PCs. The dashed horizontal lines represent different possible thresholds.  Cell-type specific correlations, indicate this statistical method is working. It is worthwhile being stringent here such that we get an accurate representative profile that will enable us to more cleanly predict which cell type a sample is most similar to.  
+
+```{r studentizedValues, fig.width = 12, fig.height = 10, echo = FALSE}
+
+par(mfrow = c(2,1))
+par(mar = c(4,4,0.5,0.5), mgp=c(2,0.75,0))
+for(i in 1:2){
+	boxplot(studentPCA[[1]][,i] ~ QCmetrics$Cell.type ,col = cellCols, pch = 16,ylab = "Studentized value", cex.axis = 1.5, cex.lab = 1.5, main = paste0("PC", i), xlab = "")
+	abline(h=c(1,1.5,2,3), lty = 2)
+	abline(h=c(1,1.5,2,3)*-1, lty = 2)
+}
+legend("topleft", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell.type)))
+```
+
+We can look at which samples are included to define the representative profile as we apply more stringent thresholds. This should "clean" up the previous PCA plot.
+
+```{r studnetized PCA, fig.width = 15, fig.height = 15,}
+
+#par(mfrow = c(2,2))
+#for(i in 1:ncol(pcaClassify$withinSDMean)){
+ # plot(betas.scores[,1], betas.scores[,2], pch = #c(3,16)[as.factor(pcaClassify$withinSDMean[,i])], col = #cellCols[as.factor(QCmetrics$Cell.type)], xlab = "PC1", ylab = "PC2", cex = 1.2, #cex.lab = 1.5, cex.axis = 1.5)
+#}
+#legend("topleft", pch = 16, col = cellCols, #levels(as.factor(QCmetrics$Cell.type)))
+
+par(mfrow = c(2,2))
+for(i in 1:ncol(pcaClassify$withinSDMean)){
+  keep<-which(QCmetrics$maxStudentPCA < c(1,1.5,2,3)[i])
+  plot(betas.scores[keep,1], betas.scores[keep,2], pch = 16, col = cellCols[as.factor(QCmetrics$Cell.type)][keep], xlab = "PC1", ylab = "PC2", cex = 1.2, cex.lab = 1.5, cex.axis = 1.5, main = paste0("Studentized threshold +/- ", c(1,1.5,2,3)[i]))
+}
+legend("bottomright", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell.type)))
+
+
+```
+
+Here we can see how many samples of each type are excluded from this analysis.
+
+```{r, echo = FALSE}
+studCounts<-NULL
+for(i in 1:ncol(pcaClassify$withinSDMean)){
+  studCounts<-rbind(studCounts, table(QCmetrics$Cell.type[QCmetrics$maxStudentPCA > c(1,1.5,2,3)[i]]))
+}
+
+studCounts<-cbind("Threshold" = c(1,1.5,2,3), studCounts)
+
+kbl(studCounts) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 10)
+
+
+```
+
+
+### Confirm FACs sorting efficancy (Individual level)
+
+For individuals, where the FACs sorting did not generate distinct cellular populations, this will disrupt the prediction of for all cell types. Therefore we will first identify these individuals and exclude them. 
+
+For each sample we can determine how similar it is to the average profile for the labelled cell type. We can combine the sample level scores into an individual level score, which is used to rank the FACs sorting. Below we will visualise the individual level FAC effciency scores. 
+
+```{r}
+uniqueIDs<-read.csv(paste0(qcOutFolder, "/IndividualFACsEffciencyScores.csv"), row.names = 1, stringsAsFactors = FALSE)
+
+boxplot(uniqueIDs$FACsEffiency ~ uniqueIDs$Tissue.Centre, xlab = "", ylab = "Median SD from mean")
+abline(h=nSDThres)
+
+boxplot(uniqueIDs$FACsEffiency ~ uniqueIDs$nFACS, xlab = "Number of fractions", ylab = "Median SD from mean")
+abline(h=nSDThres)
+
+
+
+```
+
+Let's visualise some good examples.
+
+
+```{r, fig.width = 15, fig.height = 10, echo = FALSE}
+
+
+	cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier]), mean, na.rm = TRUE)
+	rownames(cellMeanPCA)<-cellMeanPCA[,1]
+	cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
+
+	cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier]), sd, na.rm = TRUE)
+	rownames(cellSDPCA)<-cellSDPCA[,1]
+	cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
+
+	lowerBound<-cellMeanPCA-nSDThres*cellSDPCA
+	upperBound<-cellMeanPCA+nSDThres*cellSDPCA
+	
+
+uniqueIDs<-uniqueIDs[order(uniqueIDs$FACsEffiency),]
+goodFACS<-c(uniqueIDs$Indidivual.ID[head(which(uniqueIDs$nFACS > 2), n = 3)], uniqueIDs$Indidivual.ID[head(which(uniqueIDs$nFACS > 3), n = 3)])
+badFACS<-uniqueIDs$Indidivual.ID[tail(which(uniqueIDs$nFACS > 2), n = 3)]
+
+x_lim<-range(betas.scores[,1])
+y_lim<-range(betas.scores[,2])
+par(mfrow = c(2,3))
+for(each in goodFACS){
+
+	index<-which(QCmetrics$Indidivual.ID == each)
+	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell.type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
+	for(i in 1:ncol(cellMeanPCA)){
+		polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[match(colnames(cellMeanPCA)[i], cellTypes)], lwd = 2, col = cellColsTrans[match(colnames(cellMeanPCA)[i], cellTypes)])
+	}
+	
+}
+```
+
+All individuals with score > 5 are excluded as having suboptimal FACs sorting. 
+
+```{r, fig.width = 15, fig.height = 15}
+badFACS<-uniqueIDs$Indidivual.ID[which(uniqueIDs$FACsEffiency >= 5)]
+
+par(mfrow = c(3,3))
+for(each in badFACS){
+
+	index<-which(QCmetrics$Indidivual.ID == each)
+	if(length(index > 1)){
+    	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell.type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
+    	for(i in 1:ncol(cellMeanPCA)){
+    		polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[match(colnames(cellMeanPCA)[i], cellTypes)], lwd = 2, col = cellColsTrans[match(colnames(cellMeanPCA)[i], cellTypes)])
+    	}
+    	mtext(side = 3, adj =1, signif(uniqueIDs$FACsEffiency[match(each, uniqueIDs$Indidivual.ID)],2))
+	}
+	
+}
+
+```
+
+In total we identified, `r length(which(uniqueIDs$FACsEffiency >= 5))` individuals with sub optimal FACs sorting and all `r sum(!QCmetrics$passFACS & QCmetrics$Cell.type != "Total")` samples for these individuals were excluded.
+
+```{r}
+
+kbl(table(QCmetrics$Cell.type, QCmetrics$passFACS)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 10)
+
+```
+
+
+
+The exclusion of these individuals should give us more refined average profiles, we will re-run the outlier detection.
+
+
+
+
+### Assigning closest cell-type: Mahalanobis distance
+
+```{r, echo = FALSE}
+
+tab1<-table(QCmetrics$Cell.type,QCmetrics$predLabelledCellType)
+percCon1<-sum(QCmetrics$predLabelledCellType)/nrow(QCmetrics)*100
+
+```
+
+
+In this approach we will use Mahalanobis distance to compare each sample to all possible cell types. The closest cell type i.e. the smallest Mahalanobis distance, will be assigned to that sample. Mahalanobis distance is multi-dimensional generalization of the idea of measuring how many standard deviations away a point P is from the median of a distribution D. Here the distribution is a cell type and the point is a sample. If the sample looks exactly like the median of a cell type, it's Mahalanobis distance will be 0, the larger the distance metric, the further away it is.  For this method, all samples are assigned a cell type, as they have to be closest to something, but they could still be very dissimilar to the cell type they are assigned. This prediction is not possible for cell types with a limited number of samples.
+
+The table below shows how many samples were predicted the same as their label.In this sample, `r signif(percCon1, 3)`% of the samples had DNAm profiles which most closely resemebled the cell type they were labelled. It should be noted that discrepancies between this prediction and the sample label may arise due to 1) poor data quality, 2) insufficient isolation, 3) sample mislabelling, 4) fractions containing overlapping sets of cells. 
+
+```{r, echo = FALSE}
+
+kbl(tab1) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 10)
+
+```
+
+To visualise the success of this filtering steps, we will repeat the hierarchical cluster from earlier using only the samples whose prediction matched their label. 
+
+```{r hclustAfter, echo = FALSE, fig.width = 15, fig.height = 8}
+index<-which(QCmetrics$predLabelledCellType)
+pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],index], annotation_col = sample_anno[index,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Mahalanobis Distance of PCs")
+
+```
+
+Here we will look at the correlations between the Mahalanobis distances across samples. This might highlight where common misclassifications could occur. 
+
+```{r, echo = FALSE, fig.width = 15, fig.height = 15}
+
+panel.cor <- function(x, y){
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- round(cor(x, y), digits=2)
+    txt <- paste0("R = ", r)
+    cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+# Customize upper panel
+upper.panel<-function(x, y){
+  points(x,y, pch = 16, col = cellCols[as.factor(QCmetrics$Cell.type)])
+  abline(a = 0, b = 1)
+}
+# Create the plots
+pairs(mahDistPCA, 
+      lower.panel = panel.cor,
+      upper.panel = upper.panel)
+
+```
+
+
+Below are a series of boxplots to look at the distribution of the distances to gauge how equal the prediction works across cell-types. Each panel plots the distances to a single cell type, where the different boxplots group samples by their labelled cell type. 
+
+
+```{r, echo = FALSE, fig.width = 15, fig.height = 15}
+y_lim<-range(mahDistPCA)
+par(mfrow = c(2,3))
+for(each in colnames(mahDistPCA)){
+	boxplot(mahDistPCA[,each] ~ QCmetrics$Cell.type, main = paste("Comparision with ", each), col = rainbow(5), ylab = "Mahalanobis distance", xlab = "Labelled cell type")
+}
+```
+
+
+
+### Predicting cell-type: Confirmation within expected polytope 
+
+
+```{r, echo = FALSE}
+
+	cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier2]), mean, na.rm = TRUE)
+	rownames(cellMeanPCA)<-cellMeanPCA[,1]
+	cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
+
+	cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier2]), sd, na.rm = TRUE)
+	rownames(cellSDPCA)<-cellSDPCA[,1]
+	cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
+
+	lowerBound<-cellMeanPCA-nSDThres*cellSDPCA
+	upperBound<-cellMeanPCA+nSDThres*cellSDPCA
+	
+
+```
+
+Given the overlap of different cell types, we define a regular polytope in 2 dimensional space for each cell type. The centre of each polytope is calculated as the mean of the PCs. The polytope then extends `r nSDThres` SD away from the mean in all dimensions. The geometric position of each sample is compared to each of these regions and if it falls within a polytope it is considered to be representative of that cell type. As it is possible that the regions for two cell types will overlap, a cell type is labelled with all the cell types it overlaps with.  With this approach, a sample may fall outside of all cell types and therefore remain unassigned.  
+
+
+```{r}
+tab2<-table(QCmetrics$Cell.type, QCmetrics$withinSDMean)
+percCon2<-sum(QCmetrics$withinSDMean)/sum(QCmetrics$passFACS)*100
+```
+
+The table below shows how many samples were located within the same geometric space as the others in their sample group. In this sample, `r signif(percCon2, 3)`% of the samples had DNAm profiles which closely resembled the cell type they were labelled. 
+
+```{r}
+pander(tab2)
+```
+
+
+To visualize how stringent this filtering is.
+
+
+```{r, fig.width = 12, fig.height = 18}
+
+## add thresholds more relaxed than selected
+
+
+lowerBound1<-cellMeanPCA-(nSDThres+0.5)*cellSDPCA
+upperBound1<-cellMeanPCA+(nSDThres+0.5)*cellSDPCA
+
+lowerBound2<-cellMeanPCA-(nSDThres+1)*cellSDPCA
+upperBound2<-cellMeanPCA+(nSDThres+1)*cellSDPCA
+
+par(mfrow = c(3,2))
+for(i in 1:ncol(lowerBound)){
+  plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2",  type = "n",cex.axis = 2, cex.lab = 2,cex = 1.2, main = colnames(lowerBound)[i], cex.main = 2)
+  # just plot points labelled as that cell type
+    sInd<-which(QCmetrics$Cell.type == colnames(lowerBound)[i])
+  points(betas.scores[sInd,1], betas.scores[sInd,2], pch = c(4,16)[as.factor(QCmetrics$withinSDMean[sInd])], col = c("grey", "black")[as.factor(QCmetrics$withinSDMean[sInd])])
+  polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[i], lwd = 2)
+  
+    polygon(c(lowerBound1[1,i], lowerBound1[1,i], upperBound1[1,i], upperBound1[1,i]), c(lowerBound1[2,i],upperBound1[2,i],upperBound1[2,i],lowerBound1[2,i] ), border = cellCols[i], lwd = 2, lty = 2)
+    
+    polygon(c(lowerBound2[1,i], lowerBound2[1,i], upperBound2[1,i], upperBound2[1,i]), c(lowerBound2[2,i],upperBound2[2,i],upperBound2[2,i],lowerBound2[2,i] ), border = cellCols[i], lwd = 2, lty = 2)
+}
+  
+
+```
+
+
+To visualize the success of this filtering steps, we will repeat the hierarchical cluster from earlier using only the samples whose prediction matched their label. 
+
+```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
+if(length(cellTypes) < 10){
+  pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
+} else {
+    pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,],  show_colnames = FALSE, show_rownames = FALSE, main = "PCA Outliers")
+}
+
+```
+
+
+### Summary of cell type confirmation 
+
+Samples are classed as passing the cell type check if, based on the first 2 PCs they are within `r nSDThres` SD of the average profile of their labelled cell type.
+
+
+All Total samples are retained.
+
+
+```{r}
+
+passTab<- table(QCmetrics$passCTCheck, QCmetrics$Cell.type)
+
+pander(passTab)
+
+```
+
+
+We can look at how clean the samples we have retained by looking at how many SD they are from the mean of their cell type. The boxplots below include a) all samples and b) all samples that pass the cell type check.
+
+```{r}
+
+boxplot(QCmetrics$maxSD ~ QCmetrics$Cell.type, xlab = "Cell type", ylab = "nSD from mean",col = cellCols)
+
+boxplot(QCmetrics$maxSD[QCmetrics$passCTCheck] ~ QCmetrics$Cell.type[QCmetrics$passCTCheck], xlab = "Cell type", ylab = "nSD from mean",col = cellCols)
+
+```
+
+
+Let's explore the other QC metrics of samples that are not predicted as their labelled cell type.
+
+```{r, fig.width = 15, fig.height = 6}
+par(mfrow = c(1,3))
+boxplot(QCmetrics$M.median ~ QCmetrics$predLabelledCellType, ylab = "Median M Intensity", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(QCmetrics$U.median ~ QCmetrics$predLabelledCellType, ylab = "Median U Intensity", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(QCmetrics$intens.ratio ~ QCmetrics$predLabelledCellType, ylab = "M:U Ratio", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+boxplot(QCmetrics$rmsd ~ QCmetrics$predLabelledCellType, ylab = "Normalisation Violence", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+if("genoCheck" %in% colnames(QCmetrics) ){
+  boxplot(QCmetrics$genoCheck ~ QCmetrics$predLabelledCellType, ylab = "Correlation with SNP data", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+}
+boxplot(QCmetrics$bisulfCon ~ QCmetrics$predLabelledCellType, ylab = "Bisulfite Coversion", xlab = "Concordant Prediction",cex.axis = 2, cex.lab = 2)
+
+
+```
+
+
+```{r, fig.width = 15, fig.height = 15, echo = FALSE}
+QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/passQCStatusStage3AllSamples.csv"), row.names = 1)
+passQC<-QCSum$Basename[QCSum[,"passQCS3"]]
+
+QCmetrics<-QCmetrics[match(colnames(rawbetas), QCmetrics$Basename),]
+
+
+#plot(betas.scores[passQC,1], betas.scores[passQC,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(QCmetrics$Cell.type)], pch = 16,cex.axis = 2, cex.lab = 2,cex = 1.2)
+#legend("topright", pch = 16, col = cellCols, colnames(lowerBound),cex = 1.2)
+
+```
+
+
+Boxplots to separate cell types should also look cleaner.
+
+
+```{r, fig.width = 15, fig.height = 15, echo = FALSE}
+par(mfrow = c(3,2))
+for(i in 1:ncol(betas.scores)){
+  
+  boxplot(betas.scores[,i] ~ QCmetrics$Cell.type, col = cellCols, ylab = paste0("PC", i), xlab = "", subset = rownames(betas.scores) %in% passQC)
+  
+}
+```
+
+
+
+
+### Diagnostics of individuals with multiple incorrect samples
+
+Where multiple samples from the same individual are identified as not resembling their labelled cell types we will visualise all samples from that individual in an attempt to determine, whether is is a failed antibody or sample mix up.
+
+```{r, fig.width = 15, fig.height = 15, echo = FALSE}
+## for any individual with multiple incorrect sample labels, plot all samples to diagnose.
+
+countInd<-table(QCmetrics$Indidivual.ID[!QCmetrics$passCTCheck])
+multIn<-names(countInd)[countInd > 1]
+
+x_lim<-range(betas.scores[,1])
+y_lim<-range(betas.scores[,2])
+par(mfrow = c(3,3))
+for(each in multIn){
+
+	index<-which(QCmetrics$Indidivual.ID == each)
+	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell.type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
+	for(i in 1:ncol(cellMeanPCA)){
+		polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[match(colnames(cellMeanPCA)[i], cellTypes)], lwd = 2, col = cellColsTrans[match(colnames(cellMeanPCA)[i], cellTypes)])
+	}
+	
+}
+
+```
+
+

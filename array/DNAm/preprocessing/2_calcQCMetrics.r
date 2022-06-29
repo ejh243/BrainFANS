@@ -2,19 +2,28 @@
 ## first it excludes samples with really low intensities values
 ## requires gdsfile to already be generated and takes sample sheet to be loaded
 ## assumes matched genotype data, if it exists is in the 0_metadata folder named epicSNPs.raw
-
+args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 refDir <- args[2]
 
-gdsFile <-paste0(dataDir, "2_gds/raw.gds")
-qcData <-paste0(dataDir, "2_gds/QCmetrics/QCmetrics.rdata")
-genoFile <- paste0(dataDir, "0_metadata/epicSNPs.raw")
+gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
+genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
 setwd(dataDir)
 library(e1071)
 library(bigmelon)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
-sampleSheet<-read.gdsn(index.gdsn(gfile, "pData"))
+#sampleSheet<-read.gdsn(index.gdsn(gfile, "pData"))
+## load sample sheet
+sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), stringsAsFactors = FALSE)
+## if no column Basename, creates from columns Chip.ID and Chip.Location
+if(!"Basename" %in% colnames(sampleSheet)){
+	sampleSheet$Basename<-paste(sampleSheet$Chip.ID, sampleSheet$Chip.Location, sep = "_")
+}
+
+## ensure sample sheet is in same order as data
+sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
 
 ## see if any QC data already exists
 if(file.exists(qcData)){
@@ -36,6 +45,8 @@ QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
 ## extract a few useful matrices
 rawbetas<-betas(gfile)[,]
 
+
+
 # calculate median M & U intensity
 if(!"M.median" %in% colnames(QCmetrics)){
 	print("Calculating signal intensity statistics")
@@ -56,6 +67,8 @@ if(!"M.median" %in% colnames(QCmetrics)){
 	intensPASS[which(intens.ratio > 4)]<-FALSE
 	QCmetrics<-cbind(QCmetrics,M.median, U.median, intens.ratio, intensPASS)
 
+} else {
+	intensPASS<-QCmetrics$intensPASS
 }
 
 # calculate bisulfite conversion statistic
@@ -117,9 +130,13 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 ## detection p value filtering at this stage only interested in sample filtering, will repeat later for probe filtering
 if(!"pFilter" %in% colnames(QCmetrics)){	
 	print("Running pfilter")
-	pFOut<-pfilter.gds(gfile, pn = pvals(gfile), bc = index.gdsn(gfile, "NBeads"))
+	pFOut<-apply.gdsn(node = pvals(gfile), margin = 2, FUN = function(x,
+            y, z) {
+            (sum(x > y, na.rm = TRUE)) < ((sum(!is.na(x)) * z)/100)
+        }, as.is = "logical", y = 0.05, z = 1)
+
 	pFOut[!QCmetrics$intensPASS]<-NA
-	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut$samples)
+	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut)
 }
 
 
@@ -158,13 +175,13 @@ if(!"predSex" %in% colnames(QCmetrics)){
 	
 	## base prediction on y chromosome
 	predSex.y<-rep(NA, length(y.cp))
-	predSex.y[which(y.cp > 1 & intensPASS == TRUE)]<-"M"
-	predSex.y[which(y.cp < 1 & intensPASS == TRUE)]<-"F"
+	predSex.y[which(y.cp > 1.1 & intensPASS == TRUE)]<-"M"
+	predSex.y[which(y.cp < 0.9 & intensPASS == TRUE)]<-"F"
 	
 	## base prediction on x chromosome
 	predSex.x<-rep(NA, length(x.cp))
-	predSex.x[which(x.cp < 1 & intensPASS == TRUE)]<-"M"
-	predSex.x[which(x.cp > 1 & intensPASS == TRUE)]<-"F"
+	predSex.x[which(x.cp < 0.995 & intensPASS == TRUE)]<-"M"
+	predSex.x[which(x.cp > 1.005 & intensPASS == TRUE)]<-"F"
 	
 	## check for consistent prediction
 	predSex<-rep(NA, length(x.cp))
@@ -184,7 +201,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	print("Comparing against matched genotype data")
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno.all<-geno
-	geno<-geno[match(gsub("-", "_", QCmetrics$Indidivual.ID), geno$IID),]
+	geno<-geno[match(QCmetrics$Genotype.IID, geno$IID),]
 	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
 	betas.rs<-rawbetas[rsIDs,]
 
@@ -204,7 +221,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 
 	genoCheck<-rep(NA, nrow(QCmetrics))
 	for(i in 1:ncol(betas.rs)){
-		if(!is.na(geno[i,1]) & intensPASS[i] == TRUE){
+		if(!is.na(geno[i,1]) & QCmetrics$intensPASS[i] == TRUE){
 			genoCheck[i]<-cor(geno.mat[i,], betas.rs[,i], use = "pairwise.complete.obs")
 		}
 	}
@@ -223,14 +240,14 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 		for(each in dupCombos){
 			dupIDs<-c(dupIDs, paste(rownames(geno.all.mat)[which(indGenoCombo == each)], collapse = ";"))
 		}
-		write.csv(dupIDs, paste0(qcOutFolder,"/IndividualsWithIdenticlaGenotypeCombinationsInComparisionWithSNPData.csv"))
+		write.csv(dupIDs, paste0(dataDir, "/2_gds/QCmetrics/IndividualsWithIdenticalGenotypeCombinationsInComparisionWithSNPData.csv"))
 	}
 		
 	
 	genoMatch<-rep(NA, nrow(QCmetrics))
 	genoMatchVal<-rep(NA, nrow(QCmetrics))
 	for(i in 1:ncol(betas.rs)){
-		if(intensPASS[i] == TRUE){
+		if(QCmetrics$intensPASS[i] == TRUE){
 			corVals<-rep(NA, nrow(geno.all.mat))
 			for(j in 1:nrow(geno.all.mat)){
 				corVals[j]<-cor(geno.all.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
@@ -254,14 +271,22 @@ print("Calculating effect of normalisation")
 	qualDat<-qual(rawbetas, normbetas)
 	qualDat[which(intensPASS == FALSE),]<-NA
 	QCmetrics<-cbind(QCmetrics,qualDat)
+	
 }
 
+# count number of missing values
+if(!"nNAsPer" %in% colnames(QCmetrics)){
+	print("Counting the number of missing beta values per sample")
+	nNAs<-colSums(is.na(rawbetas))
+	nNAsPer<-nNAs/nrow(rawbetas)*100
+	QCmetrics<-cbind(QCmetrics,nNAs, nNAsPer)
+}
 ## need to close gds file in order to open in another R session
 closefn.gds(gfile)
 
 # save QC metrics and SNP correlations to generate QC report
-if(!is.null(genoFile)){
-	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, file = qcData)
+if(file.exists(genoFile)){
+	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, betas.rs, rsbetas, file = qcData)
 } else {
-	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, file = qcData)
+	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, rsbetas, file = qcData)
 }

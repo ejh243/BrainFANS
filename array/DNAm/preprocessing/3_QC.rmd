@@ -1,11 +1,16 @@
 ---
 title: "DNA methylation Illumina Arrays Quality Control Report"
 author: "`r commandArgs(trailingOnly=T)[4]`"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
 ---
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache = FALSE)
 ```
+
 ```{r setup, include=FALSE}
 args<-commandArgs(trailingOnly = TRUE)
 library(bigmelon)
@@ -13,6 +18,8 @@ library(gplots)
 library(diptest)
 library(corrplot)
 library(pander)
+library(kableExtra)
+library(RColorBrewer)
 
 
 
@@ -23,7 +30,7 @@ dataDir <- args[2]
 setwd(dataDir) 
 
 
-gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+#gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 
 load(qcData)
@@ -34,6 +41,47 @@ nSamIP<-sum(QCmetrics$intensPASS)
 par(mar = c(4,4,1,1))
 
 ```
+
+
+
+```{r, echo = FALSE}
+
+## perform sample filtering
+
+QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres), QCmetrics$rmsd < nvThres, QCmetrics$nNAsPer < perMiss, QCmetrics$pFilter, QCmetrics$intens.ratio < 4)
+	colnames(QCSum)<-c(paste0("BSConversion>",thresBS),  paste0("intens>", intenThres), paste0("normviolence<", nvThres), paste0("%MissingSites<", perMiss), "DetectionPvalues", "MethylatedControl")
+
+QCSum<-cbind(QCSum, rowSums(QCSum, na.rm = TRUE) == rowSums(!is.na(QCSum)))
+colnames(QCSum)[ncol(QCSum)]<-"passQCS1"
+	
+if(sexCheck){
+	sexPass <- as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
+	sexPass[is.na(QCmetrics$predSex)]<-FALSE
+    ## if unable to predict sex, change to fail
+	QCSum<-cbind(QCSum, sexPass)
+}else{
+ 	QCSum<-cbind(QCSum, NA)
+}
+colnames(QCSum)[ncol(QCSum)]<-"sexCheck"
+if(snpCheck){
+	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
+}else{
+ 	QCSum<-cbind(QCSum, NA)
+}
+colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
+
+QCSum<-cbind(QCSum, rowSums(QCSum[,c("passQCS1", "sexCheck", "snpCheck")], na.rm = TRUE) == rowSums(!is.na(QCSum[,c("passQCS1", "sexCheck", "snpCheck")])))
+colnames(QCSum)[ncol(QCSum)]<-"passQCS2"
+rownames(QCSum)<-QCmetrics$Basename
+
+write.csv(cbind(QCmetrics[,c("Basename", "Samples.ID", "Indidivual.ID", "Cell.type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
+
+QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
+
+
+
+```
+
 
 ```{r definPlotParams, include = FALSE}
 ### define plotting parameters to automate which factors output is to be coloured by
@@ -49,6 +97,7 @@ if(length(techVar) > 0){
   for(item in techVar){
     ### check if exists in QC metircs
       if(item %in% colnames(QCmetrics)){
+        QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
         if(class(QCmetrics[,item]) != "factor"){
           print(paste("Converting techinical variable", item, "to factor."))
           tmpVar<-as.factor(QCmetrics[,item])
@@ -82,8 +131,9 @@ if(length(bioVar) > 0){
   for(item in bioVar){
     ### check if exists in QC metircs
       if(item %in% colnames(QCmetrics)){
+       QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
         if(class(QCmetrics[,item]) != "factor"){
-          print(paste("Converting techinical variable", item, "to factor."))
+          print(paste("Converting biological variable", item, "to factor."))
           tmpVar<-as.factor(QCmetrics[,item])
         } else {
           tmpVar<-QCmetrics[,item]
@@ -116,7 +166,7 @@ if(ncol(plotCols) > 1){
 
 ```
 
-### Study Information
+# Study Information
 
 This report documents the internal quality control (QC) process of DNA methylation data generated at the University of Exeter Medical School for the following study:
 
@@ -135,7 +185,7 @@ This report documents the internal quality control (QC) process of DNA methylati
 Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Indidivual.ID))` individuals.
 
 
-#### Summary of Technical Variables
+## Summary of Technical Variables
 
 These are only included if they are categorical. For this study the following technical variables were included:
 
@@ -158,7 +208,7 @@ if(length(missingVar[missingVar %in% techVar]) > 0){
 }
 ```
 
-#### Summary of Biological Variables
+## Summary of Biological Variables
 
 These are only included if they are categorical. For this study the following biological variables were included:
 
@@ -179,13 +229,14 @@ if(length(missingVar[missingVar %in% bioVar]) > 0){
 }
 ```
 
-### Summary of Quality Control
+# Quality Control: Data Quality
 
 A series of quality control (QC) metrics have been calculated for all samples and are reported below. After reviewing this report, exclusion thresholds to identify poorly performing samples can be provided to the normalisation script. For some QC metrics we use the provided technical and biological variables to aid identification of any patterns behind sample failures or artefacts that need to be included in the analysis. 
 
 
-#### Step 1: Signal Intensities
-Previous experience has shown that intensity level indicates sample quality and likelihood of passing the QC process. This is summarised for each sample by calculating the median of the methylated signal intensity and unmethylated signal intensity.  In the histograms below we would ideally like to see a single distribution (typically approximately normal) with a single peak. The vertical red lines indicate median intentisty of 500. `r nSamAll - nSamIP` samples with really low intensity values (< 500) are dropped at this stage and not considered in any of the subsequent QC steps.
+## Signal Intensities
+
+Previous experience has shown that intensity level indicates sample quality and likelihood of passing the QC process. This is summarised for each sample by calculating the median of the methylated signal intensity and unmethylated signal intensity.  In the histograms below we would ideally like to see a single distribution (typically approximately normal) with a single peak. The vertical red lines indicate median intentisty of 500. `r sum(!QCmetrics$intensPASS)` samples with really low intensity values (< 500) are dropped at this stage and not considered in any of the subsequent QC steps.
 
 ```{r intensitiesPlot, fig.width = 12, fig.height = 6, echo = FALSE}
 par(mfrow = c(1,2))
@@ -231,7 +282,7 @@ lines(density(QCmetrics$U.median), lty=2, lwd=2)
 
 ```
 
-#### Step 2: Ratio of M and U Intensities
+## Ratio of M and U Intensities
 
 ```{r, bimodalTest, echo = FALSE}
 library(diptest)
@@ -261,19 +312,19 @@ for(i in 2:ncol(plotCols)){
 ```
 
 
-#### Step 3: Fully Methylated Controls
+## Fully Methylated Controls
 
 
 ```{r, echo = FALSE}
-nFMLab<-sum(QCmetrics$Extraction.Plate == "Meth Control")
+nFMLab<-sum(QCmetrics$Indidivual.ID == "Meth Control")
 nFMDat<-sum(QCmetrics$intens.ratio > 4)  
-nFMCorrect<-sum(QCmetrics$Extraction.Plate == "Meth Control" & QCmetrics$intens.ratio > 4)
+nFMCorrect<-sum(QCmetrics$Indidivual.ID == "Meth Control" & QCmetrics$intens.ratio > 4)
 
 ```
 
 In this dataset `r nFMLab` fully methylated control samples were included to check that plates were orientated correctly. From the ratio of M intensities to U intensities `r nFMDat` fully methylated control probes were detected, `r nFMCorrect` (`r signif(nFMCorrect/nFMLab*100,3)`%) fully methylated controls were identified in the correct position.
 
-#### Step 4: Bisulfite Conversion Efficiency
+## Bisulfite Conversion Efficiency
 
 For each sample a bisulfite conversion statistic is calculated as the median value across 8 fully methylated control probes. We apply a threshold of 80% excluding samples below this threshold. In this dataset `r sum(QCmetrics$bisulfCon<80, na.rm = TRUE)` (`r signif(sum(QCmetrics$bisulfCon<80, na.rm = TRUE)/nSamIP*100,3)` %) samples fail at this threshold.
 
@@ -289,7 +340,19 @@ abline(v = 80, col = "red")
 
 ```
 
-#### Step 5: Control Probes
+
+## Missing Data
+
+For each sample the number of missing values was calculated. The vertical line indicates `r perMiss`% of sites, `r sum(QCmetrics$nNAsPer > perMiss)` (`r signif(sum(QCmetrics$nNAsPer > perMiss)/nSamIP*100,3)` %) samples have more sites with missing data than this threshold.
+
+```{r, missingValues, fig.width = 5, fig.height = 5, echo = FALSE}
+hist(QCmetrics$nNAsPer, breaks = 100, xlab = "% of missing sites", ylab = "Number of samples", main = "", col = "gray")
+abline(v = perMiss)
+
+```
+
+
+## Control Probes
 
 As recommended by Lehne et al. we performed principal component (PC) analysis of the control probes to identify batch effects and poorly performing samples. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
 
@@ -376,7 +439,89 @@ for(i in 2:ncol(plotCols)){
 ```
 
 
-#### Step 6: Genetically Identical Samples
+## Detection P values
+
+Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter, na.rm = TRUE)` samples are recommended for removal. 
+
+
+## Principal Component Analysis
+
+To identify and visually inspect potential outliers we performed principal component analysis on the autosomal probes. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
+
+```{r, betasPCAPlot, fig.width = 6, fig.height = 4, echo = FALSE}
+par(mar = c(4,4,1,1))
+plot(1:20, betas.pca[1:20]*100, type = "b", ylab = "% variance explained", xlab = "Betas PC", lty = 1)
+abline(h=1, col = "red")
+```
+
+We will use histograms and scatterplots below to visualally inspect for potential outliers or patterns in the data. In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
+
+```{r, echo=FALSE, fig.height=4, betasPCAHist, fig.width=15}
+par(mar = c(4,4,4,1))
+### are there any outliers?
+par(mfrow = c(1,4))
+for(j in which(betas.pca > 0.01)){
+  pcDat<-QCmetrics[,paste("PC", j, "_betas", sep = "")]
+  mu<-mean(pcDat, na.rm = TRUE)
+  sigma<-sd(pcDat, na.rm = TRUE)
+  x_lim<-range(c(mu-3*sigma, mu+3*sigma, pcDat), na.rm = TRUE)
+  hist(pcDat, xlim = x_lim, xlab = paste("Betas:PC", j, sep = ""), breaks = 15, main = paste(signif(betas.pca[j],3)*100, "% variance explained", sep = ""), col = "gray", cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
+  for(i in 2:3){
+    abline(v = mu+i*sigma, col = "red", lty = 2)
+    abline(v = mu-i*sigma, col = "red", lty = 2)
+  }
+ 
+}
+```
+
+```{r, betasPCAScatter, fig.width = 15, fig.height = 6, echo = FALSE}
+par(mar = c(4,4,4,1))
+par(mfrow = c(1,2))
+for(i in 2:ncol(plotCols)){
+  for(j in which(betas.pca[-1] > 0.01)){
+    j<-j+1
+	y_lim<-range(QCmetrics[,paste("PC", j, "_betas", sep = "")], na.rm = TRUE)
+	y_lim[2]<-y_lim[2]+0.2*diff(y_lim)
+  	plot(QCmetrics$PC1_betas, QCmetrics[,paste("PC", j, "_betas", sep = "")], pch = 16, xlab = "Betas:PC1", ylab = paste("Betas:PC", j, sep = ""), main=paste("Coloured by", colnames(plotCols)[i]), col = plotCols[,i], ylim = y_lim)
+  }
+  legendDat<-legendParams[[i-1]]
+	if(nrow(legendDat) > 10){
+		nCols=floor(nrow(legendDat)/10)
+	} else {
+		nCols<-1
+	}
+	legend("topleft", legendDat[,1], col = legendDat[,2], pch = 16, cex=0.75, ncol = nCols)
+}
+```
+
+
+## Influence of Normalisation
+
+The goal of normalisation is to convert data for each sample onto a common distribution and minimise effects of technical variation. Outlier samples will need a high level of manipulation to transform them to look more similar to the rest of the sample. To identify samples that are dramatically altered as a result of normalization the quantified the difference between the normalized and raw data at each probe for each sample calculating the root mean square. Here we have apply a threshold of `r nvThres` to exclude samples. 
+
+```{r, echo = FALSE, fig.width = 12, fig.height = 6}
+par(mfrow = c(1,2))
+par(mar = c(4,4,1,1))
+hist(QCmetrics[,"rmsd"], xlab = "Root Mean Square Deviation", breaks = 25, main = "")
+abline(v = nvThres, col = "red")
+hist(QCmetrics[,"sadd"], xlab = "SD difference", breaks = 25, main = "")
+abline(v = nvThres, col = "red")
+```
+
+```{r, echo = FALSE, fig.width = 6, fig.height=6, eval = FALSE}
+par(mfrow = c(1,1))
+plot(QCmetrics[,"rmsd"], QCmetrics[,"sadd"], xlab = "Root Mean Square Deviation", ylab = "SD difference", main = "", pch = 16)
+abline(v = nvThres, col = "red")
+abline(h = nvThres, col = "red")
+
+```
+
+
+
+# Quality Control: Correct Sample
+
+
+## Genetically Identical Samples
 
 This step uses the 59 SNP probes on the array to identify genetically identical samples. For all pairs of samples a correlation statistic across these probes is calculated. If there are correlations greater than 0.8 (highlighted by the red vertical line), this suggests the presence of genetically identical samples.
 
@@ -413,6 +558,13 @@ pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Numbe
 
 ```
 
+We can compare this to the expected distribution of number of samples per individuals based on the sample sheet. 
+
+```{r,echo = FALSE, results = "asis"}
+pander(t(as.data.frame(table(table(QCmetrics$Indidivual.ID)))), row.names = c("Number of Samples", "Number of Individuals"))
+
+```
+
 These correlations can be visualised in the following heatmap, where the colours indicate samples from the same individual.
 
 
@@ -420,9 +572,13 @@ These correlations can be visualised in the following heatmap, where the colours
 	### heatmap of snp cor
 	if("Indidivual.ID" %in% colnames(plotCols)){
 		
-		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID, RowSideColors = plotCols$Indidivual.ID, labCol = "", labRow = "", margins = c(1,1), main = "All")
+		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID, RowSideColors = plotCols$Indidivual.ID, labCol = "", labRow = "", margins = c(1,1), 
+      lhei=c(0.1,9), 
+      lwid=c(2,9))
 	} else {
-		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1), main = "All")
+		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", labCol = "", labRow = "", margins = c(1,1),
+      lhei=c(0.1,9), 
+      lwid=c(2,9))
 	}
 
 ```
@@ -430,7 +586,7 @@ These correlations can be visualised in the following heatmap, where the colours
 
 Checking if genetically identical samples have the sample Individual ID:
 
-```{r,echo = FALSE}
+```{r,echo = FALSE, fig.width = 15, fig.height = 15}
 
   QCmetrics<-cbind(QCmetrics, predictedduplicates)
 	predictedduplicates<-unique(predictedduplicates)
@@ -448,19 +604,44 @@ Checking if genetically identical samples have the sample Individual ID:
 	if(length(errors) == 0){
 	  print("All genetically identical samples had the same individual ID")  
 	} else {
-	  print("ERROR: Genetically identical samples had different individual IDs, see heatmap below for potential mismatches and output file GeneticMismatches.csv for details")
+	  print("ERROR: Genetically identical samples had different individual IDs. See heatmap below for potential mismatches and output file WithinDNAmGeneticMismatches.csv for details")
 	  errorIndexes<-NULL
 	  for(element in errors){
 	    index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
 	    errorIndexes<-c(index,errorIndexes)
 	  }
-	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Indidivual.ID[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Indidivual.ID[errorIndexes], margin = c(10,10))
+	  if("Indidivual.ID" %in% colnames(plotCols)){
+  	  indCols<-plotCols$Indidivual.ID
+	  } else {
+	    indCols<-rainbow(length(unique(QCmetrics$Indidivual.ID)))[as.factor(QCmetrics$Indidivual.ID)]
+	  }
+	  
+	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = indCols[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Indidivual.ID[errorIndexes], margin = c(10,10))
 	if(length(errorIndexes) > 0){	
 		write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticMismatches.csv"), row.names = FALSE)
 		}
 	}
 
+	## do heatmap across any individual who is not clustering as expected
+	if(length(errorIndexes) > 0){
+  samplePlot<-which(QCmetrics$Indidivual.ID %in% unique(QCmetrics$Indidivual.ID[errorIndexes]))
+  pdf(paste0(dataDir, "/2_gds/QCmetrics/HeatmapGeneticInconsistencies.pdf"), height = 15, width = 10)
+  heatmap.2(t(rsbetas[,samplePlot]), trace = "none", key = FALSE, dendrogram = "row", RowSideColors = c("red", "blue")[as.factor(QCSum[samplePlot, "snpCheck"])], labRow = QCmetrics$Indidivual.ID[samplePlot], margin = c(5,5), col = colorRampPalette(rev(brewer.pal(n = 7, name =
+    "RdYlBu")))(100), 
+      lhei=c(0.1,9), 
+      lwid=c(2,9))	
+  dev.off()
+  sampleGroups<-QCmetrics[errorIndexes,]
+	} else {
+  
+	 sampleGroups<-NULL
+}
+
+
+
 ```
+
+
 
 Checking if samples with same Individual ID are genetically identical:
 
@@ -476,133 +657,290 @@ for(each in unique(QCmetrics$Indidivual.ID)){
 	  ## count number of samples with which each sample looks identical to
 	    nSamples<-apply(snpCor.tmp > 0.8,1,sum)
 	    ## if any samples that don't look like any others 
-	    errorIndexes<-c(ind[which(nSamples == 0)],errorIndexes)
+	    errorIndexes<-c(ind[which(nSamples != length(ind))],errorIndexes)
 	}
 
 }
 
 if(length(errorIndexes) > 0){
-  print("ERROR: samples labelled as the same individual are not geneticaly identical see output file WithinDNAmGeneticErrors.csv for details")
+  print("ERROR: samples labelled as the same individual are not genetically identical. See output file WithinDNAmGeneticErrors.csv for sample details")
 	write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticErrors.csv"), row.names = FALSE)
 } else {
   
-  print("All samples labelled as the same individual are geneticaly identical")
+  print("All samples labelled as the same individual are genetically identical")
 }
+sampleGroups<-unique(rbind(sampleGroups, QCmetrics[errorIndexes,]))
 ```
 
 
-#### Step 7: Sex Prediction
+```{r plotsOfSampleGroupsFromMultipleIDs, results = "hide", echo = FALSE}
+
+
+
+pdf(paste0(dataDir, "/2_gds/QCmetrics/PlotsWithinDNAmMismatches.pdf"), width = 10, height = 8)
+for(each in unique(sampleGroups$predictedduplicates)){
+	if(!is.na(each)){
+
+		bsnames<-unlist(strsplit(as.character(each), "\\|"))
+		
+		par(mfrow = c(3,4))
+		## plot 59 snp probes against each other
+		for(i in 1:(length(bsnames)-1)){
+				if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
+			    xlabcol<-"black"
+			  }else{
+			    xlabcol<-"red"
+			  }
+		  for(j in (i+1):length(bsnames)){
+        if(QCmetrics[match(bsnames[j], QCmetrics$Basename), "passQCS1"]){
+			    ylabcol<-"black"
+			  }else{
+			    ylabcol<-"red"
+			  }
+			 plot(rsbetas[,bsnames[i]], rsbetas[,bsnames[j]], xlab = "",ylab = "", pch = 16, xlim = c(0,1), ylim = c(0,1))
+			 title(xlab = bsnames[i], col.lab = xlabcol)
+			 title(ylab = bsnames[j], col.lab = ylabcol)
+			}
+		}
+		
+
+		## plot against matched genetic data
+		allGenoIDs<-unique(sampleGroups$Genotype.IID[which(sampleGroups$predictedduplicates == each)])
+		allGenoIDs<-c(na.omit(allGenoIDs))
+		if(length(allGenoIDs) > 0){
+			for(i in 1:length(bsnames)){
+			  if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
+			    xlabcol<-"black"
+			  }else{
+			    xlabcol<-"red"
+			  }
+				methID<-sampleGroups$Indidivual.ID[match(bsnames[i], sampleGroups$barcode)]
+				for(j in 1:length(allGenoIDs)){
+					plot(betas.rs[,bsnames[i]], geno.mat[match(allGenoIDs[j],rownames(geno.mat))[1],], pch = 16, xlab = "", ylab = allGenoIDs[j], main = methID, xlim = c(0,1), ylim = c(0,2))
+				  title(xlab = bsnames[i], col.lab = xlabcol)
+				}
+			}
+		}
+	}
+}
+dev.off()
+
+
+
+```
+
+
+## Sex Prediction
 
 Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. Based on these assumptions we can predict male or female from each sex chromosome. 
 
+Let's look at the distribution of these fold change statistics. If you have > 1 sex you should see two peaks. You sometimes also see a third peak around 0, these are poor quality samples. The grey area on the graph highlights were the data are two ambigous to make a sex prediction. 
+
+```{r, plotSexChromosomeHist, echo = FALSE, fig.width = 12, fig.height=6}
+par(mfrow = c(1,2))
+hist(QCmetrics$x.cp, breaks = 25, main = "X chromosome FC")
+polygon(c(0.995,1.005,1.005,0.995), c(0,0,1000,1000), col = "grey")
+abline(v = 1)
+abline(v = 0.995, col = "red")
+abline(v = 1.005, col = "red")
+mtext("Female", side = 3, adj = 0.9, line = 0)
+mtext("Male", side = 3, adj = 0.1, line = 0)
+
+hist(QCmetrics$y.cp, breaks = 25, main = "Y chromosome FC")
+polygon(c(0.9,1.1,1.1,0.9), c(0,0,1000,1000), col = "grey")
+abline(v = 1)
+abline(v = 0.9, col = "red")
+abline(v = 1.1, col = "red")
+mtext("Male", side = 3, adj = 0.9, line = 0)
+mtext("Female", side = 3, adj = 0.1, line = 0)
+
+```
+
+In this dataset `r sum(is.na(QCmetrics$predSex))` samples did not have sex predicted.
+
 ```{r, plotSexChromosomeFC, echo = FALSE, fig.width = 6, fig.height=6}
-plot(QCmetrics$x.cp, QCmetrics$y.cp, col = as.factor(QCmetrics$Sex), xlab = "X chromosome FC", ylab = "Y chromosome FC", pch = 16)
+plot(QCmetrics$x.cp, QCmetrics$y.cp, type = "n", xlab = "X chromosome FC", ylab = "Y chromosome FC")
+polygon(c(0.995,1.005,1.005,0.995), c(0.9, 0.9, 1.1, 1.1), col = "grey")
 abline(v = 1)
 abline(h = 1, pch = 16)
+points(QCmetrics$x.cp, QCmetrics$y.cp, col = as.factor(QCmetrics$Sex), pch = 16)
+
 
 #plot(QCmetrics$x.cp, QCmetrics$M.median, pch = 16, xlab = "X chromosome FC", ylab = "median M intenisty")
 
-write.csv(QCmetrics[which(as.character(QCmetrics$predSex) != as.character(QCmetrics$Sex)),], paste0(dataDir, "/2_gds/QCmetrics/SexMismatches.csv"), row.names = FALSE)
 ```
 
-`r sum(!is.na(QCmetrics$Sex))` (`r sum(!is.na(QCmetrics$Sex))/nrow(QCmetrics)*100`%) samples have sex provided in the phenotype file for comparision with predicted sex. 
 
-First we will compare the sex predictions from the X and Y chromosomes.
-
+We will compare the sex predictions from the X and Y chromosomes.
 
 ```{r tabSexpredictions, echo = FALSE}
 pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
 ``` 
 
-Second ,we will compare the sex predictions to that provided in the phenotype file
-
-```{r tabSexReported, echo = FALSE}
-pander(table(QCmetrics$predSex, QCmetrics$Sex))
-``` 
-
-Samples where predicted sex is inconsistent with reported sex are written to the file SexMismatches.csv.
+Perform sex check against phenotype reported sexes: `r sexCheck`. 
 
 
-
-#### Step 8: Compare with SNP data
-
-To check for potential sample swaps we will compare the 59 SNPs on the EPIC array to genotype data we have from SNP arrays. Genotype data was available for `r sum(!is.na(QCmetrics$genoCheck))` (`r sum(!is.na(QCmetrics$genoCheck))/nrow(QCmetrics)*100`%) samples. 
-
-```{r genoCheck, results = "asis", echo = FALSE}
-
-if(class(QCmetrics$genoCheck) == "numeric"){
-  hist(QCmetrics$genoCheck, xlab = "Correlation SNP vs DNAm Array", breaks = 50, ylab = "nSamples")
-}
-
-pander(table(QCmetrics$genoCheck > 0.8), caption = "Number of samples where genotypes concordant across SNP and DNAm arrays")
-nFail<-sum(QCmetrics$genoCheck < 0.8, na.rm = TRUE)
-nRematch<-sum(!is.na(QCmetrics$genoMatch[QCmetrics$genoCheck < 0.8]))
-
-
-if(nFail > 0){
-	write.csv(QCmetrics[which(QCmetrics$genoCheck < 0.8),], file = paste0(dataDir, "/2_gds/QCmetrics/CompSNPdataGeneticErrors.csv"))
-}
+```{r, child=if (sexCheck) 'rmarkdownChild/sexCheck.rmd'}
 ```
 
-If any of the DNAm samples are not genetically concordant across the EPIC data and SNP chip data then we perform a search to see if they are genetically identical to any other sample in the SNP chip data. This was performed for `r nFail` samples and we identified matching SNP data for `r nRematch` of these individuals. The output of this step has been written to CompSNPdataGeneticErrors.csv.
+## Compare with SNP data
+
+Perform concordance check against genotype data: `r snpCheck`. 
 
 
-#### Step 9: Principal Component Analysis
-
-To identify and visually inspect potential outliers we performed principal component analysis on the autosomal probes. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
-
-```{r, betasPCAPlot, fig.width = 6, fig.height = 4, echo = FALSE}
-par(mar = c(4,4,1,1))
-plot(1:20, betas.pca[1:20]*100, type = "b", ylab = "% variance explained", xlab = "Betas PC", lty = 1)
-abline(h=1, col = "red")
+```{r, child=if (snpCheck) 'rmarkdownChild/snpCheck.rmd'}
 ```
 
-We will use histograms and scatterplots below to visualally inspect for potential outliers or patterns in the data. In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
 
-```{r, echo=FALSE, fig.height=4, betasPCAHist, fig.width=15}
-par(mar = c(4,4,4,1))
-### are there any outliers?
-par(mfrow = c(1,4))
-for(j in which(betas.pca > 0.01)){
-  pcDat<-QCmetrics[,paste("PC", j, "_betas", sep = "")]
-  mu<-mean(pcDat, na.rm = TRUE)
-  sigma<-sd(pcDat, na.rm = TRUE)
-  x_lim<-range(c(mu-3*sigma, mu+3*sigma, pcDat), na.rm = TRUE)
-  hist(pcDat, xlim = x_lim, xlab = paste("Betas:PC", j, sep = ""), breaks = 15, main = paste(signif(betas.pca[j],3)*100, "% variance explained", sep = ""), col = "gray", cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5)
-  for(i in 2:3){
-    abline(v = mu+i*sigma, col = "red", lty = 2)
-    abline(v = mu-i*sigma, col = "red", lty = 2)
+
+# QC Summary: Sample Filtering
+
+Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.
+
+```{r, echo = FALSE}
+# create cross tab table
+xTab<-matrix(data = NA, ncol = ncol(QCSum), nrow = ncol(QCSum))
+for(i in 1:ncol(QCSum)){
+  for(j in 1:ncol(QCSum)){
+    xTab[i,j]<-sum(rowSums(QCSum[,c(i,j)]) == 0, na.rm = TRUE)
   }
- 
+}
+colnames(xTab)<-colnames(QCSum)
+rownames(xTab)<-colnames(QCSum)
+
+kbl(xTab) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+## Correlations between QC metrics
+
+```{r, echo = FALSE, fig.width = 10, fig.height = 10}
+if(sexCheck & snpCheck){
+corrplot(cor(QCmetrics[,c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon",
+ "PC1_cp","PC2_cp","PC3_cp","PC4_cp","PC5_cp",
+ "PC1_betas","PC2_betas","PC3_betas","PC4_betas","PC5_betas","PC6_betas",
+ "pFilter",
+ "x.cp","y.cp",
+ "genoCheck",
+ "rmsd","sdd","sadd","srms",
+ "nNAsPer")], use = "p"))
+} else {
+    corrplot(cor(QCmetrics[,c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon",
+ "PC1_cp","PC2_cp","PC3_cp","PC4_cp","PC5_cp",
+ "PC1_betas","PC2_betas","PC3_betas","PC4_betas","PC5_betas","PC6_betas",
+ "pFilter",
+ "rmsd","sdd","sadd","srms",
+ "nNAsPer")], use = "p"))
 }
 ```
-```{r, betasPCAScatter, fig.width = 15, fig.height = 6, echo = FALSE}
-par(mar = c(4,4,4,1))
-par(mfrow = c(1,2))
-for(i in 2:ncol(plotCols)){
-  for(j in which(betas.pca[-1] > 0.01)){
-    j<-j+1
-	y_lim<-range(QCmetrics[,paste("PC", j, "_betas", sep = "")], na.rm = TRUE)
-	y_lim[2]<-y_lim[2]+0.2*diff(y_lim)
-  	plot(QCmetrics$PC1_betas, QCmetrics[,paste("PC", j, "_betas", sep = "")], pch = 16, xlab = "Betas:PC1", ylab = paste("Betas:PC", j, sep = ""), main=paste("Coloured by", colnames(plotCols)[i]), col = plotCols[,i], ylim = y_lim)
+
+
+## Reconfirm genetic relationships are correct
+
+Having excluding poor quality data and sample swaps we will repeat the genetic clustering. 
+
+```{r,findDuplicateSamplesPostQC, echo = FALSE}
+
+passQC<-rownames(QCSum)[QCSum[,"passQCS2"]]
+
+snpCor<-snpCor[passQC, passQC]
+
+if(max(snpCor, na.rm = TRUE) > 0.8){
+  	# pull out samples that are genetically identical
+  	predictedduplicates<-vector(length = ncol(snpCor))
+  	for(i in 1:ncol(snpCor)){
+  	  predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
+  	}
+  } else {
+	  predictedduplicates<-colnames(snpCor)
+	} 
+
+```
+
+Post QC we identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
+
+
+```{r,echo = FALSE, results = "asis"}
+pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+
+```
+
+
+Checking if genetically identical samples have the sample Individual ID:
+
+```{r,echo = FALSE, fig.width = 15, fig.height = 15}
+
+	predictedduplicates<-unique(predictedduplicates)
+	dupSampleIDs<-NULL
+	errors<-NULL
+  for(element in predictedduplicates){
+		index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
+		sampleIDs<-QCmetrics$Indidivual.ID[index]
+		if(length(unique(sampleIDs)) > 1){
+		  errors<-c(errors, element)
+		}
+		dupSampleIDs<-c(dupSampleIDs, paste(sort(QCmetrics$Indidivual.ID[index]), sep = "|", collapse = "|"))
   }
-  legendDat<-legendParams[[i-1]]
-	if(nrow(legendDat) > 10){
-		nCols=floor(nrow(legendDat)/10)
+
+	if(length(errors) == 0){
+	  print("All genetically identical samples had the same individual ID")  
 	} else {
-		nCols<-1
+	  print("ERROR: Genetically identical samples had different individual IDs.")
+	  errorIndexes<-NULL
+	  for(element in errors){
+	    index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
+	    errorIndexes<-c(index,errorIndexes)
+	  }
+	  if("Indidivual.ID" %in% colnames(plotCols)){
+  	  indCols<-plotCols$Indidivual.ID
+	  } else {
+	    indCols<-rainbow(length(unique(QCmetrics$Indidivual.ID)))[as.factor(QCmetrics$Indidivual.ID)]
+	  }
+	  
+	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = indCols[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Indidivual.ID[errorIndexes], margin = c(10,10))
+	if(length(errorIndexes) > 0){	
+		write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticMismatchesPostQC.csv"), row.names = FALSE)
+		}
 	}
-	legend("topleft", legendDat[,1], col = legendDat[,2], pch = 16, cex=0.75, ncol = nCols)
+
+
+```
+
+
+
+Checking if samples with same Individual ID are genetically identical:
+
+```{r checkGenoSampleswithSameIDPostQC, echo = FALSE}
+
+QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
+
+### check if samples with same Individual ID are genetically identical.
+
+errorIndexes<-NULL
+for(each in unique(QCmetrics$Indidivual.ID)){
+	ind<-which(QCmetrics$Indidivual.ID == each)
+	snpCor.tmp<-snpCor[ind,ind]
+	if(min(snpCor.tmp, na.rm = TRUE)< 0.8){
+	  ## count number of samples with which each sample looks identical to
+	    nSamples<-apply(snpCor.tmp > 0.8,1,sum)
+	    ## if any samples that don't look like any others 
+	    errorIndexes<-c(ind[which(nSamples != length(ind))],errorIndexes)
+	}
+
+}
+
+if(length(errorIndexes) > 0){
+  print("ERROR: samples labelled as the same individual are not genetically identical. See output file WithinDNAmGeneticErrorsPostQC.csv for sample details")
+	write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticErrorsPostQC.csv"), row.names = FALSE)
+} else {
+  
+  print("All samples labelled as the same individual are genetically identical")
 }
 ```
 
-#### Step 10: Detection P values
 
-Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter, na.rm = TRUE)` samples are recommended for removal. 
-
-
-
-#### Step 11: Age Prediction
+## Age Prediction
 
 ```{r ageSetup, echo=FALSE}
 show_text <- "Age" %in% colnames(QCmetrics)
@@ -617,40 +955,19 @@ if("Age" %in% colnames(QCmetrics)){
   model<-lm(QCmetrics$Age~QCmetrics$DNAmAge)
   plot(QCmetrics$DNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Horvath Clock", pch=16, col="purple")
   title(main = paste("r = ", signif(cor(QCmetrics$DNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
-  title(main = paste("RMSE = ", signif(sqrt(median(abs(QCmetrics$DNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
+  title(main = paste("RMSE = ", signif(sqrt(mean(abs(QCmetrics$DNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
   abline(model, lty = 2)
   abline(a = 0, b = 1)
   
   model<-lm(QCmetrics$Age~QCmetrics$CCDNAmAge)
   plot(QCmetrics$CCDNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Cortical Clock", pch=16, col="purple")
   title(main = paste("r = ", signif(cor(QCmetrics$CCDNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
-  title(main = paste("RMSE = ", signif(sqrt(median(abs(QCmetrics$CCDNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
+  title(main = paste("RMSE = ", signif(sqrt(mean(abs(QCmetrics$CCDNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
   abline(model, lty = 2)
   abline(a = 0, b = 1)
 }
 ```
 
-
-#### Step 12: Influence of Normalisation
-
-The goal of normalisation is to convert data for each sample onto a common distribution and minimise effects of technical variation. Outlier samples will need a high level of manipulation to transform them to look more similar to the rest of the sample. To identify samples that are dramatically altered as a result of normalization the quantified the difference between the normalized and raw data at each probe for each sample calculating the root mean square. Previously we have applied a threshold of 0.05 to exclude samples. 
-
-```{r, echo = FALSE, fig.width = 12, fig.height = 6}
-par(mfrow = c(1,2))
-par(mar = c(4,4,1,1))
-hist(QCmetrics[,"rmsd"], xlab = "mean root mean square", breaks = 10, main = "")
-abline(v = 0.05, col = "red")
-hist(QCmetrics[,"sadd"], xlab = "sd difference", breaks = 10, main = "")
-abline(v = 0.05, col = "red")
-```
-
-```{r, echo = FALSE, fig.width = 6, fig.height=6, eval = FALSE}
-par(mfrow = c(1,1))
-plot(QCmetrics[,"rmsd"], QCmetrics[,"sadd"], xlab = "Root Mean Square Deviation", ylab = "SD difference", main = "", pch = 16)
-abline(v = 0.05, col = "red")
-abline(h = 0.05, col = "red")
-
-```
 
 #### Session Information
 
