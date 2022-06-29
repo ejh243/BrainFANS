@@ -1,0 +1,310 @@
+---
+title: "Stage 1 Summary Statistics"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+params:
+  project: !r commandArgs(trailingOnly=T)[3]
+  configFile: !r file.path(commandArgs(trailingOnly=T)[2], "/BSSeq/config/config.r")
+---
+
+```{r setup, include=FALSE}
+## LOAD PACKAGES
+library(ggplot2)
+library(plyr)
+library(tidyr)
+library(gridExtra)
+library(reshape2)
+library(corrplot)
+
+## load config variables
+if (is.na(params$project)){
+  project<-"WGBS/rizzardi"
+  source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/BSSeq/config/config.r")
+
+} else {
+  project<-params$project
+  source(params$configFile)
+}
+
+
+## create colourblind friendly palette
+colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999", 
+                       "#F0E442", "#0072B2",  "#E69F00", "#56B4E9")
+
+```
+
+This report provides a summary of a Bisulfite-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment, methylation calling and filtering. The bioinformatic pipeline parallels that of the [ENCODE BS-seq guidelines] (https://www.encodeproject.org/data-standards/wgbs/). Raw fastq files have been have been aligned and methylation extracted with Bismark. Alignment to the bisulfite-converted human genome (hg38) uses Bowtie2. The pipeline is still under development.
+
+```{r loadDat}
+## import data
+sampleid<-read.table(paste0(metaDir, '/samples.txt'))[,1]
+pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+processSum <- read.csv(file.path(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
+fastqc<-read.table(file.path(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+alignQC<-read.table(file.path(alignedDir, "/multiqc/multiqc_data/multiqc_bismark_alignment.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+encode<-read.csv(file.path(alignedDir, "/ENCODEMetrics/collateENCODEQCMetrics.txt"), header = TRUE)
+
+## wrangle data
+missingCol<-setdiff(c("sequencingBatch", "sampleID",  "cohort", "fraction", "experiment", "individualID"), colnames(pheno))
+if (length(missingCol) != 0 ) {
+  if ("sequencingBatch" %in% missingCol){
+    pheno$sequencingBatch<-pheno$cohort
+    if (length(missingCol) > 1) {
+      warning('Incorrect column names. Missing column(s): ', list(missingCol))
+      stop()
+    }
+  }
+}
+
+pheno<- pheno[match(pheno$sampleID, sampleid),]
+dups<-names(which(table(paste(pheno$individualID, pheno$fraction, pheno$tissue, sep = "_")) > 1))
+pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","cohort","fraction","individualID", "tissue"), colnames(pheno))])
+
+colsKeep<-c("Total.Sequences","total_deduplicated_percentage", "Sequences.flagged.as.poor.quality")
+mergeStats<-cbind(fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep], fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep])
+
+aIndex<-match(processSum$sampleID, gsub("\\_1_val_1", "", alignQC$Sample))
+mergeStats<-cbind(mergeStats,alignQC[aIndex,c("percent_aligned", "total_reads", "aligned_reads")])
+
+encode<-encode[match(processSum$sampleID, encode$sampleID),]
+files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = ".qc")
+eMetrics<-NULL
+for(each in files){
+  tmp<-read.table(paste0(alignedDir, "/ENCODEMetrics/", each))
+  eMetrics<-rbind(eMetrics, t(tmp))
+}
+
+colnames(eMetrics)<-c("coverage","conversionEfficiency")
+eIndex<-match(processSum$sampleID, gsub(".qc", "", files))
+eMetrics<-eMetrics[eIndex,]
+mergeStats<-cbind(mergeStats,eMetrics)
+
+files<-list.files(paste0(methylDir, '/QCOutput/'), pattern = '.corr.qc')
+files <- files[gsub('_', ' ', gsub('.corr.qc', '', files)) %in% pheno$fraction]
+
+cMetrics<-NULL
+for (x in 1:length(files)){
+  tmp<-read.table(paste0(methylDir, '/QCOutput/',files[x]), sep='\t') %>%
+    as.matrix()
+  V<-c(tmp)%>% 
+    t() %>% 
+    as.data.frame()
+  cMetrics[[x]]<-V
+}
+cMetrics<-do.call(rbind.fill, cMetrics) %>% 
+  t() %>% 
+  as.data.frame() 
+
+colnames(cMetrics)<-gsub(".corr.qc", "", files)
+cMetrics<-pivot_longer(cMetrics, cols=1:ncol(cMetrics), names_to = 'tissue', values_to = 'corr') %>%
+  drop_na()
+
+## count number of samples with X million reads
+readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, 10^6)
+nSamples<-matrix(data = NA, nrow = length(readThres), ncol = length(unique(pheno$sequencingBatch))+1)
+for(i in readThres){
+  nSamples[1+(i/10^6),1] <- sum(mergeStats[,1] > i, na.rm = TRUE)
+  colNum<-2
+  for(each in unique(pheno$sequencingBatch)){
+    nSamples[1+(i/10^6),colNum] <- sum(mergeStats[which(pheno$sequencingBatch == each),1] > i, na.rm = TRUE)
+    colNum<-colNum+1
+  }
+}
+
+```
+
+## Overview
+
+To provide an overall summary here is a plot showing number of raw reads and aligned reads (post filtering) for each sample.
+
+``` {r overview, fig.align = 'centre', echo =FALSE}
+# plot barplot of raw and aligned reads per sample
+data.frame(pheno$sampleID, mergeStats[,c(1,9)]) %>%
+  setNames(c('Samples', 'Raw reads', 'Aligned reads')) %>%
+  melt(id='Samples') %>%
+  ggplot(., aes(fill= variable, x=Samples, y=value))+
+    geom_bar(position = 'dodge', stat = 'identity')+
+    theme_bw()+
+    labs(y = 'Number of reads')+
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.position = 'bottom', 
+          legend.title = element_blank())+
+    scale_fill_manual(values = colorBlindGrey8)
+
+```
+
+## 1. Sequencing
+
+### 1.1 Data summary
+
+In total there were `r sum(c(mergeStats[,1], mergeStats[,4]))/1000000` million reads generated across these samples, with a mean of 
+`r signif(mean(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million).
+
+```{r histograms, fig.align='center'}
+# plot histograms
+xlab <- c('Number of Reads', '% unique reads' ,'' , 'Number of Reads', '% unique reads')
+read<-c('R1','R1','','R2', 'R2')
+p=NULL
+for (x in 1:5){
+  p[[x]]<-mergeStats %>% dplyr::select(all_of(x))%>%
+          ggplot(., aes_string(x = names(.)[1]))+ # select x values based on column index rather than name
+          geom_histogram(bins=100, fill ='white', colour = 'black')+
+          labs(title = read[x], x = xlab[x], y = 'Number of Samples')+
+          theme_bw()
+}
+p<-p[- 3] # remove the null list item
+grid.arrange(grobs = p,ncol=2)
+```
+
+
+```{r minReads, fig.align='center'}
+# plot minimum number of reads
+coeff=nSamples[1,1]/100
+data.frame(readThres/10^6, nSamples[,-1]) %>% 
+  melt(., id='readThres.10.6') %>%
+  ggplot(., aes_string(x = names(.)[1], y = names(.)[3], colour = names(.)[2]))+
+  geom_line() +
+  labs(x = 'Minimum number of reads (millions)', y = 'Number of Samples')+
+  theme_bw()+
+  geom_vline(xintercept=c((25)/0.8, 50, median(mergeStats[,1], na.rm = TRUE)/10^6), 
+             colour = c('black', 'black', colorBlindGrey8[2]),
+             linetype="dashed", show.legend =FALSE)+
+  scale_y_continuous(sec.axis = sec_axis(trans = ~./coeff, name = '% of samples'))+
+  theme(legend.position = "none")+
+  scale_color_manual(values = rep('black', ncol(nSamples)))
+
+```
+
+### 1.2 Estimate Library Complexity
+
+Complexity can be assessed at two points, from both the raw sequencing reads and the aligned reads. In this section we will assess the number of unique reads as the total number of reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. 
+
+``` {r uniqueReads, fig.align = 'center'}
+## d. Plot %unique reads against read number
+ggplot(mergeStats[,c(1,2)], aes(x = Total.Sequences, y = total_deduplicated_percentage, colour = pheno$fraction))+
+  geom_point() +
+  labs(x = 'Number of Reads', y = '% unique reads')+
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
+  theme(legend.title = element_blank(),
+        legend.position = 'bottom')
+```
+
+## 2. Alignment
+
+### 2.1 Summary of alignment (pre-filtering)
+
+The plot below shows the alignment rate and number of mapped reads per sample. 
+
+```{r alignment rate, fig.align = 'center'}
+## a. Plot alignment rate against number of reads
+ggplot(mergeStats[,c(7,8)], aes(x = total_reads, y = percent_aligned, colour = pheno$fraction))+
+  geom_point() +
+  geom_hline(yintercept=c(70), #acceptable
+             #colour = c('black', colorBlindGrey8[2]),
+             linetype="dashed", show.legend =FALSE)+
+  labs(x = 'Number of Reads', y = 'Alignment rate')+
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8[1:3])+
+  theme(legend.title = element_blank(),
+        legend.position = 'bottom')
+
+```
+
+``` {r blank, fig.align = 'center'}
+## b. Plot alignment rate
+p1<-data.frame(pheno$fraction, mergeStats$percent_aligned) %>%
+  ggplot(., aes(x=pheno.fraction, y=mergeStats.percent_aligned, ))+
+    theme_bw()+
+    labs(x = 'Cell fraction', y = 'Alignment rate')+
+    geom_violin(fill = "grey80")+
+    geom_boxplot(width=0.05, fill='black')+
+    stat_summary(fun="median",
+                 geom="point", color="white")
+
+p2<-data.frame(pheno$fraction, mergeStats$aligned_reads) %>%
+  ggplot(., aes(x=pheno.fraction, y=mergeStats.aligned_reads, ))+
+  theme_bw()+
+  labs(x = 'Cell fraction', y = 'Number of aligned reads')+
+  geom_violin(fill = "grey80")+
+  geom_boxplot(width=0.05, fill='black')+
+  stat_summary(fun="median",
+               geom="point", color="white")
+
+grid.arrange(grobs = list(p1, p2), nrow = 1)
+```
+
+## 3. Library Metrics
+
+### 3.1 Coverage
+
+ENCODE recommends a minimum coverage of 30X per replicate, requiring the average read depth across the genome to be 30 reads per base.
+
+``` {r coverage, fig.align = 'center'}
+#coverage
+data.frame(mergeStats[,1],mergeStats$coverage, pheno$fraction) %>%
+  ggplot(., aes_string(x = names(.)[3], y = names(.)[2]))+
+  theme_bw()+
+  theme(axis.text = element_text(size = 10))+
+  labs(x = 'Cell fraction', y = 'Coverage')+
+  geom_violin(fill = "grey80")+
+  geom_boxplot(width=0.05, fill='black')+
+  stat_summary(fun="median",
+               geom="point", color="white")+
+  geom_hline(yintercept=30, linetype="dashed", show.legend =FALSE)
+```
+
+### 3.2 Conversion efficiency
+
+As a measure of control, a spike-in with known methylation should be used to ensure that the bisulfite conversion has been successful. ENCODE guidelines recommend that the C to T conversion rate be >98%, as indicated by the dashed line.
+
+``` {r conversion, fig.align = 'center'}
+data.frame(mergeStats$conversionEfficiency, pheno$sequencingBatch) %>%
+  ggplot(., aes(x=pheno.sequencingBatch,y=mergeStats.conversionEfficiency))+
+    theme_bw()+
+    theme(axis.text = element_text(size = 10))+
+    labs(x = '', y = 'Conversion efficiency %')+
+    geom_violin(fill = "grey80")+
+    geom_boxplot(width=0.05, fill='black')+
+    stat_summary(fun="median", 
+                 geom="point", color="white")+
+    geom_hline(yintercept=98, linetype="dashed", show.legend =FALSE)
+```
+
+### 3.3 Correlation
+
+ENCODE recommends that CpG quantification should have a Pearson correlation >0.8 in sites with >10x coverage between replicates. Given the high correlation in methylation between cell type, this metric examines this correlation between cell type, across sites with >10x coverage in all samples of the same cell type.
+
+```{r corr, fig.align = 'center'}
+# plot correlation
+ggplot(cMetrics, aes(x=tissue, y=corr))+
+  theme_bw()+
+  theme(axis.text = element_text(size = 10))+
+  xlab('')+
+  ylim(c(0,1))+
+  ylab('Pearson correlation')+
+  geom_violin(fill = "grey80")+
+  geom_boxplot(width=0.05, fill='black')+
+  stat_summary(fun="median",
+               geom="point", color="white")+
+  geom_hline(yintercept=0.8, linetype="dashed", show.legend =FALSE)
+```
+
+Correlation matrix of the QC metrics.
+
+```{r corrMt, fig.align = 'center'}
+## create correlation plot 
+corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)]), rowMeans(mergeStats[,c(3,6)]),
+                     mergeStats$percent_aligned,
+                     mergeStats$aligned_reads, mergeStats[,c((ncol(mergeStats)-1):ncol(mergeStats))]) 
+colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'alignt\nrate', 'distinct\nreads', 'coverage', 'convrsn\nefficncy') 
+
+corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
+corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black', upper.col = COL2('PiYG'), lower.col = COL2('PiYG'))
+
+```
