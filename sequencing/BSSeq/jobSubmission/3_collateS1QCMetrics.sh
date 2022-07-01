@@ -10,6 +10,7 @@
 #SBATCH --error=BSSeq/logFiles/%u/BSSeqQCSummary-%A.e
 #SBATCH --job-name=BSSeqQCSummary
 
+#-----------------------------------------------------------------------#
 
 ## print start date and time
 echo Job started on:
@@ -28,6 +29,7 @@ export PROJECT=$1
 source ./BSSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
 
+#-----------------------------------------------------------------------#
 
 if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
 then 
@@ -83,5 +85,5 @@ echo 'EXITCODE: ' $?
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/BSSeq/logFiles/${USER}
-mkdir -p ${SLURM_JOB_ID}
-mv BSSeqQCSummary-${SLURM_JOB_ID}* ${SLURM_JOB_ID}/
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv *${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}

@@ -34,18 +34,16 @@ f1=$(basename $f)
 sampleName=${f1%.*.fastq.gz} 
 echo "Processing" ${sampleName}
 
-f1=$(basename $(ls ${TRIMDIR}/${sampleName}*1_trimmed*.f*)) 
-f2=$(basename $(ls ${TRIMDIR}/${sampleName}*2_trimmed*.f*)) 
+cd ${TRIMDIR}
+f=($(ls ${sampleName}*trimmed*.f*))
 
-cd ${ALIGNEDDIR}	
-echo "Aligning"" ${sampleName}"	
-	
+
 if [ ! -f ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]		
 then
   cd ${TRIMDIR}
 
   # Alignment
-  bowtie2 -p 10 -x ${REFGENOME}/genome -1 ${f1} -2 ${f2}  -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
+  bowtie2 -p 10 -x ${REFGENOME}/genome -1 ${f[0]} -2 ${f[1]}  -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
 
   ## Convert to sam file, sort and index
   samtools view -bSo ${ALIGNEDDIR}/${sampleName}.bam ${ALIGNEDDIR}/${sampleName}.sam
