@@ -15,7 +15,6 @@
 ## print start date and time
 echo Job started on:
 date -u
-JOBNAME="ATACAlignment"
     
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: " $SLURM_SUBMIT_DIR
@@ -66,7 +65,7 @@ then
     echo "Current sample: " ${sampleID} ##
 
 
-    ## if number of flags is 1 (config.txt), then run all steps
+    ## if number of flags is 1 ($PROJECT), then run all steps
     if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
     then
         ## run sequencing QC and trimming on fastq files        
@@ -85,7 +84,7 @@ then
         sh ./preScripts/fastp.sh ${sampleID} ${toProcess[0]} ${toProcess[1]} 
     fi
 
-	if [ $# = 1 ] || [[ $2 =~ 'ALIGN' ]]
+	if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
 	then
 		## run alignment and post processing on sample
 		module purge ## had conflict issues if this wasn't run first
@@ -95,10 +94,10 @@ then
 		export PATH="$PATH:/lustre/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
 		
 		cd ${SCRIPTDIR}
-		sh ./ATACSeq/preprocessing/1_alignment.sh ${sampleID}
+		sh ./ATACSeq/preprocessing/alignment.sh ${sampleID}
 	fi
 
-	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
+	if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
 	then
 		module purge
 		module load SAMtools
@@ -113,8 +112,10 @@ then
     fi
 
     ## move log files into a folder
-    mkdir -p ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
-    mv ATACSeq/logFiles/${USER}/${JOBNAME}-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+    cd ATACSeq/logFiles/${USER}/
+    mkdir -p ${SLURM_ARRAY_JOB_ID}
+    mv *${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* ${SLURM_ARRAY_JOB_ID}
+
 
 else
     echo "File list not found"

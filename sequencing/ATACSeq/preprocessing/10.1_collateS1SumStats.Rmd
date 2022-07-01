@@ -12,6 +12,9 @@ params:
 ---
 
 ```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center')
+
 # load packages
 library(dplyr)
 library(plyr)
@@ -25,7 +28,7 @@ library(cowplot)
 
 ## load config variables
 if (is.na(params$project)){
-  project<-"rizzardi"
+  project<-"MRC"
   source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
 
 } else {
@@ -37,12 +40,13 @@ if (is.na(params$project)){
 ## create colourblind friendly palette
 colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999", 
                        "#F0E442", "#0072B2",  "#E69F00", "#56B4E9")
+
 ```
 
 This report provides a summary of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment and filtering (and peak calling steps). The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines] (https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. The pipeline is still under development.
 
 ```{r loadDat, message = FALSE, results='hide'}
-# import data
+## import data
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 processSum <- read.csv(file.path(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
 fastqc<-read.table(file.path(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
@@ -65,7 +69,6 @@ if (length(missingCol) != 0 ) {
 ## exclude duplicates from metadata
 dups<-names(which(table(paste(pheno$individualID, pheno$fraction, pheno$tissue, sep = "_")) > 1))
 pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","cohort","fraction","individualID", "tissue"), colnames(pheno))])
-
 processSum <- processSum[match(pheno$sampleID, processSum$sampleID),]
 
 ## c. MULTIQC
@@ -82,13 +85,13 @@ colnames(mergeStats)[ncol(mergeStats)]<-"PercentMTReads"
 aIndex<-match(processSum$sampleID, gsub("\\.bowtie", "", alignQC$Sample))
 alignQC$aligned_total<-rowSums(alignQC[,c("paired_aligned_one", "paired_aligned_multi")])
 mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "aligned_total")])
+
 ## f. ENCODE METRICS
 ## load flagstat metrics calculated as part of encode qc pipeline
 flagstat<-flagstat[match(processSum$sampleID, flagstat$V1),]
 files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = ".pbc.qc")
 eMetrics<-NULL
 for(each in files){
-  
   tmp<-read.table(paste0(alignedDir, "/ENCODEMetrics/", each))
   if(ncol(tmp) == 7){
     eMetrics<-rbind(eMetrics, tmp)
@@ -142,9 +145,27 @@ for(i in readThres){
 
 ## Overview
 
-To provide an overall summary here is a table of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
+To provide an overall summary here is a plot of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
 
-``` {r overview, fig.align = 'center', echo =FALSE}
+<style>
+  .scrollingimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .scrollingimage img{
+     max-width: none;
+  }
+
+</style>
+```{r setup2}
+if (nrow(pheno) > 70) {
+  knitr::opts_chunk$set(fig.width=(nrow(pheno)/5))
+}
+```
+
+<div class="scrollingimage">
+```{r overview, echo=FALSE}
 data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats$ReadsinMACS2TagAlignPeaks) %>%
   setNames(c('Samples', 'Raw reads', 'Aligned reads', 'Reads in peaks')) %>%
   melt(id='Samples') %>%
@@ -158,16 +179,19 @@ data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats$ReadsinMACS2TagAlignPea
           legend.title = element_blank())+
     scale_fill_manual(values = colorBlindGrey8)
 
+knitr::opts_chunk$set(fig.width=7)
 ```
+</div>
+
 
 ## 1. Sequencing
 
 ### 1.1 Data summary
 
 In total there were `r sum(c(mergeStats[,1], mergeStats[,4]))/1000000` million reads generated across these samples, with a mean of 
-`r signif(mean(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]))/1000000,3)` million).
+`r signif(mean(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million).
 
-```{r pressure, fig.align = 'center'}
+```{r pressure}
 xlab <- c('Number of Reads', '% unique reads' ,'' , 'Number of Reads', '% unique reads')
 read<-c('R1','R1','','R2', 'R2')
 p=NULL
@@ -184,12 +208,12 @@ grid.arrange(grobs = p,ncol=2)
 
 For mammalian studies, authors of the ATAC-seq protocol use a minimum of 50 million non-duplicated, non-mitochondrial mapped reads for open chromatin detection. The ENCODE pipeline recommends a minimum of 25 million for single end and 50 million for paired. In the plot below, median of the data is indicated by the orange line and 50 million and 25 million thresholds by the black lines.
 
-``` {r minReads, fig.align = 'center'}
+``` {r minReads}
 # plot minimum number of reads
 coeff=nSamples[1,1]/100
 data.frame(readThres/10^6, nSamples[,-1]) %>% 
   melt(., id='readThres.10.6') %>%
-  ggplot(., aes_string(x = names(.)[1], y = names(.)[3], colour = names(.)[2]))+
+  ggplot(aes(x = .[,1], y = .[,3], colour = .[,2]))+
   geom_line() +
   labs(x = 'Minimum number of reads (millions)', y = 'Number of Samples')+
   theme_bw()+
@@ -207,7 +231,7 @@ A good ATAC-seq experiment will capture enrichment at a broad range of genomic l
 
 Complexity can be assessed at two points, from both the raw sequencing reads and the aligned reads. In this section we will assess the number of unique reads as the total number of reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. 
 
-``` {r uniqueReads, fig.align = 'center'}
+``` {r uniqueReads}
 ## plot %unique reads against read number
 ggplot(mergeStats[,c(1,2)], aes(x = Total.Sequences, y = total_deduplicated_percentage, colour = pheno$fraction))+
   geom_point() +
@@ -222,11 +246,11 @@ p<-NULL
 x=1
 cols<-c("sequencingBatch", "fraction", "cohort", "Sequencing batch", "Cell fraction", "Brain bank")
 lab <- c('Number of reads', '% unique reads', "Alignment rate", "Number of aligned reads")
-for (j in 1:2){
-  for (i in 1:3){
+for (i in 1:3){ #select pheno columns
+  for (j in 1:2){ #select mergeStats columns
     p[[x]]<-data.frame(mergeStats[,j], pheno[,cols[i]]) %>%
       ggplot(aes(y = .[,1], x=as.factor(.[,2])))+
-      geom_violin(fill = "grey80")+
+      geom_violin(fill = "grey80", scale = 'width')+
       geom_boxplot(width=0.05, fill='black')+
       labs(x = cols[i+3], y = lab[j])+
       stat_summary(fun="median", 
@@ -238,7 +262,7 @@ for (j in 1:2){
     x<-x+1
   }
 }
-grid.arrange(grobs = p,ncol=3)
+grid.arrange(grobs = p,ncol=2)
 
 ```
 
@@ -249,7 +273,7 @@ grid.arrange(grobs = p,ncol=3)
 
 The plot below shows the alignment rate and number of mapped reads per sample. While general convention is a unique mapping rate over 80% is typical for a successful ATAC-seq experiment, ENCODE would require that the percentage of mapped reads should be greater than 95%, though values >80% may be acceptable. In the plot below the pink line indicates the 80% threshold, the black indicates the 95%.  
 
-```{r alignment rate, fig.align = 'center'}
+```{r alignment rate}
 ## plot alignment rate against number of reads
 ggplot(mergeStats[,c('aligned_total','overall_alignment_rate')], aes(x = aligned_total, y = overall_alignment_rate, colour = pheno$fraction))+
   geom_point() +
@@ -264,15 +288,15 @@ ggplot(mergeStats[,c('aligned_total','overall_alignment_rate')], aes(x = aligned
 ```
 
 
-``` {r blank, fig.align = 'center'}
+``` {r alignBoxplot}
 ## plot alignment rate amd no aligned reads by sequencing batch, cell fraction and brain bank
 p<-NULL
 x=1
-for (j in 8:9){
-  for (i in 1:3){
+for (i in 1:3){
+  for (j in 8:9){
     p[[x]]<-data.frame(mergeStats[,j], pheno[,cols[i]]) %>%
       ggplot(aes(y = .[,1], x=as.factor(.[,2])))+
-      geom_violin(fill = "grey80")+
+      geom_violin(fill = "grey80", scale='width')+
       geom_boxplot(width=0.05, fill='black')+
       labs(x = cols[i+3], y = lab[j-5])+
       stat_summary(fun="median", 
@@ -288,7 +312,7 @@ for (j in 8:9){
     x<-x+1
   }
 }
-grid.arrange(grobs = p,ncol=3)
+grid.arrange(grobs = p,ncol=2)
 
 ```
 
@@ -297,11 +321,11 @@ grid.arrange(grobs = p,ncol=3)
 
 It can be a useful QC to assess the number of mitochondrial reads; some ATAC-Seq samples have been reported to be 80% mitochondrial reads. 
 
-``` {r mitochondria, fig.align = 'center'}
+``` {r mitochondria}
 # plot percentage of mitochondrial reads
 data.frame(mergeStats$PercentMTReads, pheno$cohort) %>%
   ggplot(aes(y = .[,1], x=as.factor(.[,2])))+
-      geom_violin(fill = "grey80")+
+      geom_violin(fill = "grey80", scale='width')+
       geom_boxplot(width=0.05, fill='black')+
       labs(x = "Sequencing batch", y = "Percentage of MT reads")+
       stat_summary(fun="median", 
@@ -314,7 +338,7 @@ data.frame(mergeStats$PercentMTReads, pheno$cohort) %>%
 
 In this section we will assess the number of unique aligned reads as the number of total reads increases. This is equivalent to subsampling the data. The dynamics of the resulting curve indicate the complexity of the library prep and are best interpreted across a number of samples. NB this will differ slightly to the complexity curves produced earlier as this is based on just the aligned reads.
 
-``` {r dedupreads, fig.align = 'center'}
+``` {r dedupreads}
 # plot unique reads against total reads
 data.frame(mergeStats[,1], mergeStats$DistinctReadPairs, pheno$fraction) %>%
   ggplot(aes(x=.[,1], y = .[,2], colour = .[,3]))+
@@ -328,7 +352,7 @@ data.frame(mergeStats[,1], mergeStats$DistinctReadPairs, pheno$fraction) %>%
 
 We will also calculate additional statistics recommended by the ENCODE ATAC-seq pipeline: PCR Bottlenecking Coefficients 1 & 2 (PBC1 & PBC2) and Non-Redundant Fraction (NRF) and compare these to their reference values.
 
-``` {r encode, fig.align = 'center'}
+``` {r encode}
 p=NULL
 refs<-matrix(c(0.7, 0.9,
                0.7, 0.9, 
@@ -338,13 +362,15 @@ labs[2, ]<-colMeans(refs)
 labsText<-list(c("Concerning", "Acceptable", "Ideal"), c("Severe", "Concerning", "None"), c("Severe", "Concerning", "None"))
 for (x in 1:3){
   colNum<-x+4
+  min<-min(eMetrics[,colNum], na.rm = TRUE)
+  max<-max(eMetrics[,colNum], na.rm = TRUE)
   # generate the placement of the labels relative to the data
-  if (min(eMetrics[,colNum]) < refs[1, x]){
-    labs[1, x]<-mean(c(min(eMetrics[,colNum]), refs[1, x]))
-  } else { labs[1, x]<-refs[1, x]-sd(eMetrics[,colNum]) } 
-  if(max(eMetrics[,colNum]) > refs[2, x]){
-    labs[3, x]<-mean(c(max(eMetrics[,colNum]), refs[2, x]))
-  } else { labs[3, x]<- refs[2, x]+sd(eMetrics[,colNum]) }
+  if (min < refs[1, x]){
+    labs[1, x]<-mean(c(min, refs[1, x]))
+  } else { labs[1, x]<-refs[1, x]-sd(eMetrics[,colNum], na.rm = TRUE) } 
+  if(max > refs[2, x]){
+    labs[3, x]<-mean(c(max, refs[2, x]))
+  } else { labs[3, x]<- refs[2, x]+sd(eMetrics[,colNum], na.rm = TRUE) }
   
   # create plot
   p[[x]]<-dplyr::select(eMetrics, all_of(colNum)) %>%
@@ -364,7 +390,7 @@ grid.arrange(grobs = p, nrow = 3)
 
 Correlation matrix of the QC metrics.
 
-``` {r correlation, fig.align = 'center'}
+``` {r correlation}
 ## create correlation plot 
 corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)]), rowMeans(mergeStats[,c(3,6)]),
                      mergeStats$PercentMTReads, mergeStats$overall_alignment_rate,
@@ -372,14 +398,14 @@ corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)])
 colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
                             colnames(mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]))
 corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
-corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black', upper.col = COL2('PiYG'), lower.col = COL2('PiYG'))
+corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black')
 ```
 
 ### 2.4 Fragment Size Distribution
 
 ATAC-seq data should be enriched for specific sized fragments, so the distribution of fragment size should show periodicity. Typically there should be a large proportion of reads with fragment length < 100bp indicating nucleosome-free fragments, the plot should then show periodicity of ~ 200bp representing  enrichment of mono-, di-, and tri-nucleosome bound fragments (~200, 400, 600?p, respectively).  In the plot below, a successful ATAC-seq experiment should have a peak at ~50-100bp with a large proportion of reads less than 100 bp, and peaks at 200bp, 400bp, 600bp. If there was no chromatin in the sample the graph would have no periodicity and resemble a poisson distribution with lambda = 1).
 
-``` {r periodicity, fig.align = 'center'}
+``` {r periodicity}
 ## plot nucleosome periodicity
 melt(na.omit(propNucleosomesAll)) %>%
   ggplot(aes(x=as.factor(Var2), y=value))+
@@ -416,7 +442,7 @@ ENCODE recommends that number of peaks in each sample be greater than 150000, th
 data.frame(fripStats$MACS2TagAlignPeaks, fripStats$MACS2PEPeaks)%>%
   melt() %>%
   ggplot(aes(y = value, x=variable))+
-      geom_violin(fill = "grey80")+
+      geom_violin(fill = "grey80", scale='width')+
       geom_boxplot(width=0.05, fill='black')+
       labs(x = "Sequencing batch", y = "Number of peaks")+
       stat_summary(fun="median", 
@@ -438,7 +464,7 @@ Plot of the fraction of reads in peaks called for that sample. These plots give 
 data.frame(fripStats$FripMACS2TagAlign, fripStats$FripMACS2PE)%>%
   melt() %>%
   ggplot(aes(y = value, x=variable))+
-      geom_violin(fill = "grey80")+
+      geom_violin(fill = "grey80", scale='width')+
       geom_boxplot(width=0.05, fill='black')+
       labs(x = "Sequencing batch", y = "Fraction reads in peaks")+
       stat_summary(fun="median", 
@@ -468,5 +494,5 @@ p<-compact(p) # remove the null item
 
 grid.arrange(grobs = p, ncol=2, nrow = 2, 
              layout_matrix = rbind(c(1,2), c(3,3)),
-             widths = c(2.7, 2.7), heights = c(2.5, 0.2))
+             widths = c(2.7, 2.7), heights = c(2.5, 0.5))
 ```

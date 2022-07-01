@@ -61,5 +61,5 @@ echo 'EXITCODE: ' $?
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
-mkdir -p ${SLURM_JOB_ID}
-mv ChIPQCSummary-${SLURM_JOB_ID}* ${SLURM_JOB_ID}/
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv *${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}

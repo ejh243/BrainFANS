@@ -2,8 +2,8 @@ This readme explains the content of the scripts for running the ATAC analysis pi
 
 	REQUISITES:
 		Scripts submitted from the scripts/sequencing folder.
-		The ${DATADIR} variable of the config file edited to be specific to the dataset.
 		Users require a username folder in the ATACSeq/logFiles directory.
+		The name of the project folder must be specified as the first argument on the command line.
 
 #### Data pre-processing:
 

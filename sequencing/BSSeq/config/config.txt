@@ -1,4 +1,4 @@
-## Sequencing data filepaths
+## Data filepaths
 export DATADIR=/lustre/projects/Research_Project-MRC190311/${PROJECT}
 
 export METADIR=${DATADIR}/0_metadata

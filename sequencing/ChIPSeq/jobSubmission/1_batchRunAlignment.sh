@@ -10,10 +10,11 @@
 #SBATCH --output=ChIPSeq/logFiles/%u/ChIPAlignment-%A_%a.o # output file
 #SBATCH --job-name=ChIPAlignment
 
+#-----------------------------------------------------------------------#
+
 ## print start date and time
 echo Job started on:
 date -u
-JOBNAME="ChIPAlignment"
 	
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: "
@@ -39,6 +40,7 @@ then
     { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
+#-----------------------------------------------------------------------#
 
 echo "Changing Folder to Data directory "
 echo ${DATADIR}
@@ -65,7 +67,7 @@ then
 
     echo "Current sample: " ${sampleID} ##
 
-   ## if number of flags is 1 (config.txt), then run all steps
+   ## if number of flags is 1 ($PROJECT), then run all steps
     if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
     then
         ## run sequencing QC and trimming on fastq files        
@@ -95,10 +97,10 @@ then
 		module load BEDTools
 		module load Java
 
-        mkdir -p ${ALIGNEDDIR}
+        mkdir -p ${ALIGNEDDIR}/QCOutput
 
 		cd ${SCRIPTDIR}
-		sh ./ChIPSeq/preprocessing/1_alignment.sh ${sampleID} ## using ./ rather than sh executes script in current session and can make use of variables alredy declared.
+		sh ./ChIPSeq/preprocessing/1_alignment.sh ${sampleID} ## using ./ rather than sh executes script in current session and can make use of variables already declared.
 	fi
 
 	if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
@@ -117,11 +119,12 @@ then
     fi
 
 	echo 'EXITCODE: ' $?
-cd
-	## move log files into a folder
-	cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
-	mkdir -p ${SLURM_ARRAY_JOB_ID}
-	mv ${JOBNAME}-${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}/
+
+    ## move log files into a folder
+    cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
+    mkdir -p ${SLURM_ARRAY_JOB_ID}
+    mv *${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* ${SLURM_ARRAY_JOB_ID}
+
 else
 	echo 'File list not found'
 fi

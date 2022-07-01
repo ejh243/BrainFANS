@@ -5,12 +5,16 @@ output:
   html_document:
     toc: true
     toc_float: true
+    code_folding: hide
 params:
   project: !r commandArgs(trailingOnly=T)[3]
   configFile: !r paste0(commandArgs(trailingOnly=T)[2], "/ChIPSeq/config/config.r")
 ---
 
 ```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center')
+
 ## load packages
 library(ChIPQC)
 library(knitr)
@@ -45,7 +49,7 @@ colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999",
 
 This report provides a summary of a ChIP-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment, filtering and peak calling steps. The bioinformatic pipeline parallels that of the [ENCODE ChIP-seq guidelines] (https://www.encodeproject.org/chip-seq/histone/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. The pipeline is still under development.
 
-``` {r load, echo =FALSE, warning = FALSE}
+``` {r load}
 # import data
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 processSum <- read.csv(paste0(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
@@ -117,7 +121,25 @@ for(i in readThres){
 
 To provide an overall summary here is a barplot of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
 
-``` {r overview, echo =FALSE}
+<style>
+  .scrollingimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .scrollingimage img{
+     max-width: none;
+  }
+
+</style>
+```{r setup2}
+if (nrow(pheno) > 70) {
+  knitr::opts_chunk$set(fig.width=(nrow(pheno)/5))
+}
+```
+
+<div class="scrollingimage">
+``` {r overview}
 data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats[,4]) %>%
   setNames(c('Samples', 'Raw reads', 'Aligned reads', 'Reads in peaks')) %>%
   melt(id='Samples') %>%
@@ -132,13 +154,14 @@ data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats[,4]) %>%
     scale_fill_manual(values = colorBlindGrey8)
 
 ```
+</div>
 
 
 ## 1. Sequencing
 
 ### 1.1 Data Summary
 
-```{r hists, fig.align = 'center', echo=FALSE}
+```{r hists}
 xlab <- c('Number of Reads', '% unique reads' ,'' , 'Number of Reads', '% unique reads')
 read<-c('R1','R1','','R2', 'R2')
 p=NULL
@@ -155,7 +178,7 @@ grid.arrange(grobs = p,ncol=2)
 
 For narrow-peak histone experiments, each replicate should have 20 million usable fragments. For broad-peak histone experiments, each replicate should have 45 million usable fragments. A fragment is defined as the sequencing output corresponding to one location in the genome. If single-ended sequencing is performed, one read is considered a fragment. If paired-ended sequencing is performed, one pair of reads is considered a fragment.
 
-``` {r minReads, fig.align = 'center', echo=FALSE}
+``` {r minReads}
 # plot minimum number of reads
 coeff=nSamples[1,1]/100
 data.frame(readThres/10^6, nSamples[,-1]) %>% 
@@ -178,7 +201,7 @@ data.frame(readThres/10^6, nSamples[,-1]) %>%
 
 ### 2.1 Summary of alignment (pre-filtering)
 
-```{r alignment rate, fig.align = 'center', echo = FALSE}
+```{r alignment rate}
 ## plot alignment rate against number of reads
 ggplot(mergeStats[,c(7,8)], aes(x = paired_total, y = overall_alignment_rate, colour = rep(pheno$fraction, 2)))+
   geom_point() +
@@ -201,7 +224,7 @@ These metrics inspect distribution of global pile-up across the genome.
 In the histogram of coverage depths, the X-axis represents the read pileup height at a basepair position, and the Y-axis represents how many positions have this pileup height on a log scale. A ChIP sample with good enrichment should have a reasonable "tail".
 
 
-```{r covhist, fig.align = 'center', echo=FALSE, warning=FALSE, results=FALSE}
+```{r covhist, fig.align = 'center', warning=FALSE, results=FALSE}
 plotCoverageHist(dat,colourBy=('Factor'), facetBy=("Tissue")) +
   theme_bw() +
   scale_color_manual(values = colorBlindGrey8)+
@@ -216,7 +239,7 @@ SSD is the standard deviation of coverage normalised to the total number of read
 To assess the contribution of artefact signal to global distrubtion of signal pileup, SSD is measured before and after exclusion of signal from known blacklisted regions.
 
 
-```{r ssd, fig.align = 'center', fig.height = 10, echo=FALSE, warning=FALSE, results=FALSE}
+```{r ssd, fig.height = 10}
 plotSSD(dat, facetBy=c("Tissue", "Factor"))+
   theme_bw() +
   scale_color_manual(values = colorBlindGrey8)+
@@ -232,7 +255,7 @@ In ChIPQC the reduction in total genome covered which occurs from shifting the W
 
 The cross-coverage scores after successive shifts can then be visualised and reviewed. There should be a distinctive peak around the read length and a second peak at the expected fragment length. 
 
-```{r cc, fig.align = 'center', echo=FALSE, warning=FALSE, results=FALSE}
+```{r cc}
 plotCC(dat, colourBy=('Factor'), facetBy=("Tissue"))+
   theme_bw() +
   scale_color_manual(values = colorBlindGrey8)+
@@ -247,21 +270,19 @@ plotCC(dat, colourBy=('Factor'), facetBy=("Tissue"))+
 Each peak is centered on its summit (point of highest pileup after
 extending the reads to the calculated fragment length), and the pileup values at bases in a window upstream and downstream of the summits is computed and averaged for all peaks in the sample. Good ChIPs will show distinctive patterns of enrichment in these peaks, while associated controls will be relatively flat.
 
-```{r peakProf, fig.align = 'center', echo=FALSE, warning=FALSE, results=FALSE}
+```{r peakProf}
 plotPeakProfile(dat, colourBy=('Factor'), facetBy=("Tissue"))+
   theme_bw() +
   scale_color_manual(values = colorBlindGrey8)+
   theme(legend.position = 'bottom', 
         legend.title = element_blank())
-
-knitr::knit_exit()
 ```
 
 ### 4.2 Plotting Relative Enrichment of reads in Genomic Intervals
 
 A heatmap plot showing relative enrichment of reads around annotated genomic features.
 
-```{r relativeEnrich, fig.align = 'center', echo=FALSE, warning=FALSE, results=FALSE}
+```{r relativeEnrich}
 plotRegi(dat, facetBy=c("Tissue", "Factor")) + 
   theme_bw() +
   theme(text = element_text(size=10),
@@ -285,7 +306,7 @@ The first plot shows the percentage of reads that overlap called peaks (also kno
 
 The second plot shows the percentage of reads that overlapped blacklisted regions (RiBL). The signal from blacklisted has been shown to contribute to confound peak callers and fragment length estimation as well as to contribute to the read length peak in cross coverage. The RiBL score then may act as a guide for the level of background signal in a ChIP or input.
 
-```{r fripfribl, fig.align = 'center', echo=FALSE, warning=FALSE, results=FALSE}
+```{r fripfribl}
 plotRap(dat, facet = FALSE) + 
   theme_bw() +
   theme(text = element_text(size=10), 
@@ -311,7 +332,7 @@ plotFribl(dat, facet = FALSE) +
 
 The correlation heatmap is based on correlation values for all the peak scores for each sample. The other plot shows the first two principal component values for each sample.
 
-``` {r cluster, fig.align = 'center', echo=FALSE, warning=FALSE, results=FALSE}
+``` {r cluster}
 plotCorHeatmap(dat,attributes=c("Tissue","Factor"))
-dba.plotPCA(dat,attributes=c("Tissue", "Factor"))
+plotPrincomp(dat,attributes=c("Tissue", "Factor"))
 ```

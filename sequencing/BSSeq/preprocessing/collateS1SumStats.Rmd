@@ -12,7 +12,10 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-## LOAD PACKAGES
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center')
+
+## load packages
 library(ggplot2)
 library(plyr)
 library(tidyr)
@@ -121,6 +124,24 @@ for(i in readThres){
 
 To provide an overall summary here is a plot showing number of raw reads and aligned reads (post filtering) for each sample.
 
+<style>
+  .scrollingimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .scrollingimage img{
+     max-width: none;
+  }
+
+</style>
+```{r setup2}
+if (nrow(pheno) > 70) {
+  knitr::opts_chunk$set(fig.width=(nrow(pheno)/5))
+}
+```
+
+<div class="scrollingimage">
 ``` {r overview, fig.align = 'centre', echo =FALSE}
 # plot barplot of raw and aligned reads per sample
 data.frame(pheno$sampleID, mergeStats[,c(1,9)]) %>%
@@ -136,7 +157,9 @@ data.frame(pheno$sampleID, mergeStats[,c(1,9)]) %>%
           legend.title = element_blank())+
     scale_fill_manual(values = colorBlindGrey8)
 
+knitr::opts_chunk$set(fig.width=7)
 ```
+</div>
 
 ## 1. Sequencing
 

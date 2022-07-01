@@ -10,7 +10,11 @@
 #SBATCH --error=BSSeq/logFiles/%u/BSSeqCorrelation-%A_%a.e
 #SBATCH --job-name=BSSeqCorrelation
 
-cd $SLURM_SUBMIT_DIR
+#-----------------------------------------------------------------------#
+
+## print start date and time
+echo Job started on:
+date -u
 
 ## load config file provided on command line when submitting job
 echo "Loading config file for project: " $1
@@ -58,4 +62,4 @@ Rscript ${SCRIPTDIR}/BSSeq/preprocessing/computeCorr.r ${PROJECT} ${tissue} ${SA
 ## move log files into a folder
 cd ${SCRIPTDIR}/BSSeq/logFiles/${USER}
 mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv BSSeqCorrelation-${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}
+mv *${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}

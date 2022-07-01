@@ -10,7 +10,11 @@
 #SBATCH --error=ATACSeq/logFiles/%u/sexCheck-%A_%a.e
 #SBATCH --job-name=sexCheck
 
+#-----------------------------------------------------------------------#
 
+## print start date and time
+echo Job started on:
+date -u
 
 ## load config file provided on command line when submitting job
 echo "Loading config file for project: " $1
@@ -23,6 +27,7 @@ echo "Project directory is: " $DATADIR
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
+#-----------------------------------------------------------------------#
 
 if [ ! -d ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr ]
 then
@@ -37,3 +42,7 @@ module purge
 module load R/3.6.3-foss-2020a
 Rscript ATACSeq/preprocessing/13_collateSexChecks.r ${DATADIR}/
 
+## move log files into a folder
+cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv *${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* ${SLURM_ARRAY_JOB_ID}
