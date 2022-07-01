@@ -10,11 +10,15 @@
 ##
 ##---------------------------------------------------------------------#
 
+#----------------------------------------------------------------------#
+# NOTES
+#----------------------------------------------------------------------#
+# project folder is provided on command line at execution
+# assumes idats are in 1_raw
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
-# project folder is provided on command line at execution
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 gdsFile <-file.path(dataDir, "2_gds/raw.gds")

@@ -1,30 +1,52 @@
-## two normalisation strategies 
-## 1) across all samples
-## 2) within cell type
+##---------------------------------------------------------------------#
+##
+## Title: Normalisation
+##
+## Purpose of script: Perform normalisation of cell-specific DNAm data
+##
+## Author: Eilis Hannon
+##
+## Date Created: 2020
+##
+##---------------------------------------------------------------------#
 
+#----------------------------------------------------------------------#
+# NOTES
+#----------------------------------------------------------------------#
+# project folder is provided on command line at execution
+# normalisation is performed across whole sample and within cell type
 
+#----------------------------------------------------------------------#
+# DEFINE PARAMETERS
+#----------------------------------------------------------------------#
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 
 gdsFile <-file.path(dataDir, "/2_gds/raw.gds")
+normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
 qcOutFolder<-file.path(dataDir, "/2_gds/QCmetrics")
 normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
 
+#----------------------------------------------------------------------#
+# LOAD PACKAGES
+#----------------------------------------------------------------------#
 library(bigmelon)
 
+#----------------------------------------------------------------------#
+# IMPORT DATA
+#----------------------------------------------------------------------#
 setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
-## filter samples
+# filter samples
 QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/passQCStatusStage3AllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 passQC<-QCSum$Basename[which(QCSum$passQCS3)]
-
 
 QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
 QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
-normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
+cellTypes<-unique(QCmetrics$Cell.type)
 
 # create new gfile with only samples that pass QC
 if(exists(normgdsFile)){
@@ -35,29 +57,30 @@ for(node in ls.gdsn(gfile)){
 	copyto.gdsn(node = normfile, source = index.gdsn(gfile, node), name = node)
 }
 
-## filter out samples that fail QC
-## need to match to basename not colnames!!!
+# filter out samples that fail QC
+# match to basename not colnames
 rawbetas<-betas(normfile)[,]
 subSet(normfile, i=1:length(rownames(normfile)), j=match(passQC, colnames(rawbetas))) 
 
-## need to close gds file in order to open in another R session
+# close gds file in order to open in another R session
 closefn.gds(gfile)
 
+#----------------------------------------------------------------------#
+# NORMALISATION ALL SAMPLES TOGETHER
+#----------------------------------------------------------------------#
 
-## repeat detection p value filtering
-#pfilter(normfile)
-
-## normalise all samples together
 dasen(normfile, node="normbeta")
 
-## need to extract below to run normalisation on each cell type
+#----------------------------------------------------------------------#
+# NORMALISATION CELL TYPES SEPARATELY
+#----------------------------------------------------------------------#
+
+# need to extract below to run normalisation
 meth<-methylated(normfile)[,]
 unmeth<-unmethylated(normfile)[,]
 probeType<-fData(normfile)$Type
 rawbetas<-betas(normfile)[,]
 
-
-cellTypes<-unique(QCmetrics$Cell.type)
 
 celltypeNormbeta<-matrix(NA, nrow = nrow(meth), ncol = ncol(meth))
 rownames(celltypeNormbeta)<-rownames(rawbetas)
@@ -65,12 +88,13 @@ colnames(celltypeNormbeta)<-colnames(rawbetas)
 for(each in cellTypes){
 	index<-which(QCmetrics$Cell.type == each)
 	if(length(index) > 2){
-		## perform normalisation within cell type & study
-		## compare effect of normalisation within cell type
 		celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeType)
 	}
 }
 
+#----------------------------------------------------------------------#
+# SAVE AND CLOSE
+#----------------------------------------------------------------------#
 
 add.gdsn(normfile, 'celltypenormbeta', val = celltypeNormbeta, replace = TRUE)
 
