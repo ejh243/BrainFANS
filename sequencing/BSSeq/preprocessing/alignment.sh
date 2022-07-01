@@ -25,6 +25,8 @@ date -u
 ## alignment
 bismark --genome ${REFGENOME} -o ${ALIGNEDDIR} -1 $f1 -2 $f2 --basename ${sampleName} --parallel
 
+# align to spike-in genome
+bismark --genome ${REFSPIKE} -o ${ALIGNEDDIR}/spikeAlignments -1 $f1 -2 $f2 --basename ${sampleName}.spike --parallel
 
 ## deduplicate for WGBS libraries
 cd ${ALIGNEDDIR}

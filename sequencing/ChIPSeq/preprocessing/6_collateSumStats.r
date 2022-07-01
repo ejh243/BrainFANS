@@ -152,9 +152,6 @@ processSum <- read.csv(paste0(metaDir, "/summariseSampleProcessingProgress.csv")
 ## MULTIQC
 fastqc<-read.table(paste0(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
-## MITOCHONDRIAL READS
-#readCounts<-read.table(paste0(alignedDir, "/countMTReads.txt"), fill = TRUE, skip = 1)
-
 ## ALIGNMENT STATISTICS
 alignQC<-read.table(paste0(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
@@ -244,22 +241,22 @@ for(i in readThres){
 ## count number of samples with X million useable fragments
 # 45 million usable fragments - broad
 # 20 million usable fragments - narrow
+
 broad<-c('H3F3A', 'H3K27me3', 'H3K36me3', 'H3K4me1', 'H3K79me2', 'H3K79me3', 'H3K9me1', 'H3K9me2', 'H4K20me1')
 narrow<-c('H2AFZ', 'H3ac', 'H3K27ac', 'H3K4me2', 'H3K4me3', 'H3K9ac')
 
-readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, 10^6)
-nSamples<-matrix(data = NA, nrow = length(readThres), ncol = length(unique(pheno$target))+1)
+readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, by = 10^6)
+nSamples<-matrix(data = NA, nrow = length(readThres), ncol = 3)
+colnames(nSamples)<-c('all', 'narrow', 'broad')
+
 for(i in readThres){
-  print(i)
   nSamples[1+(i/10^6),1] <- sum(mergeStats[,1] > i, na.rm = TRUE)
   colNum<-2
-  for(each in unique(pheno$target)){
-    nSamples[1+(i/10^6),colNum] <- sum(mergeStats[which(c(pheno$target) == each),1] > i, na.rm = TRUE)
-    colNum<-colNum+1
-  }
+  nSamples[1+(i/10^6),colNum] <- (sum(mergeStats[which(c(pheno$target) %in% narrow),1] > i, na.rm = TRUE)*2)
+  colNum<-colNum+1
+  nSamples[1+(i/10^6),colNum] <- (sum(mergeStats[which(c(pheno$target) %in% broad),1] > i, na.rm = TRUE)*2)
+  colNum<-colNum+1
 }
-
-
 
 #----------------------------------------------------------------------#
 #

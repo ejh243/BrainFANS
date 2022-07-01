@@ -80,7 +80,7 @@ do
     f1=$(basename ${toProcess[0]}) 
     f2=$(basename ${toProcess[1]})
 
-    echo -n ${sampleName},${RAWDATADIR}, ${f1},${f2}, >> ${METADIR}/summariseSampleProcessingProgress.csv
+    echo -n ${sampleName},${RAWDATADIR},${f1},${f2}, >> ${METADIR}/summariseSampleProcessingProgress.csv
 
     
     if [ ! -s ${FASTQCDIR}/${f1%%.*}*fastqc.zip ]
@@ -127,9 +127,9 @@ do
     
     if [ ! -s ${METHYLDIR}/${sampleName}.deduplicated.bismark.cov.gz ]
     then
-        echo -n "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo -n "Y" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "Y" >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
   
 done

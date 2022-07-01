@@ -56,6 +56,29 @@ then
 	sh ./BSSeq/preprocessing/progressReport.sh 
 fi
 
+if [ $# = 1 ] || [[ $2 =~ 'SUMMARY' ]]
+then
+	## collate the earlier outputs into a r markdown report
+	cd ${SCRIPTDIR}
+	echo ${SCRIPTDIR}
+
+	module load R/3.6.3-foss-2020a
+	module load Pandoc
+	Rscript -e "rmarkdown::render('BSSeq/preprocessing/collateS1SumStats.Rmd', output_file=paste0(commandArgs(trailingOnly=T)[1], '/QCOutput/stage1SummaryStats.html'))" "$ALIGNEDDIR" "${SCRIPTDIR}" "$PROJECT" 
+fi
+
+
+if [[ $1 =~ 'FILTER' ]] #only run this if specified
+then
+	## collate the earlier outputs into a r markdown report
+	cd ${SCRIPTDIR}
+
+	shift # so that all command line arguments are the filtering parameters
+
+	module load R/3.6.3-foss-2020a
+	Rscript BSSeq/preprocessing/filterOnS1SumStats.r ${PROJECT} $@ #all remaining cmd line arguments
+fi
+
 echo 'EXITCODE: ' $?
 
 ## move log files into a folder

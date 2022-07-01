@@ -46,19 +46,23 @@ rm ${sampleName}.filt.nodup.nmsrt.bam
 # Subsample tagAlign file
 # Restrict to one read end per pair for CC analysis
 # ================================
-zcat ${sampleName}.filt.nodup.nmsrt.bedpe.gz | grep -v “chrM” | shuf -n ${NREADS} | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,"N","1000",$9}' | gzip -c > "${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz"
+zcat ${sampleName}.filt.nodup.nmsrt.bedpe.gz | grep -v “chrM” | shuf -n ${NREADS} | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,"N","1000",$9}' | \
+	gzip -c > "${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz"
 
 # =================================
 # Calculate cross correlation scores
 # ================================
 # CC_SCORE FILE format
 # Filename <tab> numReads <tab> estFragLen <tab> corr_estFragLen <tab> PhantomPeak <tab> corr_phantomPeak <tab> argmin_corr <tab> min_corr <tab> phantomPeakCoef <tab> relPhantomPeakCoef <tab> QualityTag
-Rscript ${PHANTOMPEAK}run_spp.R -c="${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz" -p=${NTHREADS} -filtchr=chrM -savp=${sampleName}.subsample.cc.plot.pdf -out=${sampleName}.subsample.cc.qc -rf
+Rscript ${PHANTOMPEAK}run_spp.R -c="${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz" -p=${NTHREADS} \
+	-filtchr=chrM -savp=${sampleName}.subsample.cc.plot.pdf -out=${sampleName}.subsample.cc.qc -rf
 sed -r 's/,[^\t]+//g' ${sampleName}.subsample.cc.qc > temp
 mv temp ${sampleName}.subsample.cc.qc
 
-rm "${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz"
-rm ${sampleName}.filt.nodup.nmsrt.bedpe.gz
+echo 'Calculated cross correlation'
+
+#rm "${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz"
+#rm ${sampleName}.filt.nodup.nmsrt.bedpe.gz
 
 # ================
 # Shift tagAlign file

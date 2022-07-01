@@ -2,8 +2,7 @@ This readme explains the content of the scripts for running the WGBS analysis pi
 
 	REQUISITES:
 		Scripts submitted from the scripts/sequencing folder.
-		The ${DATADIR} variable of the config file edited to be specific to the dataset.
-		Users require a username folder in the ATACSeq/logFiles directory.
+		Users require a username folder in the BSSeq/logFiles directory.
 		
 #### Data pre-processing:
 

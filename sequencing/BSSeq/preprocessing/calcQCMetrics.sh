@@ -41,7 +41,7 @@ samtools sort ${sampleName}*bt2_pe.bam | bedtools genomecov -ibam stdin | \
 # =============================
 #The C to T conversion rate should be ≥98%
 
-var=$( grep 'C methylated in CpG context:' lambdaAlignments/${sampleName}*.txt | awk '{ print $6 }' | rev | cut -c2- | rev )
+var=$( grep 'C methylated in CpG context:' spikeAlignments/${sampleName}*.txt | awk '{ print $6 }' | rev | cut -c2- | rev )
 echo "100 - $var" | bc >> ENCODEMetrics/${sampleName}.qc
 
 

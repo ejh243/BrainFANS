@@ -102,7 +102,7 @@ then
 		mkdir -p $METHYLDIR
 
 		cd ${SCRIPTDIR}
-		sh ./BSSeq/preprocessing/1_alignment.sh ${sampleID}
+		sh ./BSSeq/preprocessing/alignment.sh ${sampleID}
 	fi
 
 	if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
@@ -114,7 +114,7 @@ then
 		mkdir -p ${ALIGNEDDIR}/ENCODEMetrics
 
 		cd ${SCRIPTDIR}
-		sh ./BSSeq/preprocessing/2_calcQCMetrics.sh ${sampleID}
+		sh ./BSSeq/preprocessing/calcQCMetrics.sh ${sampleID}
 	fi
 
 	echo 'EXITCODE: ' $?

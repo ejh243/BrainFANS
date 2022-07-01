@@ -18,7 +18,6 @@ export PROJECT=$1
 
 source ./BSSeq/config/config.txt 
 
-
 ## check directories
 echo "Project directory is: " $DATADIR
 echo 'Script directory is: ' ${SCRIPTDIR}
@@ -35,12 +34,12 @@ module purge
 module load R
 
 ## get column number of tissue 
-column=$(awk '$1 == "tissue"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
+column=$(awk '$1 == "fraction"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
 
 echo 'Column number is ' $column
 
-## get mark for sample
-IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
+## get tissue for sample
+IFS=$'\n' # need to set this as \n rather than default - space, \t and then \n - so that elements are expanded using \n as delimiter
 tissue=($(awk -F"," -v col="$column" '(NR>1) {print $col}' ${METADIR}/sampleSheet.csv | sort -u))
 unset IFS
 echo 'Tissue is' ${tissue[${SLURM_ARRAY_TASK_ID}]}
