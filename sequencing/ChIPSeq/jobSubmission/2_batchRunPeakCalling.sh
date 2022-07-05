@@ -46,16 +46,14 @@ sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/samples.txt | tail -1))
 
 if [[ $2 == 'control' ]]
 then 
-	echo 'Control file specified'
-	control=($(head -n `expr ${SLURM_ARRAY_TASK_ID} + 1` ${METADIR}/samples.txt | tail -1))
-	echo $control
+	column=$(awk -v RS=',' '/controlID/{print NR; exit}' $METADIR/sampleSheet.csv)
+	control=$(awk -F"," -v col="$column" /$sampleName/'{print $col}' ${METADIR}/sampleSheet.csv)
+	echo 'Control file specified:' $control
 	shift
 fi
 
 if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
-	echo "Starting peak calling on" ${sampleName} "at: "
-	date -u
 	module purge
 	module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 	module load BEDTools
@@ -64,7 +62,11 @@ then
 
 	# derive histone mark from sampleSheet file
 	## get column number for mark
-	column=$(awk '$1 == "target"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
+	column=$(awk -v RS=',' '/target/{print NR; exit}' $METADIR/sampleSheet.csv)
+	if [[ $column == '' ]]
+	then
+		{ echo 'target not found in sampleSheet, please check required columns'; exit 1; }
+	fi
 
 	echo 'Column number is ' $column
 	## get mark for sample

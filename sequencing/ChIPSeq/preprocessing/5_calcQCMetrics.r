@@ -15,8 +15,10 @@ rm(list=ls())
 
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
-args[1]<-"epiGaba"
-batchNum<-0
+if (length(args)==0){
+  args[1]<-"SFARI"
+  args[2]<-0
+} 
 
 ## load config variables
 project<-args[1]
@@ -42,11 +44,11 @@ if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
   
   peaks<-list.files(peakDir, pattern = "Peak.filt", recursive = TRUE) %>%
     sort()
-  bamReads<-paste(sampleSheet$sampleID, 'filt.nodup.bam') %>%
+  bamReads<-paste0(sampleSheet$sampleID, '.filt.nodup.bam') %>%
     sort()
   
   # bam files
-  bamControl<-paste(sampleSheet$controlID, 'filt.nodup.bam') %>%
+  bamControl<-paste0(sampleSheet$controlID, '.filt.nodup.bam') %>%
     sort()
   
   # necessary columns

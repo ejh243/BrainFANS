@@ -20,6 +20,10 @@
 # ${PEAKDIR}/QCOutput/FRIP_*.csv
 
 sampleName=$1
+echo
+echo "Starting calculating frip for" ${sampleName} "at: "
+date -u
+
 
 ## save output in txt file
 echo "SampleName,BAMTotalReads,MACS2PEPeaks,ReadsinMACS2PEPeaks" > ${PEAKDIR}/QCOutput/FRIP_${sampleName}.csv

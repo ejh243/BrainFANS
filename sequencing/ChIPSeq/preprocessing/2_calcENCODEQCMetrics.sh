@@ -23,9 +23,8 @@
 ## input: sampleName
 
 sampleName=$1 
-
-echo "Calculating ENCODE QC metrics on:" ${sampleName}
-echo Job started on:
+echo
+echo "Calculating ENCODE QC metrics on" ${sampleName} 'at:'
 date -u
 
 cd ${ALIGNEDDIR}

@@ -30,7 +30,3 @@ echo "Replacing" $2 "with" $3
 echo
 python ${SLURM_SUBMIT_DIR}/general/processing/replaceName.py $2 $3 "${FILES[@]}"
 
-## move log files into a folder
-cd ${SCRIPTDIR}/general/logFiles/${USER}
-mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv *${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* ${SLURM_ARRAY_JOB_ID}

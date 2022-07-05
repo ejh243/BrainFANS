@@ -26,13 +26,10 @@
 # *_sorted.bam.bai
 
 
-f=$1
-cd ${DATADIRPE}
-
-## extract sample names
-f1=$(basename $f)
-sampleName=${f1%.*.fastq.gz} 
-echo "Processing" ${sampleName}
+sampleName=$1
+echo
+echo "Starting alignment on" ${sampleName} "at: "
+date -u
 
 cd ${TRIMDIR}
 f=($(ls ${sampleName}*trimmed*.f*))

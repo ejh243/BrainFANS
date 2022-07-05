@@ -108,7 +108,7 @@ then
         source activate encodeqc
 
         cd ${SCRIPTDIR}
-        sh ./ATACSeq/preprocessing/2_calcENCODEQCMetrics.sh ${sampleID}
+        sh ./ATACSeq/preprocessing/calcENCODEQCMetrics.sh ${sampleID}
     fi
 
     ## move log files into a folder

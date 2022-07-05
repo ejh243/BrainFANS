@@ -4,7 +4,7 @@
 #SBATCH --time=96:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
-#SBATCH --ntasks-per-node=32 # specify number of processors per node
+#SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=BSSeq/logFiles/%u/BSSeqAlignment-%A_%a.o

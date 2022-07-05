@@ -28,7 +28,7 @@ library(cowplot)
 
 ## load config variables
 if (is.na(params$project)){
-  project<-"MRC"
+  project<-"rizzardi"
   source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/config/config.r")
 
 } else {
@@ -71,22 +71,20 @@ dups<-names(which(table(paste(pheno$individualID, pheno$fraction, pheno$tissue, 
 pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","cohort","fraction","individualID", "tissue"), colnames(pheno))])
 processSum <- processSum[match(pheno$sampleID, processSum$sampleID),]
 
-## c. MULTIQC
 ## wrangle multiqc stats to retain important columns
 colsKeep<-c("Total.Sequences","total_deduplicated_percentage", "Sequences.flagged.as.poor.quality")
 mergeStats<-cbind(fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep], fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep])
 
-## d. MITOCHONDRIAL READS
+## calculate percentage of mitochondrial reads
 readCounts<-readCounts[match(pheno$sampleID, readCounts$V1),]
 mergeStats<-cbind(mergeStats, readCounts$V2/readCounts$V3*100)
 colnames(mergeStats)[ncol(mergeStats)]<-"PercentMTReads"
 
-## e. ALIGNMENT QC
+## select alignment columns and match to sampleIDs
 aIndex<-match(processSum$sampleID, gsub("\\.bowtie", "", alignQC$Sample))
 alignQC$aligned_total<-rowSums(alignQC[,c("paired_aligned_one", "paired_aligned_multi")])
 mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "aligned_total")])
 
-## f. ENCODE METRICS
 ## load flagstat metrics calculated as part of encode qc pipeline
 flagstat<-flagstat[match(processSum$sampleID, flagstat$V1),]
 files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = ".pbc.qc")
@@ -104,7 +102,7 @@ eIndex<-match(processSum$sampleID, gsub(".pbc.qc", "", files))
 eMetrics<-eMetrics[eIndex,]
 mergeStats<-cbind(mergeStats,eMetrics)
 
-## 6. FRIP
+## load and calculate fraction reads in peaks
 fripStats<-read.csv(paste0(peakDir, "/QCOutput/", fripFiles[1]))
 for(each in fripFiles[-1]){
   fripStats<-rbind(fripStats, read.csv(paste0(peakDir, "/QCOutput/", each)))
@@ -121,7 +119,7 @@ fripStats$FripMACS2PE <- fripStats$ReadsinMACS2PEPeaks/fripStats$BAMTotalReads
 #}
 #crossCor<-crossCor[match(processSum$sampleID, crossCor$SampleName),]
 
-## load ATACQC metrics 
+## load periodicity metrics 
 propNucleosomesAll<-NULL
 filePaths <- list.files(file.path(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch")
 for(each in filePaths){
@@ -160,12 +158,14 @@ To provide an overall summary here is a plot of the number of raw reads, aligned
 </style>
 ```{r setup2}
 if (nrow(pheno) > 70) {
+  ## include scrolling bar if number of samples exceeds 70
   knitr::opts_chunk$set(fig.width=(nrow(pheno)/5))
 }
 ```
 
 <div class="scrollingimage">
 ```{r overview, echo=FALSE}
+# plot barchart of 
 data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats$ReadsinMACS2TagAlignPeaks) %>%
   setNames(c('Samples', 'Raw reads', 'Aligned reads', 'Reads in peaks')) %>%
   melt(id='Samples') %>%
@@ -192,6 +192,7 @@ In total there were `r sum(c(mergeStats[,1], mergeStats[,4]))/1000000` million r
 `r signif(mean(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million).
 
 ```{r pressure}
+# plot histograms of read numbers and % unique reads
 xlab <- c('Number of Reads', '% unique reads' ,'' , 'Number of Reads', '% unique reads')
 read<-c('R1','R1','','R2', 'R2')
 p=NULL
@@ -353,31 +354,36 @@ data.frame(mergeStats[,1], mergeStats$DistinctReadPairs, pheno$fraction) %>%
 We will also calculate additional statistics recommended by the ENCODE ATAC-seq pipeline: PCR Bottlenecking Coefficients 1 & 2 (PBC1 & PBC2) and Non-Redundant Fraction (NRF) and compare these to their reference values.
 
 ``` {r encode}
+## plot encode statistics
 p=NULL
-refs<-matrix(c(0.7, 0.9,
+## to ensure the threshold labels are in correct place according to threshold lines, calculate midpoints between lines:
+# matrix of encode thresholds
+thres<-matrix(c(0.7, 0.9,
                0.7, 0.9, 
                1, 3), nrow = 2)
+# matrix of label orientation (mean)
 labs<-matrix(data=NA, ncol = 3, nrow = 3)
-labs[2, ]<-colMeans(refs)
+labs[2, ]<-colMeans(thres)
 labsText<-list(c("Concerning", "Acceptable", "Ideal"), c("Severe", "Concerning", "None"), c("Severe", "Concerning", "None"))
+
 for (x in 1:3){
-  colNum<-x+4
+  colNum<-x+4 # index to correct column according to label
   min<-min(eMetrics[,colNum], na.rm = TRUE)
   max<-max(eMetrics[,colNum], na.rm = TRUE)
   # generate the placement of the labels relative to the data
-  if (min < refs[1, x]){
-    labs[1, x]<-mean(c(min, refs[1, x]))
-  } else { labs[1, x]<-refs[1, x]-sd(eMetrics[,colNum], na.rm = TRUE) } 
-  if(max > refs[2, x]){
-    labs[3, x]<-mean(c(max, refs[2, x]))
-  } else { labs[3, x]<- refs[2, x]+sd(eMetrics[,colNum], na.rm = TRUE) }
+  if (min < thres[1, x]){
+    labs[1, x]<-mean(c(min, thres[1, x]))
+  } else { labs[1, x]<-thres[1, x]-sd(eMetrics[,colNum], na.rm = TRUE) } 
+  if(max > thres[2, x]){
+    labs[3, x]<-mean(c(max, thres[2, x]))
+  } else { labs[3, x]<- thres[2, x]+sd(eMetrics[,colNum], na.rm = TRUE) }
   
   # create plot
   p[[x]]<-dplyr::select(eMetrics, all_of(colNum)) %>%
     ggplot(aes_string(x=names(.)[1]))+
     geom_histogram(bins = 20, fill ='white', colour = 'black')+
     labs(y = "Number of samples")+
-    geom_vline(xintercept = refs[,x],alpha=0.9, linetype="dashed", show.legend =FALSE)+
+    geom_vline(xintercept = thres[,x],alpha=0.9, linetype="dashed", show.legend =FALSE)+
     annotate("text", x = labs[,x], y = Inf, vjust = 2, label = labsText[[x]])+
     theme_bw()+
     theme(axis.text.y = element_text(angle = 90))
