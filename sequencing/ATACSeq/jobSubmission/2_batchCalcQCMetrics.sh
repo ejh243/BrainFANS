@@ -40,7 +40,7 @@ mkdir -p ${ALIGNEDDIR}/QCOutput
 
 module load R/3.6.3-foss-2020a
 
-Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/3_fragmentDistribution.r ${ALIGNEDDIR} ${SLURM_ARRAY_TASK_ID} 
+Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/fragmentDistribution.r ${ALIGNEDDIR} ${SLURM_ARRAY_TASK_ID} 
 
 echo 'EXITCODE: ' $?
 

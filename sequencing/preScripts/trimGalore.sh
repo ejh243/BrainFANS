@@ -5,11 +5,12 @@
 ## requires a (_1) fastq file provided on the command line 
 
 sampleName=$1
+echo
+echo "Starting trimming on" ${sampleName} "at: "
+date -u
+
 f1=$(basename $2)
 f2=$(basename $3)
-
-echo "Processing" ${sampleName}
-
 
 ## create output filenames
 outf1=${f1/.f/_trimmed.f}

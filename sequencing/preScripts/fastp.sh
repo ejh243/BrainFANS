@@ -20,19 +20,20 @@
 # trimming report 
 
 sampleName=$1
+
+echo
+echo "Starting trimming on" ${sampleName} "at: "
+date -u
+
 f1=$(basename $2)
 f2=$(basename $3)
 
 cd ${RAWDATADIR}
 
-echo "Processing" ${sampleName}
-
 ## create output filenames
 outf1=${f1/.f/_trimmed.f}
 outf2=${f2/.f/_trimmed.f}
   
-echo "Running FASTP"
-
 mkdir -p ${TRIMDIR}/fastp_reports/
      
 echo "Looking for trimmed files in" ${TRIMDIR}

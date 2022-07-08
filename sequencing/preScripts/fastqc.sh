@@ -20,22 +20,17 @@
 
 
 sampleName=$1
+
+echo
+echo "Starting fastqc on" ${sampleName} "at: "
+date -u
+
 f1=$(basename $2)
 f2=$(basename $3)
 
-cd ${RAWDATADIR} 
- 
-## extract sample name from filename
-echo "Processing" ${sampleName}
-
-## run fastqc
-
-echo "Running FASTQC on"
-echo ${f1}
-echo ${f2}
-
 echo "Output written to " ${FASTQCDIR}
 
+cd ${RAWDATADIR} 
 fastqc ${f1} ${f2} -t 8 -o ${FASTQCDIR}
 
 if [[ $? == 0 ]]

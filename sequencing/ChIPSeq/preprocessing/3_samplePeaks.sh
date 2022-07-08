@@ -26,10 +26,14 @@
 broad=(H3F3A H3K27me3 H3K36me3 H3K4me1 H3K79me2 H3K79me3 H3K9me1 H3K9me2 H4K20me1)
 narrow=(H2AFZ H3ac H3K27ac H3K4me2 H3K4me3 H3K9ac)
 
-cd ${ALIGNEDDIR}
-mkdir -p ${PEAKDIR}
 mark=$1
 sampleName=$2
+echo
+echo "Starting peak calling on" ${sampleName} "at: "
+date -u
+
+cd ${ALIGNEDDIR}
+mkdir -p ${PEAKDIR}
 
 if [[ ! -z "$3" ]]
 then 
@@ -39,8 +43,6 @@ then
 fi
 
 f=${sampleName}.filt.nodup.bam
-echo "Processing:" ${f} 
-
 
 if [[ ${broad[*]} =~  ${mark} ]]
 then
