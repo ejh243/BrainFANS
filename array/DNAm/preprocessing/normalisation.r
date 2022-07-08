@@ -73,16 +73,24 @@ unmeth<-unmethylated(normfile)[,]
 rawbetas<-betas(normfile)[,]
 
 # need to know which probe type
-probeAnno<-read.table(file.path(refDir, "EPICArray/EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-probeAnno<-probeAnno[match(rownames(rawbetas), probeAnno$probeID),]
+if(nrow(rawbetas) < 600000){
+	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
+	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$TargetID),]
+	colnames(probeAnnot)[which(colnames(probeAnnot) == "INFINIUM_DESIGN_TYPE")]<-"designType"
+} else  {
+	probeAnnot<-read.table(file.path(refDir, "EPICArray/EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$probeID),]
+}
+
+
 
 #----------------------------------------------------------------------#
 # NORMALISE ALL SAMPLES TOGETHER
 #----------------------------------------------------------------------#
 
-#dasen(normfile, node="normbeta", onetwo=probeAnno$designType)
+#dasen(normfile, node="normbeta", onetwo=probeAnnot$designType)
 
-normbeta<-dasen(meth, unmeth, probeAnno$designType)
+normbeta<-dasen(meth, unmeth, probeAnnot$designType)
 add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
 
 #----------------------------------------------------------------------#
@@ -95,7 +103,7 @@ colnames(celltypeNormbeta)<-colnames(rawbetas)
 for(each in cellTypes){
 	index<-which(QCmetrics$Cell.type == each)
 	if(length(index) > 2){
-		celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnno$designType)
+		celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
 	}
 }
 
