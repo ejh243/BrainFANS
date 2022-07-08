@@ -13,7 +13,7 @@
 
 
 #----------------------------------------------------------------------#
-# DEFINE FUNCTIONS
+# DEFINE ANALYSIS FUNCTION
 #----------------------------------------------------------------------#
 
 runEWAS<-function(row,QCmetrics, status){
@@ -25,10 +25,10 @@ runEWAS<-function(row,QCmetrics, status){
 	modelMLM<-lmer(row ~ status * Cell.type + CCDNAmAge + Sex +  + (1 | Tissue.Centre)  + (1 | Indidivual.ID), REML = FALSE, data = QCmetrics)
 	nullMLM<-lmer(row ~ status + Cell.type + CCDNAmAge + Sex +  + (1 | Tissue.Centre)  + (1 | Indidivual.ID), REML = FALSE, data = QCmetrics)
 
-	p.df <- pdata.frame(data.frame("meth" = row, "QCmetricstype" = status, "age" = QCmetrics$CCDNAmAge, "sex" = QCmetrics$Sex, "cell.type" = QCmetrics$Cell.type, "brain.bank" = QCmetrics$Tissue.Centre, "id" = QCmetrics$Indidivual.ID), index = c("id", "cell.type"), drop.index = F)
+	p.df <- pdata.frame(data.frame("meth" = row, "phenotype" = status, "age" = QCmetrics$CCDNAmAge, "sex" = QCmetrics$Sex, "cell.type" = QCmetrics$Cell.type, "brain.bank" = QCmetrics$Tissue.Centre, "id" = QCmetrics$Indidivual.ID), index = c("id"), drop.index = F)
 		
-	modelp <- plm(meth ~ QCmetricstype * cell.type + age + sex  + brain.bank, data = p.df, model = "pooling")
-	nullCRR <- plm(meth ~ QCmetricstype + cell.type + age + sex  + brain.bank, data = p.df, model = "pooling")
+	modelp <- plm(meth ~ phenotype * cell.type + age + sex  + brain.bank, data = p.df, model = "pooling")
+	nullCRR <- plm(meth ~ phenotype + cell.type + age + sex  + brain.bank, data = p.df, model = "pooling")
 	# compute Stata like df-adjustment
 	G <- length(unique(p.df$id))
 	N <- length(p.df$id)
@@ -41,7 +41,7 @@ runEWAS<-function(row,QCmetrics, status){
 
 	return(c(summary(modelLM)$coefficients["status1", 4], anova(modelLM, nullLM)[2,6], 
 	summary(modelMLM)$coefficients["status1", 5], anova(modelMLM, nullMLM)[2,8],
-	 modelCRR["QCmetricstype1",4],waldtest(modelp, nullCRR, vcov = firm_c_vcov, test = "F")[2,4]))
+	 modelCRR["phenotype1",4],waldtest(modelp, nullCRR, vcov = firm_c_vcov, test = "F")[2,4]))
 }
 
 
@@ -70,6 +70,8 @@ sigEffect<-0.05
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 nChunk<-args[2]
+
+set.seed(nChunk)
 
 normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
 resPath<-file.path(dataDir, "/4_analysis/methodsDevelopment")
@@ -114,6 +116,8 @@ paste("CRR_Int", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS
 rowNum<-1
 nullSim<-NULL
 for(simNum in 1:nSim){
+	message("Simulation: ", simNum, " of ", nSim)
+
 	# randomly select samples to be cases, fix so numbers per brain bank match actual
 	status<-rep(0,nrow(QCmetrics))
 	for(centre in unique(QCmetrics$Tissue.Centre)){
@@ -190,5 +194,5 @@ for(simNum in 1:nSim){
 	}
 }
 
-save(nullSim, file = file.path(resPath, "nullSimulations_Chunk", nChunk, ".rdata"))
-save(sumSim, file = file.path(resPath, "nSigSimulateTrueEffects_Chunk", nChunk, ".rdata"))
+save(nullSim, file = file.path(resPath, paste0("nullSimulations_Chunk", nChunk, ".rdata")))
+save(sumSim, file = file.path(resPath, paste0("nSigSimulateTrueEffects_Chunk", nChunk, ".rdata")))

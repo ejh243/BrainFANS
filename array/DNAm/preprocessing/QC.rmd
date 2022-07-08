@@ -588,53 +588,97 @@ Checking if genetically identical samples have the sample Individual ID:
 
 ```{r,echo = FALSE, fig.width = 15, fig.height = 15}
 
-  QCmetrics<-cbind(QCmetrics, predictedduplicates)
-	predictedduplicates<-unique(predictedduplicates)
-	dupSampleIDs<-NULL
-	errors<-NULL
-  for(element in predictedduplicates){
-		index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
-		sampleIDs<-QCmetrics$Indidivual.ID[index]
-		if(length(unique(sampleIDs)) > 1){
-		  errors<-c(errors, element)
-		}
-		dupSampleIDs<-c(dupSampleIDs, paste(sort(QCmetrics$Indidivual.ID[index]), sep = "|", collapse = "|"))
+QCmetrics <- cbind(QCmetrics, predictedduplicates)
+predictedduplicates <- unique(predictedduplicates)
+dupSampleIDs <- NULL
+errors <- NULL
+for (element in predictedduplicates) {
+  index <- match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
+  sampleIDs <- QCmetrics$Indidivual.ID[index]
+  if (length(unique(sampleIDs)) > 1) {
+    errors <- c(errors, element)
   }
+  dupSampleIDs <-
+    c(dupSampleIDs, paste(
+      sort(QCmetrics$Indidivual.ID[index]),
+      sep = "|",
+      collapse = "|"
+    ))
+}
 
-	if(length(errors) == 0){
-	  print("All genetically identical samples had the same individual ID")  
-	} else {
-	  print("ERROR: Genetically identical samples had different individual IDs. See heatmap below for potential mismatches and output file WithinDNAmGeneticMismatches.csv for details")
-	  errorIndexes<-NULL
-	  for(element in errors){
-	    index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
-	    errorIndexes<-c(index,errorIndexes)
-	  }
-	  if("Indidivual.ID" %in% colnames(plotCols)){
-  	  indCols<-plotCols$Indidivual.ID
-	  } else {
-	    indCols<-rainbow(length(unique(QCmetrics$Indidivual.ID)))[as.factor(QCmetrics$Indidivual.ID)]
-	  }
-	  
-	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = indCols[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Indidivual.ID[errorIndexes], margin = c(10,10))
-	if(length(errorIndexes) > 0){	
-		write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticMismatches.csv"), row.names = FALSE)
-		}
-	}
-
-	## do heatmap across any individual who is not clustering as expected
-	if(length(errorIndexes) > 0){
-  samplePlot<-which(QCmetrics$Indidivual.ID %in% unique(QCmetrics$Indidivual.ID[errorIndexes]))
-  pdf(paste0(dataDir, "/2_gds/QCmetrics/HeatmapGeneticInconsistencies.pdf"), height = 15, width = 10)
-  heatmap.2(t(rsbetas[,samplePlot]), trace = "none", key = FALSE, dendrogram = "row", RowSideColors = c("red", "blue")[as.factor(QCSum[samplePlot, "snpCheck"])], labRow = QCmetrics$Indidivual.ID[samplePlot], margin = c(5,5), col = colorRampPalette(rev(brewer.pal(n = 7, name =
-    "RdYlBu")))(100), 
-      lhei=c(0.1,9), 
-      lwid=c(2,9))	
-  dev.off()
-  sampleGroups<-QCmetrics[errorIndexes,]
-	} else {
+if (length(errors) == 0) {
+  print("All genetically identical samples had the same individual ID")
+  errorIndexes <- NULL
+} else {
+  print(
+    "ERROR: Genetically identical samples had different individual IDs. See heatmap below for potential mismatches and output file WithinDNAmGeneticMismatches.csv for details"
+  )
+  errorIndexes <- NULL
+  for (element in errors) {
+    index <- match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
+    errorIndexes <- c(index, errorIndexes)
+  }
+  if ("Indidivual.ID" %in% colnames(plotCols)) {
+    indCols <- plotCols$Indidivual.ID
+  } else {
+    indCols <-
+      rainbow(length(unique(QCmetrics$Indidivual.ID)))[as.factor(QCmetrics$Indidivual.ID)]
+  }
   
-	 sampleGroups<-NULL
+
+  if (length(errorIndexes) > 0) {
+    heatmap.2(
+      snpCor[errorIndexes, errorIndexes],
+      trace = "none",
+      key = FALSE,
+      dendrogram = "column",
+      ColSideColors = indCols[errorIndexes],
+      labRow = QCmetrics$Basename[errorIndexes],
+      labCol = QCmetrics$Indidivual.ID[errorIndexes],
+      margin = c(10, 10)
+    )
+    write.csv(
+      QCmetrics[errorIndexes, ],
+      paste0(
+        dataDir,
+        "/2_gds/QCmetrics/WithinDNAmGeneticMismatches.csv"
+      ),
+      row.names = FALSE
+    )
+  }
+}
+
+## do heatmap across any individual who is not clustering as expected
+if (length(errorIndexes) > 0) {
+  samplePlot <-
+    which(QCmetrics$Indidivual.ID %in% unique(QCmetrics$Indidivual.ID[errorIndexes]))
+  pdf(
+    paste0(
+      dataDir,
+      "/2_gds/QCmetrics/HeatmapGeneticInconsistencies.pdf"
+    ),
+    height = 15,
+    width = 10
+  )
+  heatmap.2(
+    t(rsbetas[, samplePlot]),
+    trace = "none",
+    key = FALSE,
+    dendrogram = "row",
+    RowSideColors = c("red", "blue")[as.factor(QCSum[samplePlot, "snpCheck"])],
+    labRow = QCmetrics$Indidivual.ID[samplePlot],
+    margin = c(5, 5),
+    col = colorRampPalette(rev(brewer.pal(
+      n = 7, name =
+        "RdYlBu"
+    )))(100),
+    lhei = c(0.1, 9),
+    lwid = c(2, 9)
+  )
+  dev.off()
+  sampleGroups <- QCmetrics[errorIndexes, ]
+} else {
+  sampleGroups <- NULL
 }
 
 
@@ -665,11 +709,12 @@ for(each in unique(QCmetrics$Indidivual.ID)){
 if(length(errorIndexes) > 0){
   print("ERROR: samples labelled as the same individual are not genetically identical. See output file WithinDNAmGeneticErrors.csv for sample details")
 	write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticErrors.csv"), row.names = FALSE)
+	sampleGroups<-unique(rbind(sampleGroups, QCmetrics[errorIndexes,]))
 } else {
   
   print("All samples labelled as the same individual are genetically identical")
 }
-sampleGroups<-unique(rbind(sampleGroups, QCmetrics[errorIndexes,]))
+
 ```
 
 
@@ -949,7 +994,7 @@ show_text <- "Age" %in% colnames(QCmetrics)
 The age of samples can be predicted from the DNAm data using the Epigenetic Clock algorithm developed by Steve Horvath. These predicted values are compared to the samples' reported ages. As on a sample level this estimaion can be inaccurate it is used as a quality check of the overall data set and not as a reason to exclude individual samples. The overall correlation was `r if("Age" %in% colnames(QCmetrics)) {signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = "pairwise.complete.obs"),3)}` and the root mean square error was `r if("Age" %in% colnames(QCmetrics)){signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3)}` years. We also applied a custom clock algorithm developed secifically for cortical samples. The overall correlation was `r if("Age" %in% colnames(QCmetrics)){signif(cor(as.numeric(QCmetrics$Age), QCmetrics$CCDNAmAge, use = "pairwise.complete.obs"),3)}` and the root mean square error was `r if("Age" %in% colnames(QCmetrics)){signif(sqrt(mean((QCmetrics$Age-QCmetrics$CCDNAmAge)^2, na.rm = TRUE)),3)}` years.
 
 ```{r dnamage, echo=FALSE, fig.width = 10, fig.height = 5, eval = show_text}
-if("Age" %in% colnames(QCmetrics)){
+if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age)) > 1){
   par(mfrow = c(1,2))
   
   model<-lm(QCmetrics$Age~QCmetrics$DNAmAge)

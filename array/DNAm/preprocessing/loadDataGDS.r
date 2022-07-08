@@ -35,12 +35,12 @@ library(devtools)
 devtools::load_all(path = "../functionsR")
 
 
-setwd(dataDir) 
+
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
 #----------------------------------------------------------------------#
-
+setwd(dataDir) 
 ## load sample sheet
 sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), stringsAsFactors = FALSE)
 ## if no column Basename, creates from columns Chip.ID and Chip.Location

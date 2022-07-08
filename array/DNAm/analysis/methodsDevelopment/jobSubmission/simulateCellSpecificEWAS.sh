@@ -27,7 +27,7 @@ source ./DNAm/config/config.txt
 
 module load R/3.6.3-foss-2020a
 
-Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID}
+Rscript DNAm/analysis/methodsDevelopment/simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID}
 
 # print end date and time
 echo Job finished on:
