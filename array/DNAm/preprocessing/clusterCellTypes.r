@@ -24,9 +24,6 @@ args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 config <- args[2]
 
-if(is.null(config)){
-	config<-"DNAm/config/config.r"
-}
 source(config)
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
@@ -104,8 +101,8 @@ for(i in 1:nrow(QCmetrics)){
 
 
 # identify outliers from first 2 PCs only
-studentCTOutlier<-rowMax(abs(studentPCA[[1]][,1:2])) > studentThres
-QCmetrics$maxStudentPCA<-rowMax(abs(studentPCA[[1]][,1:2]))
+studentCTOutlier<-rowMaxs(abs(studentPCA[[1]][,1:2])) > studentThres
+QCmetrics$maxStudentPCA<-rowMaxs(abs(studentPCA[[1]][,1:2]))
 QCmetrics$studentCTOutlier<-studentCTOutlier
 
 
@@ -124,20 +121,22 @@ cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
 maxSD<-rep(NA, nrow(QCmetrics))
 for(i in 1:nrow(QCmetrics)){
-  maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell.type[i]])/cellSDPCA[1:2,QCmetrics$Cell.type[i]])
-
+	if(QCmetrics$Cell.type[i] %in% colnames(cellMeanPCA)){
+		maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell.type[i]])/cellSDPCA[1:2,QCmetrics$Cell.type[i]])
+	} 
 }
 
 #----------------------------------------------------------------------#
 # CALCULATE INDIVIDUAL FACS SCORE
 #----------------------------------------------------------------------#
-
-uniqueIDs<-unique(QCmetrics[,c("Indidivual.ID", "Sex", "Age", "Phenotype", "Tissue.Centre")])
-indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell.type != "Total")], by = list(QCmetrics$Indidivual.ID[which(QCmetrics$Cell.type != "Total")]), FUN = median)
+keepCols<-c("Indidivual.ID", "Sex", "Age", "Phenotype", "Tissue.Centre")
+keepCols<-keepCols[keepCols %in% colnames(QCmetrics)]
+uniqueIDs<-unique(QCmetrics[,keepCols])
+indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell.type != "Total")], by = list(QCmetrics$Indidivual.ID[which(QCmetrics$Cell.type != "Total")]), FUN = median, na.rm = TRUE)
 nFACs<-table(QCmetrics$Indidivual.ID[QCmetrics$Cell.type != "Total"])
 
 uniqueIDs<-cbind(uniqueIDs, indFACSEff$x[match(uniqueIDs$Indidivual.ID, as.character(indFACSEff$Group.1))], as.numeric(nFACs[uniqueIDs$Indidivual.ID]))
-colnames(uniqueIDs)<-c("Indidivual.ID", "Sex", "Age", "Phenotype", "Tissue.Centre", "FACsEffiency", "nFACS")
+colnames(uniqueIDs)<-c(keepCols, "FACsEffiency", "nFACS")
 
 write.csv(uniqueIDs, paste0(qcOutFolder, "/IndividualFACsEffciencyScores.csv"))
 
@@ -164,8 +163,8 @@ for(i in 1:nrow(QCmetrics)){
 
 # identify outliers from first 2 PCs only
 studentPCA[[2]][is.na(studentPCA[[2]])]<-100
-studentCTOutlier<-rowMax(abs(studentPCA[[2]][,1:2])) > studentThres
-QCmetrics$maxStudentPCA2<-rowMax(abs(studentPCA[[2]][,1:2]))
+studentCTOutlier<-rowMaxs(abs(studentPCA[[2]][,1:2])) > studentThres
+QCmetrics$maxStudentPCA2<-rowMaxs(abs(studentPCA[[2]][,1:2]))
 QCmetrics$maxStudentPCA2[which(QCmetrics$maxStudentPCA2 == 100)]<-NA
 QCmetrics$studentCTOutlier2<-studentCTOutlier
 
@@ -184,8 +183,9 @@ cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
 maxSD<-rep(NA, nrow(QCmetrics))
 for(i in 1:nrow(QCmetrics)){
-  maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell.type[i]])/cellSDPCA[1:2,QCmetrics$Cell.type[i]])
-
+	if(QCmetrics$Cell.type[i] %in% colnames(cellMeanPCA)){
+	  maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell.type[i]])/cellSDPCA[1:2,QCmetrics$Cell.type[i]])
+	}
 }
 
 QCmetrics<-cbind(QCmetrics, maxSD)

@@ -76,6 +76,9 @@ if("Age" %in% colnames(sample_anno)){
   sample_anno$Age<-as.numeric(sample_anno$Age)
 }
 rownames(sample_anno)<-QCmetrics$Basename
+
+sample_anno<-sample_anno[,colSums(!is.na(sample_anno))> 0, drop=F]
+
 sigma<-apply(rawbetas, 1, sd)
 
 
@@ -320,7 +323,7 @@ To visualise the success of this filtering steps, we will repeat the hierarchica
 
 ```{r hclustAfter, echo = FALSE, fig.width = 15, fig.height = 8}
 index<-which(QCmetrics$predLabelledCellType)
-pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],index], annotation_col = sample_anno[index,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Mahalanobis Distance of PCs")
+pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],index], annotation_col = sample_anno[index,, drop = F],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "Mahalanobis Distance of PCs")
 
 ```
 
@@ -431,9 +434,9 @@ To visualize the success of this filtering steps, we will repeat the hierarchica
 
 ```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
 if(length(cellTypes) < 10){
-  pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
+  pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,, drop = F],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
 } else {
-    pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,],  show_colnames = FALSE, show_rownames = FALSE, main = "PCA Outliers")
+    pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,,drop = F],  show_colnames = FALSE, show_rownames = FALSE, main = "PCA Outliers")
 }
 
 ```

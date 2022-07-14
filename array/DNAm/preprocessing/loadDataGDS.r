@@ -31,16 +31,18 @@ library(bigmelon)
 #library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 library(IlluminaHumanMethylationEPICmanifest)
+library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+library(IlluminaHumanMethylation450kmanifest)
 library(devtools)
 devtools::load_all(path = "../functionsR")
 
 
-setwd(dataDir) 
+
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
 #----------------------------------------------------------------------#
-
+setwd(dataDir) 
 ## load sample sheet
 sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), stringsAsFactors = FALSE)
 ## if no column Basename, creates from columns Chip.ID and Chip.Location
@@ -107,8 +109,11 @@ for(i in 1:length(loadGroups)){
 	## update feature data
 	if(updateProbes){
 		print("Updating Feature data")
-
-		annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+		if(nProbes[1] > 650000){
+			annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+		} else {
+			annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+		}
 		all <- minfi:::.availableAnnotation(annoObj)$defaults
 		newfData <- do.call(cbind, lapply(all, function(wh) {
 				minfi:::.annoGet(wh, envir = annoObj@data)

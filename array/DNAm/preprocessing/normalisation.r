@@ -15,12 +15,14 @@
 #----------------------------------------------------------------------#
 # project folder is provided on command line at execution
 # normalisation is performed across whole sample and within cell type
+# probe type info from R package was incomplete so loaded separately
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
+refDir <- args[2]
 
 gdsFile <-file.path(dataDir, "/2_gds/raw.gds")
 normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
@@ -65,22 +67,35 @@ subSet(normfile, i=1:length(rownames(normfile)), j=match(passQC, colnames(rawbet
 # close gds file in order to open in another R session
 closefn.gds(gfile)
 
-#----------------------------------------------------------------------#
-# NORMALISATION ALL SAMPLES TOGETHER
-#----------------------------------------------------------------------#
-
-dasen(normfile, node="normbeta")
-
-#----------------------------------------------------------------------#
-# NORMALISATION CELL TYPES SEPARATELY
-#----------------------------------------------------------------------#
-
 # need to extract below to run normalisation
 meth<-methylated(normfile)[,]
 unmeth<-unmethylated(normfile)[,]
-probeType<-fData(normfile)$Type
 rawbetas<-betas(normfile)[,]
 
+# need to know which probe type
+if(nrow(rawbetas) < 600000){
+	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
+	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$TargetID),]
+	colnames(probeAnnot)[which(colnames(probeAnnot) == "INFINIUM_DESIGN_TYPE")]<-"designType"
+} else  {
+	probeAnnot<-read.table(file.path(refDir, "EPICArray/EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$probeID),]
+}
+
+
+
+#----------------------------------------------------------------------#
+# NORMALISE ALL SAMPLES TOGETHER
+#----------------------------------------------------------------------#
+
+#dasen(normfile, node="normbeta", onetwo=probeAnnot$designType)
+
+normbeta<-dasen(meth, unmeth, probeAnnot$designType)
+add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
+
+#----------------------------------------------------------------------#
+# NORMALISE CELL TYPES SEPARATELY
+#----------------------------------------------------------------------#
 
 celltypeNormbeta<-matrix(NA, nrow = nrow(meth), ncol = ncol(meth))
 rownames(celltypeNormbeta)<-rownames(rawbetas)
@@ -88,7 +103,7 @@ colnames(celltypeNormbeta)<-colnames(rawbetas)
 for(each in cellTypes){
 	index<-which(QCmetrics$Cell.type == each)
 	if(length(index) > 2){
-		celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeType)
+		celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
 	}
 }
 
