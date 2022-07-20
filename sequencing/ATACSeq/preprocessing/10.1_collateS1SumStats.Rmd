@@ -43,7 +43,7 @@ colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999",
 
 ```
 
-This report provides a summary of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment and filtering (and peak calling steps). The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines] (https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. The pipeline is still under development.
+This report provides a summary of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment and filtering (and peak calling steps). The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines](https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. The pipeline is still under development.
 
 ```{r loadDat, message = FALSE, results='hide'}
 ## import data
@@ -139,6 +139,15 @@ for(i in readThres){
     colNum<-colNum+1
   }
 }
+
+## a successful ATAC experiment should have decreasing proportions in the nucleosome, mono, di,tri- nucleosomes
+## define a tolerence for these comparisions
+tol <- 0.05
+decreasingProps<-cbind(propNucleosomesAll[,1]+tol > propNucleosomesAll[,2], 
+                       propNucleosomesAll[,2]+tol > propNucleosomesAll[,3], 
+                       propNucleosomesAll[,3]+tol > propNucleosomesAll[,4]
+)
+colnames(decreasingProps)<-c("NFR>Mono", "Mono>Di", "Di>Tri")
 ```
 
 ## Overview
@@ -501,4 +510,21 @@ p<-compact(p) # remove the null item
 grid.arrange(grobs = p, ncol=2, nrow = 2, 
              layout_matrix = rbind(c(1,2), c(3,3)),
              widths = c(2.7, 2.7), heights = c(2.5, 0.5))
+```
+
+```{r samplePASS}
+# generate a txt file of passed samples
+QCPASS<-cbind(mergeStats[,1] > 10*10^6,
+              mergeStats$overall_alignment_rate > 80, #alignment rate 
+              fripStats$BAMTotalReads > 20*10^6, #total filtered/aligned reads
+              eMetrics$NRF > 0.7, #encode
+              eMetrics$PBC1 > 0.7, #encode
+              eMetrics$PBC2 > 1, #encode
+              propNucleosomesAll[,2] > 0.15, #>15% fractions mononucleosome 
+              decreasingProps[,1]) #periodicity
+
+keep<-rowSums(QCPASS) == ncol(QCPASS)
+
+write.table(names(keep[keep==TRUE]), file = paste0(metaDir, "/stage1Samples.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
 ```

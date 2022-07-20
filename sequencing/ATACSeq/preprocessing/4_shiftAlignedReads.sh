@@ -54,7 +54,7 @@ zcat ${sampleName}.filt.nodup.nmsrt.bedpe.gz | grep -v “chrM” | shuf -n ${NR
 # ================================
 # CC_SCORE FILE format
 # Filename <tab> numReads <tab> estFragLen <tab> corr_estFragLen <tab> PhantomPeak <tab> corr_phantomPeak <tab> argmin_corr <tab> min_corr <tab> phantomPeakCoef <tab> relPhantomPeakCoef <tab> QualityTag
-Rscript ${PHANTOMPEAK}run_spp.R -c="${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz" -p=${NTHREADS} \
+Rscript ${PHANTOMPEAK}/run_spp.R -c="${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz" -p=${NTHREADS} \
 	-filtchr=chrM -savp=${sampleName}.subsample.cc.plot.pdf -out=${sampleName}.subsample.cc.qc -rf
 sed -r 's/,[^\t]+//g' ${sampleName}.subsample.cc.qc > temp
 mv temp ${sampleName}.subsample.cc.qc
