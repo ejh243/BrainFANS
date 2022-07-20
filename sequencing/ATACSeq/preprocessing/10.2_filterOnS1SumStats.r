@@ -241,7 +241,8 @@ fripStats$FripMACS2PE <- fripStats$ReadsinMACS2PEPeaks/fripStats$BAMTotalReads
 # FILTER SAMPLES
 #----------------------------------------------------------------------#
 
-QCPASS<-cbind(mergeStats$overall_alignment_rate > args[3], #alignment rate 
+QCPASS<-cbind(mergeStats[,1] < 10*10^6,
+              mergeStats$overall_alignment_rate > args[3], #alignment rate 
               fripStats$BAMTotalReads > args[4]*10^6, #total filtered/aligned reads
               eMetrics$NRF > 0.7, #encode
               eMetrics$PBC1 > 0.7, #encode
@@ -252,7 +253,7 @@ QCPASS<-cbind(mergeStats$overall_alignment_rate > args[3], #alignment rate
 keep<-rowSums(QCPASS) == ncol(QCPASS)
 length(keep[keep==TRUE])
 
-write.table(names(keep[keep==TRUE]), file = paste0(metaDir, "/stage1QCSamples.txt"), 
+write.table(names(keep[keep==TRUE]), file = paste0(metaDir, "/stage1Samples.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 

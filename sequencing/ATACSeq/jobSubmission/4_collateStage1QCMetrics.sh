@@ -68,7 +68,7 @@ then
 
 	module load R/3.6.3-foss-2020a
 	module load Pandoc
-	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd', output_file=paste0(commandArgs(trailingOnly=T)[1], '/QCOutput/stage1SummaryStats.html'))" "$ALIGNEDDIR" "${SCRIPTDIR}" "$PROJECT" 
+	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd', output_file=paste0(commandArgs(trailingOnly=T)[1], '/QCOutput/stage1SummaryStats.html'))" "$PEAKDIR" "${SCRIPTDIR}" "$PROJECT" 
 fi
 
 shift #move command line arguments so that $1 is no longer project but step
