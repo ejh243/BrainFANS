@@ -43,7 +43,7 @@ then
 	echo "Running alignment for"" ${sampleName}"
 	date -u	
 	## alignment
-	bowtie2  -p 10 -X 2000 -k ${multimap} -x ${REFGENOME}/genome -1 ${f[0]} -2 echo ${f[1]} -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
+	bowtie2  -p 10 -X 2000 -k ${multimap} -x ${REFGENOME}/genome -1 ${f[0]} -2 ${f[1]} -S ${ALIGNEDDIR}/${sampleName}.sam &> ${ALIGNEDDIR}/${sampleName}.bowtie.log
 
 	## convert to sam files, sort and index
 	echo "converting to sam file, sorting and indexing"
