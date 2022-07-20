@@ -95,7 +95,7 @@ cellTypes<-unique(QCmetrics$Cell.type)
 nCores<-detectCores()
 cl <- makeCluster(nCores-1)
 registerDoParallel(cl)
-clusterExport(cl, list("runEWAS", "lmer", "pdata.frame", "plm", "vcovHC", "coeftest", "waldtest"))
+clusterExport(cl, list("runEWAS", "pdata.frame", "plm", "vcovHC", "coeftest", "waldtest"))
 
 outtab<-matrix(data = parRapply(cl, celltypeNormbeta, runEWAS, QCmetrics), ncol = 17, byrow = TRUE)
 
