@@ -32,16 +32,11 @@ if (length(args)==1) {
 
 source("ATACSeq/config/config.r")
 
+tol <- 0.05 ## tolerence for comparing proportion periodicity
+
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
-library(vioplot)
-library(FME)
-
-
-## create colourblind friendly palette
-colorBlindGrey8   <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
-                       "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -92,9 +87,6 @@ pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","cohort","fractio
 pheno$sequencingRuns<-1
 pheno$sequencingRuns[match(dups, paste(pheno$individualID, pheno$fraction, pheno$tissue, sep = "_"))]<-2
 #sequencingRuns is not used anywhere else?? 
-
-table(pheno$fraction)
-barplot(table(table(pheno$individualID)), xlab = "Number of Samples", ylab = 'Number of individuals', col="white")
 
 ## b. PROGRESS SUMMARY
 ## sort if processSum$sampleID is not equivalent to pheno$sampleID
@@ -204,13 +196,7 @@ for(each in filePaths){
 
 propNucleosomesAll<-propNucleosomesAll[match(processSum$sampleID, rownames(propNucleosomesAll)),]
 
-## a successful ATAC experiment should have periodicity in the fragment distribution
-## detect samples with no evidence of mono, di, tri nucleosomes
-propNucleosomesAll > 0.9
-
 ## a successful ATAC experiment should have decreasing proportions in the nucleosome, mono, di,tri- nucleosomes
-## define a tolerence for these comparisions
-tol <- 0.05
 decreasingProps<-cbind(propNucleosomesAll[,1]+tol > propNucleosomesAll[,2], 
                        propNucleosomesAll[,2]+tol > propNucleosomesAll[,3], 
                        propNucleosomesAll[,3]+tol > propNucleosomesAll[,4]

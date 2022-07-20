@@ -1,14 +1,14 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH --time=48:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.o
-#SBATCH --error=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.e
-#SBATCH --job-name=verifyBAMID
+#SBATCH --output=ATACSeq/logFiles/%u/searchGeno-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/searchGeno-%A_%a.e
+#SBATCH --job-name=searchGeno
 
 #-----------------------------------------------------------------------#
 
@@ -44,9 +44,9 @@ module load GATK
 module load SAMtools
 
 # process a line from IDMap file
-IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/matchedVCFIDs.txt | tail -1))
+IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/potentialSwitches.txt | tail -1))
 
-sh ./ATACSeq/preprocessing/14_compareBamWithGenotypes.sh ${IDS[@]}
+sh ./ATACSeq/preprocessing/searchBestGenoMatch.sh ${IDS[@]}
 
 echo 'EXITCODE: ' $?
 
