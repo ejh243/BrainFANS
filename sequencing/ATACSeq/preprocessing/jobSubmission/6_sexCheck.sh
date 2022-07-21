@@ -35,12 +35,12 @@ then
 
 	module load MACS2
 	module load BEDTools
-	sh ./ATACSeq/preprocessing/12_sexChrPeaks.sh
+	sh ./ATACSeq/preprocessing/sexChrPeaks.sh
 fi
 
 module purge
 module load R/3.6.3-foss-2020a
-Rscript ATACSeq/preprocessing/13_collateSexChecks.r ${DATADIR}/
+Rscript ATACSeq/preprocessing/collateSexChecks.r ${DATADIR}/
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}

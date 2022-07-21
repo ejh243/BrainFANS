@@ -44,9 +44,9 @@ module load GATK
 module load SAMtools
 
 # process a line from IDMap file
-IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/potentialSwitches.txt | tail -1))
+IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/matchedVCFIDs.txt | tail -1))
 
-sh ./ATACSeq/preprocessing/searchBestGenoMatch.sh ${IDS[@]}
+sh ./ATACSeq/preprocessing/compareBamWithGenotypes.sh ${IDS[@]}
 
 echo 'EXITCODE: ' $?
 
