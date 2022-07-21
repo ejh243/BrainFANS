@@ -22,10 +22,6 @@ library(tidyverse)
 
 source("ATACSeq/preprocessing/rmdLoadConfig.r")
 
-## create colourblind friendly palette
-colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999", 
-                       "#F0E442", "#0072B2",  "#E69F00", "#56B4E9")
-
 pheno<-read.csv(sampleSheet, stringsAsFactors = FALSE)
 
 s1Pass<-read.table(paste0(metaDir, "/stage1QCSamples.txt"))
@@ -34,7 +30,7 @@ s1Pass<-read.table(paste0(metaDir, "/stage1QCSamples.txt"))
 
 ## Overview
 
-Having already excluded samples that did not work experiementally, we will now confirm whether the sample matchs the phenotype data we have as a secondly confirmation of data quality and to identify any sample switches. To do this we will perform a sex prediction using the X and Y chromosomes and compare to matched genotype data. 
+Having already excluded samples that did not work experimentally, we will now confirm whether the sample matchs the phenotype data we have as a secondly confirmation of data quality and to identify any sample switches. To do this we will perform a sex prediction using the X and Y chromosomes and compare to matched genotype data. 
 
 In total, `r nrow(sampleSheets)` samples were profiled and `r length(s1Pass)` samples passed stage 1 (data quality) of the QC. 
 
