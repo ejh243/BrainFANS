@@ -45,9 +45,9 @@ module load SAMtools
 
 ## load sample to process from text file
 
-sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/stage1Samples.txt | tail -1))
+sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/passStage1SampleList.txt | tail -1))
 
-sh ./ATACSeq/preprocessing/11_subsetSexChrs.sh ${sampleName}
+sh ./ATACSeq/preprocessing/subsetSexChrs.sh ${sampleName}
 
 echo 'EXITCODE: ' $?
 

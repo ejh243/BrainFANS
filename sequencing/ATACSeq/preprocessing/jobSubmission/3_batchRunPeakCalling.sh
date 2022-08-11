@@ -58,7 +58,7 @@ then
 	echo "Shifting reads"
 
 	cd ${SCRIPTDIR}
-	./ATACSeq/preprocessing/4_shiftAlignedReads.sh ${sampleName}
+	./ATACSeq/preprocessing/shiftAlignedReads.sh ${sampleName}
 
 	if [[ $? == 0 ]]
 		then date -u
@@ -74,7 +74,7 @@ then
 	module load MACS2/2.1.2.1-foss-2017b-Python-2.7.14
 	module load BEDTools
 	cd ${SCRIPTDIR}/
-	./ATACSeq/preprocessing/5_samplePeaks.sh ${sampleName}
+	./ATACSeq/preprocessing/samplePeaks.sh ${sampleName}
 	
 	if [[ $? == 0 ]]
 		then date -u
@@ -95,7 +95,7 @@ then
 	mkdir -p ${PEAKDIR}/QCOutput
 
 	cd ${SCRIPTDIR}/
-	sh ./ATACSeq/preprocessing/6_calcFrip.sh ${sampleName}
+	sh ./ATACSeq/preprocessing/calcFrip.sh ${sampleName}
 
 	if [[ $? == 0 ]]
 		then date -u

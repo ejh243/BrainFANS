@@ -37,16 +37,15 @@ fi
 
 #-----------------------------------------------------------------------#
 
-## reformat bam file
+## take samples that look contaminated (FREEMIX | CHIPMIX > 0.2) and search for best
 
-module load picard/2.6.0-Java-1.8.0_131
-module load GATK
-module load SAMtools
+cd ${ALIGNEDDIR}/baseRecalibrate/
+awk '{if($7 != "FREEMIX" && ($7 > 0.2 || $12 > 0.2)) print FILENAME,$1}' *.selfSM > ${METADIR}/potentialSwitches.txt
 
-# process a line from IDMap file
-IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/matchedVCFIDs.txt | tail -1))
 
-sh ./ATACSeq/preprocessing/14_compareBamWithGenotypes.sh ${IDS[@]}
+IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/potentialSwitches.txt | tail -1))
+
+sh ./ATACSeq/preprocessing/searchBestGenoMatch.sh ${IDS[@]}
 
 echo 'EXITCODE: ' $?
 
