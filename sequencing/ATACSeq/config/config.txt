@@ -21,6 +21,12 @@ export PAR=/lustre/projects/Research_Project-MRC190311/references/ATAQSeq/hg38.p
 export XCHRBED=/lustre/projects/Research_Project-MRC190311/references/GeneLists/XChrGenes.bed
 export UCSCRef=/lustre/projects/Research_Project-MRC190311/references/UCSC/
 export GENOMESIZE=/lustre/projects/Research_Project-MRC190311/references/grch38/genome.info
+export SEGREFGENOME=/lustre/projects/Research_Project-MRC190311/references/Segway/GRCh38/Sequence/WholeGenomeSegwayFasta/genome.char.fa
+
+
+## Integrative data filepaths 
+export CHROMDIR=/lustre/projects/Research_Project-MRC190311/integrative/chromHMM
+export SEGDIR=/lustre/projects/Research_Project-MRC190311/integrative/segway
 
 
 ## Software/script filepaths
