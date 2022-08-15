@@ -216,11 +216,26 @@ hist(genoScores$CHIPMIX, breaks = 50, col = "grey", ylab = "Number of samples", 
 
 plot(genoScores$FREEMIX, genoScores$CHIPMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Proportion contamination (seq only)", ylab = "Proportion contamination (given genotypes)")
 abline(v = 0.1)
-abline(h = 0.1)
+abline(h = c(0.1,0.9))
 
 ```
 
-We will define samples that match their genotype data those with < 0.1 contamination with both methods of quantifying.
+Let's compare the contamination statistics against other metrics of data quality.
+
+```{r}
+par(mfrow = c(1,2))
+plot(genoScores$nREADS/1e6, genoScores$FREEMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Number of reads (M)", ylab = "Proportion contamination (seq only")
+abline(v = 10)
+abline(h = c(0.1,0.9))
+
+plot(genoScores$nREADS/1e6, genoScores$CHIPMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Number of reads (M)", ylab = "Proportion contamination (given genotypes)")
+abline(v = 10)
+abline(h = c(0.1,0.9))
+
+
+```
+
+We will define samples that match their genotype data those with < 0.1 contamination with both methods of quantifying.The table below shows the number of samples either evidence of contamination (rows) and evidence of matching their genotype data or not. 
 
 
 ```{r}
@@ -234,7 +249,7 @@ kbl(contamCheck) %>%
 
 ```
 
-We will define candidates for potential swaps as those with > 0.9 contamination given the genotype data. `r sum(genoScores$FREEMIX < 0.1 & genoScores$CHIPMIX > 0.9, na.rm = TRUE)` meet this criteria. 
+We will define candidates for potential swaps as those with > 0.9 contamination given the genotype data. We also require sufficient number of reads to confirm it is a different sample, we will only take forward samples with 1 million reads to search for an alternative genotype match. `r sum(genoScores$CHIPMIX > 0.9 & genoScores$nREADS > 1e6, na.rm = TRUE)` meet this criteria. These the ATAC bam files for these samples will be compared against the genotypes for all cohort to identify potential swaps. 
 
 
 # QC Summary: Sample Filtering
@@ -245,7 +260,7 @@ QCPASS<-cbind(sexPredict$concordantLabel, genoCheck)
 
 colnames(QCPASS)<-c("sexCheck", "genoCheck")
 
-write.csv(cbind(pheno, QCPASS), file = file.path(metaDir, "/passStage2Status.txt"))
+write.csv(cbind(pheno, QCPASS), file = file.path(metaDir, "/passStage2Status.csv"))
 
 # need to keep samples without sex or genotype data to confirm.
 keep<-rowSums(QCPASS) == rowSums(!is.na(QCPASS))

@@ -111,12 +111,16 @@ fripStats$FripMACS2PE <- fripStats$ReadsinMACS2PEPeaks/fripStats$BAMTotalReads
 
 ## load periodicity metrics 
 propNucleosomesAll<-NULL
+diptestStatsAll<-NULL
 filePaths <- list.files(file.path(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch")
 for(each in filePaths){
   load(paste0(alignedDir,"/QCOutput/", each))
   propNucleosomesAll<-rbind(propNucleosomesAll, propNucleosomes)
+  diptestStatsAll<-rbind(diptestStatsAll, diptestStats)
 }
+diptestStatsAll<-as.data.frame(diptestStatsAll)
 propNucleosomesAll<-propNucleosomesAll[match(processSum$sampleID, rownames(propNucleosomesAll)),]
+diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, sub("X", "", gsub("\\.D$", "", rownames(diptestStatsAll)))),]
 
 ## count number of samples with X million reads
 readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, 10^6)
@@ -423,21 +427,6 @@ grid.arrange(grobs = p, nrow = 3)
 ```
 
 
-## Correlations between QC metrics
-
-This is a correlation matrix of the QC metrics considered so far which enables us to see whether lower quality samples fail across multiple metrics. 
-
-``` {r correlation}
-## create correlation plot 
-corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)]), rowMeans(mergeStats[,c(3,6)]),
-                     mergeStats$PercentMTReads, mergeStats$overall_alignment_rate,
-                     mergeStats$DistinctReadPairs, mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]) 
-colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
-                            colnames(mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]))
-corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
-corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black')
-```
-
 ### 2.4 Fragment Size Distribution
 
 ATAC-seq data should be enriched for specific sized fragments, so the distribution of fragment size should show periodicity. Typically there should be a large proportion of reads with fragment length < 100bp indicating nucleosome-free fragments, the plot should then show periodicity of ~ 200bp representing  enrichment of mono-, di-, and tri-nucleosome bound fragments (~200, 400, 600bp, respectively). Typically we would look at the fragment distribution where a successful ATAC-seq experiment would have a peak at ~50-100bp with a large proportion of reads less than 100 bp, and peaks at 200bp, 400bp, 600bp. If there was no chromatin in the sample the graph would have no periodicity and resemble a poisson distribution with lambda = 1). Instead to make this tractable across hundred of samples we have classified the fragments into bins representing nucleosome-free,mono-, di-, tri, and quad-nucleosome bound fragments. From this for each sample we can calculate the proportion within in each bin and apply filters/conditions. If in general the ATAC-seq has worked, we would expect to see decreasing proportions across the violins below. The plot below contains data from `r sum(!is.na(propNucleosomesAll[,1]))` samples.  
@@ -454,7 +443,7 @@ melt(na.omit(propNucleosomesAll)) %>%
       theme_bw()
 ```
 
- We need to apply thresholds to satisfy the following criteria
+We need to apply thresholds to satisfy the following criteria
 
 * large proportion of nucleosome-free fragments
 * presence of mono-nucleosome bound fragments
@@ -478,6 +467,16 @@ data.frame(propNucleosomesAll)%>%
 
 ```
 
+Alternatively we can test for periodicity (i.e. multimodality) using Hartigan's Dip test for Unimodality. Here a significant p-value indicates the presence of multiple modes as we would expect in a successful ATAC experiment. The plot below contains data from `r sum(!is.na(diptestStatsAll[,1]))` samples.  
+
+
+```{r periodicity3}
+
+# plot distribution of hartigan's dip test p values
+hist(diptestStatsAll[,"p.value"], breaks = 50, col = "grey", xlab = "Hartigans Test P-value", ylab = "Number of samples", main = "")
+abline(v = dipPThres)
+
+```
 
 ## 3. Peak calling
 
@@ -537,9 +536,73 @@ for (i in 1:3){
 grid.arrange(grobs = p,ncol=2)
 ```
 
+Peak calling will be affected by the background noise of a sample, and the success of the ATAC enrichment. Let's compare some of our periodicity statistics agains the number of peaks. 
+
+```{r, fig.height = 16 , fig.width = 8}
+p<-NULL
+p[[1]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=propNucleosomesAll[,1]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Proportion nucleosome free")+
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[2]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=propNucleosomesAll[,2]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Proportion mono-nucleosome") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[3]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=diptestStatsAll[,"D"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test Statistic") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[4]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=diptestStatsAll[,"p.value"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test P") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+
+p[[5]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$FripMACS2TagAlign, y=propNucleosomesAll[,1]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Proportion nucleosome free")
+
+p[[6]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$FripMACS2TagAlign, y=propNucleosomesAll[,2]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Proportion mono-nucleosome")
+
+
+p[[7]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$FripMACS2TagAlign, y=diptestStatsAll[,"D"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Hartigans Test Statistic")
+
+p[[8]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$FripMACS2TagAlign, y=diptestStatsAll[,"p.value"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Hartigans Test P")
+
+
+grid.arrange(grobs = p, ncol=2, nrow = 4)
+
+```
+
+
 ### 3.2 Specificity of reads in peaks
 
-Plot of the fraction of reads in peaks called for that sample. These plots give a good indication of how "enriched" the sample is and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads. According to the ENCODE standard processing pipeline for ATAC-seq the FRiP score should be > 0.3, though values greater than 0.2 are acceptable. 
+Plot of the fraction of reads in peaks called for that sample. These plots give a good indication of how "enriched" the sample is and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads. According to the ENCODE standard processing pipeline for ATAC-seq the FRiP score should be > 0.3, though values greater than 0.2 are acceptable. We will not filter on this metric yet, but return to it once we have called peaks at the group level. 
 
 
 ```{r readsinpeaks}
@@ -589,14 +652,17 @@ QCPASS<-cbind(mergeStats$overall_alignment_rate > alignRate, #alignment rate
               eMetrics$NRF > nrfThres, #encode
               eMetrics$PBC1 > pbc1Thres, #encode
               eMetrics$PBC2 > pbc2Thres, #encode,
-              propNucleosomesAll[,1] > nfrThres, #fractions nucleosome free 
-              propNucleosomesAll[,2] > monoThres, #fractions mononucleosome 
-              decreasingProps[,1],#periodicity
-              fripStats$MACS2TagAlignPeak > peakThres, # number of peaks
-              fripStats$FripMACS2TagAlign > fripThres) #frip
+              #propNucleosomesAll[,1] > nfrThres, #fractions nucleosome free 
+              #propNucleosomesAll[,2] > monoThres, #fractions mononucleosome 
+              #decreasingProps[,1],#periodicity
+              #fripStats$MACS2TagAlignPeak > peakThres, # number of peaks
+              #fripStats$FripMACS2TagAlign > fripThres #frip
+              diptestStatsAll[,"p.value"] < dipPThres #multimodality
+              ) 
 
-colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2", "NucleosomeFreeFraction", "MononucleosomeFraction",
-                    "DecreasingPeriodicity", "Peaks", "FRIP")
+colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2", 
+                    "SignifPeriodicity")
+rownames(QCPASS)<-processSum$sampleID
 
 write.csv(cbind(pheno, QCPASS), file = file.path(metaDir, "/passStage1Status.txt"))
 
@@ -605,12 +671,15 @@ keep<-rowSums(QCPASS, na.rm = TRUE) == rowSums(!is.na(QCPASS))
 write.table(names(keep[keep==TRUE]), file = file.path(metaDir, "/passStage1SampleList.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-QCPASS<-cbind(QCPASS, "QCPASS" = rowSums(QCPASS) == ncol(QCPASS))
+QCPASS<-cbind(QCPASS, "QCPASS" = keep)
 ```
 
 Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.
 
 ```{r, echo = FALSE}
+
+kbl(colSums(!QCPASS, na.rm = TRUE))
+
 # create cross tab table
 xTab<-matrix(data = NA, ncol = ncol(QCPASS), nrow = ncol(QCPASS))
 for(i in 1:ncol(QCPASS)){
@@ -624,4 +693,27 @@ rownames(xTab)<-colnames(QCPASS)
 kbl(xTab) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 
+```
+
+
+
+## Correlations between QC metrics
+
+This is a correlation matrix of the QC metrics considered so far which enables us to see whether lower quality samples fail across multiple metrics. 
+
+``` {r correlation, fig.width = 10, fig.height= 10}
+## create correlation plot 
+corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)]), rowMeans(mergeStats[,c(3,6)]),
+                     mergeStats$PercentMTReads,
+                     mergeStats$overall_alignment_rate,
+                     mergeStats$DistinctReadPairs,
+                     mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))],
+                     propNucleosomesAll[,c(1,2)],
+                     diptestStatsAll[,2],
+                     fripStats$MACS2TagAlignPeak,
+                     fripStats$FripMACS2TagAlign) 
+colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
+                            colnames(mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]),  "PropNRF", "PropMono", "DipP", "NPeaks", "FRIP")
+corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
+corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black')
 ```
