@@ -1,0 +1,399 @@
+---
+title: "Stage 1 Summary Statistics"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+params:
+  project: !r commandArgs(trailingOnly=T)[3]
+  configFile: !r paste0(commandArgs(trailingOnly=T)[2], "/ChIPSeq/config/config.r")
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, results=FALSE, fig.align='center')
+
+## load packages
+library(ChIPQC)
+library(knitr)
+library(dplyr)
+library(reshape2)
+library('TxDb.Hsapiens.UCSC.hg38.knownGene')
+library("BiocParallel")
+library(org.Hs.eg.db)
+library(GenomeInfoDb)
+library(ChIPseeker)
+library(GenomicRanges)
+library(gridExtra)
+library(magrittr)
+
+
+## load config variables
+if (is.na(params$project)){
+  project='epiGaba'
+  source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ChIPSeq/config/config.r")
+
+} else {
+  project<-params$project
+  source(params$configFile)
+}
+
+## create colourblind friendly palette
+colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999", 
+                       "#F0E442", "#0072B2",  "#E69F00", "#56B4E9")
+
+```
+
+This report provides a summary of a ChIP-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment, filtering and peak calling steps. The bioinformatic pipeline parallels that of the [ENCODE ChIP-seq guidelines](https://www.encodeproject.org/chip-seq/histone/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. The pipeline is still under development.
+
+``` {r loadDat}
+#if combined chipseqQC object does not exist, create it
+if (file.exists(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))==FALSE){
+  chipFiles <- list.files(paste0(peakDir, "/QCOutput"), pattern = "ChIPQCObject_")
+  
+  datALL<-NULL
+  for (each in chipFiles) {
+    print(each)
+    load(paste(peakDir, "QCOutput", each, sep = "/"))
+    datALL<- c(datALL, QCsample(dat))
+  }
+  # create combined chipqcexperiment object
+  dat<- ChIPQC(sampleSheet, samples=datALL)
+  save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))
+} else {
+  print('Loading existing object')
+  load(paste0(peakDir, "/QCOutput/ChIPQCObject.rdata"))
+}
+
+
+
+# import data
+pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+processSum <- read.csv(paste0(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
+fastqc<-read.table(paste0(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+alignQC<-read.table(paste0(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+flagstat<-read.csv(paste0(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
+fripFiles <- list.files(paste0(peakDir, "/QCOutput"), pattern = "FRIP")
+
+
+# wrangle data
+missingCol<-setdiff(c("sequencingBatch", "sampleID",  "cohort", "fraction", "target", "individualID"), colnames(pheno))
+if (length(missingCol) != 0 ) {
+  if ("sequencingBatch" %in% missingCol){
+    pheno$sequencingBatch<-pheno$cohort
+    if (length(missingCol) > 1) {
+      warning('Incorrect column names. Missing column(s): ', list(missingCol))
+      stop()
+    }
+  }
+}
+
+## exclude duplicates from metadata
+pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","controlID", "cohort","target", "fraction","individualID", "tissue", "postConceptionDays"), colnames(pheno))])
+
+# create data.frame with row info for both sample and control (not sample and matching con on one row)
+conIndex<-match(unique(pheno$controlID), pheno$controlID)
+pheno<-data.frame(sampleID=c(pheno$sampleID, unique(pheno$controlID)), 
+           fraction=c(pheno$fraction, pheno$fraction[conIndex]), 
+           sequencingBatch=c(pheno$sequencingBatch, pheno$sequencingBatch[conIndex]),
+           cohort=c(pheno$cohort, pheno$cohort[conIndex]), 
+           target=c(pheno$target, pheno$target[conIndex]))
+
+#extract qc metrics from ChipQC object and index to pheno
+qcMetrics<-QCmetrics(dat) %>%
+    as.data.frame() %>%
+  .[match(pheno$sampleID, rownames(.)),]
+
+# ensure indexed correctly
+processSum <- processSum[match(pheno$sampleID, processSum$sampleID), ]
+
+colsKeep<-c("Total.Sequences","total_deduplicated_percentage", "Sequences.flagged.as.poor.quality")
+mergeStats<-cbind(fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep], fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep])
+
+aIndex<-match(processSum$sampleID, gsub("\\.bowtie", "", alignQC$Sample))
+alignQC$aligned_total<-rowSums(alignQC[,c("paired_aligned_one", "paired_aligned_multi")])
+mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "aligned_total")])
+
+alignQC<-alignQC[,c('Sample', 'paired_total', 'paired_aligned_one', 'paired_aligned_multi')]
+
+files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = ".pbc.qc")
+eMetrics<-NULL
+for(each in files){
+  tmp<-read.table(paste0(alignedDir, "/ENCODEMetrics/", each))
+  eMetrics<-rbind(eMetrics, tmp)
+}
+
+colnames(eMetrics)<-c("TotalReadPairs","DistinctReadPairs","OneReadPair","TwoReadPairs","NRF","PBC1","PBC2")
+eIndex<-match(processSum$sampleID, gsub(".pbc.qc", "", files))
+eMetrics<-eMetrics[eIndex,]
+mergeStats<-cbind(mergeStats,eMetrics)
+
+
+fripStats<-read.csv(paste0(peakDir, "/QCOutput/", fripFiles[1]))
+for(each in fripFiles[-1]){
+    fripStats<-rbind(fripStats, read.csv(paste0(peakDir, "/QCOutput/", each)))
+}
+fripStats<-fripStats[match(processSum$sampleID, fripStats$SampleName),]
+
+fripStats<-fripStats[match(processSum$sampleID, fripStats$SampleName),]
+fripStats$FripMACS2PE <- fripStats$ReadsinMACS2PEPeaks/fripStats$BAMTotalReads
+
+
+## count number of samples with X million reads across broad and narrow histone marks
+broad<-c('H3F3A', 'H3K27me3', 'H3K36me3', 'H3K4me1', 'H3K79me2', 'H3K79me3', 'H3K9me1', 'H3K9me2', 'H4K20me1')
+narrow<-c('H2AFZ', 'H3ac', 'H3K27ac', 'H3K4me2', 'H3K4me3', 'H3K9ac')
+
+readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, by = 10^6)
+nSamples<-matrix(data = NA, nrow = length(readThres), ncol = 3)
+colnames(nSamples)<-c('all', 'narrow', 'broad')
+
+for(i in readThres){
+  nSamples[1+(i/10^6),1] <- sum(mergeStats[,1] > i, na.rm = TRUE)
+  colNum<-2
+  nSamples[1+(i/10^6),colNum] <- (sum(mergeStats[which(pheno$target %in% narrow),1] > i, na.rm = TRUE)*2)
+  colNum<-colNum+1
+  nSamples[1+(i/10^6),colNum] <- (sum(mergeStats[which(pheno$target %in% broad),1] > i, na.rm = TRUE)*2)
+  colNum<-colNum+1
+}
+```
+
+## Overview
+
+To provide an overall summary here is a barplot of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
+
+<style>
+  .scrollingimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .scrollingimage img{
+     max-width: none;
+  }
+
+</style>
+```{r setChunk}
+if (nrow(pheno) > 70) {
+  knitr::opts_chunk$set(fig.width=(nrow(pheno)/5))
+}
+```
+
+<div class="scrollingimage">
+``` {r overview}
+data.frame(pheno$sampleID, mergeStats[,c(1,8)],fripStats[,4]) %>%
+  setNames(c('Samples', 'Raw reads', 'Aligned reads', 'Reads in peaks')) %>%
+  melt(id='Samples') %>%
+  ggplot(., aes(fill= variable, x=Samples, y=value))+
+    geom_bar(position = 'dodge', stat = 'identity')+
+    theme_bw()+
+    labs(y = 'Number of reads')+
+    theme(axis.text.x = element_text(angle = 90),
+          axis.ticks.x = element_blank(),
+          legend.position = 'bottom', 
+          legend.title = element_blank())+
+    scale_fill_manual(values = colorBlindGrey8)
+```
+</div>
+
+
+## 1. Sequencing
+
+### 1.1 Data Summary
+
+```{r hists}
+xlab <- c('Number of Reads', '% unique reads' ,'' , 'Number of Reads', '% unique reads')
+read<-c('R1','R1','','R2', 'R2')
+p=NULL
+for (x in 1:5){
+  p[[x]]<-mergeStats %>% dplyr::select(all_of(x))%>%
+          ggplot(., aes_string(x = names(.)[1]))+ # select x values based on column index rather than name
+          geom_histogram(bins=100, fill ='white', colour = 'black')+
+          labs(title = read[x], x = xlab[x], y = 'Number of Samples')+
+          theme_bw()
+}
+p<-p[- 3] # remove the null list item
+grid.arrange(grobs = p,ncol=2)
+```
+
+For narrow-peak histone experiments, each replicate should have 20 million usable fragments. For broad-peak histone experiments, each replicate should have 45 million usable fragments. A fragment is defined as the sequencing output corresponding to one location in the genome. If single-ended sequencing is performed, one read is considered a fragment. If paired-ended sequencing is performed, one pair of reads is considered a fragment.
+
+``` {r minReads}
+# plot minimum number of reads
+coeff=nSamples[1,1]/100
+data.frame(readThres/10^6, nSamples[,-1]) %>% 
+  melt(., id='readThres.10.6') %>%
+  ggplot(., aes_string(x = names(.)[1], y = names(.)[3], colour = names(.)[2]))+
+  geom_line() +
+  labs(x = 'Minimum number of reads (millions)', y = 'Number of Samples')+
+  theme_bw()+
+  geom_vline(xintercept=c(20, 45), 
+             colour = c('black', 'black'),
+             linetype="dashed", show.legend =FALSE)+
+  scale_y_continuous(sec.axis = sec_axis(trans = ~./coeff, name = '% of samples'))+
+  theme(legend.title=element_blank(),
+        legend.position = 'bottom')+
+  scale_color_manual(values = colorBlindGrey8[1:ncol(nSamples)])
+
+```
+
+## 2. Alignment
+
+### 2.1 Summary of alignment (pre-filtering)
+
+```{r alignment rate}
+## plot alignment rate against number of reads
+ggplot(mergeStats[,c(7,8)], aes(x = aligned_total, y = overall_alignment_rate, colour = pheno$fraction))+
+  geom_point() +
+  geom_hline(yintercept=c(95),
+             colour = c(colorBlindGrey8[4]),
+             linetype="dashed", show.legend =FALSE)+
+  labs(x = 'Number of Reads', y = 'Alignment rate')+
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8[1:3])+
+  theme(legend.title = element_blank(), 
+        legend.position = 'bottom')
+```
+
+## 3. ChIP Signal Distribution and Structure
+
+These metrics inspect distribution of global pile-up across the genome. 
+
+### 3.1 Coverage histogram
+
+In the histogram of coverage depths, the X-axis represents the read pileup height at a basepair position, and the Y-axis represents how many positions have this pileup height on a log scale. A ChIP sample with good enrichment should have a reasonable "tail".
+
+
+```{r covhist, fig.align = 'center', warning=FALSE, results=FALSE}
+plotCoverageHist(dat,colourBy=('Factor'), facetBy=("Tissue")) +
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8)+
+  theme(legend.position = 'bottom', 
+        legend.title = element_blank())
+```
+
+### 3.2 Standard deviation of coverage
+
+SSD is the standard deviation of coverage normalised to the total number of reads. Samples with low enrichment, consisting of mostly background reads and genome-wide low pile-up (such as in controls), should have lower SSD values than good ChIP samples. Equivalence of sample and input SSD scores highlights either an unsuccessful ChIP or high levels of anomalous input signal, and hence a flag for further blacklisting of genomic regions.
+
+To assess the contribution of artefact signal to global distrubtion of signal pileup, SSD is measured before and after exclusion of signal from known blacklisted regions.
+
+“Heavy tail” refers to the curve being heavier than an exponential curve, with more bulk under the curve. Samples with this have more positions in the genome with higher depth.
+
+```{r ssd, fig.height = 10}
+plotSSD(dat, facetBy=c("Tissue", "Factor"))+
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8)+
+  theme(legend.position = 'bottom', 
+        legend.title = element_blank())
+```
+
+### 3.3 Cross-correlation
+
+A high quality ChIP-seq experiment produces significant clustering around protein binding sites, with this density accumulating on the forward and reverse strands centred around the binding site. These ‘‘true signal’’ sequence tags are positioned at a distance from the binding site centre that depends on the fragment size distribution. The degree to which your ChIP-seq signal is clustered around such sites can be exploited as a metric of ChIP efficiency.
+
+The cross-correlation metric is computed as the Pearson’s linear correlation between coverage for each complementary base (i.e. on the minus strand and the plus strands), by systematically shifting minus strand by k base pairs at a time. This is performed by calculating the correlation after each every successive shift of 1bp. 
+
+The cross-coverage scores after successive shifts can then be visualised and reviewed. The cross-correlation plot typically produces two peaks: a peak of enrichment corresponding to the predominant fragment length (highest correlation value) and a peak corresponding to the read length (“phantom” peak).
+
+For NSC values below 1.05 and RSC values below 0.8, a second replicate is recommended.
+
+```{r cc}
+plotCC(dat, colourBy=('Factor'), facetBy=("Tissue"))+
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8)+
+  theme(legend.position = 'bottom', 
+        legend.title = element_blank())
+```
+
+## 4. Peak Profile and ChIP Enrichment
+
+### 4.1 Peak profiles
+
+Each peak is centered on its summit (point of highest pileup after
+extending the reads to the calculated fragment length), and the pileup values at bases in a window upstream and downstream of the summits is computed and averaged for all peaks in the sample. Good ChIPs will show distinctive patterns of enrichment in these peaks, while associated controls will be relatively flat.
+
+```{r peakProf}
+plotPeakProfile(dat, colourBy=('Factor'), facetBy=("Tissue"))+
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8)+
+  theme(legend.position = 'bottom', 
+        legend.title = element_blank())
+```
+
+### 4.2 Plotting Relative Enrichment of reads in Genomic Intervals
+
+A heatmap plot showing relative enrichment of reads around annotated genomic features.
+
+```{r relativeEnrich}
+plotRegi(dat, facetBy=c("Tissue", "Factor")) + 
+  theme_bw() +
+  theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90))+
+  scale_fill_viridis_c()
+
+nPeaks<-unlist(lapply(peaks(dat), length))
+peakAnnoList <- lapply(peaks(dat)[which(nPeaks > 0)], annotatePeak,tssRegion=c(-500, 500), 
+                       TxDb=TxDb.Hsapiens.UCSC.hg38.knownGene, 
+                       annoDb="org.Hs.eg.db")
+plotAnnoBar(peakAnnoList) +
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8)+
+  theme(text = element_text(size=10))
+  
+```
+
+### 4.3 Specificity of reads in peaks
+
+The first plot shows the percentage of reads that overlap called peaks (also known as FRIP). This is a good indication of how "enriched" the sample is, and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads.
+
+The second plot shows the percentage of reads that overlapped blacklisted regions (RiBL). The signal from blacklisted has been shown to contribute to confound peak callers and fragment length estimation as well as to contribute to the read length peak in cross coverage. The RiBL score then may act as a guide for the level of background signal in a ChIP or input.
+
+```{r fripfribl}
+plotRap(dat, facet = FALSE) + 
+  theme_bw() +
+  theme(text = element_text(size=10), 
+        axis.title.y = element_text(size = 10),
+        axis.text.x = element_text(angle=90)) 
+
+par(mfrow = c(1,2))
+plotFrip(dat, facet = FALSE) + 
+  theme_bw() +
+  scale_color_manual(values = colorBlindGrey8)+
+  theme(text = element_text(size=10), 
+        axis.title = element_text(size = 10),
+        axis.text.x = element_text(angle=90))
+
+plotFribl(dat, facet = FALSE) + 
+  theme_minimal()+
+  theme(text = element_text(size=10), 
+        axis.title = element_text(size = 10),
+        axis.text.x = element_text(angle=90))
+```
+
+### 4.4 Sample clustering
+
+The correlation heatmap is based on correlation values for all the peak scores for each sample. The other plot shows the first two principal component values for each sample.
+
+``` {r cluster}
+plotCorHeatmap(dat,attributes=c("Tissue","Factor"))
+plotPrincomp(dat,attributes=c("Tissue", "Factor"))
+```
+
+```{r samplePASS}
+# generate a txt file of passed samples
+QCPASS<-cbind(cbind((mergeStats[,1] > 45*10^6) & (pheno$target %in% broad),
+      (mergeStats[,1] > 20*10^6) & (pheno$target %in% narrow)) %>% rowSums() > 0, #create boolean for broad and narrow peak thresholds
+      fripStats$ReadsinMACS2PEPeaks > 1000000) %>%
+          set_rownames(pheno$sampleID)
+
+keep<-rowSums(QCPASS) == ncol(QCPASS)
+keep<-keep[!is.na(keep)]
+
+#length(keep[keep==TRUE])
+
+write.table(names(keep[keep==TRUE]), file = paste0(metaDir, "/stage1Samples.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+```
