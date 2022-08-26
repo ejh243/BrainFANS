@@ -23,9 +23,9 @@ def CMBF_Synapse(file, mark):
 			line = line.replace('"', '')
 			line = line.split(',') #split by column
 			if line[10]=='input':
-				control.append(line[4][:-12]+'_depDup_q30.bam')
+				control.append(line[4][:-12]+'.filt.nodup.bam')
 			elif line[10] in mark:
-				newline = dic[line[14]]+'\t'+line[10]+'\t'+line[4][:-12]+'_depDup_q30.bam'+'\t'
+				newline = dic[line[14]]+'\t'+line[10]+'\t'+line[4][:-12]+'.filt.nodup.bam'+'\t'
 				if newline not in case:
 					case.append(newline)
 		control = list(set(control)) #remove duplicates generated from reads 1 and 2 

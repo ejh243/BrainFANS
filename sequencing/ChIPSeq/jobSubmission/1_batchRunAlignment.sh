@@ -15,11 +15,9 @@
 ## print start date and time
 echo Job started on:
 date -u
-	
-## needs to be executed from the scripts folder
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
+echo
 
+## needs to be executed from the scripts folder
 cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
@@ -53,7 +51,8 @@ then
     echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 
     sampleName=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
-    echo $sampleName
+    echo "Current sample: " ${sampleName} 
+
     if [[ $(awk -F, '{print $1}' $METADIR/sampleSheet.csv | grep -w $sampleName) == '' ]];
     then 
         { echo 'sampleSheet$sampleID does not match record in samples.txt. Please check that sample IDs match'; exit 1; }
@@ -62,13 +61,11 @@ else
     { echo 'samples.txt not found in 0_metadata folder. Please ensure file exists'; exit 1; }
 fi
 echo
-exit 1
+
 #-----------------------------------------------------------------------#
 
-echo "Changing Folder to Data directory "
-echo ${DATADIR}
+echo "Changing folder to data directory: " ${DATADIR}
 cd ${DATADIR}
-
 
 ## find the file name in RAWDATADIR
 toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
@@ -79,9 +76,7 @@ toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
 unset IFS 
 
 echo "R1 file found is: " $( basename ${toProcess[0]} )
-echo ${toProcess[0]}
-
-echo "Current sample: " ${sampleName} ##
+echo "Path to R1 file is: " ${toProcess[0]}
 
 ## if number of flags is 1 ($PROJECT), then run all steps
 if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
@@ -116,7 +111,7 @@ then
     mkdir -p ${ALIGNEDDIR}/QCOutput
 
 	cd ${SCRIPTDIR}
-	sh ./ChIPSeq/preprocessing/1_alignment.sh ${sampleName} ## using ./ rather than sh executes script in current session and can make use of variables already declared.
+	sh ./ChIPSeq/preprocessing/alignment.sh ${sampleName} ## using ./ rather than sh executes script in current session and can make use of variables already declared.
 fi
 
 if [ $# = 1 ] || [[ $2 =~ 'ENCODE' ]]
@@ -131,7 +126,7 @@ then
     module load picard/2.6.0-Java-1.8.0_131
 
     cd ${SCRIPTDIR}
-    sh ./ChIPSeq/preprocessing/2_calcENCODEQCMetrics.sh ${sampleName}
+    sh ./ChIPSeq/preprocessing/calcENCODEQCMetrics.sh ${sampleName}
 fi
 
 echo 'EXITCODE: ' $?
