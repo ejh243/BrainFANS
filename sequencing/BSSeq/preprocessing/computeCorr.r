@@ -24,8 +24,8 @@ sampleids<-args[3:length(args)]
 
 ##load config file (if not submitted to isca, set example args)
 if (length(args)==0){
-  project<-'WGBS/rizzardi'
-  tissue<- 'anterior_cingulate_cortex_BA24'
+  project<-'WGBS/epiGaba'
+  tissue<- 'dorsolateral_prefrontal_cortex'
   sampleids<- c("SRR5343780",
                 "SRR5343781",
                 "SRR5343788",
@@ -40,6 +40,12 @@ if (length(args)==0){
                 "SRR5343840",
                 "SRR5343845",
                 "SRR5343848")
+  sampleids<- c('GABA1_BS',
+                'GABA2_BS',
+                'GLU1_BS',
+                'GLU2_BS',
+                'OLIG1_BS',
+                'OLIG2_BS')
 }
 
 source("~/BrainFANS/sequencing/BSSeq/config/config.r")
