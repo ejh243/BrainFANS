@@ -1,27 +1,28 @@
 ##---------------------------------------------------------------------#
 ##
-## Title: Collate Summary Statistics
+## Title: Collate Summary Statistics ===================================
 ##
-## Purpose of script:
+## Purpose of script: to collate the summary statistics of 
+##                    the stage 1 QC metrics
 ##
 ## Author: Jessica Shields
 ##
-## Date Created: 2022-03-25
+## Date Created: 2022-07-06
 ##
 ##---------------------------------------------------------------------#
 
 ## clear the R environment
 rm(list=ls()) 
-
 ## set working directory
-setwd("/lustre/projects/Research_Project-MRC190311/scripts/sequencing")
-
+setwd("")
 
 #----------------------------------------------------------------------#
-# LOAD PACKAGES
+# LOAD PACKAGES ========================================================
 #----------------------------------------------------------------------#
 project='epiGaba'
 source("ChIPSeq/config/config.r")
+
+
 
 
 library(ChIPQC)
@@ -39,9 +40,8 @@ register(DoparParam())
 registered() 
 bpparam("SerialParam")
 
-
 #----------------------------------------------------------------------#
-# IMPORT DATA
+# IMPORT DATA ==========================================================
 #----------------------------------------------------------------------#
 
 #setwd(dataDir)
@@ -142,7 +142,7 @@ compKEGG <- compareCluster(geneCluster   = genes,
 dotplot(compKEGG, showCategory = 15, title = "KEGG Pathway Enrichment Analysis")
 
 #----------------------------------------------------------------------#
-# ALIGNMENT AND FILTERING STATS
+# ALIGNMENT AND FILTERING STATS ========================================
 #----------------------------------------------------------------------#
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 
@@ -161,7 +161,7 @@ flagstat<-read.csv(paste0(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt
 ## FRIP
 fripFiles <- list.files(paste0(peakDir, "/QCOutput"), pattern = "FRIP")
 #----------------------------------------------------------------------#
-# WRANGLE DATA
+# WRANGLE DATA =========================================================
 #----------------------------------------------------------------------#
 ## a. METADATA
 ## check metadata is in the correct format
@@ -224,7 +224,7 @@ if ( length(fripFiles) != 0 ) {
 
 fripStats$FripMACS2PE <- fripStats$ReadsinMACS2PEPeaks/fripStats$BAMTotalReads
 #----------------------------------------------------------------------#
-# COUNT SAMPLES
+# COUNT SAMPLES ========================================================
 #----------------------------------------------------------------------#
 ## count number of samples with X million reads
 readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, 10^6)
@@ -333,7 +333,7 @@ mtext("Moderate", at = 2, side = 3)
 mtext("None", at = 3.05, side = 3)
 
 #----------------------------------------------------------------------#
-# ChIPQC plots
+# CHIPQC PLOTS ========================================================
 #----------------------------------------------------------------------#
 
 ## Coverage histogram

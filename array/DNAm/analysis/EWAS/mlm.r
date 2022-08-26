@@ -45,8 +45,6 @@ runEWAS<-function(row,QCmetrics){
 
 library(lme4)
 library(lmerTest)
-library(plm)
-library(lmtest)
 #library(GenABEL)
 library(doParallel)
 library(devtools)
@@ -87,7 +85,7 @@ cellTypes<-unique(QCmetrics$Cell.type)
 nCores<-detectCores()
 cl <- makeCluster(nCores-1)
 registerDoParallel(cl)
-clusterExport(cl, list("runEWAS", "lmer", "pdata.frame", "plm", "vcovHC", "coeftest", "waldtest"))
+clusterExport(cl, list("runEWAS", "lmer"))
 
 outtab<-matrix(data = parRapply(cl, celltypeNormbeta, runEWAS, QCmetrics), ncol = 17, byrow = TRUE)
 

@@ -2,7 +2,7 @@
 ## parameter choices guided by this post: https://github.com/crazyhottommy/ChIP-seq-analysis/blob/master/part1.3_MACS2_peak_calling_details.md
 
 ## EXECUTION
-# sh ./ChIPSeq/preprocessing/3_samplePeaks.sh <sampleName>
+# sh ./ChIPSeq/preprocessing/samplePeaks.sh <sampleName>
 # where 
 # <sampleName> is the sample specific file prefix
 # script needs to be executed from <git repo>/sequencing/
@@ -46,7 +46,7 @@ f=${sampleName}.filt.nodup.bam
 
 if [[ ${broad[*]} =~  ${mark} ]]
 then
-  macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR} -n ${sampleName} -g 2.9e9 -q 5e-2 --broad --nomodel --extsize 147 --keep-dup all 2> ${PEAKDIR}/${sampleName}.macs2.log
+  macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR} -n ${sampleName} -g 2.9e9 -q 5e-2 --broad 2> ${PEAKDIR}/${sampleName}.macs2.log
 
 
   ## exclude peaks aligned to blacklist regions
@@ -60,7 +60,7 @@ then
 elif [[ ${narrow[*]} =~  ${mark} ]]
 then
   # calculate narrowPeak
-  macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR} -n ${sampleName} -g 2.9e9 -q 1e-2 --nomodel --extsize 147 --keep-dup all 2> ${PEAKDIR}/${sampleName}.macs2.log
+  macs2 callpeak -t ${f} -c ${c} --outdir ${PEAKDIR} -n ${sampleName} -g 2.9e9 -q 1e-2 2> ${PEAKDIR}/${sampleName}.macs2.log
 
   ## exclude peaks aligned to blacklist regions
   bedtools intersect -v -a ${PEAKDIR}/${sampleName}_peaks.narrowPeak -b ${BLACKLIST} \

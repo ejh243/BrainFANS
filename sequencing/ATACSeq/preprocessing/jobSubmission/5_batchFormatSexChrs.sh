@@ -6,15 +6,21 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=ATACSeq/logFiles/%u/sexCheck-%A_%a.o
-#SBATCH --error=ATACSeq/logFiles/%u/sexCheck-%A_%a.e
-#SBATCH --job-name=sexCheck
+#SBATCH --output=ATACSeq/logFiles/%u/formatSexChr-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/formatSexChr-%A_%a.e
+#SBATCH --job-name=formatSexChr
 
 #-----------------------------------------------------------------------#
 
 ## print start date and time
 echo Job started on:
 date -u
+	
+## needs to be executed from the scripts folder
+echo "Changing Folder to: "
+echo $SLURM_SUBMIT_DIR
+
+cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
 echo "Loading config file for project: " $1
@@ -23,26 +29,31 @@ export PROJECT=$1
 source ./ATACSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
 
-
 ## check script directory
 echo 'Script directory is: ' ${SCRIPTDIR}
 
-#-----------------------------------------------------------------------#
-
-if [ ! -d ${PEAKDIR}/MACS/ShiftedTagAlign/sexChr ]
-then
-	## call peaks for sex chromosomes & do read counts in these peaks
-
-	module load MACS2
-	module load BEDTools
-	sh ./ATACSeq/preprocessing/12_sexChrPeaks.sh
+##check array specified and exit if not
+if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+then 
+    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
 fi
 
-module purge
-module load R/3.6.3-foss-2020a
-Rscript ATACSeq/preprocessing/13_collateSexChecks.r ${DATADIR}/
+#-----------------------------------------------------------------------#
+
+## reformat bam file
+module load SAMtools
+
+## load sample to process from text file
+
+sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/passStage1SampleList.txt | tail -1))
+
+sh ./ATACSeq/preprocessing/subsetSexChrs.sh ${sampleName}
+
+echo 'EXITCODE: ' $?
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/ATACSeq/logFiles/${USER}
 mkdir -p ${SLURM_ARRAY_JOB_ID}
 mv *${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* ${SLURM_ARRAY_JOB_ID}
+
+

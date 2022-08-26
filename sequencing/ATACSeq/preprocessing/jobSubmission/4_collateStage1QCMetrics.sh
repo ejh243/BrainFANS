@@ -54,9 +54,9 @@ then
 	## run other bespoke utilty scripts to collate other QC metrics
 	cd ${SCRIPTDIR}
 
-	./ATACSeq/preprocessing/7_progressReport.sh 
-	./ATACSeq/preprocessing/8_countMTReads.sh 
-	./ATACSeq/preprocessing/9_collateFlagStatOutput.sh 
+	./ATACSeq/preprocessing/progressReport.sh 
+	./ATACSeq/preprocessing/countMTReads.sh 
+	./ATACSeq/preprocessing/collateFlagStatOutput.sh 
 fi
 
 
@@ -68,7 +68,7 @@ then
 
 	module load R/3.6.3-foss-2020a
 	module load Pandoc
-	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/10.1_collateS1SumStats.Rmd', output_file=paste0(commandArgs(trailingOnly=T)[1], '/QCOutput/stage1SummaryStats.html'))" "$ALIGNEDDIR" "${SCRIPTDIR}" "$PROJECT" 
+	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/collateDataQualityStats.Rmd', output_file=paste0(commandArgs(trailingOnly=T)[1], '/QCOutput/stage1SummaryStats.html'))" "$PEAKDIR" "${SCRIPTDIR}" "$PROJECT" 
 fi
 
 shift #move command line arguments so that $1 is no longer project but step
@@ -81,7 +81,7 @@ then
 	shift
 
 	module load R/3.6.3-foss-2020a
-	Rscript ATACSeq/preprocessing/10.2_filterOnS1SumStats.r ${PROJECT} $@ #all remaining cmd line arguments
+	Rscript ATACSeq/preprocessing/filterDataQualityStats.r ${PROJECT} $@ #all remaining cmd line arguments
 fi
 
 echo 'EXITCODE: ' $?

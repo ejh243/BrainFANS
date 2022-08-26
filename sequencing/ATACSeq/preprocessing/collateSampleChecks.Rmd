@@ -1,0 +1,291 @@
+---
+title: "QC Stage 2: confirm sample identity"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+params:
+  project: !r commandArgs(trailingOnly=T)[3]
+  configFile: !r file.path(commandArgs(trailingOnly=T)[2], "/ATACSeq/config/config.r")
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center')
+
+# load packages
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(kableExtra)
+
+source(file.path(commandArgs(trailingOnly=T)[2],"ATACSeq/preprocessing/rmdLoadConfig.r"))
+
+pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+
+s1Pass<-read.table(file.path(metaDir, "/passStage1SampleList.txt"))
+
+```
+
+## Overview
+
+Having already excluded samples that did not work experimentally, we will now confirm whether the sample matchs the phenotype data we have as a secondly confirmation of data quality and to identify any sample switches. To do this we will perform a sex prediction using the X and Y chromosomes and compare to matched genotype data. 
+
+In total, `r nrow(pheno)` samples were profiled and `r nrow(s1Pass)` samples passed stage 1 (data quality) of the QC. 
+
+```{r}
+nCTStart<-table(pheno$fraction)
+nSBStart<-table(pheno$sequencingBatch)
+nBBStart<-table(pheno$cohort)
+
+pheno<-pheno[match(s1Pass$V1, pheno$sampleID),]
+
+nCTMid<-table(pheno$fraction)
+nSBMid<-table(pheno$sequencingBatch)
+nBBMid<-table(pheno$cohort)
+
+nSBMid<-nSBMid[names(nSBStart)]
+nSBMid[is.na(nSBMid)]<-0
+
+nBBMid<-nBBMid[names(nBBStart)]
+nBBMid[is.na(nBBMid)]<-0
+
+ctCounts<-cbind(nCTStart, nCTMid)
+sbCounts<-cbind(nSBStart, nSBMid)
+bbCounts<-cbind(nBBStart, nBBMid)
+colnames(ctCounts)<-c("Profiled", "PassQCStage1")
+colnames(sbCounts)<-c("Profiled", "PassQCStage1")
+colnames(bbCounts)<-c("Profiled", "PassQCStage1")
+
+kbl(ctCounts) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),font_size = 10)
+
+kbl(sbCounts) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),font_size = 10)
+
+kbl(bbCounts) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),font_size = 10)
+```
+
+
+## Sex Check
+
+```{r sexPrediction}
+
+## reads in peaks annotated to XIST and FIRRE
+
+xPeakFile<-file.path(dir, "5_countPeaks", "MACS","ShiftedTagAlign", "sexChr", "chrX.peakcounts.txt")
+yPeakFile<-file.path(dir, "5_countPeaks", "MACS","ShiftedTagAlign","sexChr", "chrY.peakcounts.txt")
+xPeaks<-read.table(xPeakFile, stringsAsFactors = FALSE)
+yPeaks<-read.table(yPeakFile, stringsAsFactors = FALSE)
+
+xPeaks<-unique(xPeaks)
+
+xPeaks$V18<-basename(xPeaks$V18)
+yPeaks$V10<-basename(yPeaks$V10)
+xPeaksWide = xPeaks %>% 
+	select(V4, V17, V18) %>% 
+  spread(V4, V17)
+
+yPeaksWide = yPeaks %>% 
+	select(V4, V10, V11) %>% 
+  spread(V4, V11)
+
+## filter to samples pass S1
+xPeaksWide$V18<-gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V18)
+yPeaksWide$V10<-gsub(".chrY.tn5.tagAlign.gz", "", yPeaksWide$V10)
+
+xPeaksWide<-xPeaksWide[match(pheno$sampleID, xPeaksWide$V18), ]
+yPeaksWide<-yPeaksWide[match(pheno$sampleID,yPeaksWide$V10 ),]
+
+xPeaksWide$YTot<-rowSums(yPeaksWide[,-1])
+xPeaksWide$sex<-pheno$gender
+ 
+
+## determine threshold as a line to bisect the two groups 
+ratioF<-xPeaksWide$YTot/xPeaksWide$FIRRE
+ratioF[!is.finite(ratioF)]<-NA
+sexMeans<-aggregate(ratioF, by = list(xPeaksWide$sex), mean, na.rm = TRUE)[,2]
+thresF<-min(sexMeans)+ 0.5*abs(diff(sexMeans))
+
+ratioX<-xPeaksWide$YTot/xPeaksWide$XIST
+ratioX[!is.finite(ratioX)]<-NA
+sexMeans<-aggregate(ratioX, by = list(xPeaksWide$sex), mean, na.rm = TRUE)[,2]
+thresX<-min(sexMeans)+ 0.5*abs(diff(sexMeans))
+
+a1<-ggplot(xPeaksWide, aes(x=FIRRE, y=YTot, color=sex)) + 
+  geom_point() + 
+  labs(
+    x = "Counts in FIRRE associated peak",
+    y = "Counts across all Y chr peaks"
+  ) + theme_bw() + geom_abline(intercept = 0, slope = thresF)
+  
+a2 <- ggplot(xPeaksWide, aes(x=XIST, y=YTot, color=sex)) + 
+  geom_point() + 
+  labs(
+    x = "Counts in XIST associated peak",
+    y = "Counts across all X chr peaks"
+  ) + theme_bw() + geom_abline(intercept = 0, slope = thresX)
+
+figa<-ggarrange(a1, a2,  
+          ncol = 2, nrow = 1)
+
+pdf(file.path(dir, "3_aligned", "QCOutput", "sexPredictions.pdf"), width = 10, height = 5)
+print(figa)
+dev.off()
+		  
+## predict sex
+
+sexPredict<-data.frame("sampleID" = xPeaksWide$V18,"LabelledSex" = xPeaksWide$sex, "FIRREratio" = ratioF > thresF,"XISTratio" = ratioX > thresX)
+
+## TRUE means male
+sexPredict[sexPredict == TRUE]<-"M"
+sexPredict[sexPredict == FALSE]<-"F"
+sexPredict$concordantPredictions<-sexPredict$FIRREratio == sexPredict$XISTratio
+sexPredict$concordantLabel<-xPeaksWide$sex == sexPredict$FIRREratio
+sexPredict$concordantLabel[sexPredict$concordantPredictions != TRUE]<-FALSE
+
+write.csv(sexPredict, file.path(dir, "3_aligned", "QCOutput", "sexPredictions.csv"))
+```
+
+Sex was predicted from the ATAC data as follows. Peak calling was performed with MACS2 on the X and Y chromsome. Three metrics were then generated for each sample. The read counts of OCRs adjacent to FIRRE and XIST, which are only, or predominantly, accessible in females and aggregate read counts in OCRs on chromosome Y outside the pseudoautosomal region. Sex predictions were made by plotting each of the two X chromosome counts against the single Y chromosome counts. The samples then cluster into two groups, representing each sex (see below). Females are then predicted where the X chromosome counts are greater than the Y chromosome counts. 
+
+```{r, fig.width = 10}
+figa
+```
+
+
+
+Sex predictions were made for `r sum(is.na(sexPredict$FIRREratio))` samples. `r sum(sexPredict$concordantPredictions, na.rm = TRUE)` samples were predicted the same sex using both X chromosome metrics. 
+
+
+
+```{r}
+table(sexPredict$FIRREratio, sexPredict$XISTratio)
+```
+
+`r sum(sexPredict$concordantLabel, na.rm = TRUE)` samples were predicted as their labelled sex.
+
+```{r}
+table(sexPredict$FIRREratio, sexPredict$LabelledSex)
+```
+
+
+## Genotype Check
+
+
+```{r}
+genoFolder<-file.path(dir, "3_aligned/genotypeConcordance")
+
+setwd(genoFolder)
+outFiles<-list.files(genoFolder, pattern = "selfSM$")
+
+genoScores<-NULL
+for(each in outFiles){
+	genoScores<-rbind(genoScores, cbind(sub("\\.selfSM", "", each), read.table(each)))
+}
+
+colnames(genoScores)<-c("sampleID", "SEQ_ID", "RG", "CHIP_ID", "nSNPS", "nREADS", "AVG_DP", "FREEMIX", "FREELK1", "FREELK0", "FREE_RH", "FREE_RA", "CHIPMIX","CHIPLK1","CHIPLK0","CHIP_RH","CHIP_RA","DPREF","RDPHET","RDPALT")
+
+genoScores<-genoScores[match(pheno$sampleID, genoScores$sampleID),]
+
+```
+
+
+Aligned ATAC bam files were compared to imputed genotype data using verifyBamID. This software checks for sample contamination as well as confirming that the genotypes are consistent with the external data. `r sum(!is.na(genoScores$sampleID))` samples were processed, with `r sum(!is.na(genoScores$CHIPMIX))` having matched genotype data to be compared against.
+
+Firstly this software looks for evidence of contamination, using genotypes from within the ATAC bam file.The distribution of this metric is shown below. It is bounded between 0 and 1, with 0 reflecting no contamination. This value can be roughly interpreted as representing the proportion of non-reference bases that are observed in reference sites. 
+
+```{r}
+hist(genoScores$FREEMIX, breaks = 50, col = "grey", ylab = "Number of samples", xlab = "Proportion contamination", main = "")
+abline(v = 0.02)
+
+```
+
+
+Secondly, it compares the sequence in the bam file to genotypes for that individual and calculates a contaminination score that incorporates the genotype data for that sample. Here a value of ~ 0 indicates no contamination and therefore this matches the provided genotype data. A value of ~ 1 indicates that the sample does not have any contamination but it does not match the genotype data.   
+
+```{r}
+hist(genoScores$CHIPMIX, breaks = 50, col = "grey", ylab = "Number of samples", xlab = "Proportion contamination", main = "")
+
+```
+
+```{r}
+
+plot(genoScores$FREEMIX, genoScores$CHIPMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Proportion contamination (seq only)", ylab = "Proportion contamination (given genotypes)")
+abline(v = 0.1)
+abline(h = c(0.1,0.9))
+
+```
+
+Let's compare the contamination statistics against other metrics of data quality.
+
+```{r}
+par(mfrow = c(1,2))
+plot(genoScores$nREADS/1e6, genoScores$FREEMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Number of reads (M)", ylab = "Proportion contamination (seq only")
+abline(v = 10)
+abline(h = c(0.1,0.9))
+
+plot(genoScores$nREADS/1e6, genoScores$CHIPMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Number of reads (M)", ylab = "Proportion contamination (given genotypes)")
+abline(v = 10)
+abline(h = c(0.1,0.9))
+
+
+```
+
+We will define samples that match their genotype data those with < 0.1 contamination with both methods of quantifying.The table below shows the number of samples either evidence of contamination (rows) and evidence of matching their genotype data or not. 
+
+
+```{r}
+
+genoCheck<-genoScores$FREEMIX < 0.1 & genoScores$CHIPMIX < 0.1
+
+contamCheck<-table(genoScores$FREEMIX < 0.1,cut(genoScores$CHIPMIX, breaks = c(0,0.1, 0.9,1)))
+
+kbl(contamCheck) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),font_size = 10)
+
+```
+
+We will define candidates for potential swaps as those with > 0.9 contamination given the genotype data. We also require sufficient number of reads to confirm it is a different sample, we will only take forward samples with 1 million reads to search for an alternative genotype match. `r sum(genoScores$CHIPMIX > 0.9 & genoScores$nREADS > 1e6, na.rm = TRUE)` meet this criteria. These the ATAC bam files for these samples will be compared against the genotypes for all cohort to identify potential swaps. 
+
+
+# QC Summary: Sample Filtering
+
+```{r samplePASS}
+# generate a txt file of passed samples
+QCPASS<-cbind(sexPredict$concordantLabel, genoCheck)
+
+colnames(QCPASS)<-c("sexCheck", "genoCheck")
+
+write.csv(cbind(pheno, QCPASS), file = file.path(metaDir, "/passStage2Status.csv"))
+
+# need to keep samples without sex or genotype data to confirm.
+keep<-rowSums(QCPASS) == rowSums(!is.na(QCPASS))
+
+write.table(names(keep[keep==TRUE]), file = file.path(metaDir, "/passStage2SampleList.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+QCPASS<-cbind(QCPASS, "QCPASS" = rowSums(QCPASS) == ncol(QCPASS))
+```
+
+Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.
+
+```{r, echo = FALSE}
+# create cross tab table
+xTab<-matrix(data = NA, ncol = ncol(QCPASS), nrow = ncol(QCPASS))
+for(i in 1:ncol(QCPASS)){
+  for(j in 1:ncol(QCPASS)){
+    xTab[i,j]<-sum(rowSums(QCPASS[,c(i,j)]) == 0, na.rm = TRUE)
+  }
+}
+colnames(xTab)<-colnames(QCPASS)
+rownames(xTab)<-colnames(QCPASS)
+
+kbl(xTab) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+

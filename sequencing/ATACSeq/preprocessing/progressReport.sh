@@ -105,7 +105,7 @@ do
         echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}.bowtie.log ]
+    if [ $(wc -l < ${ALIGNEDDIR}/${sampleName}.bowtie.log) != 15 ]
     then
         echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else

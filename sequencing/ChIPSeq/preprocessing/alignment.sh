@@ -1,7 +1,7 @@
 ## Takes trimmed reads for single sample aligns with bowtie2 and filters out duplicates, mt reads, incorrectly paired reads
 
 ## EXECUTION
-# sh ./ChIPSeq/preprocessing/1_alignment.sh <fastq file>
+# sh ./ChIPSeq/preprocessing/alignment.sh <fastq file>
 # where 
 # <fastq file> is the path to the "R1" fastq files which are expected to be compressed
 # script needs to be executed from <git repo>/sequencing/

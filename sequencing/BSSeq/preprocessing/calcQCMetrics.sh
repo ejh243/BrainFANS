@@ -21,27 +21,26 @@
 # *.flagstat.qc
 
 sampleName=$1 
-
+echo
 echo "Calculating ENCODE QC metrics"
 echo Job started on:
 date -u
 
 cd ${ALIGNEDDIR}
 
-# =============================
-# Compute average coverage across genome
-# =============================
-#Each replicate should have 30X coverage.
+## compute average coverage across genome
+## each replicate should have 30X coverage.
 
-samtools sort ${sampleName}*bt2_pe.bam | bedtools genomecov -ibam stdin | \
+echo 'Computing average coverage'
+samtools sort ${sampleName}*nodup.bam | bedtools genomecov -ibam stdin | \
 	awk '{SUM+=$2 * $3}{ a[$4]++ } END { for (b in a) { TOT+=b } {print SUM/TOT} }' > ENCODEMetrics/${sampleName}.qc
 
-# =============================
-# Conversion efficiency
-# =============================
-#The C to T conversion rate should be ≥98%
 
-if [ test -d spikeAlignments ]
+## conversion efficiency
+# the C to T conversion rate should be ≥98%
+
+echo "Computing conversion efficiency"
+if test -d spikeAlignments 
 then 
 	var=$( grep 'C methylated in CpG context:' spikeAlignments/${sampleName}*.txt | awk '{ print $6 }' | rev | cut -c2- | rev )
 	echo "100 - $var" | bc >> ENCODEMetrics/${sampleName}.qc
@@ -49,18 +48,14 @@ else
 	echo 'No separate alignment found. Conversion efficiency not calculated'
 fi
 
-# =============================
-# Compute correlation part 1
-# =============================
 
-cd $METHYLDIR
-mkdir -p ENCODEMetrics
+## Compute correlation part 1
 
-zcat ${sampleName}*.deduplicated.bismark.cov.gz | grep "chr1	" > ENCODEMetrics/${sampleName}.chr1.cov.bg
+#cd $METHYLDIR
+
+#zcat ${sampleName}*bismark.cov.gz | grep "chr1	" > ENCODEMetrics/${sampleName}.chr1.cov.bg
 
 if [[ $? == 0 ]]
 	then echo "Part 1 ENCODE metrics calculated"
 	date -u
 fi
-
-

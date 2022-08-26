@@ -111,7 +111,7 @@ do
         echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}_depDup_q30.bam ]
+    if [ ! -s ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]
     then
         echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else

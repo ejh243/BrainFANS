@@ -10,6 +10,7 @@
 #SBATCH --error=ChIPSeq/logFiles/%u/ChIPQCSummary-%A.e
 #SBATCH --job-name=ChIPQCSummary
 
+#-----------------------------------------------------------------------#
 
 ## print start date and time
 echo Job started on:
@@ -28,6 +29,7 @@ export PROJECT=$1
 source ./ChIPSeq/config/config.txt 
 echo "Project directory is: " $DATADIR
 
+#-----------------------------------------------------------------------#
 
 if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
 then 
@@ -52,14 +54,24 @@ then
 	## run other bespoke utilty scripts to collate other QC metrics
 	cd ${SCRIPTDIR}
 
-	sh ./ChIPSeq/preprocessing/6_progressReport.sh 
-	##sh ./ChIPSeq/preprocessing/7_countMTReads.sh 
-	sh ./ChIPSeq/preprocessing/8_collateFlagStatOutput.sh 
+	sh ./ChIPSeq/preprocessing/progressReport.sh 
+	sh ./ChIPSeq/preprocessing/collateFlagStatOutput.sh 
+fi
+
+if [ $# = 1 ] || [[ $2 =~ 'SUMMARY' ]]
+then
+	## collate the earlier outputs into a r markdown report
+	cd ${SCRIPTDIR}
+	echo ${SCRIPTDIR}
+
+	module load R/3.6.3-foss-2020a
+	module load Pandoc
+	Rscript -e "rmarkdown::render('ChIPSeq/preprocessing/collateS1SumStats.Rmd', output_file=paste0(commandArgs(trailingOnly=T)[1], '/QCOutput/stage1SummaryStats.html'))" "$PEAKDIR" "${SCRIPTDIR}" "$PROJECT" 
 fi
 
 echo 'EXITCODE: ' $?
 
 ## move log files into a folder
 cd ${SCRIPTDIR}/ChIPSeq/logFiles/${USER}
-mkdir -p ${SLURM_ARRAY_JOB_ID}
-mv *${SLURM_ARRAY_JOB_ID}* ${SLURM_ARRAY_JOB_ID}
+mkdir -p ${SLURM_JOB_ID}
+mv *${SLURM_JOB_ID}.* ${SLURM_JOB_ID}

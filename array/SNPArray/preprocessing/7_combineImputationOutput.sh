@@ -56,7 +56,6 @@ rm chr*_rsq0.3.bim
 rm chr*_rsq0.3.fam
 
 
-## update sex in fam file run hwe filter
 awk '{split($1,a,"_"); print $1,$2,a[1]"_"a[2],a[3]}' ${FILEPREFIX}_rsq0.3.fam > UpdateIDs.txt
 ${PLINK}/plink --bfile ${FILEPREFIX}_rsq0.3 --update-ids UpdateIDs.txt --make-bed --out ${FILEPREFIX}_rsq0.3_QCd 
 

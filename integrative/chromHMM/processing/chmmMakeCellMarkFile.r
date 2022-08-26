@@ -28,7 +28,10 @@ if (length(args)==0){
 } 
 
 project<-args[1]
-tissue<-args[2]
+tissue<-paste(args[2:length(args)], collapse = ' ')
+
+print(tissue)
+
 source("BSSeq/config/config.r")
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -56,11 +59,11 @@ sampleSheet
 
 # create reference dictionary to rename fractions
 dic<-data.frame( 
-    c('N+', 'glu|gaba|neun|neun pos'),
-    c('N-', 'olig|sox10|neun neg'),
-    c('T', 'total|bulk'), 
-    c('DN', 'neg')
-    )
+  c('N-', 'olig|sox10|neun neg'),
+  c('N+', 'glu|gaba|neun|neun pos'),
+  c('T', 'total|bulk'), 
+  c('DN', 'neg')
+)
 # rename fractions to N-, N- and S
 cell <- tolower(sampleSheet$fraction)
 for (x in 1:length(colnames(dic))){

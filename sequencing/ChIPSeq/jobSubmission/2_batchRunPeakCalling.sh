@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
-#SBATCH -p mrcq # submit to the serial queue
+#SBATCH -p pq # submit to the serial queue
 #SBATCH --time=24:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
@@ -42,7 +42,7 @@ echo ${ALIGNEDDIR}
 
 cd ${ALIGNEDDIR}
 
-sampleName=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/samples.txt | tail -1))
+sampleName=($(head -n `expr ${SLURM_ARRAY_TASK_ID} + 1` ${METADIR}/samples.txt | tail -1))
 
 if [[ $2 == 'control' ]]
 then 
@@ -74,7 +74,7 @@ then
 	echo 'Mark is' $mark
 
 	cd ${SCRIPTDIR}/
-	sh ./ChIPSeq/preprocessing/3_samplePeaks.sh ${mark} ${sampleName} ${control}
+	sh ./ChIPSeq/preprocessing/samplePeaks.sh ${mark} ${sampleName} ${control}
 	
 	if [[ $? == 0 ]]
 		then echo "Peaks called"
@@ -93,7 +93,7 @@ then
 	mkdir -p ${PEAKDIR}/QCOutput
 
 	cd ${SCRIPTDIR}/
-	sh ./ChIPSeq/preprocessing/4_calcFrip.sh ${sampleName}
+	sh ./ChIPSeq/preprocessing/calcFrip.sh ${sampleName}
 
 	if [[ $? == 0 ]]
 		then date -u

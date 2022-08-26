@@ -22,6 +22,8 @@ project<-args[1]
 tissue<-args[2]
 sampleids<-args[3:length(args)]
 
+print(c(project, tissue, sampleids))
+
 ##load config file (if not submitted to isca, set example args)
 if (length(args)==0){
   project<-'WGBS/epiGaba'
@@ -46,6 +48,13 @@ if (length(args)==0){
                 'GLU2_BS',
                 'OLIG1_BS',
                 'OLIG2_BS')
+  tissue<- 'anterior_cingulate_cortex_BA24'
+  sampleids<- c("GABA1_BS",
+                "GABA2_BS",
+                "GLU1_BS",
+                "GLU2_BS",
+                "OLIG1_BS",
+                "OLIG2_BS")
 }
 
 source("~/BrainFANS/sequencing/BSSeq/config/config.r")
@@ -61,7 +70,12 @@ library(ggplot2)
 #----------------------------------------------------------------------#
 # IMPORT DATA
 #----------------------------------------------------------------------#
+
 covFile<-list.files(qcDir, pattern = '.chr1.cov.bg') 
+
+print(sampleids)
+print(gsub(".chr1.cov.bg", "", covFile))
+print(match(sampleids,gsub(".chr1.cov.bg", "", covFile)))
 covFile<-covFile[match(sampleids,gsub(".chr1.cov.bg", "", covFile))]
 
 

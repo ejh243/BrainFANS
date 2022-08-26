@@ -25,7 +25,7 @@ library(corrplot)
 
 ## load config variables
 if (is.na(params$project)){
-  project<-"WGBS/rizzardi"
+  project<-"DNAhydroxy/MRC"
   source("/lustre/projects/Research_Project-MRC190311/scripts/sequencing/BSSeq/config/config.r")
 
 } else {
@@ -40,7 +40,7 @@ colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999",
 
 ```
 
-This report provides a summary of a Bisulfite-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment, methylation calling and filtering. The bioinformatic pipeline parallels that of the [ENCODE BS-seq guidelines] (https://www.encodeproject.org/data-standards/wgbs/). Raw fastq files have been have been aligned and methylation extracted with Bismark. Alignment to the bisulfite-converted human genome (hg38) uses Bowtie2. The pipeline is still under development.
+This report provides a summary of a Bisulfite-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment, methylation calling and filtering. The bioinformatic pipeline parallels that of the [ENCODE BS-seq guidelines](https://www.encodeproject.org/data-standards/wgbs/). Raw fastq files have been have been aligned and methylation extracted with Bismark. Alignment to the bisulfite-converted human genome (hg38) uses Bowtie2. The pipeline is still under development.
 
 ```{r loadDat}
 ## import data
@@ -81,13 +81,16 @@ for(each in files){
   eMetrics<-rbind(eMetrics, t(tmp))
 }
 
+if (ncol(eMetrics)!=2){
+  eMetrics<- cbind(eMetrics, matrix(nrow = nrow(eMetrics)))
+}
 colnames(eMetrics)<-c("coverage","conversionEfficiency")
 eIndex<-match(processSum$sampleID, gsub(".qc", "", files))
 eMetrics<-eMetrics[eIndex,]
 mergeStats<-cbind(mergeStats,eMetrics)
 
 files<-list.files(paste0(methylDir, '/QCOutput/'), pattern = '.corr.qc')
-files <- files[gsub('_', ' ', gsub('.corr.qc', '', files)) %in% pheno$fraction]
+files <- files[gsub('_', ' ', gsub('.corr.qc', '', files)) %in% pheno$tissue]
 
 cMetrics<-NULL
 for (x in 1:length(files)){
@@ -330,4 +333,19 @@ colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'alignt\nrate
 corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
 corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black', upper.col = COL2('PiYG'), lower.col = COL2('PiYG'))
 
+knitr::knit_exit()
+```
+
+```{r samplePASS}
+# generate a txt file of passed samples
+QCPASS<-cbind(mergeStats$percent_aligned > 65, #alignment rate 
+              mergeStats$coverage > 10, #coverage
+              mergeStats$conversionEfficiency > 98) %>%
+  set_rownames(pheno$sampleID)
+
+keep<-rowSums(QCPASS) == ncol(QCPASS)
+length(keep[keep==TRUE])
+
+write.table(names(keep[keep==TRUE]), file = paste0(metaDir, "/stage1Samples.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
 ```

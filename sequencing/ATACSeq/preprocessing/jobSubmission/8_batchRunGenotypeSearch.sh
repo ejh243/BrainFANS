@@ -1,14 +1,14 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH --time=150:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.o
-#SBATCH --error=ATACSeq/logFiles/%u/verifyBAMID-%A_%a.e
-#SBATCH --job-name=verifyBAMID
+#SBATCH --output=ATACSeq/logFiles/%u/genoSearch-%A_%a.o
+#SBATCH --error=ATACSeq/logFiles/%u/genoSearch-%A_%a.e
+#SBATCH --job-name=genoSearch
 
 #-----------------------------------------------------------------------#
 
@@ -37,16 +37,18 @@ fi
 
 #-----------------------------------------------------------------------#
 
-## reformat bam file
+## take samples that look contaminated and search for best
 
-module load picard/2.6.0-Java-1.8.0_131
-module load GATK
-module load SAMtools
+cd ${ALIGNEDDIR}/genotypeConcordance/
+awk '{if($7 != "FREEMIX") print FILENAME,$0}' *.selfSM > collatedGenoCheckStats.txt
+awk '{if($7 != "FREEMIX" && ($5 > 1000000 && $12 > 0.9)) print FILENAME,$1}' *.selfSM > ${METADIR}/potentialSwitches.txt
 
-# process a line from IDMap file
-IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/matchedVCFIDs.txt | tail -1))
 
-sh ./ATACSeq/preprocessing/14_compareBamWithGenotypes.sh ${IDS[@]}
+IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${METADIR}/potentialSwitches.txt | tail -1))
+
+cd ${SCRIPTDIR}
+
+sh ./ATACSeq/preprocessing/searchBestGenoMatch.sh ${IDS[@]}
 
 echo 'EXITCODE: ' $?
 
