@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
-#SBATCH -p mrcq # submit to the serial queue
+#SBATCH -p pq # submit to the serial queue
 #SBATCH --time=18:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
@@ -35,27 +35,30 @@ fi
 #-----------------------------------------------------------------------#
 
 module purge
-module load R
+module load R/3.6.3-foss-2020a
 
 ## get column number of tissue 
-column=$(awk '$1 == "fraction"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
+tissueCol=$(awk '$1 == "tissue"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
+sampleCol=$(awk '$1 == "sampleID"{print NR;exit} ' RS="," ${METADIR}/sampleSheet.csv)
 
-echo 'Column number is ' $column
+echo 'Tissue column number is ' $tissueCol
 
 ## get tissue for sample
 IFS=$'\n' # need to set this as \n rather than default - space, \t and then \n - so that elements are expanded using \n as delimiter
-tissue=($(awk -F"," -v col="$column" '(NR>1) {print $col}' ${METADIR}/sampleSheet.csv | sort -u))
+tissue=($(awk -F"," -v col="$tissueCol" '(NR>1) {print $col}' ${METADIR}/sampleSheet.csv | sort -u))
 unset IFS
 echo 'Tissue is' ${tissue[${SLURM_ARRAY_TASK_ID}]}
 
 # finds all samples with this tissue and save to array
-SAMPLEIDS=($(grep "${tissue[${SLURM_ARRAY_TASK_ID}]}" ${METADIR}/sampleSheet.csv | awk -F',' '{print $1}'))
+SAMPLEIDS=($(grep "${tissue[${SLURM_ARRAY_TASK_ID}]}" ${METADIR}/sampleSheet.csv | awk -F',' -v col=$sampleCol '{print $col}'))
 
 # replace spaces and remove other characters
 tissue=${tissue[${SLURM_ARRAY_TASK_ID}]// /_}
 tissue=${tissue//[()]/}
 
 echo 'Tissue file name is:' ${tissue}.corr.qc
+
+mkdir -p ${METHYLDIR}/QCOutput
 
 Rscript ${SCRIPTDIR}/BSSeq/preprocessing/computeCorr.r ${PROJECT} ${tissue} ${SAMPLEIDS[@]}
 

@@ -1,9 +1,9 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
-#SBATCH -p mrcq # submit to the serial queue
+#SBATCH -p pq # submit to the serial queue
 #SBATCH --time=25:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
-#SBATCH --nodes=5 # specify number of nodes.
+#SBATCH --nodes=2 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --output=integrative/chromHMM/logFiles/learnModel-%A_%a.o
@@ -24,7 +24,7 @@ echo $SLURM_SUBMIT_DIR
 cd $SLURM_SUBMIT_DIR
 
 echo 'Loading config file for project: ' $1
-PROJECT=$1
+INTPROJECT=$1
 source ./integrative/chromHMM/config/config.txt
 
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
@@ -35,13 +35,16 @@ else
 	echo 'Number of states: ' ${SLURM_ARRAY_TASK_ID}
 fi
 
-mkdir -p ${MODELDIR}
+#-----------------------------------------------------------------------#
 
+mkdir -p ${MODELDIR}
 module load Java
 
 echo 
-echo 'Learning model'
-java -mx4000M -jar ${CHROMHMM}/ChromHMM.jar LearnModel -p 0 ${MERGEDIR} ${MODELDIR} ${SLURM_ARRAY_TASK_ID} hg38
+echo 'Started learning model at:'
+date -u
+
+java -mx6000M -jar ${CHROMHMM}/ChromHMM.jar LearnModel -p 0 ${MERGEDIR} ${MODELDIR} ${SLURM_ARRAY_TASK_ID} hg38
 
 if [[ $? == 0 ]]
 then 
@@ -49,3 +52,8 @@ then
 fi
 
 echo 'EXIT CODE: ' $?
+
+## move log files into a folder
+cd ${SCRIPTDIR}/integrative/chromHMM/logFiles/${USER}
+mkdir -p ${SLURM_ARRAY_JOB_ID}
+mv *${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}

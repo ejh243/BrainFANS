@@ -23,7 +23,7 @@ echo $SLURM_SUBMIT_DIR
 
 cd $SLURM_SUBMIT_DIR
 echo 'Loading config file for project: ' $1
-PROJECT=$1
+INTPROJECT=$1
 source ./integrative/chromHMM/config/config.txt
 
 echo "Reference model is: " $2

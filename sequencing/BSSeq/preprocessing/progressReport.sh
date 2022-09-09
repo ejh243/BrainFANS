@@ -45,16 +45,16 @@ echo "Number of fastqc reports found " $(ls ${FASTQCDIR}/*_fastqc.zip | wc -l)
 echo "Number of fastp reports found " $(ls ${TRIMDIR}/trimGaloreReports/*.txt | wc -l)
 
 ## check for bowtie output
-echo "Number of Bismark reports found " $(ls ${ALIGNEDDIR}/bismarkReports/*.report.txt | wc -l)
+echo "Number of Bismark reports found " $(ls ${ALIGNEDDIR}/bismarkReports/*report.txt | wc -l)
 
-echo "Number of filtered aligned files found " $(ls ${ALIGNEDDIR}/nodup/*.deduplicated.bam | wc -l)
+echo "Number of filtered aligned files found " $(ls ${ALIGNEDDIR}/*.nodup.bam | wc -l)
 
 ## check for output of ENCODE QC metrics calculation
 ## first delete empty files 
 
 find ${ALIGNEDDIR}/ENCODEMetrics/ -size  0 -print -delete
 
-echo "Number of ENCODE QC metric output files found " $(ls ${ALIGNEDDIR}/ENCODEMetrics/*.pbc.qc | wc -l)
+echo "Number of ENCODE QC metric output files found " $(ls ${ALIGNEDDIR}/ENCODEMetrics/*.qc | wc -l)
 
 
 ## check for methylation output
@@ -111,7 +111,7 @@ do
         echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}*pe.deduplicated.bam ]
+    if [ ! -s ${ALIGNEDDIR}/${sampleName}*nodup.bam ]
     then
         echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
@@ -125,7 +125,7 @@ do
         echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
     
-    if [ ! -s ${METHYLDIR}/${sampleName}.deduplicated.bismark.cov.gz ]
+    if [ ! -s ${METHYLDIR}/${sampleName}*bismark.cov.gz ]
     then
         echo "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
     else

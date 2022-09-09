@@ -28,10 +28,10 @@ source ./ChIPSeq/config/config.txt
 echo "Project directory is: " $DATADIR
 
 ##check array specified and exit if not
-if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
-then 
-    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
-fi
+#if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
+#then 
+#    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+#fi
 
 
 #-----------------------------------------------------------------------#
@@ -40,7 +40,7 @@ mkdir -p ${PEAKDIR}/QCOutput
 
 module load R/3.6.3-foss-2020a
 
-Rscript ${SCRIPTDIR}/ChIPSeq/preprocessing/5_calcQCMetrics.r ${PROJECT} ${SLURM_ARRAY_TASK_ID}
+Rscript ${SCRIPTDIR}/ChIPSeq/preprocessing/calcQCMetrics.r ${PROJECT} ${SLURM_ARRAY_TASK_ID}
 
 echo 'EXITCODE: ' $?
 

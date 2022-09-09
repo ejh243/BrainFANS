@@ -16,10 +16,11 @@ rm(list=ls())
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0){
-  args[1]<-"SFARI"
+  args[1]<-"epiGaba"
   args[2]<-0
-} 
-
+} else if (length(args)==1){
+  args[2]<-0
+}
 ## load config variables
 project<-args[1]
 batchNum<-as.numeric(args[2]) ## nb starts from 0
@@ -39,56 +40,55 @@ bpparam("SerialParam")
 # IMPORT AND WRANGLE DATA
 #----------------------------------------------------------------------#
 ## Create sample sheet for the chipqc input
-if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))==FALSE){
-  sampleSheet<-read.csv(sampleSheet)
+if (file.exists(paste0(metaDir, "/sampleSheetForChipQC.csv"))){
+  print('Using existing sampleSheet for ChIPQC')
+  sampleSheet<- read.csv(paste0(metaDir,"/sampleSheetForChipQC.csv"))
+} else {
+  sampleSheet<-read.csv(sampleSheet) 
   
   peaks<-list.files(peakDir, pattern = "Peak.filt", recursive = TRUE) %>%
-    sort()
+    .[match(sampleSheet$sampleID, gsub(".narrowPeak.filt|.broadPeak.filt", '', .), )]
+  
   bamReads<-paste0(sampleSheet$sampleID, '.filt.nodup.bam') %>%
-    sort()
+    .[match(sampleSheet$sampleID, gsub('.filt.nodup.bam', '', .), )]
   
   # bam files
-  bamControl<-paste0(sampleSheet$controlID, '.filt.nodup.bam') %>%
-    sort()
+  bamControl<-paste0(sampleSheet$controlID, '.filt.nodup.bam')
   
   # necessary columns
   factor<-sampleSheet$target
   tissue<-sampleSheet$fraction
   pe<-"Paired"
-  peakIndex<-match(sampleSheet$sampleID, gsub(".narrowPeak.filt|.broadPeak.filt", "", peaks))
   
   sampleSheet<-data.frame(SampleID = sampleSheet$sampleID, Tissue=tissue, Factor=factor, Replicate=1, ReadType = pe, 
                           bamReads = paste(alignedDir, bamReads, sep = "/"), 
                           ControlID = sampleSheet$controlID,
                           bamControl = paste(alignedDir, bamControl, sep = "/"),
-                          Peaks = paste(peakDir, peaks[peakIndex],sep = "/"),
+                          Peaks = paste(peakDir, peaks,sep = "/"),
                           PeakCaller='macs',
                           stringsAsFactors = FALSE)
   
   if (batchNum == 0){
     write.csv(sampleSheet, paste(metaDir, "sampleSheetForChipQC.csv",sep = "/"), row.names = FALSE)
   } 
-} else {
-  print('Using existing sampleSheet for ChIPQC')
-  sampleSheet<- read.csv(paste0(metaDir,"/sampleSheetForChipQC.csv"))
 }
 
 #----------------------------------------------------------------------#
 # SUBSET TO BATCH SUBMIT
 #----------------------------------------------------------------------#
 ## filter to subset of samples
-index<-c(1:10)+(batchNum*10)
+#index<-c(1:10)+(batchNum*10)
 ## if number of samples is not a function of ten adjust index
-index<-index[index %in% 1:length(rownames(sampleSheet))]
+#index<-index[index %in% 1:length(rownames(sampleSheet))]
 
-sampleSheet<- sampleSheet[index,]
+#sampleSheet<- sampleSheet[index,]
 
 #----------------------------------------------------------------------#
 # CREATE CHIP QC OBJECT
 #----------------------------------------------------------------------#
 
-dat<-ChIPQC(sampleSheet, consensus = TRUE, chromosomes = NULL, annotation = "hg38", blacklist = blacklist)
-save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject_", batchNum, ".rdata"))
+dat<-ChIPQC(sampleSheet, consensus = TRUE, chromosomes = NULL, annotation = "hg38")
+save(dat, file = paste0(peakDir, "/QCOutput/ChIPQCObject", batchNum, ".rdata"))
 
 
 

@@ -10,13 +10,20 @@ export PEAKDIR=${DATADIR}/4_calledPeaks
 
 ## Software/script filepaths
 export SCRIPTDIR=${SLURM_SUBMIT_DIR}
-export CHROMHMM=/gpfs/mrc0/projects/Research_Project-MRC190311/software/ChromHMM
-export BBMAP=/gpfs/mrc0/projects/Research_Project-MRC190311/software/bbmap
+export CHROMHMM=/lustre/projects/Research_Project-MRC190311/software/ChromHMM
+export BBMAP=/lustre/projects/Research_Project-MRC190311/software/bbmap
 
 
 ## Reference data filepaths
-export REFGENOME=/gpfs/mrc0/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index
-export BLACKLIST=/gpfs/mrc0/projects/Research_Project-MRC190311/references/ChipSeq/hg38.blacklist.bed.gz
+export REFGENOME=/lustre/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index
+export BLACKLIST=/lustre/projects/Research_Project-MRC190311/references/ChipSeq/hg38.blacklist.bed.gz
+export SEGREFGENOME=/lustre/projects/Research_Project-MRC190311/references/Segway/GRCh38/Sequence/WholeGenomeSegwayFasta/genome.char.fa
+
+
+## Integrative data filepaths 
+export CHROMDIR=/lustre/projects/Research_Project-MRC190311/integrative/chromHMM
+export SEGDIR=/lustre/projects/Research_Project-MRC190311/integrative/segway
+
 
 ## conda filepaths
 export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc 
