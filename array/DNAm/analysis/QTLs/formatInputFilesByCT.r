@@ -1,13 +1,13 @@
 ##---------------------------------------------------------------------#
 ##
-## Title: Format data for MatrixEQTL 
+## Title: Format data for cell specific MatrixEQTL 
 ##
-## Purpose of script: match DNAm, genotype and covariate data ready
-## for matrix QTL analysis
+## Purpose of script: match DNAm, genotype and covariate data separately for each cell type 
+## ready for matrix QTL analysis 
 ##
 ## Author: Eilis Hannon
 ##
-## Date Created: 2022-08-11
+## Date Created: 2022-08-23
 ##
 ##---------------------------------------------------------------------#
 
@@ -29,16 +29,31 @@ resPath<-file.path(dataDir, "4_analysis", "QTLs", "Input", pop)
 # LOAD AND PREPARE DATA
 #----------------------------------------------------------------------#
 
+
+
 setwd(dataDir)
 load(normData)
 
-## remove total samples and cell types with less than 20 samples
-QCmetrics<-QCmetrics[which(QCmetrics$Cell.type != "Total"),]
+## remove cell types with less than 20 samples
 nSample<-table(QCmetrics$Cell.type)
 QCmetrics<-QCmetrics[QCmetrics$Cell.type %in% names(nSample[which(nSample > 19)]),]
 
 celltypeNormbeta<-celltypeNormbeta[,QCmetrics$Basename]
 cellTypes<-unique(QCmetrics$Cell.type)
+
+for(fraction in cellTypes){
+	if (!file.exists(file.path(resPath, fraction,"genotype"))) {
+	 dir.create(file.path(resPath, fraction, "genotype"), recursive = TRUE)
+	}
+
+	if (!file.exists(file.path(resPath, fraction,  "methylation"))) {
+	 dir.create(file.path(resPath, fraction,  "methylation"), recursive = TRUE)
+	}
+
+	if (!file.exists(file.path(resPath, fraction,  "covariate"))) {
+	 dir.create(file.path(resPath, fraction, "covariate"), recursive = TRUE)
+	}
+}
 
 load(file.path(refDir, "AFSnpProbesCrossHybProbesToExcludeEPIC.rdata"))
 
@@ -79,14 +94,18 @@ for(each in genoFiles){
 	genoMap<-genoRaw[,c("SNP", "CHR", "POS")]
 	colnames(genoMap)<-c("snp", "chr", "pos")
 	genoRaw<-genoRaw[,iIndex]
-	write.table(genoRaw, file.path(resPath, "genotype", paste0("genotype_", chr, ".txt")), sep = "\t", quote = FALSE)
-	write.table(genoMap, file.path(resPath, "genotype", paste0("genotype_", chr, "_Info.txt")), sep = "\t", quote = FALSE)
-	
-	#match meth data
-	pIndex<-which(probeAnnot$chrm == chr)
-	meth<-celltypeNormbeta[pIndex,]
-	write.table(meth, file.path(resPath, "methylation", paste0("methylation_", chr, ".txt")), sep = "\t", quote = FALSE)
-	write.table(probeAnnot[pIndex,c("probeID", "chrm", "start", "end")], file.path(resPath, "methylation", paste0("methylation_", chr, "_Info.txt")), sep = "\t", quote = FALSE)	
+	for(fraction in cellTypes){
+		
+		
+		write.table(genoRaw[,which(QCmetrics$Cell.type == fraction)], file.path(resPath, fraction, "genotype", paste0("genotype_", chr, ".txt")), sep = "\t", quote = FALSE)
+		write.table(genoMap, file.path(resPath, fraction, "genotype", paste0("genotype_", chr, "_Info.txt")), sep = "\t", quote = FALSE)
+		
+		#match meth data
+		pIndex<-which(probeAnnot$chrm == chr)
+		meth<-celltypeNormbeta[pIndex,which(QCmetrics$Cell.type == fraction)]
+		write.table(meth, file.path(resPath, fraction, "methylation", paste0("methylation_", chr, ".txt")), sep = "\t", quote = FALSE)
+		write.table(probeAnnot[pIndex,c("probeID", "chrm", "start", "end")], file.path(resPath, fraction, "methylation", paste0("methylation_", chr, "_Info.txt")), sep = "\t", quote = FALSE)
+	}
 }
 
 
@@ -98,26 +117,25 @@ genoPCs<-read.table(file.path(genoDir, "3_imputed","ImputationOutput", pop, "hg3
 iIndex<-match(QCmetrics$Genotype.IID, idMap$V4[match(genoPCs$V1, idMap$V3)])
 genoPCs<-genoPCs[iIndex,]
 
-##PC plot
-pdf(file.path(resPath, "PCPlotIncludedSamples.pdf"), width = 10, height = 10)
-par(mfrow = c(2,2))
-par(mar = c(4,4,0.5,0.5))
-plot(genoPCs[,3], genoPCs[,4], pch = 16, xlab = "PC1", ylab = "PC2")
-plot(genoPCs[,3], genoPCs[,5], pch = 16, xlab = "PC1", ylab = "PC3")
-plot(genoPCs[,3], genoPCs[,6], pch = 16, xlab = "PC1", ylab = "PC4")
-plot(genoPCs[,3], genoPCs[,7], pch = 16, xlab = "PC1", ylab = "PC5")
-dev.off()
-
 # combine continuous covariates
 contCov<-cbind(QCmetrics$CCDNAmAge, genoPCs[,3:7])
 
 # create dummy variable for sex
 sex_m<-ifelse(QCmetrics$Sex == "M", 1, 0)
 
-# create dummy variables for cell types
-ct_neun<-ifelse(QCmetrics$Cell.type == "NeuN+", 1, 0)
-ct_sox10<-ifelse(QCmetrics$Cell.type == "Sox10+", 1, 0)
+for(fraction in cellTypes){
 
-## for interaction need covariate files with different cell types at the end
-write.table(t(cbind(contCov, sex_m, ct_neun, ct_sox10)), file.path(resPath, "covariate", "covariates_sox10.txt"), sep = "\t", quote = FALSE)	
-write.table(t(cbind(contCov, sex_m, ct_neun, ct_sox10)), file.path(resPath, "covariate", "covariates_neun.txt"), sep = "\t", quote = FALSE)	
+	##PC plot
+	pdf(file.path(resPath, fraction, "PCPlotIncludedSamples.pdf"), width = 10, height = 10)
+	par(mfrow = c(2,2))
+	par(mar = c(4,4,0.5,0.5))
+	plot(genoPCs[,3], genoPCs[,4], pch = 16, xlab = "PC1", ylab = "PC2")
+	plot(genoPCs[,3], genoPCs[,5], pch = 16, xlab = "PC1", ylab = "PC3")
+	plot(genoPCs[,3], genoPCs[,6], pch = 16, xlab = "PC1", ylab = "PC4")
+	plot(genoPCs[,3], genoPCs[,7], pch = 16, xlab = "PC1", ylab = "PC5")
+	dev.off()
+
+
+	## for interaction need covariate files with different cell types at the end
+	write.table(t(cbind(contCov, sex_m)[which(QCmetrics$Cell.type == fraction),]), file.path(resPath, fraction, "covariate", "covariates.txt"), sep = "\t", quote = FALSE)	
+}

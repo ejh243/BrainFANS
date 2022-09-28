@@ -62,6 +62,13 @@ ${PLINK}/plink --bfile ${FILEPREFIX}_rsq0.3 --update-ids UpdateIDs.txt --make-be
 rm ${FILEPREFIX}_rsq0.3.b*
 rm ${FILEPREFIX}_rsq0.3.fam
 
+## update snp names
+
+awk '{print $2,$1":"$4}' ${FILEPREFIX}_rsq0.3_QCd.bim > updateVariantIDs.txt
+${PLINK}/plink --bfile ${FILEPREFIX}_rsq0.3_QCd --update-name updateVariantIDs.txt --out ${FILEPREFIX}_rsq0.3_QCd_tmp --make-just-bim
+
+mv ${FILEPREFIX}_rsq0.3_QCd_tmp.bim ${FILEPREFIX}_rsq0.3_QCd.bim 
+
 
 ## recalculate PCs
 # LD prune
@@ -79,3 +86,6 @@ rm ${FILEPREFIX}_rsq0.3_QCd.ld.prune.fam
 
 ## plot PCs to identify outliers
 Rscript ${SCRIPTDIR}/SNPArray/utilitys/plotPCs.r ${FILEPREFIX}_rsq0.3_QCd.pca.eigenvec 3
+
+## calculate MAF
+${PLINK}/plink --bfile ${FILEPREFIX}_rsq0.3_QCd --freq --out ${FILEPREFIX}_rsq0.3_QCd_maf

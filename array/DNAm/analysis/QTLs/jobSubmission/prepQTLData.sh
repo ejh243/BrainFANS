@@ -40,7 +40,9 @@ mkdir -p ${DATADIR}/4_analysis/QTLs/Input/$POP/methylation
 mkdir -p ${DATADIR}/4_analysis/QTLs/Input/$POP/genotype
 mkdir -p ${DATADIR}/4_analysis/QTLs/Input/$POP/covariate
 
-Rscript DNAm/analysis/QTLs/formatInputFiles.r ${DATADIR} ${REFDIR} ${SNPDIR} $POP
+Rscript DNAm/analysis/QTLs/formatInputFiles.r ${DATADIR} ${REFDIR}/EPICArray ${SNPDIR} $POP
+
+Rscript DNAm/analysis/QTLs/formatInputFilesByCT.r ${DATADIR} ${REFDIR}/EPICArray ${SNPDIR} $POP
 
 
 

@@ -34,3 +34,11 @@ Rscript DNAm/analysis/QTLs/runQTLByChr.r ${DATADIR}/4_analysis/QTLs/Input/$POP/ 
 Rscript DNAm/analysis/QTLs/runCTQTLByChr.r ${DATADIR}/4_analysis/QTLs/Input/$POP/ ${SLURM_ARRAY_TASK_ID} covariates_sox10.txt
 
 Rscript DNAm/analysis/QTLs/runCTQTLByChr.r ${DATADIR}/4_analysis/QTLs/Input/$POP/ ${SLURM_ARRAY_TASK_ID} covariates_neun.txt
+
+Rscript DNAm/analysis/QTLs/runQTLByChr.r ${DATADIR}/4_analysis/QTLs/Input/$POP/NeuN+ ${SLURM_ARRAY_TASK_ID} covariates.txt
+
+Rscript DNAm/analysis/QTLs/runQTLByChr.r ${DATADIR}/4_analysis/QTLs/Input/$POP/Sox10+ ${SLURM_ARRAY_TASK_ID} covariates.txt
+
+Rscript DNAm/analysis/QTLs/runQTLByChr.r ${DATADIR}/4_analysis/QTLs/Input/$POP/Double- ${SLURM_ARRAY_TASK_ID} covariates.txt
+
+Rscript DNAm/analysis/QTLs/runQTLByChr.r ${DATADIR}/4_analysis/QTLs/Input/$POP/Total ${SLURM_ARRAY_TASK_ID} covariates.txt
