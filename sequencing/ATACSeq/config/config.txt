@@ -7,6 +7,7 @@ export FASTQCDIR=${RAWDATADIR}/fastqc
 export TRIMDIR=${DATADIR}/2_trimmed
 export ALIGNEDDIR=${DATADIR}/3_aligned
 export PEAKDIR=${DATADIR}/4_calledPeaks
+export PEAKGROUP=${PEAKDIR}/MACS/ShiftedTagAlign/subset
 export PEAKCOUNTS=${DATADIR}/5_countPeaks
 export GENODIR=/lustre/projects/Research_Project-MRC190311/SNPArray/mrcbrain/3_imputed/ImputationOutput/All
 export BINARISEDIR=${ALIGNEDDIR}/binarisedData

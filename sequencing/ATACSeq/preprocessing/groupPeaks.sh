@@ -20,20 +20,22 @@
 
 ## OUTPUT
 # ${PEAKDIR}/MACS/ShiftedTagAlign/*.broadPeak (and other macs output)
-# ${PEAKDIR}/MACS/BAMPE/*.broadPeak
 # ${PEAKDIR}/MACS/ShiftedTagAlign/${sampleName}.broadPeak.filt
-# ${PEAKDIR}/MACS/BAMPE/${sampleName}.broadPeak.filt
 
 cd ${ALIGNEDDIR}
 
+SAMPLEFILE=$1
 
-SUBSET=$@
+QC1SAMPLES=($(awk '{print $1}' ${SAMPLEFILE} ))
+SUBSET=( "${QC1SAMPLES[@]/%/.tn5.tagAlign.gz}" )
 
-#macs2 callpeak -t ${SUBSET[@]} --outdir ${PEAKDIR}/MACS/ShiftedTagAlign/subset -n ${GROUP} -f BED -g 2.9e9 -q 5e-2 --keep-dup all  --shift 100 --extsize 147 --nomodel --broad --broad-cutoff 5e-2
+echo 'Files for peak-calling are:' ${SUBSET[@]}
+
+macs2 callpeak -t ${SUBSET[@]} --outdir ${PEAKGROUP} -n ${GROUP}_atac -f BED -g 2.9e9 -q 5e-2 --keep-dup all  --shift 100 --extsize 147 --nomodel --broad --broad-cutoff 5e-2
 
 ## exclude peaks aligned to blacklist regions
-bedtools intersect -v -a ${PEAKDIR}/MACS/ShiftedTagAlign/subset/${GROUP}*peaks.broadPeak -b ${BLACKLIST} \
+bedtools intersect -v -a ${PEAKGROUP}/${GROUP}_atac_peaks.broadPeak -b ${BLACKLIST} \
 	| awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
-	| grep -P 'chr[\dXY]+[ \t]' > ${PEAKDIR}/MACS/ShiftedTagAlign/subset/${GROUP}.broadPeak.filt
+	| grep -P 'chr[\dXY]+[ \t]' > ${PEAKGROUP}/${GROUP}_atac.broadPeak.filt
 
 echo 'Finished calling peaks in common'

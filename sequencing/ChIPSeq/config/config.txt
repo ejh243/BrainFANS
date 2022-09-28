@@ -7,6 +7,7 @@ export FASTQCDIR=${RAWDATADIR}/fastqc
 export TRIMDIR=${DATADIR}/2_trimmed
 export ALIGNEDDIR=${DATADIR}/3_aligned
 export PEAKDIR=${DATADIR}/4_calledPeaks
+export PEAKGROUP=${PEAKDIR}/subset
 
 ## Software/script filepaths
 export SCRIPTDIR=${SLURM_SUBMIT_DIR}
