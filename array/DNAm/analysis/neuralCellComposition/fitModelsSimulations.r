@@ -1,0 +1,144 @@
+##---------------------------------------------------------------------#
+##
+## Title: Derive models for cell composition in brain
+##
+## Purpose of script: To train a series of models to predict difference combinations of neural cell types
+##
+## Author: Eilis Hannon
+##
+## Date Created: 04/07/2022
+##
+##---------------------------------------------------------------------#
+
+#----------------------------------------------------------------------#
+# NOTES
+#----------------------------------------------------------------------#
+
+# tests different models for deconvoluting brain cell types
+# compares two methods for selecting CpGs to base the deconvolutions on
+# compares reference panels consisting of different panels of cell fractions
+# compares different numbers of sites for prediction
+# where these reference panels are defined in accompanying csv file
+# uses houseman CP method to generate cell composition estimates
+# test against reconstructed blood profiles where proportions are known
+
+
+#----------------------------------------------------------------------#
+# DEFINE PARAMETERS
+#----------------------------------------------------------------------#
+set.seed(100)
+probeSelect<- "any" 
+intervals<-seq(0.05,0.9,0.05) # prop of each cell type for test data
+numProbesIter<-seq(50,200, 50) # number of sites included in model
+nRepeats<-10
+
+args<-commandArgs(trailingOnly = TRUE)
+normData<-args[1]
+refPath<-args[2]
+refPanelPath<-args[3]
+i<-args[4]
+
+#----------------------------------------------------------------------#
+# LOAD PACKAGES
+#----------------------------------------------------------------------#
+library(CETYGO)
+library(IDOL)
+library(doParallel)
+nworkers <- 8 ## if pushed too high causes OOM errors
+
+
+#----------------------------------------------------------------------#
+# LOAD AND PREPARE DATA
+#----------------------------------------------------------------------#
+message("Loading data")
+load(normData)
+load(file.path(refPath, "AllProbeIlluminaAnno.Rdata"))
+
+colnames(pheno.all)[3]<-"CellType" # need to rename for use with IDOL functions
+pheno.all$CellType<-gsub("\\+", "Pos", pheno.all$CellType) ## need to remove the "+" and "-"
+pheno.all$CellType<-gsub("\\-", "Neg", pheno.all$CellType) ## need to remove the "+" and "-"
+
+probeAnnot<-probeAnnot[rownames(norm.all),]
+
+## filter to autosome probes
+message("Filtering data")
+norm.all<-norm.all[!probeAnnot$CHR %in% c("X", "Y"),]
+
+## filter out cross hyb & SNP probes
+
+crosshyb<-read.csv(file.path(refPath, "CrossHybridisingProbesPriceORWeksberg.csv"), row.names = 1)
+probes<-read.csv(file.path(refPath, "SNPsinProbesAnno.csv"), row.names = 1)
+
+## remove cross hybridising probes
+remove<-match(crosshyb[,1], rownames(norm.all))
+remove<-remove[which(is.na(remove) != TRUE)]
+norm.all<-norm.all[-remove,]
+## remove SNP probes
+probes<-probes[row.names(norm.all),]
+norm.all<-norm.all[which(probes$Weksburg_CommonSNP_Af_within10bpSBE == "" & probes$Illumina_CommonSNP_Af_within10bpSBE == ""),]
+
+
+refPanels<-read.csv(refPanelPath, stringsAsFactors = FALSE)
+modelNum<-refPanels[i,1]
+cellTypes <- unlist(strsplit(refPanels[i,2], ";"))
+cellTypes<-sort(cellTypes)
+pheno.all<-pheno.all[pheno.all$CellType %in% cellTypes,]
+
+norm.all<-norm.all[,pheno.all$Basename]
+pheno.all$CellType<-factor(pheno.all$CellType)
+
+indexCells <- split(1:nrow(pheno.all), pheno.all$CellType)
+predOut<-NULL
+
+for(j in 1:nRepeats){
+	message(paste("Running simulation", j))
+	## select one sample to drop from each cell type
+	exclude<-unlist(lapply(indexCells, sample, size = 1))
+	
+	## select one sample from training data to generate bulk training data
+	trainIndex<-exclude
+	while(sum(trainIndex %in% exclude) > 0){
+		trainIndex<-unlist(lapply(indexCells, sample, size = 1))
+	}
+
+	pheno.sub<-pheno.all[-exclude,]
+	norm.sub<-norm.all[,-exclude]
+	cellInd<-pheno.sub$CellType
+
+	# generate training and test "bulk profiles"
+	## simulate full spectrum of brain profiles where each cell type is present at at least 10%
+	matrixSimProp<-expand.grid(rep(list(intervals), length(cellTypes)))
+	matrixSimProp<-matrixSimProp[which(rowSums(matrixSimProp) == 1),]
+	colnames(matrixSimProp)<-cellTypes
+
+	hetBetas <-createBulkProfiles(norm.all[,trainIndex[cellTypes]], matrixSimProp) ## training
+	testBulkBetas <-createBulkProfiles(norm.all[,exclude[cellTypes]], matrixSimProp)		
+	# perform idol dmr test with M large enough to only do it once
+	idolDMRs<-CandidateDMRFinder.v2(cellTypes, norm.sub, pheno.sub, M = 150,
+	   equal.variance = F)		
+	   
+	## test out each algorithm with increasing numbers of sites
+	for(numProbes in numProbesIter){
+		## select probes as basis of algorithm
+		## use ANOVA method
+		compData <- pickCompProbesMatrix(rawbetas=norm.sub, cellInd=cellInd, cellTypes = cellTypes, numProbes = numProbes/2, probeSelect = probeSelect)
+		
+		## test model in simulated bulk profiles
+		predCC<-projectCellTypeWithError(testBulkBetas[rownames(compData$coefEsts),], compData$coefEsts)
+		diffCC<-predCC - matrixSimProp
+		rmseCC<- sqrt(rowMeans(diffCC^2))
+		predOut <- rbind(predOut, cbind("Selection" = "ANOVA", "nProbes" = numProbes*length(cellTypes), matrixSimProp, predCC, diffCC, "RMSE" = rmseCC))
+				
+		## use IDOL method
+		## only works if > 2 cell types
+		if(length(cellTypes) > 2) {
+			idolLib<-IDOLoptimize(idolDMRs, hetBetas, matrixSimProp*100, libSize = numProbes*length(cellTypes), numCores = nworkers, maxIt = 300)
+			predCC<-projectCellTypeWithError(testBulkBetas[rownames(idolLib$`IDOL Optimized CoefEsts`),], idolLib$`IDOL Optimized CoefEsts`)
+			diffCC<-predCC - matrixSimProp
+			rmseCC<- sqrt(rowMeans(diffCC^2))
+			predOut <- rbind(predOut, cbind("Selection" = "IDOL", "nProbes" = numProbes*length(cellTypes), matrixSimProp, predCC, diffCC, "RMSE" = rmseCC))
+		}
+	}
+	save(predOut, file = file.path(gsub("3_normalised", "4_analysis", dirname(normData)), paste0("CompareDeconvolutionParameters_Model", i, ".rdata")))
+}
+
