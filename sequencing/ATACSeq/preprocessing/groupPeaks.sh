@@ -29,7 +29,7 @@ cd ${ALIGNEDDIR}
 
 SUBSET=$@
 
-#macs2 callpeak -t ${SUBSET[@]} --outdir ${PEAKDIR}/MACS/ShiftedTagAlign/subset -n ${GROUP} -f BED -g 2.9e9 -q 5e-2 --keep-dup all  --shift 100 --extsize 147 --nomodel --broad --broad-cutoff 5e-2
+macs2 callpeak -t ${SUBSET[@]} --outdir ${PEAKDIR}/MACS/ShiftedTagAlign/subset -n ${GROUP} -f BED -g 2.9e9 -q 5e-2 --keep-dup all  --shift 100 --extsize 147 --nomodel --broad --broad-cutoff 5e-2
 
 ## exclude peaks aligned to blacklist regions
 bedtools intersect -v -a ${PEAKDIR}/MACS/ShiftedTagAlign/subset/${GROUP}*peaks.broadPeak -b ${BLACKLIST} \
