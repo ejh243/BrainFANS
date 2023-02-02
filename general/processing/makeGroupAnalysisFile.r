@@ -21,8 +21,8 @@ args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0){
   args[1]<-"DNAhydroxy/MRC"
   args[1]<-'WGBS/rizzardi'
-  args[1]<-'ATACSeq/MRC'
-  #args[1]<-'ChIPSeq/epiGaba'
+  #args[1]<-'ATACSeq/MRC'
+  args[1]<-'ChIPSeq/epiGaba'
   args[2]<-'prefrontal cortex|PFC'
 } 
 
@@ -61,27 +61,25 @@ if (length(sampleSheet$tissue)!=0){
 
 
 # create reference dictionary to rename fractions
-#dic<-data.frame( 
-#  c('N-', 'olig|sox10|neun neg'),
-#  c('N+', 'glu|gaba|neun|neun pos'),
-#  c('T', 'total|bulk'), 
-#  c('DN', 'doubleneg')
-#)
+dic<-data.frame( 
+  c('N-', 'olig|sox10|neun neg'),
+  c('N+', 'glu|gaba|neun|neun pos'),
+  c('T', 'total|bulk'), 
+  c('DN', 'doubleneg')
+)
 
 # rename fractions to N-, N- and S
-cell <- toupper(sampleSheet$fraction)
+cell <- tolower(sampleSheet$fraction)
 cell
-#for (x in 1:length(colnames(dic))){
-#  cell<-replace(cell, 
-#                grepl(dic[2,x], cell), 
-#                as.character(dic[1,x]))
-#}
+for (x in 1:length(colnames(dic))){
+  cell<-replace(cell, 
+                grepl(dic[2,x], cell), 
+                as.character(dic[1,x]))
+}
 
 
 ## get assay target
 mark<-as.character(sampleSheet$target)
-
-mark
 
 samples<-cbind(as.character(sampleSheet$sampleID), cell, mark)
 
@@ -89,5 +87,15 @@ if (is_empty(sampleSheet$controlID) ==FALSE){
   samples<-cbind(samples, as.character(sampleSheet$controlID))
 }
 
-write.table(samples, paste0(metaDir, '/samplesForGroupAnalysis.txt'),
-            sep = '\t', col.names = FALSE, row.names = FALSE, quote = FALSE)
+if (length(unique(mark))>1){
+  for (x in 1:length(unique(mark))){
+    # if multiple marks, create separate file for each
+    samples[mark %in% unique(mark)[x],] %>%
+      write.table(paste0(metaDir, '/samplesForGroupAnalysis_',unique(mark)[x],'.txt'),
+                sep = '\t', col.names = FALSE, row.names = FALSE, quote = FALSE)
+  }
+} else {
+  write.table(samples, paste0(metaDir, '/samplesForGroupAnalysis.txt'),
+              sep = '\t', col.names = FALSE, row.names = FALSE, quote = FALSE)
+}
+
