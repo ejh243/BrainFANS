@@ -26,10 +26,11 @@
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
+
 set.seed(100)
 probeSelect<- "any" 
-intervals<-seq(0.05,0.9,0.05) # prop of each cell type for test data
-numProbesIter<-seq(50,200, 50) # number of sites included in model
+intervals<-seq(0.1,0.9,0.1) # prop of each cell type for test data
+numProbesIter<-seq(20,200, 20) # number of sites included in model
 nRepeats<-10
 
 args<-commandArgs(trailingOnly = TRUE)
@@ -108,7 +109,7 @@ for(j in 1:nRepeats){
 	# generate training and test "bulk profiles"
 	## simulate full spectrum of brain profiles where each cell type is present at at least 10%
 	matrixSimProp<-expand.grid(rep(list(intervals), length(cellTypes)))
-	matrixSimProp<-matrixSimProp[which(rowSums(matrixSimProp) == 1),]
+	matrixSimProp<-matrixSimProp[which(signif(rowSums(matrixSimProp),3) == 1),]
 	colnames(matrixSimProp)<-cellTypes
 
 	hetBetas <-createBulkProfiles(norm.all[,trainIndex[cellTypes]], matrixSimProp) ## training
@@ -116,7 +117,7 @@ for(j in 1:nRepeats){
 	# perform idol dmr test with M large enough to only do it once
 	idolDMRs<-CandidateDMRFinder.v2(cellTypes, norm.sub, pheno.sub, M = 150,
 	   equal.variance = F)		
-	   
+	message("Selected IDOL DMRs")   
 	## test out each algorithm with increasing numbers of sites
 	for(numProbes in numProbesIter){
 		## select probes as basis of algorithm
