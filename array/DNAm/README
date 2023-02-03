@@ -1,6 +1,6 @@
 This readme explains how to use the scripts for running the DNAm analysis pipeline
 
-REQUISITES:
+PREQUISITES:
 	* Scripts submitted from the scripts/array folder
 	* Unix config file located scripts/array/DNAm/config/config.txt that generates the file paths specific to the project 
 	* Users require a folder named with their username in the DNAm/logFiles directory 
@@ -21,11 +21,11 @@ Parameters in [] are optional.
 	
 
 
-	* executes DNAm/preprocessing/1_loadDataGDS.r ${DATADIR}
-	* executes DNAm/preprocessing/2_calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
-	* executes Rscript -e "rmarkdown::render('DNAm/preprocessing/3_QC.rmd', output_file='QC.html')" --args ${DATADIR} <mkdownConfig> $USER
-	* executesDNAm/preprocessing/4_clusterCellTypes.r ${DATADIR} <mkdownConfig> 
-	* Rscript -e "rmarkdown::render('DNAm/preprocessing/5_QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} <mkdownConfig> $USER
+	* executes DNAm/preprocessing/loadDataGDS.r ${DATADIR}
+	* executes DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
+	* executes Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} <mkdownConfig> $USER
+	* executesDNAm/preprocessing/clusterCellTypes.r ${DATADIR} <mkdownConfig> 
+	* Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} <mkdownConfig> $USER
 	
 
 
