@@ -94,9 +94,11 @@ for(i in 1:nrow(QCmetrics)){
 	keep<-QCmetrics$Basename[which(QCmetrics$Cell.type == QCmetrics$Cell.type[i])]
 	## exclude itself
 	keep<-keep[keep != QCmetrics$Basename[i]]
-	cell.means<-colMeans(betas.scores[keep,])
-	cell.sd<-apply(betas.scores[keep,], 2, sd)
-	studentPCA[[1]][i,]<-c((betas.scores[i,]-cell.means)/cell.sd)
+	if(length(keep) > 1){
+		cell.means<-colMeans(betas.scores[keep,])
+		cell.sd<-apply(betas.scores[keep,], 2, sd)
+		studentPCA[[1]][i,]<-c((betas.scores[i,]-cell.means)/cell.sd)
+	}
 }
 
 
@@ -129,19 +131,19 @@ for(i in 1:nrow(QCmetrics)){
 #----------------------------------------------------------------------#
 # CALCULATE INDIVIDUAL FACS SCORE
 #----------------------------------------------------------------------#
-keepCols<-c("Indidivual.ID", "Sex", "Age", "Phenotype", "Tissue.Centre")
+keepCols<-c("Individual.ID", "Sex", "Age", "Phenotype", "Tissue.Centre")
 keepCols<-keepCols[keepCols %in% colnames(QCmetrics)]
 uniqueIDs<-unique(QCmetrics[,keepCols])
-indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell.type != "Total")], by = list(QCmetrics$Indidivual.ID[which(QCmetrics$Cell.type != "Total")]), FUN = median, na.rm = TRUE)
-nFACs<-table(QCmetrics$Indidivual.ID[QCmetrics$Cell.type != "Total"])
+indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell.type != "Total")], by = list(QCmetrics$Individual.ID[which(QCmetrics$Cell.type != "Total")]), FUN = median, na.rm = TRUE)
+nFACs<-table(QCmetrics$Individual.ID[QCmetrics$Cell.type != "Total"])
 
-uniqueIDs<-cbind(uniqueIDs, indFACSEff$x[match(uniqueIDs$Indidivual.ID, as.character(indFACSEff$Group.1))], as.numeric(nFACs[uniqueIDs$Indidivual.ID]))
+uniqueIDs<-cbind(uniqueIDs, indFACSEff$x[match(uniqueIDs$Individual.ID, as.character(indFACSEff$Group.1))], as.numeric(nFACs[uniqueIDs$Individual.ID]))
 colnames(uniqueIDs)<-c(keepCols, "FACsEffiency", "nFACS")
 
 write.csv(uniqueIDs, paste0(qcOutFolder, "/IndividualFACsEffciencyScores.csv"))
 
 # exclude individuals who hd very poor FACS sorts
-QCmetrics$passFACS<-QCmetrics$Indidivual.ID %in% uniqueIDs$Indidivual.ID[which(uniqueIDs$FACsEffiency < 5)]
+QCmetrics$passFACS<-QCmetrics$Individual.ID %in% uniqueIDs$Individual.ID[which(uniqueIDs$FACsEffiency < 5)]
 
 
 #----------------------------------------------------------------------#
@@ -155,9 +157,11 @@ for(i in 1:nrow(QCmetrics)){
 		keep<-QCmetrics$Basename[which(QCmetrics$Cell.type == QCmetrics$Cell.type[i] & QCmetrics$passFACS)]
 		# exclude itself
 		keep<-keep[keep != QCmetrics$Basename[i]]
-		cell.means<-colMeans(betas.scores[keep,])
-		cell.sd<-apply(betas.scores[keep,], 2, sd)
-		studentPCA[[2]][i,]<-c((betas.scores[i,]-cell.means)/cell.sd)
+		if(length(keep) > 1){
+			cell.means<-colMeans(betas.scores[keep,])
+			cell.sd<-apply(betas.scores[keep,], 2, sd)
+			studentPCA[[2]][i,]<-c((betas.scores[i,]-cell.means)/cell.sd)
+		}
 	}
 }
 
@@ -203,7 +207,7 @@ cellMedPCA<-as.matrix(t(cellMedPCA[,-1]))
 cov_sigmaPCA<-list()
 for(each in colnames(cellMedPCA)){
 	## only possible if > 1 sample
-	if(sum(QCmetrics$Cell.type == each) > 1){
+	if(sum(QCmetrics$Cell.type == each & !QCmetrics$studentCTOutlier2) > 1){
 		cov_sigmaPCA[[each]]<-cov(betas.scores[which(QCmetrics$Cell.type == each & !QCmetrics$studentCTOutlier2),1:2], use = "p")
 	}
 }
@@ -257,8 +261,10 @@ for(thres in outlierThres){
 	# assumes cell types are distinct so just consider set of non-overlappping cell types
 	pcaClassifyDistinctCT<-rep("", nrow(QCmetrics))
 	for(each in predDistinctCT){
-		indexClassify<-which(betas.scores[,1] < upperBound[1,each] & betas.scores[,1] > lowerBound[1,each] & betas.scores[,2] < upperBound[2,each] & betas.scores[,2] > lowerBound[2,each])
-		pcaClassifyDistinctCT[indexClassify]<-paste(pcaClassifyDistinctCT[indexClassify], each, sep = ";")
+	    if(each %in% colnames(upperBound)){
+			indexClassify<-which(betas.scores[,1] < upperBound[1,each] & betas.scores[,1] > lowerBound[1,each] & betas.scores[,2] < upperBound[2,each] & betas.scores[,2] > lowerBound[2,each])
+			pcaClassifyDistinctCT[indexClassify]<-paste(pcaClassifyDistinctCT[indexClassify], each, sep = ";")
+		}
 	}
 
 	pcaClassify[["predictCellType"]][,match(thres, outlierThres)]<-pcaClassifyDistinctCT
