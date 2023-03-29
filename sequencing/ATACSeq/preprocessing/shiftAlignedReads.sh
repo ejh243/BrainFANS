@@ -46,7 +46,7 @@ rm ${sampleName}.filt.nodup.nmsrt.bam
 # Subsample tagAlign file
 # Restrict to one read end per pair for CC analysis
 # ================================
-zcat ${sampleName}.filt.nodup.nmsrt.bedpe.gz | grep -v “chrM” | shuf -n ${NREADS} | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,"N","1000",$9}' | \
+zcat ${sampleName}.filt.nodup.nmsrt.bedpe.gz | grep -v “chrM” | shuf -n ${NREADS} | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$7,"1000",$9}' | \
 	gzip -c > "${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz"
 
 # =================================
@@ -61,8 +61,8 @@ mv temp ${sampleName}.subsample.cc.qc
 
 echo 'Calculated cross correlation'
 
-#rm "${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz"
-#rm ${sampleName}.filt.nodup.nmsrt.bedpe.gz
+rm "${sampleName}.filt.nodup.sample.$((NREADS /1000000)).MATE1.tagAlign.gz"
+rm ${sampleName}.filt.nodup.nmsrt.bedpe.gz
 
 # ================
 # Shift tagAlign file
