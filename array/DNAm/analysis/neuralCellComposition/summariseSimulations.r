@@ -77,7 +77,7 @@ for(i in 1:length(predOutAll)){
 		xlab("") +
 		ylab("CETYGO") + ylim(cet_lim) +
 		theme_bw() +  
-		theme(legend.position="none")
+		theme(legend.position="none")  + labs(tag = paste("Panel", i))
 		
 	fig0b[[i]]<-ggplot(predOutAll[[i]], aes(x = Selection, y = RMSE, fill = Selection)) + 
 	geom_violin()+ 
@@ -85,7 +85,7 @@ for(i in 1:length(predOutAll)){
 		xlab("") +
 		ylab("RMSE") + ylim(rmse_lim) +
 		theme_bw() +  
-		theme(legend.position="none")
+		theme(legend.position="none")  + labs(tag = paste("Panel", i))
 }
 
 fig0a[[i]]<- fig0a[[i]] +  
@@ -95,7 +95,7 @@ fig0b[[i]]<- fig0b[[i]]
 
 ggarrange(plotlist = fig0a,
 			  ncol = 4, nrow = 2, widths = c(4,4,4,5))
-ggsave(file.path(resPath, "plots", paste0("ViolinPlotCETYGOAcrossModels.pdf")), width = 16, height = 8, units = "cm")
+ggsave(file.path(resPath, "plots", paste0("ViolinPlotCETYGOAcrossModels.pdf")), width = 16, height = 8)
 
 ## extract sum stats into a table
 
@@ -108,7 +108,7 @@ write.csv(sumStats, file.path(resPath, paste0("TableSumStatsCETYGORMSEAcrossMode
 
 ggarrange(plotlist = fig0b,
 			  ncol = 4, nrow = 2, widths = c(4,4,4,5))
-ggsave(file.path(resPath, "plots", paste0("ViolinPlotRMSEAcrossModels.pdf")), width = 16, height = 8, units = "cm")
+ggsave(file.path(resPath, "plots", paste0("ViolinPlotRMSEAcrossModels.pdf")), width = 16, height = 8)
 
 fig1a<-list()
 fig1b<-list()
@@ -118,30 +118,32 @@ for(i in 1:length(predOutAll)){
 	fig1a[[i]]<-ggplot(sumCETYGO, aes(x=nProbes, y=CETYGO, colour=Selection)) + 
 		geom_line() +
 		geom_point(size=1.5, shape=21, fill="white") + # 21 is filled circle
-		xlab("Number of probes") +
+		xlab("Number of sites") +
 		ylab("CETYGO") + ylim(0, 0.05) +
 		theme_bw() +  
 		theme(legend.position="none")+       
-		geom_ribbon(aes(ymin=CETYGO-ci, ymax=CETYGO+ci, colour=Selection), linetype=2, alpha=0.1)
+		geom_ribbon(aes(ymin=CETYGO-ci, ymax=CETYGO+ci, colour=Selection), linetype=2, alpha=0.1) + labs(tag = paste("Panel", i))
 
 	## compare algorithm parameters
 	sumRMSE <- summarySE(predOutAll[[i]], measurevar="RMSE", groupvars=c("nProbes", "Selection"))
 	fig1b[[i]]<-ggplot(sumRMSE, aes(x=nProbes, y=RMSE, colour=Selection)) + 
 		geom_line() +
 		geom_point(size=1.5, shape=21, fill="white") + # 21 is filled circle
-		xlab("Number of probes") +
+		xlab("Number of sites") +
 		ylab("RMSE") + ylim(0,0.15) +
 		theme_bw() +  
 		theme(legend.position="none")  + 
-		geom_ribbon(aes(ymin=RMSE-ci, ymax=RMSE+ci, colour=Selection), linetype=2, alpha=0.1)
+		geom_ribbon(aes(ymin=RMSE-ci, ymax=RMSE+ci, colour=Selection), linetype=2, alpha=0.1)  + labs(tag = paste("Panel", i))
 
 }
+fig1a[[i]]<-fig1a[[i]]+theme(legend.position = c(0.8,0.8))
+fig1b[[i]]<-fig1b[[i]]+theme(legend.position =  c(0.8,0.8))
 ggarrange(plotlist = fig1a,
-			  ncol = 4, nrow = 2, widths = c(4,4,4,5))	
-ggsave(file.path(resPath, "plots", "LineGraphCETYGOAgainstnProbesAcrossModels.pdf"), width = 16, height = 8, units = "cm")
+			  ncol = 4, nrow = 2)	
+ggsave(file.path(resPath, "plots", "LineGraphCETYGOAgainstnProbesAcrossModels.pdf"), width = 26, height = 15, units = "cm")
 ggarrange(plotlist = fig1b,
-			  ncol = 4, nrow = 2, widths = c(4,4,4,5))	
-ggsave(file.path(resPath, "plots", "LineGraphRMSEAgainstnProbesAcrossModels.pdf"), width = 16, height = 8, units = "cm")
+			  ncol = 4, nrow = 2)	
+ggsave(file.path(resPath, "plots", "LineGraphRMSEAgainstnProbesAcrossModels.pdf"), width = 26, height = 15, units = "cm")
 
 fig3a<-list()
 fig3b<-list()
@@ -174,8 +176,6 @@ for(i in 1:length(predOutAll)){
 								  paste("RMSE", summ$RMSE,
 										sep = " = ")))
 
-	# This here is important, especially naming the first column
-	# Species
 	colnames(df.annotations) <- c("Selection", "CellType", "label")
 
 	vertical_adjustment = ifelse(grepl("Rsq",df.annotations$label),1.5,3)
@@ -202,20 +202,20 @@ for(i in 1:length(predOutAll)){
 	fig3a[[i]]<-ggplot(subset(sumCT, Selection == "ANOVA"), aes(x=nProbes, y=Difference, colour=CellType)) + 
 			geom_line() +
 			geom_point(size=1.5, shape=21, fill="white") + # 21 is filled circle
-			xlab("Number of probes") +
+			xlab("Number of sites") +
 			ylab("Predicted - Actual") +
 			ylim(y_lim) +
 			theme_bw() +  
 		theme(legend.position="none")+       
-			geom_ribbon(aes(ymin=Difference-ci, ymax=Difference+ci, colour=CellType), linetype=2, alpha=0.1)
+			geom_ribbon(aes(ymin=Difference-ci, ymax=Difference+ci, colour=CellType), linetype=2, alpha=0.1)  + labs(tag = paste("Panel", i))
 	fig3b[[i]]<-ggplot(subset(sumCT, Selection == "IDOL"), aes(x=nProbes, y=Difference, colour=CellType)) + 
 			geom_line() +
 			geom_point(size=1.5, shape=21, fill="white") + # 21 is filled circle
-			xlab("Number of probes") +
+			xlab("Number of sites") +
 			ylab("Predicted - Actual") +
 			ylim(y_lim) +
 			theme_bw() +       
-			geom_ribbon(aes(ymin=Difference-ci, ymax=Difference+ci, colour=CellType), linetype=2, alpha=0.1)
+			geom_ribbon(aes(ymin=Difference-ci, ymax=Difference+ci, colour=CellType), linetype=2, alpha=0.1)  + labs(tag = paste("Panel", i))
 }
 
 ggarrange(plotlist= fig3a,
@@ -238,31 +238,34 @@ for(i in 1:length(predOutAll)){
 	predOutByCTAll<-rbind(predOutByCTAll, cbind(paste("Panel", i), predOutByCT))
 
     predOutByCTsub<-subset(predOutByCT, Selection == "ANOVA")
-	fig4a[[i]]<-ggplot(predOutByCTsub, aes(x = CellType, y = value, fill = CellType)) + geom_boxplot() + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
+	fig4a[[i]]<-ggplot(predOutByCTsub, aes(x = CellType, y = value, fill = CellType)) + geom_violin() + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
 	ylim(-0.6, 0.6)  + scale_fill_manual(values=group.colors) +  
-		theme(legend.position="none")  +
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())+
-			ylab("Predicted - Actual")
+			ylab("Predicted - Actual") + labs(tag = paste("Panel", i)) + 
+	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black") +
+	geom_hline(aes(yintercept = 0))
 		
 	predOutByCTsub<-subset(predOutByCT, Selection == "IDOL")
-	fig4b[[i]]<-ggplot(predOutByCTsub, aes(x = CellType, y = value, fill = CellType)) + geom_boxplot() + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
+	fig4b[[i]]<-ggplot(predOutByCTsub, aes(x = CellType, y = value, fill = CellType)) + geom_violin() + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
 	ylim(-0.6, 0.6)  + scale_fill_manual(values=group.colors) +  
 		theme(legend.position="none")  +
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())+
-			ylab("Predicted - Actual")
+			ylab("Predicted - Actual") + labs(tag = paste("Panel", i)) + 
+	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black") +
+	geom_hline(aes(yintercept = 0))
 }
 
 ggarrange(plotlist= fig4a,
-			  ncol = 4, nrow = 2)	
-ggsave(file.path(resPath, "plots", "BoxplotDifferenceANOVA.pdf"), width = 20, height = 12, units = "cm")
+			  ncol = 4, nrow = 2, common.legend = TRUE)	
+ggsave(file.path(resPath, "plots", "ViolinplotDifferenceANOVA.pdf"), width = 20, height = 12, units = "cm")
 
 ggarrange(plotlist= fig4b,
 			  ncol = 4, nrow = 2)	
-ggsave(file.path(resPath, "plots", "BoxplotDifferenceIDOL.pdf"), width = 20, height = 12, units = "cm")
+ggsave(file.path(resPath, "plots", "ViolinplotDifferenceIDOL.pdf"), width = 20, height = 12, units = "cm")
 
 
 ## plot by cell type
@@ -272,31 +275,37 @@ fig5b<-list()
 for(ct in names(table(predOutByCTAll$CellType))){
 
 	predOutByCTsub<-subset(predOutByCTAll, Selection == "ANOVA" & CellType == ct)
-	fig5a[[ct]]<-ggplot(predOutByCTsub, aes(x = Panel, y = value, fill = Panel)) + geom_boxplot(width=0.5) + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
+	fig5a[[ct]]<-ggplot(predOutByCTsub, aes(x = Panel, y = value, fill = Panel)) + geom_violin(width=0.5) + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
 		ylim(-0.6, 0.6)  +
-			theme(legend.position="none")  +
 	  theme(axis.title.y=element_blank(),
 			axis.text.y=element_blank(),
 			axis.ticks.y=element_blank())+
-				ylab("Predicted - Actual") + ggtitle(ct) + scale_fill_manual(values=panel.colors)
+				ylab("Predicted - Actual") + ggtitle(ct) + scale_fill_manual(values=panel.colors)  + 
+	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black", size = 0.5) +
+	geom_hline(aes(yintercept = 0)) 
 
 	predOutByCTsub<-subset(predOutByCTAll, Selection == "IDOL" & CellType == ct)
-	fig5b[[ct]]<-ggplot(predOutByCTsub, aes(x = Panel, y = value, fill = Panel)) + geom_boxplot(width=0.5) + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
-		ylim(-0.6, 0.6)  +
-			theme(legend.position="none")  +
+	fig5b[[ct]]<-ggplot(predOutByCTsub, aes(x = Panel, y = value, fill = Panel)) + geom_violin(width=0.5) + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
+		ylim(-0.6, 0.6) +
 	  theme(axis.title.y=element_blank(),
 			axis.text.y=element_blank(),
 			axis.ticks.y=element_blank())+
-				ylab("Predicted - Actual") + ggtitle(ct) + scale_fill_manual(values=panel.colors)
+				ylab("Predicted - Actual") + ggtitle(ct) + scale_fill_manual(values=panel.colors)  + 
+	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black", size = 0.5) +
+	geom_hline(aes(yintercept = 0))
 }
 
 ggarrange(plotlist= fig5a,
-			  ncol = 5, nrow = 2)	
-ggsave(file.path(resPath, "plots", "BoxplotDifferenceByCellTypeANOVA.pdf"), width = 25, height = 18, units = "cm")
+			  ncol = 5, nrow = 2, common.legend = TRUE)	
+ggsave(file.path(resPath, "plots", "ViolinPlotDifferenceByCellTypeANOVA.pdf"), width = 25, height = 18, units = "cm")
 
 ggarrange(plotlist= fig5b,
-			  ncol = 5, nrow = 2)	
-ggsave(file.path(resPath, "plots", "BoxplotDifferenceByCellTypeIDOL.pdf"), width = 25, height = 18, units = "cm")
+			  ncol = 5, nrow = 2, common.legend = TRUE)	
+ggsave(file.path(resPath, "plots", "ViolinPlotDifferenceByCellTypeIDOL.pdf"), width = 25, height = 18, units = "cm")
 
 
-write.csv(aggregate(value ~ CellType * Panel * Selection, predOutByCTAll, summary), file.path(resPath, paste0("TableSumStatsErrorByCelltype.csv")))
+write.csv(aggregate(value ~ CellType * Panel * Selection, predOutByCTAll, summary), file.path(resPath, paste0("TableSumStatsErrorByCelltypePanelSelection.csv")))
+
+write.csv(aggregate(value ~ CellType *Selection, predOutByCTAll, summary), file.path(resPath, paste0("TableSumStatsErrorByCelltypeSelection.csv")))
+
+write.csv(aggregate(value ~ CellType *Selection, subset(predOutByCTAll, !Panel %in% c("Panel 4","Panel 5")), summary), file.path(resPath, paste0("TableSumStatsErrorByCelltypeSelectionNoConflict.csv")))
