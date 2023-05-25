@@ -321,6 +321,8 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 
 closefn.gds(gfile)
 
+write.csv(QCmetrics, paste0(qcOutFolder,"/QCMetricsPostSampleCheck.csv"))
+
 # save QC metrics and SNP correlations to generate QC report
 if(file.exists(genoFile)){
 	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, betas.rs, rsbetas, file = qcData)
