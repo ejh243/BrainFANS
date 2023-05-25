@@ -17,7 +17,9 @@
 
 # takes bulk brain beta matrix and calculates cellular composition
 # data provided as R object with betas matrix and pheno data.frame
-
+# requires on execution path to robject with dnam data
+# requires on execution path to trained model parameters
+# requires on execution path to folder to output plots and tables
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
@@ -56,14 +58,24 @@ pos <- position_dodge(0.9)
 #----------------------------------------------------------------------#
 
 
-sumStat<-cbind(table(pheno$BrainRegion),
-	aggregate(Age ~ BrainRegion, pheno, mean)$Age,
-	aggregate(Age ~ BrainRegion, pheno, sd)$Age,
-	aggregate(Age ~ BrainRegion, pheno, min)$Age,
-	aggregate(Age ~ BrainRegion, pheno, max)$Age,
-	table(pheno$BrainRegion, pheno$Sex))
+if("BrainRegion" %in% colnames(pheno)){
+	sumStat<-cbind(table(pheno$BrainRegion),
+		aggregate(Age ~ BrainRegion, pheno, mean)$Age,
+		aggregate(Age ~ BrainRegion, pheno, sd)$Age,
+		aggregate(Age ~ BrainRegion, pheno, min)$Age,
+		aggregate(Age ~ BrainRegion, pheno, max)$Age,
+		table(pheno$BrainRegion, pheno$Sex))
 
-write.csv(sumStat, file = file.path(plotPath, "SummariseDataset.csv"))
+	write.csv(sumStat, file = file.path(plotPath, "SummariseDataset.csv"))
+}
+
+if("AgeBin" %in% colnames(pheno)){
+	sumStat<-cbind(table(droplevels(pheno$AgeBin)), 
+	aggregate(Age ~ AgeBin, pheno,min)$Age, 
+	aggregate(Age ~ AgeBin, pheno,max)$Age, 
+	table(droplevels(pheno$AgeBin),pheno$Sex))
+		write.csv(sumStat, file = file.path(plotPath, "SummariseDatasetByAgeBin.csv"))
+}
 
 #----------------------------------------------------------------------#
 # CALCULATE CELL COMPOSITION
@@ -124,7 +136,7 @@ if(length(unique(pheno$BrainRegion)) > 1){
 		lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[-1,c(1,4)]))))
 	}
 	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(droplevels(relevel(as.factor(pheno$BrainRegion), "BA9"), exclude = "CEREB"))[-1], paste0)))
-	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOANOVA.csv"))
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOANOVAExcludeCER.csv"))
 	lmOut<-NULL
 	for(i in 1:length(predCCIDOL)){
 		if(!is.null(predCCIDOL[[i]])){
@@ -133,7 +145,7 @@ if(length(unique(pheno$BrainRegion)) > 1){
 		}
 	}
 	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(droplevels(relevel(as.factor(pheno$BrainRegion), "BA9"), exclude = "CEREB"))[-1], paste0)))
-	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOIDOL.csv"))
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOIDOLExcludeCER.csv"))
 	
 } else {
 	lmOut<-NULL
@@ -230,6 +242,24 @@ ggarrange(plotlist=fig5b, nrow = 2, ncol = 4)
 ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossPanelsIDOL.pdf"),  units = "in", width = 12, height = 8)
 
 
+if("AgeBin" %in% colnames(pheno)){
+	fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYGO, fill = AgeBin))  +
+	  geom_violin(position = pos, scale = 'width')  +
+	  stat_summary(fun = "mean", 
+				   geom = "point", 
+				   position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+	  ylim(y_lim)
+	  
+	 fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = AgeBin))  +
+	  geom_violin(position = pos, scale = 'width')  +
+	  stat_summary(fun = "mean", 
+				   geom = "point", 
+				   position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+	  ylim(y_lim)
+	ggarrange(fig2a, fig2b, nrow = 2, ncol = 1)
+	ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsByAgeBin.pdf"),  units = "in", width = 12, height = 8)
+}
+
 #----------------------------------------------------------------------#
 # PLOT CETYGO AGAINST SEX
 #----------------------------------------------------------------------#
@@ -272,6 +302,34 @@ fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYG
 ggarrange(fig2a, fig2b, nrow = 2, ncol = 1)
 ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsByBatch.pdf"),  units = "in", width = 12, height = 8)
 
+
+#----------------------------------------------------------------------#
+# PLOT DISTRIBUTION OF PREDICTED CELLULAR COMPOSITION: PANEL 8
+#----------------------------------------------------------------------#
+
+# calc neuronal & glial proportions
+
+relCC<-predCCIDOL[[8]][,c("IRF8Pos", "SOX6Neg", "SOX6Pos", "Sox10Pos","TripleNeg")]
+relCC<-cbind(relCC[,"SOX6Neg"]+relCC[,"SOX6Pos"], relCC[,"IRF8Pos"]+relCC[,"Sox10Pos"]+relCC[,"TripleNeg"], relCC)
+colnames(relCC)[1:2]<-c("neuronal", "glial")
+
+tmp<-data.frame(predCCIDOL[[8]])
+tmp_long <- gather(tmp, "PredCT", "Proportion")
+tmp_long <- subset(tmp_long, PredCT %in% names(ctCols))
+tmp_long$BrainRegion<-pheno$BrainRegion
+tmp_long<-na.omit(tmp_long)
+ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
+		  geom_violin(position = pos, scale = 'width')  +
+		  stat_summary(fun = "mean", 
+					   geom = "point", 
+					   position = pos, col = "white") + scale_fill_manual(values = ctCols[unique(tmp_long$PredCT)], drop = TRUE)
+
+ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesPanel8.pdf")),  units = "in", width = 18, height = 8)
+
+
+ctMeans<-cbind(colMeans(relCC), apply(relCC, 2, sd))
+
+write.csv(ctMeans, file = file.path(plotPath, "CellCompositionPanel8IDOLSummaryStats.csv"))
 #----------------------------------------------------------------------#
 # CORPLOT OF ALL CELL TYPE PREDICTIONS 
 #----------------------------------------------------------------------#
@@ -312,6 +370,8 @@ corrplot.mixed(corMatError, order = 'hclust',tl.pos = "lt")
 dev.off()
 
 
+
+
 #----------------------------------------------------------------------#
 # EXTRACT BEST PREDICTION FOR EACH CELL TYPE
 #----------------------------------------------------------------------#
@@ -333,7 +393,7 @@ lmOut<-NULL
 if(length(unique(pheno$BrainRegion)) > 1){  
 	for(j in 1:ncol(predCCBest)){
 		model<-lm(predCCBest[,j] ~ Age + Age2 + Sex + relevel(as.factor(pheno$BrainRegion), "BA9"), data = pheno)
-		lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[-1,c(1,4)]))))
+		lmOut<-rbind(lmOut, c(colnames(predCCBest)[j], c(t(summary(model)$coefficients[-1,c(1,4)]))))
 	}
 	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(relevel(as.factor(pheno$BrainRegion), "BA9"))[-1], paste0)))
 	write.csv(lmOut, file = file.path(plotPath, "RegressionofAgeSexBrainRegionAgainstCellCompositionBest.csv"))
