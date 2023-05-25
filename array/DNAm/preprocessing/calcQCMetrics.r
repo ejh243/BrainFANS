@@ -169,7 +169,7 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
 	print("Calculating Horvath's pan tissue epigenetic age")	
 	data(coef)
 	DNAmAge<-agep(gfile, coef=coef)
-	if(!is.null(DNAmAge)){
+	if(!is.null(dim(DNAmAge))){
 		DNAmAge<-DNAmAge$custom_age
 	}
 	DNAmAge[!QCmetrics$intensPASS]<-NA
