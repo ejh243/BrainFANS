@@ -2,8 +2,8 @@
 ##
 ## Title: Profile cell composition in bulk brain samples
 ##
-## Purpose of script: To calculate cellular composition of bulk brain DNAm
-## profiles and characterise against biological factors
+## Purpose of script: Estimates cellular composition of bulk brain DNAm
+## profiles using pretrained models and tests against biological factors
 ##
 ## Author: Eilis Hannon
 ##
@@ -27,8 +27,10 @@
 ## set plotting colours
 library(paletteer)
 ctCols <- paletteer_d("ggsci::category10_d3")
-names(ctCols)<-c("DoubleNeg", "NeuNPos", "NEUNNeg", "Sox10Pos", "IRF8Pos", "TripleNeg", "SATB2Neg","SATB2Pos", 
-"SOX6Neg", "SOX6Pos")
+names(ctCols)<-c("NeuNNeg_SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg_SOX10Pos", "NeuNNeg_Sox10Neg_IRF8Pos", "NeuNNeg_Sox10Neg_IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos_SOX6Neg", "NeuNPos_SOX6Pos")
+group.labels<-c("NeuNNeg/SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg/SOX10Pos", "NeuNNeg/Sox10Neg/IRF8Pos", "NeuNNeg/Sox10Neg/IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos/SOX6Neg", "NeuNPos/SOX6Pos")
 
 args<-commandArgs(trailingOnly = TRUE)
 bulkPath <- args[1]
@@ -243,6 +245,7 @@ ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossPanelsID
 
 
 if("AgeBin" %in% colnames(pheno)){
+	sumOut$AgeBin <- pheno$AgeBin
 	fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYGO, fill = AgeBin))  +
 	  geom_violin(position = pos, scale = 'width')  +
 	  stat_summary(fun = "mean", 
@@ -309,8 +312,8 @@ ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsByBatch.pdf")
 
 # calc neuronal & glial proportions
 
-relCC<-predCCIDOL[[8]][,c("IRF8Pos", "SOX6Neg", "SOX6Pos", "Sox10Pos","TripleNeg")]
-relCC<-cbind(relCC[,"SOX6Neg"]+relCC[,"SOX6Pos"], relCC[,"IRF8Pos"]+relCC[,"Sox10Pos"]+relCC[,"TripleNeg"], relCC)
+relCC<-predCCIDOL[[8]][,c("NeuNNeg_Sox10Neg_IRF8Pos", "NeuNPos_SOX6Neg", "NeuNPos_SOX6Pos", "NeuNNeg_SOX10Pos","NeuNNeg_Sox10Neg_IRF8Neg")]
+relCC<-cbind(relCC[,"NeuNPos_SOX6Neg"]+relCC[,"NeuNPos_SOX6Pos"], relCC[,"NeuNNeg_Sox10Neg_IRF8Pos"]+relCC[,"NeuNNeg_SOX10Pos"]+relCC[,"NeuNNeg_Sox10Neg_IRF8Neg"], relCC)
 colnames(relCC)[1:2]<-c("neuronal", "glial")
 
 tmp<-data.frame(predCCIDOL[[8]])
@@ -322,7 +325,10 @@ ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
 		  geom_violin(position = pos, scale = 'width')  +
 		  stat_summary(fun = "mean", 
 					   geom = "point", 
-					   position = pos, col = "white") + scale_fill_manual(values = ctCols[unique(tmp_long$PredCT)], drop = TRUE)
+					   position = pos, col = "white") + scale_fill_manual(values = ctCols[unique(tmp_long$PredCT)], drop = TRUE, labels = group.labels[match(sort(unique(tmp_long$PredCT)), names(ctCols))]) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
 ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesPanel8.pdf")),  units = "in", width = 18, height = 8)
 
@@ -376,8 +382,8 @@ dev.off()
 # EXTRACT BEST PREDICTION FOR EACH CELL TYPE
 #----------------------------------------------------------------------#
 
-predCCBest<-cbind(predCCANOVA[[1]][,c("M1_DoubleNeg", "M1_NeuNPos")], predCCIDOL[[5]][,c("IDOL_M5_IRF8Pos","IDOL_M5_TripleNeg")], predCCANOVA[[3]][,c("M3_SATB2Neg", "M3_SATB2Pos")], predCCANOVA[[6]][,c("M6_NEUNNeg", "M6_SOX6Pos", "M6_SOX6Neg")], predCCIDOL[[4]][,"IDOL_M4_Sox10Pos"])
-colnames(predCCBest)[10]<-"Sox10Pos"
+predCCBest<-cbind(predCCANOVA[[1]][,c("M1_NeuNNeg_SOX10Neg", "M1_NeuNPos")], predCCIDOL[[5]][,c("IDOL_M5_NeuNNeg_Sox10Neg_IRF8Pos","IDOL_M5_NeuNNeg_Sox10Neg_IRF8Neg")], predCCANOVA[[3]][,c("M3_SATB2Neg", "M3_SATB2Pos")], predCCANOVA[[6]][,c("M6_NeuNNeg", "M6_NeuNPos_SOX6Pos", "M6_NeuNPos_SOX6Neg")], predCCIDOL[[4]][,"IDOL_M4_NeuNNeg_SOX10Pos"])
+colnames(predCCBest)[10]<-"NeuNNeg_SOX10Pos"
 colnames(predCCBest)<-gsub("M._", "", colnames(predCCBest))
 colnames(predCCBest)<-gsub("IDOL_", "", colnames(predCCBest))
 
@@ -420,7 +426,10 @@ ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
 		  geom_violin(position = pos, scale = 'width')  +
 		  stat_summary(fun = "mean", 
 					   geom = "point", 
-					   position = pos, col = "white") + scale_fill_manual(values = ctCols)
+					   position = pos, col = "white") + scale_fill_manual(values = ctCols, labels = group.labels) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
 ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesBest.pdf")),  units = "in", width = 18, height = 8)
 
@@ -428,8 +437,11 @@ ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
 		  geom_violin(position = pos, scale = 'width')  +
 		  stat_summary(fun = "mean", 
 					   geom = "point", 
-					   position = pos, col = "white") + scale_fill_manual(values = ctCols) +
-			facet_wrap(vars(BrainRegion), nrow = 2)
+					   position = pos, col = "white") + scale_fill_manual(values = ctCols, labels = group.labels) +
+			facet_wrap(vars(BrainRegion), nrow = 2) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 			
 ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesBestByRegion.pdf")),  units = "in", width = 18, height = 8)
 

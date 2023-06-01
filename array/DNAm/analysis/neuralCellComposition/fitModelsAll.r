@@ -2,7 +2,7 @@
 ##
 ## Title: Derive models for cell composition in brain
 ##
-## Purpose of script: To train a series of models to predict different combinations of neural cell types
+## Purpose of script: Trains a series of models to predict different combinations of neural cell types
 ##
 ## Author: Eilis Hannon
 ##
@@ -50,8 +50,6 @@ load(normData)
 load(file.path(refPath, "AllProbeIlluminaAnno.Rdata"))
 
 colnames(pheno.all)[3]<-"CellType" # need to rename for use with IDOL functions
-pheno.all$CellType<-gsub("\\+", "Pos", pheno.all$CellType) ## need to remove the "+" and "-"
-pheno.all$CellType<-gsub("\\-", "Neg", pheno.all$CellType) ## need to remove the "+" and "-"
 pheno.all$CellType<-factor(pheno.all$CellType)
 
 probeAnnot<-probeAnnot[rownames(norm.all),]
