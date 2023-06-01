@@ -1,9 +1,8 @@
 ##---------------------------------------------------------------------#
 ##
-## Title: Summarise simulations of brain cell deconvolution models
+## Title: Summarise simulations of  cell deconvolution models
 ##
-## Purpose of script: visulaise the results comapring different methods 
-## for selecting probes for Houseman algorithm
+## Purpose of script: Aggregate and visualise the simulation results comparing different reference panels 
 ##
 ## Author: Eilis Hannon
 ##
@@ -47,11 +46,12 @@ library(paletteer)
 #----------------------------------------------------------------------#
 
 group.colors <- paletteer_d("ggsci::category10_d3")
-names(group.colors)<-c("DoubleNeg", "NeuNPos", "NeuNNeg", "Sox10Pos", "IRF8Pos", "TripleNeg", "SATB2Neg","SATB2Pos", 
-"SOX6Neg", "SOX6Pos")
+names(group.colors)<-c("NeuNNeg_SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg_SOX10Pos", "NeuNNeg_Sox10Neg_IRF8Pos", "NeuNNeg_Sox10Neg_IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos_SOX6Neg", "NeuNPos_SOX6Pos")
 panel.colors <- paletteer_d("ggsci::category10_d3", n = 8)
 names(panel.colors)<-paste("Panel", 1:8)
-
+group.labels<-c("NeuNNeg/SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg/SOX10Pos", "NeuNNeg/Sox10Neg/IRF8Pos", "NeuNNeg/Sox10Neg/IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos/SOX6Neg", "NeuNPos/SOX6Pos")
 
 predOutAll<-list()
 for(file in outFiles){
@@ -77,7 +77,7 @@ for(i in 1:length(predOutAll)){
 		xlab("") +
 		ylab("CETYGO") + ylim(cet_lim) +
 		theme_bw() +  
-		theme(legend.position="none")  + labs(tag = paste("Panel", i))
+		theme(legend.position="none")  + ggtitle(paste("Panel", i))
 		
 	fig0b[[i]]<-ggplot(predOutAll[[i]], aes(x = Selection, y = RMSE, fill = Selection)) + 
 	geom_violin()+ 
@@ -85,7 +85,7 @@ for(i in 1:length(predOutAll)){
 		xlab("") +
 		ylab("RMSE") + ylim(rmse_lim) +
 		theme_bw() +  
-		theme(legend.position="none")  + labs(tag = paste("Panel", i))
+		theme(legend.position="none") + ggtitle(paste("Panel", i))
 }
 
 fig0a[[i]]<- fig0a[[i]] +  
@@ -94,7 +94,7 @@ fig0a[[i]]<- fig0a[[i]] +
 fig0b[[i]]<- fig0b[[i]] 
 
 ggarrange(plotlist = fig0a,
-			  ncol = 4, nrow = 2, widths = c(4,4,4,5))
+			  ncol = 4, nrow = 2, widths = c(4,4,4,4), common.legend = TRUE)
 ggsave(file.path(resPath, "plots", paste0("ViolinPlotCETYGOAcrossModels.pdf")), width = 16, height = 8)
 
 ## extract sum stats into a table
@@ -107,7 +107,7 @@ for(i in 1:length(predOutAll)){
 write.csv(sumStats, file.path(resPath, paste0("TableSumStatsCETYGORMSEAcrossModels.csv")))
 
 ggarrange(plotlist = fig0b,
-			  ncol = 4, nrow = 2, widths = c(4,4,4,5))
+			  ncol = 4, nrow = 2, widths = c(4,4,4,4), common.legend = TRUE)
 ggsave(file.path(resPath, "plots", paste0("ViolinPlotRMSEAcrossModels.pdf")), width = 16, height = 8)
 
 fig1a<-list()
@@ -122,7 +122,7 @@ for(i in 1:length(predOutAll)){
 		ylab("CETYGO") + ylim(0, 0.05) +
 		theme_bw() +  
 		theme(legend.position="none")+       
-		geom_ribbon(aes(ymin=CETYGO-ci, ymax=CETYGO+ci, colour=Selection), linetype=2, alpha=0.1) + labs(tag = paste("Panel", i))
+		geom_ribbon(aes(ymin=CETYGO-ci, ymax=CETYGO+ci, colour=Selection), linetype=2, alpha=0.1) + ggtitle(paste("Panel", i))
 
 	## compare algorithm parameters
 	sumRMSE <- summarySE(predOutAll[[i]], measurevar="RMSE", groupvars=c("nProbes", "Selection"))
@@ -133,16 +133,14 @@ for(i in 1:length(predOutAll)){
 		ylab("RMSE") + ylim(0,0.15) +
 		theme_bw() +  
 		theme(legend.position="none")  + 
-		geom_ribbon(aes(ymin=RMSE-ci, ymax=RMSE+ci, colour=Selection), linetype=2, alpha=0.1)  + labs(tag = paste("Panel", i))
+		geom_ribbon(aes(ymin=RMSE-ci, ymax=RMSE+ci, colour=Selection), linetype=2, alpha=0.1)  + ggtitle(paste("Panel", i))
 
 }
-fig1a[[i]]<-fig1a[[i]]+theme(legend.position = c(0.8,0.8))
-fig1b[[i]]<-fig1b[[i]]+theme(legend.position =  c(0.8,0.8))
 ggarrange(plotlist = fig1a,
-			  ncol = 4, nrow = 2)	
+			  ncol = 4, nrow = 2, common.legend = TRUE)	
 ggsave(file.path(resPath, "plots", "LineGraphCETYGOAgainstnProbesAcrossModels.pdf"), width = 26, height = 15, units = "cm")
 ggarrange(plotlist = fig1b,
-			  ncol = 4, nrow = 2)	
+			  ncol = 4, nrow = 2, common.legend = TRUE)	
 ggsave(file.path(resPath, "plots", "LineGraphRMSEAgainstnProbesAcrossModels.pdf"), width = 26, height = 15, units = "cm")
 
 fig3a<-list()
@@ -181,9 +179,9 @@ for(i in 1:length(predOutAll)){
 	vertical_adjustment = ifelse(grepl("Rsq",df.annotations$label),1.5,3)
 
 
-	ggplot(predOutByCT, aes(x = factor(Actual), y = Predicted)) + geom_boxplot() + 
+	ggplot(predOutByCT, aes(x = factor(Actual), y = Predicted)) + geom_boxplot() + xlab("Actual") +
 	  facet_wrap(~ Selection * CellType) + geom_text(data=df.annotations,aes(x=-Inf,y=+Inf,label=label),
-				  hjust = -0.1, vjust = vertical_adjustment, size=3.5) 
+				  hjust = -0.1, vjust = vertical_adjustment, size=3.5)  + theme( strip.text = element_text(size = 20))      
 				  
 	ggsave(file.path(resPath, "plots", paste0("ScatterGraphActualPredicted", modelNum, ".pdf")), width = 20, height = 15, units = "cm")
 
@@ -219,10 +217,10 @@ for(i in 1:length(predOutAll)){
 }
 
 ggarrange(plotlist= fig3a,
-			  ncol = 4, nrow = 2, widths = c(4,4,4,5))		
+			  ncol = 4, nrow = 2, widths = c(4,4,4,4), common.legend = TRUE)		
 ggsave(file.path(resPath, "plots", "LineGraphCTErrorAgainstnProbesANOVA.pdf"), width = 16, height = 8, units = "cm")
 ggarrange(plotlist= fig3b,
-			  ncol = 4, nrow = 2, widths = c(4,4,4,5))		
+			  ncol = 4, nrow = 2, widths = c(4,4,4,4), common.legend = TRUE)		
 ggsave(file.path(resPath, "plots", "LineGraphCTErrorAgainstnProbesIDOL.pdf"), width = 16, height = 8, units = "cm")
 
 fig4a<-list()
@@ -239,32 +237,31 @@ for(i in 1:length(predOutAll)){
 
     predOutByCTsub<-subset(predOutByCT, Selection == "ANOVA")
 	fig4a[[i]]<-ggplot(predOutByCTsub, aes(x = CellType, y = value, fill = CellType)) + geom_violin() + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
-	ylim(-0.6, 0.6)  + scale_fill_manual(values=group.colors) +  
+	ylim(-0.6, 0.6)  + scale_fill_manual(values=group.colors, labels = group.labels) +  
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
-        axis.ticks.y=element_blank())+
-			ylab("Predicted - Actual") + labs(tag = paste("Panel", i)) + 
+        axis.ticks.y=element_blank(), legend.direction="horizontal")+
+			ylab("Predicted - Actual") + xlab(paste("Panel", i)) + 
 	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black") +
 	geom_hline(aes(yintercept = 0))
 		
 	predOutByCTsub<-subset(predOutByCT, Selection == "IDOL")
 	fig4b[[i]]<-ggplot(predOutByCTsub, aes(x = CellType, y = value, fill = CellType)) + geom_violin() + coord_flip()+ geom_vline(xintercept = 0) + xlab("") 	+ 
-	ylim(-0.6, 0.6)  + scale_fill_manual(values=group.colors) +  
-		theme(legend.position="none")  +
+	ylim(-0.6, 0.6)  + scale_fill_manual(values=group.colors, labels = group.labels) +
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
-        axis.ticks.y=element_blank())+
-			ylab("Predicted - Actual") + labs(tag = paste("Panel", i)) + 
+        axis.ticks.y=element_blank(), legend.direction="horizontal")+
+			ylab("Predicted - Actual") + xlab(paste("Panel", i)) + 
 	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black") +
 	geom_hline(aes(yintercept = 0))
 }
 
 ggarrange(plotlist= fig4a,
-			  ncol = 4, nrow = 2, common.legend = TRUE)	
+			  ncol = 4, nrow = 2, common.legend = TRUE, legend.grob = get_legend(fig4a[[1]], position = NULL))	
 ggsave(file.path(resPath, "plots", "ViolinplotDifferenceANOVA.pdf"), width = 20, height = 12, units = "cm")
 
 ggarrange(plotlist= fig4b,
-			  ncol = 4, nrow = 2)	
+			  ncol = 4, nrow = 2, common.legend = TRUE, legend.grob = get_legend(fig4b[[1]], position = NULL))	
 ggsave(file.path(resPath, "plots", "ViolinplotDifferenceIDOL.pdf"), width = 20, height = 12, units = "cm")
 
 
@@ -280,7 +277,7 @@ for(ct in names(table(predOutByCTAll$CellType))){
 	  theme(axis.title.y=element_blank(),
 			axis.text.y=element_blank(),
 			axis.ticks.y=element_blank())+
-				ylab("Predicted - Actual") + ggtitle(ct) + scale_fill_manual(values=panel.colors)  + 
+				ylab("Predicted - Actual") + ggtitle(group.labels[match(ct, names(group.colors))]) + scale_fill_manual(values=panel.colors)  + 
 	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black", size = 0.5) +
 	geom_hline(aes(yintercept = 0)) 
 
@@ -290,7 +287,7 @@ for(ct in names(table(predOutByCTAll$CellType))){
 	  theme(axis.title.y=element_blank(),
 			axis.text.y=element_blank(),
 			axis.ticks.y=element_blank())+
-				ylab("Predicted - Actual") + ggtitle(ct) + scale_fill_manual(values=panel.colors)  + 
+				ylab("Predicted - Actual") + ggtitle(group.labels[match(ct, names(group.colors))]) + scale_fill_manual(values=panel.colors)  + 
 	stat_summary(fun.data=mean_sdl,geom="pointrange", color="black", size = 0.5) +
 	geom_hline(aes(yintercept = 0))
 }
