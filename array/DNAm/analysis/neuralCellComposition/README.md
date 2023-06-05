@@ -34,14 +34,14 @@ For example to run the **summariseDataset.r** script you might execute
 
 ` Rscript summariseDataset.r normData.rdata plots`
 
-| Filename | Description | Command line arguments | 
+| Filename | Description | Required Arguments | 
 | --- | ----------- | ----------- |
-| summariseDataset.r | Create summary tables of demographics and perform PCA analysis | <ul><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li> path to folder to save plots </li></ul> |
-| fitModelsSimulations.r | Trains and tests prediction of specified combination of neural cell types against reconstructed bulk profiles |  <ul><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path to folder with array annotation files </li><li> path to csv file with reference panels specified </li><li>  index of which reference panel to train (row number of previous file) needs to be rerun for each reference panel </li></ul> |
-| summariseSimulations.r | Aggregate and visualise the simulation results comparing different reference panels  | <ul><li> path to RDS objects with output from `fitModelsSimulations.r` </ul></li>|
-| fitModelsAll.r | Trains a series of models to predict different combinations of neural cell types  | <ul><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path to folder with array annotation files </li><li> path to csv file with reference panels specified </li></ul>|
-| profileCellCompBulkBrainSamples.r | Estimates cellular composition of bulk brain DNAm  profiles using pretrained models and tests against biological factors  | <ul><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path pretrained models, output of `fitModelsAll.r` </li><li> path to folder to save plots </li></ul> |
-| testCellCompPathology.r | Test estimated cell composition against AD neuropathology | <ul><li> path to RDS file with estimated cellular composition </li><li> path to folder to save plots </li></ul> |
+| summariseDataset.r | Create summary tables of demographics and perform PCA analysis | <ol><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li> path to folder to save plots </li></ol> |
+| fitModelsSimulations.r | Trains and tests prediction of specified combination of neural cell types against reconstructed bulk profiles |  <ol><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path to folder with array annotation files </li><li> path to csv file with reference panels specified </li><li>  index of which reference panel to train (row number of previous file) needs to be rerun for each reference panel </li></ol> |
+| summariseSimulations.r | Aggregate and visualise the simulation results comparing different reference panels  | <ol><li> path to RDS objects with output from `fitModelsSimulations.r` </ol></li>|
+| fitModelsAll.r | Trains a series of models to predict different combinations of neural cell types  | <ol><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path to folder with array annotation files </li><li> path to csv file with reference panels specified </li></ol>|
+| profileCellCompBulkBrainSamples.r | Estimates cellular composition of bulk brain DNAm  profiles using pretrained models and tests against biological factors  | <ol><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path pretrained models, output of `fitModelsAll.r` </li><li> path to folder to save plots </li></ol> |
+| testCellCompPathology.r | Test estimated cell composition against AD neuropathology | <ol><li> path to RDS file with estimated cellular composition </li><li> path to folder to save plots </li></ol> |
 
 ## Data Availablity
 
