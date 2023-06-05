@@ -155,6 +155,8 @@ for(i in 1:length(predOutAll)){
 		predOutByCT<-rbind(predOutByCT, tmp)
 	}
 
+	nCT<-length(grep("Prop", colnames(predOutAll[[i]])))
+
 	summ <- predOutByCT %>% 
 	  group_by(Selection,CellType) %>% 
 	  summarise(Rsq = cor(Actual, Predicted),
@@ -180,10 +182,10 @@ for(i in 1:length(predOutAll)){
 
 
 	ggplot(predOutByCT, aes(x = factor(Actual), y = Predicted)) + geom_boxplot() + xlab("Actual") +
-	  facet_wrap(~ Selection * CellType) + geom_text(data=df.annotations,aes(x=-Inf,y=+Inf,label=label),
-				  hjust = -0.1, vjust = vertical_adjustment, size=3.5)  + theme( strip.text = element_text(size = 20))      
+	  facet_wrap(~ Selection * CellType, ncol = nCT) + geom_text(data=df.annotations,aes(x=-Inf,y=+Inf,label=label),
+				  hjust = -0.1, vjust = vertical_adjustment, size=3.5)  + theme( strip.text = element_text(size = 10))      
 				  
-	ggsave(file.path(resPath, "plots", paste0("ScatterGraphActualPredicted", modelNum, ".pdf")), width = 20, height = 15, units = "cm")
+	ggsave(file.path(resPath, "plots", paste0("ScatterGraphActualPredicted", i, ".pdf")), width = 6*nCT, height = 15, units = "cm")
 
 
 	predOutByCT<-NULL
