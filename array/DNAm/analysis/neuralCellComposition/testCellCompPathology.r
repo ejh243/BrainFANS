@@ -1,8 +1,8 @@
 ##---------------------------------------------------------------------#
 ##
-## Title: Test estimated cell composition against AD neuropathology
+## Title: Estimated cell composition against AD neuropathology
 ##
-## Purpose of script: Test estimated cell composition against AD neuropathology
+## Purpose of script: Tests best estimates of cellular composition against AD neuropathology measured by Braak stage
 ##
 ## Author: Eilis Hannon
 ##
@@ -14,7 +14,10 @@
 # NOTES
 #----------------------------------------------------------------------#
 
-# loads cell composition predicions from rdata objects
+# loads precaluclated cellu;ar composition predictions from RDS object
+# expects a list of cellular composition estimates, where each elemetn in
+# the list represents a different pre-trained model
+# also expects age, dataset, sex, and method columns in the same object
 
 
 #----------------------------------------------------------------------#
@@ -23,8 +26,10 @@
 ## set plotting colours
 library(paletteer)
 ctCols <- paletteer_d("ggsci::category10_d3")
-names(ctCols)<-c("DoubleNeg", "NeuNPos", "NeuNNeg", "Sox10Pos", "IRF8Pos", "TripleNeg", "SATB2Neg","SATB2Pos", 
-"SOX6Neg", "SOX6Pos")
+names(ctCols)<-c("NeuNNeg_SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg_SOX10Pos", "NeuNNeg_Sox10Neg_IRF8Pos", "NeuNNeg_Sox10Neg_IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos_SOX6Neg", "NeuNPos_SOX6Pos")
+group.labels<-c("NeuNNeg/SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg/SOX10Pos", "NeuNNeg/Sox10Neg/IRF8Pos", "NeuNNeg/Sox10Neg/IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos/SOX6Neg", "NeuNPos/SOX6Pos")
 
 args<-commandArgs(trailingOnly = TRUE)
 bulkPath <- args[1]
@@ -211,8 +216,8 @@ ggsave(filename = file.path(dirname(bulkPath), "plots", "AD", "ViolinPlotCETYGOB
 
 ## extract best prediction for each cell type
 
-predCCBest<-cbind(subset(cellCompAll[[1]], Method == "ANOVA")[,c("DoubleNeg", "NeuNPos")], subset(cellCompAll[[5]], Method == "IDOL")[,c("IRF8Pos","TripleNeg")], subset(cellCompAll[[3]], Method == "ANOVA")[,c("SATB2Neg", "SATB2Pos")], subset(cellCompAll[[6]], Method == "ANOVA")[,c("NEUNNeg", "SOX6Pos", "SOX6Neg")], subset(cellCompAll[[4]], Method == "IDOL")[,"Sox10Pos"])
-colnames(predCCBest)[10]<-"Sox10Pos"
+predCCBest<-cbind(subset(cellCompAll[[1]], Method == "ANOVA")[,c("NeuNNeg_SOX10Neg", "NeuNPos")], subset(cellCompAll[[5]], Method == "IDOL")[,c("NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg")], subset(cellCompAll[[3]], Method == "ANOVA")[,c("SATB2Neg", "SATB2Pos")], subset(cellCompAll[[6]], Method == "ANOVA")[,c("NeuNNeg", "NeuNPos_SOX6Pos", "NeuNPos_SOX6Neg")], subset(cellCompAll[[4]], Method == "IDOL")[,"NeuNNeg_SOX10Pos"])
+colnames(predCCBest)[10]<-"NeuNNeg_SOX10Pos"
 predCCBest<-cbind(predCCBest, cellCompAll[[1]][,c("Dataset", "Age", "Sex", "Braak")])
 
 predCCBest$Braak_factor <- as.factor(predCCBest$Braak)
@@ -252,10 +257,11 @@ for(j in 1:10){
 	reg<-lm(get(ct) ~ Braak, data = predCCBest)
 	
 	fig1a[[j]]<-ggplot(subset(predCCBest, !is.na(Braak)), aes_string(x="Braak_factor", y=ct, fill = "Braak_factor"))  +
+	  xlab("Braak stage") +
 	  geom_violin(scale = 'width')  +
 	  stat_summary(fun = "mean", 
 				   geom = "point", 
-				   position = pos, col = "white") + theme(legend.position = "none") + ylim(0,1) + geom_abline(intercept = coef(reg)[1], slope = coef(reg)[2])
+				   position = pos, col = "white") + theme(legend.position = "none") + ylim(0,1) + geom_abline(intercept = coef(reg)[1], slope = coef(reg)[2]) 
 				   
 	
 }	
@@ -307,6 +313,7 @@ for(j in 1:10){
 	
 	
 	fig1a[[j]]<-ggplot(subset(predCCBest, !is.na(AD)), aes_string(x="AD", y=ct, fill = "AD"))  +
+	  xlab("AD status") +
 	  geom_violin(scale = 'width')  +
 	  stat_summary(fun = "mean", 
 				   geom = "point", 
