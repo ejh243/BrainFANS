@@ -41,7 +41,7 @@ For example to run the **summariseDataset.r** script you might execute
 | summariseSimulations.r | Aggregate and visualise the simulation results comparing different reference panels  | <ol><li> path to RDS objects with output from `fitModelsSimulations.r` </ol></li>|
 | fitModelsAll.r | Trains a series of models to predict different combinations of neural cell types  | <ol><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path to folder with array annotation files </li><li> path to csv file with reference panels specified </li></ol>|
 | profileCellCompBulkBrainSamples.r | Estimates cellular composition of bulk brain DNAm  profiles using pretrained models and tests against biological factors  | <ol><li> path to RDS file with normalised dataset, containing betas matrix object (`norm.all`) and phenotype matrix (`pheno.all`) </li><li>  path pretrained models, output of `fitModelsAll.r` </li><li> path to folder to save plots </li></ol> |
-| testCellCompPathology.r | Test estimated cell composition against AD neuropathology | <ol><li> path to RDS file with estimated cellular composition </li><li> path to folder to save plots </li></ol> |
+| testCellCompPathology.r | Tests best estimates of cellular composition against AD neuropathology measured by Braak stage | <ol><li> path to RDS file with estimated cellular composition </li><li> path to folder to save plots </li></ol> |
 
 ## Data Availablity
 
