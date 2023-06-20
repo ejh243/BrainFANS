@@ -77,7 +77,7 @@ for(i in 1:length(predOutAll)){
 		xlab("") +
 		ylab("CETYGO") + ylim(cet_lim) +
 		theme_bw() +  
-		theme(legend.position="none")  + ggtitle(paste("Panel", i))
+		theme(legend.position="none")  + ggtitle(paste("Panel", i)) + theme(text = element_text(size = 20))     
 		
 	fig0b[[i]]<-ggplot(predOutAll[[i]], aes(x = Selection, y = RMSE, fill = Selection)) + 
 	geom_violin()+ 
@@ -85,7 +85,7 @@ for(i in 1:length(predOutAll)){
 		xlab("") +
 		ylab("RMSE") + ylim(rmse_lim) +
 		theme_bw() +  
-		theme(legend.position="none") + ggtitle(paste("Panel", i))
+		theme(legend.position="none") + ggtitle(paste("Panel", i)) + theme(text = element_text(size = 20))     
 }
 
 fig0a[[i]]<- fig0a[[i]] +  

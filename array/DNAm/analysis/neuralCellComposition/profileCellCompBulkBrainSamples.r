@@ -181,16 +181,14 @@ fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYG
   stat_summary(fun = "mean", 
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
-  ylim(y_lim) +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18))  
+  ylim(y_lim) + theme(axis.text.x=element_blank(), text = element_text(size = 20))      + xlab("Reference Panel")
   
  fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = BrainRegion))  +
   geom_violin(position = pos, scale = 'width')  +
   stat_summary(fun = "mean", 
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
-  ylim(y_lim) +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18))  
+  ylim(y_lim) + theme(text = element_text(size = 20))      + xlab("Reference Panel") 
 		
 ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
 ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanels.pdf"),  units = "in", width = 12, height = 8)
@@ -202,14 +200,14 @@ for(br in unique(pheno$BrainRegion)){
 		   geom = "point", 
 		   position = pos) + 
 		geom_vline(xintercept = c(1:length(predCCANOVA))+ 0.5, linetype="dotted") +
-		ylim(y_lim) + theme(legend.position = "none")
+		ylim(y_lim) + theme(legend.position = "none")  + xlab("Reference Panel")
 	fig3b<-ggplot(na.omit(subset(sumOut, BrainRegion == br & Method == "IDOL")), aes(x=Model, y=CETYGO))  +
 		geom_violin(position = pos, scale = 'width')  +
 		stat_summary(fun = "mean", 
 		   geom = "point", 
 		   position = pos) + 
 		geom_vline(xintercept = c(1:length(predCCANOVA))+ 0.5, linetype="dotted") +
-		ylim(y_lim) + theme(legend.position = "none")
+		ylim(y_lim) + theme(legend.position = "none")  + xlab("Reference Panel")
 	ggarrange(plotlist=list(fig3a, fig3b), nrow = 2, common.legend = TRUE)
 	ggsave(filename = file.path(plotPath, paste0("ViolinPlotCETYGOAcrossPanels",br,"Samples.pdf")),  units = "in", width = 12, height = 8)
 }
@@ -227,7 +225,7 @@ for(i in 1:length(predCCANOVA)){
 	fig5a[[i]] <- ggplot(tmp_long, aes(x=Age, y=CETYGO))  +
 	  geom_point() +
      geom_smooth(method = "lm", alpha = .15) + theme(legend.position = "none")  +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18))
+        axis.title=element_text(size=18))  + xlab("Reference Panel")
 
 	if(!is.null(predCCIDOL[[i]])){
 	tmp_long<-as.data.frame(predCCIDOL[[i]])
@@ -238,7 +236,7 @@ for(i in 1:length(predCCANOVA)){
      geom_smooth(method = "lm", alpha = .15) + theme(legend.position = "none")
 	}else{
 			fig5b[[i]]<-ggplot(tmp_long, aes(x=Age, y=CETYGO)) + geom_blank() + theme(legend.position = "none")  +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18))
+        axis.title=element_text(size=18))  + xlab("Reference Panel")
 	}
 }
 
@@ -257,7 +255,7 @@ if("AgeBin" %in% colnames(pheno)){
 				   geom = "point", 
 				   position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
 	  ylim(y_lim)  +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18))  + xlab("Panel")
+        axis.title=element_text(size=18))  + xlab("Reference Panel")
 	  
 	 fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = AgeBin))  +
 	  geom_violin(position = pos, scale = 'width')  +
@@ -265,7 +263,7 @@ if("AgeBin" %in% colnames(pheno)){
 				   geom = "point", 
 				   position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
 	  ylim(y_lim) +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18))  + xlab("Panel")
+        axis.title=element_text(size=18))  + xlab("Reference Panel") 
 		
 	ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
 	ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsByAgeBin.pdf"),  units = "in", width = 12, height = 8)
@@ -282,7 +280,7 @@ fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYG
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
   ylim(y_lim)  + theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18)) + theme(legend.position = "none", text=element_text(size=21), axis.text.x = element_blank()) + xlab("Panel")
+        axis.title=element_text(size=18)) + theme(legend.position = "none", text=element_text(size=21), axis.text.x = element_blank()) + xlab("Reference Panel")
   
  fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = Sex))  +
   geom_violin(position = pos, scale = 'width')  +
@@ -290,7 +288,7 @@ fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYG
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
   ylim(y_lim) + theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18)) + theme(legend.position = "none", text=element_text(size=21), axis.text.x = element_blank()) + xlab("Panel")
+        axis.title=element_text(size=18)) + theme(legend.position = "none", text=element_text(size=21), axis.text.x = element_blank()) + xlab("Reference Panel")
 		
 ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
 ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsBySex.pdf"),  units = "in", width = 12, height = 8)
@@ -306,7 +304,7 @@ fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYG
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
   ylim(y_lim)  +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18)) + xlab("Experiemental Batch")
+        axis.title=element_text(size=18)) + xlab("Experimental Batch")
   
  fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = Batch))  +
   geom_violin(position = pos, scale = 'width')  +
@@ -314,7 +312,7 @@ fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYG
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
   ylim(y_lim) +theme(axis.text=element_text(size=14),
-        axis.title=element_text(size=18)) + xlab("Experiemental Batch")
+        axis.title=element_text(size=18)) + xlab("Experimental Batch")
 		
 ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
 ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsByBatch.pdf"),  units = "in", width = 12, height = 8)
