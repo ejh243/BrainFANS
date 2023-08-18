@@ -16,7 +16,7 @@
 # DEFINE ANALYSIS FUNCTION
 #----------------------------------------------------------------------#
 
-runEWAS<-function(row,QCmetrics, status){
+runSimEWAS<-function(row,QCmetrics, status){
 
 	modelLM<-lm(row ~ status * QCmetrics$Cell.type + QCmetrics$CCDNAmAge + QCmetrics$Sex + QCmetrics$Tissue.Centre)
 	nullLM<-lm(row ~ status + QCmetrics$Cell.type + QCmetrics$CCDNAmAge + QCmetrics$Sex + QCmetrics$Tissue.Centre)
@@ -44,6 +44,37 @@ runEWAS<-function(row,QCmetrics, status){
 	 modelCRR["phenotype1",4],waldtest(modelp, nullCRR, vcov = firm_c_vcov, test = "F")[2,4]))
 }
 
+runCTEWAS<-function(row,QCmetrics){
+
+	modelLM<-lm(row ~ QCmetrics$Cell.type + QCmetrics$CCDNAmAge + QCmetrics$Sex + QCmetrics$Tissue.Centre)
+	nullLM<-lm(row ~ QCmetrics$CCDNAmAge + QCmetrics$Sex + QCmetrics$Tissue.Centre)
+
+	data<-cbind(row,QCmetrics)
+	modelMLM<-lmer(row ~ Cell.type + CCDNAmAge + Sex +  + (1 | Tissue.Centre)  + (1 | Indidivual.ID), REML = FALSE, data = QCmetrics)
+	nullMLM<-lmer(row ~ CCDNAmAge + Sex +  + (1 | Tissue.Centre)  + (1 | Indidivual.ID), REML = FALSE, data = QCmetrics)
+
+	p.df <- pdata.frame(data.frame("meth" = row, "age" = QCmetrics$CCDNAmAge, "sex" = QCmetrics$Sex, "cell.type" = QCmetrics$Cell.type, "brain.bank" = QCmetrics$Tissue.Centre, "id" = QCmetrics$Indidivual.ID), index = c("id"), drop.index = F)
+		
+	modelp <- plm(meth ~ cell.type + age + sex  + brain.bank, data = p.df, model = "pooling")
+	nullCRR <- plm(meth ~ age + sex  + brain.bank, data = p.df, model = "pooling")
+	# compute Stata like df-adjustment
+	G <- length(unique(p.df$id))
+	N <- length(p.df$id)
+	dfa <- (G/(G - 1)) * (N - 1)/modelp$df.residual
+
+	# display with cluster VCE and df-adjustment
+	firm_c_vcov <- dfa * vcovHC(modelp, type = "HC0", cluster = "group", adjust = T)
+	modelCRR<-coeftest(modelp, vcov = firm_c_vcov)
+
+	return(c(anova(modelLM, nullLM)[2,6], 
+	anova(modelMLM, nullMLM)[2,8],
+	waldtest(modelp, nullCRR, vcov = firm_c_vcov, test = "F")[2,4], 
+	leveneTest(row ~ QCmetrics$Cell.type)[1,3],
+	aggregate(row ~ QCmetrics$Cell.type, FUN = mean)$row,
+    aggregate(row ~ QCmetrics$Cell.type, FUN = sd)$row))
+
+}
+
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -55,8 +86,7 @@ library(plm)
 library(lmtest)
 #library(GenABEL)
 library(doParallel)
-library(devtools)
-devtools::load_all(path = "../functionsR")
+library(car)
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
@@ -83,10 +113,10 @@ resPath<-file.path(dataDir, "/4_analysis/methodsDevelopment")
 setwd(dataDir)
 load(normData)
 
-## remove total samples and cell types with less than 20 samples
+## remove total samples and cell types with less than 100 samples
 QCmetrics<-QCmetrics[which(QCmetrics$Cell.type != "Total"),]
 nSample<-table(QCmetrics$Cell.type)
-QCmetrics<-QCmetrics[QCmetrics$Cell.type %in% names(nSample[which(nSample > 19)]),]
+QCmetrics<-QCmetrics[QCmetrics$Cell.type %in% names(nSample[which(nSample > 99)]),]
 
 celltypeNormbeta<-celltypeNormbeta[,QCmetrics$Basename]
 
@@ -97,24 +127,35 @@ cellTypes<-unique(QCmetrics$Cell.type)
 #----------------------------------------------------------------------#
 
 nCores<-detectCores()
-cl <- makeCluster(nCores-1)
+cl <- makeCluster(nCores/2)
 registerDoParallel(cl)
-clusterExport(cl, list("runEWAS", "lmer", "pdata.frame", "plm", "vcovHC", "coeftest", "waldtest"))
+clusterExport(cl, list("runSimEWAS", "runCTEWAS", "lmer", "pdata.frame", "plm", "vcovHC", "coeftest", "waldtest", "leveneTest"))
+
+#----------------------------------------------------------------------#
+# RUN CELL TYPE EWAS
+#----------------------------------------------------------------------#
+
+# Run the ct EWAS for all probes 
+ctEWAS<-foreach(i=1:nrow(celltypeNormbeta), .combine = "rbind") %dopar% runCTEWAS(celltypeNormbeta[i,], QCmetrics)
+colnames(ctEWAS)<-c("LM_ctP", "MLM_ctP", "CRR_ctP", "LevenesP", outer(unique(QCmetrics$Cell.type), c("mean", "sd"), FUN = "paste", sep = "_"))
 
 #----------------------------------------------------------------------#
 # RUN SIMULATIONS
 #----------------------------------------------------------------------#
 
 sumSim<-matrix(data = NA, nrow = nSim*length(nSig.options)*length(propCS.options), ncol = 2+(6*6))
-colnames(sumSim)<-c("nProbes", "nCTspecific", paste("LM_ME", c("TotSig", "nTruePos", "nFalsePos","nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-paste("LM_Int", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-paste("MLM_ME", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-paste("MLM_Int", c("TotSig", "nTruePos", "nFalsePos","nTruePosCS", "nFalsePosCS",  "lambda"), sep = "_"),
-paste("CRR_ME", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"),
-paste("CRR_Int", c("TotSig", "nTruePos", "nFalsePos", "nTruePosCS", "nFalsePosCS", "lambda"), sep = "_"))
+colnames(sumSim)<-c("nProbes", "nCTspecific", paste("LM_ME", c("TotSig", "nSigTrueDMPs", "nSigOther","nSigTrueCS", "nSigTrueCommon", "lambda"), sep = "_"),
+paste("LM_Int", c("TotSig", "nSigTrueDMPs", "nSigOther", "nSigTrueCS", "nSigTrueCommon", "lambda"), sep = "_"),
+paste("MLM_ME", c("TotSig", "nSigTrueDMPs", "nSigOther", "nSigTrueCS", "nSigTrueCommon", "lambda"), sep = "_"),
+paste("MLM_Int", c("TotSig", "nSigTrueDMPs", "nSigOther","nSigTrueCS", "nSigTrueCommon",  "lambda"), sep = "_"),
+paste("CRR_ME", c("TotSig", "nSigTrueDMPs", "nSigOther", "nSigTrueCS", "nSigTrueCommon", "lambda"), sep = "_"),
+paste("CRR_Int", c("TotSig", "nSigTrueDMPs", "nSigOther", "nSigTrueCS", "nSigTrueCommon", "lambda"), sep = "_"))
 
 rowNum<-1
 nullSim<-NULL
+
+commonDMPs<-NULL
+ctDMPs<-NULL
 for(simNum in 1:nSim){
 	message("Simulation: ", simNum, " of ", nSim)
 
@@ -128,7 +169,7 @@ for(simNum in 1:nSim){
 	status<-as.factor(status)
 	
 	# Run the null EWAS for this simulation
-	outtab.null<-foreach(i=1:nrow(celltypeNormbeta), .combine = "rbind") %dopar% runEWAS(celltypeNormbeta[i,], QCmetrics, status)
+	outtab.null<-foreach(i=1:nrow(celltypeNormbeta), .combine = "rbind") %dopar% runSimEWAS(celltypeNormbeta[i,], QCmetrics, status)
 	
 	rownames(outtab.null)<-rownames(celltypeNormbeta)
 	colnames(outtab.null)<-c(paste("LM", c("ME", "Int"), sep = "_"),paste("MLM", c("ME", "Int"), sep = "_"),paste("CRR", c("ME", "Int"), sep = "_"))
@@ -161,7 +202,8 @@ for(simNum in 1:nSim){
 			} else {
 				ctSpecific<-NULL
 			}				
-
+			commonProbes<-sigProbes[!sigProbes %in% ctSpecific]
+			
 			# create matrix of betas with induced effects
 			testbetas<-celltypeNormbeta[sigProbes,]+diffs
 
@@ -175,24 +217,31 @@ for(simNum in 1:nSim){
 			sumSim[rowNum,3+seq(1,6*6, 6)]<-colSums(outtab.sim[sigProbes,] < 9e-8)
 			sumSim[rowNum,4+seq(1,6*6, 6)]<-colSums(outtab.sim[-sigProbes,] < 9e-8)
 			# handle quirk of R converting 1 row matrix to vector!!
-			if(length(ctSpecific) > 2){
+			if(length(ctSpecific) > 1){
 				sumSim[rowNum,5+seq(1,6*6, 6)]<-colSums(outtab.sim[ctSpecific,] < 9e-8)
-				sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[-ctSpecific,] < 9e-8)
+				sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[commonProbes,] < 9e-8)
 			} else {
 				if(length(ctSpecific) == 1){
 					sumSim[rowNum,5+seq(1,6*6, 6)]<-as.numeric(outtab.sim[ctSpecific,] < 9e-8)
-					sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[-ctSpecific,] < 9e-8)
+					sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[commonProbes,] < 9e-8)
 				} else{
-					sumSim[rowNum,5+seq(1,6*6, 6)]<-NA
-					sumSim[rowNum,6+seq(1,6*6, 6)]<-NA
+					sumSim[rowNum,5+seq(1,6*6, 6)]<-0
+					sumSim[rowNum,6+seq(1,6*6, 6)]<-0
 				}
 			}
 						
 			sumSim[rowNum,7+seq(1,6*6, 6)]<-apply(outtab.sim, 2, estlambda)
 			rowNum<-rowNum+1
+			
+			## collate sum stats of commonDMPs
+			commonDMPs<-rbind(commonDMPs, cbind(outtab.sim[commonProbes,], ctEWAS[commonProbes,]))
+			
+			## collate sum stats of ctSpecificDMPs
+			ctDMPs<-rbind(ctDMPs, cbind(outtab.sim[ctSpecific,], ctEWAS[ctSpecific,]))			
 		}
 	}
 }
 
 save(nullSim, file = file.path(resPath, paste0("nullSimulations_Chunk", nChunk, ".rdata")))
 save(sumSim, file = file.path(resPath, paste0("nSigSimulateTrueEffects_Chunk", nChunk, ".rdata")))
+save(commonDMPs, ctDMPs, file = file.path(resPath, paste0("DMPsumStats_Chunk", nChunk, ".rdata")))
