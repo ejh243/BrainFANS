@@ -38,15 +38,14 @@ samtools sort -n --threads 10 ${sampleName}.filt.nodup.bam -O SAM  | SAMstats --
 
 if [ ! -f ${sampleName}*pbc.qc ]
 then
-	# =============================
-	# Compute library complexity
-	# =============================
+	# COMPUTE LIBRARY COMPLEXITIY
+
 	# Sort by name
 	# convert to bedPE and obtain fragment coordinates
 	# sort by position and strand
 	# Obtain unique count statistics
 	
-	# TotalReadPairs [tab] DistinctReadPairs [tab] OneReadPair [tab] TwoReadPairs [tab] NRF=Distinct/Total [tab] PBC1=OnePair/Distinct [tab] PBC2=OnePair/TwoPair
+	#### TotalReadPairs [tab] DistinctReadPairs [tab] OneReadPair [tab] TwoReadPairs [tab] NRF=Distinct/Total [tab] PBC1=OnePair/Distinct [tab] PBC2=OnePair/TwoPair
 	  
 	samtools sort -n ${sampleName}.filt.dupmark.bam -o ${sampleName}.srt.tmp.bam
 

@@ -19,7 +19,7 @@ setwd("/lustre/home/jms260/BrainFANS/")
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0){
-  args<-"chromVal5_01"
+  args<-"simulate_1"
 } 
 intproject<-args
 
@@ -30,25 +30,34 @@ source("integrative/chromHMM/config/config.r")
 #----------------------------------------------------------------------#
 
 library(ggplot2)
+library(magrittr)
 
 #----------------------------------------------------------------------#
 # IMPORT DATA ==========================================================
 #----------------------------------------------------------------------#
 
-files<-Sys.glob(file.path(paste0(logDir, '/**/likelihood.*.txt')))
+files<-Sys.glob(file.path(paste0(qcDir, '/likelihood.*.txt')))
 
 likeli<-NULL
 for (each in files){
-  tmp<-read.table(each)
-  colnames(tmp)<-('logLikelihood')
-  tmp$states<-substring(each, 87, str_length(each)) %>%
-    gsub(".txt", "", .) %>%
-    as.numeric()
-  likeli<-rbind(likeli, tmp)
+  if (file.info(each)$size != 0){ #if file not empty
+    tmp<-read.table(each)
+    colnames(tmp)<-('logLikelihood')
+    tmp$states<-gsub(paste0(qcDir, '/likelihood.'), '',each) %>%
+        gsub(".txt", "", .) %>%
+        as.numeric()
+    likeli<-rbind(likeli, tmp)
+  }
 }
 
 likeli$params<-(likeli$states*5)+(likeli$states^2) # emission probs + transition probs
 likeli$aic<-(2*likeli$params)-(2*likeli$logLikelihood)
+
+ggplot(likeli, aes(states, aic))+
+  geom_point()+
+  theme_bw()+
+  geom_line()
+
 
 likeli
 
