@@ -74,7 +74,7 @@ QCSum<-cbind(QCSum, rowSums(QCSum[,c("passQCS1", "sexCheck", "snpCheck")], na.rm
 colnames(QCSum)[ncol(QCSum)]<-"passQCS2"
 rownames(QCSum)<-QCmetrics$Basename
 
-write.csv(cbind(QCmetrics[,c("Basename", "Samples.ID", "Individual.ID", "Cell.type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
+write.csv(cbind(QCmetrics[,c("Basename", "Sample_ID", "Individual_ID", "Cell_Type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
 
 QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
 
@@ -182,7 +182,7 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 **Project datapath:** `r dataDir`
 
-Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Individual.ID))` individuals.
+Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Individual_ID))` individuals.
 
 
 ## Summary of Technical Variables
@@ -316,9 +316,9 @@ for(i in 2:ncol(plotCols)){
 
 
 ```{r, echo = FALSE}
-nFMLab<-sum(QCmetrics$Individual.ID == "Meth Control")
+nFMLab<-sum(QCmetrics$Individual_ID == "Meth Control")
 nFMDat<-sum(QCmetrics$intens.ratio > 4)  
-nFMCorrect<-sum(QCmetrics$Individual.ID == "Meth Control" & QCmetrics$intens.ratio > 4)
+nFMCorrect<-sum(QCmetrics$Individual_ID == "Meth Control" & QCmetrics$intens.ratio > 4)
 
 ```
 
@@ -561,7 +561,7 @@ pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Numbe
 We can compare this to the expected distribution of number of samples per individuals based on the sample sheet. 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(QCmetrics$Individual.ID)))), row.names = c("Number of Samples", "Number of Individuals"))
+pander(t(as.data.frame(table(table(QCmetrics$Individual_ID)))), row.names = c("Number of Samples", "Number of Individuals"))
 
 ```
 
@@ -570,9 +570,9 @@ These correlations can be visualised in the following heatmap, where the colours
 
 ```{r,dupHeatmap, echo = FALSE, fig.width = 15, fig.height = 15}
 	### heatmap of snp cor
-	if("Individual.ID" %in% colnames(plotCols)){
+	if("Individual_ID" %in% colnames(plotCols)){
 		
-		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Individual.ID, RowSideColors = plotCols$Individual.ID, labCol = "", labRow = "", margins = c(1,1), 
+		heatmap.2(snpCor, trace = "none", key = FALSE, dendrogram = "column", ColSideColors = plotCols$Individual_ID, RowSideColors = plotCols$Individual_ID, labCol = "", labRow = "", margins = c(1,1), 
       lhei=c(0.1,9), 
       lwid=c(2,9))
 	} else {
@@ -594,13 +594,13 @@ dupSampleIDs <- NULL
 errors <- NULL
 for (element in predictedduplicates) {
   index <- match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
-  sampleIDs <- QCmetrics$Individual.ID[index]
+  sampleIDs <- QCmetrics$Individual_ID[index]
   if (length(unique(sampleIDs)) > 1) {
     errors <- c(errors, element)
   }
   dupSampleIDs <-
     c(dupSampleIDs, paste(
-      sort(QCmetrics$Individual.ID[index]),
+      sort(QCmetrics$Individual_ID[index]),
       sep = "|",
       collapse = "|"
     ))
@@ -618,11 +618,11 @@ if (length(errors) == 0) {
     index <- match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
     errorIndexes <- c(index, errorIndexes)
   }
-  if ("Individual.ID" %in% colnames(plotCols)) {
-    indCols <- plotCols$Individual.ID
+  if ("Individual_ID" %in% colnames(plotCols)) {
+    indCols <- plotCols$Individual_ID
   } else {
     indCols <-
-      rainbow(length(unique(QCmetrics$Individual.ID)))[as.factor(QCmetrics$Individual.ID)]
+      rainbow(length(unique(QCmetrics$Individual_ID)))[as.factor(QCmetrics$Individual_ID)]
   }
   
 
@@ -634,7 +634,7 @@ if (length(errors) == 0) {
       dendrogram = "column",
       ColSideColors = indCols[errorIndexes],
       labRow = QCmetrics$Basename[errorIndexes],
-      labCol = QCmetrics$Individual.ID[errorIndexes],
+      labCol = QCmetrics$Individual_ID[errorIndexes],
       margin = c(10, 10)
     )
     write.csv(
@@ -651,7 +651,7 @@ if (length(errors) == 0) {
 ## do heatmap across any individual who is not clustering as expected
 if (length(errorIndexes) > 0) {
   samplePlot <-
-    which(QCmetrics$Individual.ID %in% unique(QCmetrics$Individual.ID[errorIndexes]))
+    which(QCmetrics$Individual_ID %in% unique(QCmetrics$Individual_ID[errorIndexes]))
   pdf(
     paste0(
       dataDir,
@@ -666,7 +666,7 @@ if (length(errorIndexes) > 0) {
     key = FALSE,
     dendrogram = "row",
     RowSideColors = c("red", "blue")[as.factor(QCSum[samplePlot, "snpCheck"])],
-    labRow = QCmetrics$Individual.ID[samplePlot],
+    labRow = QCmetrics$Individual_ID[samplePlot],
     margin = c(5, 5),
     col = colorRampPalette(rev(brewer.pal(
       n = 7, name =
@@ -694,8 +694,8 @@ Checking if samples with same Individual ID are genetically identical:
 ### check if samples with same Individual ID are genetically identical.
 
 errorIndexes<-NULL
-for(each in unique(QCmetrics$Individual.ID)){
-	ind<-which(QCmetrics$Individual.ID == each)
+for(each in unique(QCmetrics$Individual_ID)){
+	ind<-which(QCmetrics$Individual_ID == each)
 	snpCor.tmp<-snpCor[ind,ind]
 	if(min(snpCor.tmp, na.rm = TRUE)< 0.8){
 	  ## count number of samples with which each sample looks identical to
@@ -759,7 +759,7 @@ for(each in unique(sampleGroups$predictedduplicates)){
 			  }else{
 			    xlabcol<-"red"
 			  }
-				methID<-sampleGroups$Individual.ID[match(bsnames[i], sampleGroups$barcode)]
+				methID<-sampleGroups$Individual_ID[match(bsnames[i], sampleGroups$barcode)]
 				for(j in 1:length(allGenoIDs)){
 					plot(betas.rs[,bsnames[i]], geno.mat[match(allGenoIDs[j],rownames(geno.mat))[1],], pch = 16, xlab = "", ylab = allGenoIDs[j], main = methID, xlim = c(0,1), ylim = c(0,2))
 				  title(xlab = bsnames[i], col.lab = xlabcol)
@@ -862,21 +862,15 @@ kbl(xTab) %>%
 
 ```{r, echo = FALSE, fig.width = 10, fig.height = 10}
 if(sexCheck & snpCheck){
-corrplot(cor(QCmetrics[,c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon",
- "PC1_cp","PC2_cp","PC3_cp","PC4_cp","PC5_cp",
- "PC1_betas","PC2_betas","PC3_betas","PC4_betas","PC5_betas","PC6_betas",
- "pFilter",
+corrplot(cor(QCmetrics[,c(c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon", "pFilter",
  "x.cp","y.cp",
  "genoCheck",
  "rmsd","sdd","sadd","srms",
- "nNAsPer")], use = "p"))
+ "nNAsPer"), colnames(QCmetrics)[grep("PC", colnames(QCmetrics))])], use = "p"))
 } else {
-    corrplot(cor(QCmetrics[,c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon",
- "PC1_cp","PC2_cp","PC3_cp","PC4_cp","PC5_cp",
- "PC1_betas","PC2_betas","PC3_betas","PC4_betas","PC5_betas","PC6_betas",
- "pFilter",
+    corrplot(cor(QCmetrics[,c(c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon", "pFilter",
  "rmsd","sdd","sadd","srms",
- "nNAsPer")], use = "p"))
+ "nNAsPer"), colnames(QCmetrics)[grep("PC", colnames(QCmetrics))])], use = "p"))
 }
 ```
 
@@ -921,11 +915,11 @@ Checking if genetically identical samples have the sample Individual ID:
 	errors<-NULL
   for(element in predictedduplicates){
 		index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
-		sampleIDs<-QCmetrics$Individual.ID[index]
+		sampleIDs<-QCmetrics$Individual_ID[index]
 		if(length(unique(sampleIDs)) > 1){
 		  errors<-c(errors, element)
 		}
-		dupSampleIDs<-c(dupSampleIDs, paste(sort(QCmetrics$Individual.ID[index]), sep = "|", collapse = "|"))
+		dupSampleIDs<-c(dupSampleIDs, paste(sort(QCmetrics$Individual_ID[index]), sep = "|", collapse = "|"))
   }
 
 	if(length(errors) == 0){
@@ -937,13 +931,13 @@ Checking if genetically identical samples have the sample Individual ID:
 	    index<-match(unlist(strsplit(element, "\\|")), QCmetrics$Basename)
 	    errorIndexes<-c(index,errorIndexes)
 	  }
-	  if("Individual.ID" %in% colnames(plotCols)){
-  	  indCols<-plotCols$Individual.ID
+	  if("Individual_ID" %in% colnames(plotCols)){
+  	  indCols<-plotCols$Individual_ID
 	  } else {
-	    indCols<-rainbow(length(unique(QCmetrics$Individual.ID)))[as.factor(QCmetrics$Individual.ID)]
+	    indCols<-rainbow(length(unique(QCmetrics$Individual_ID)))[as.factor(QCmetrics$Individual_ID)]
 	  }
 	  
-	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = indCols[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Individual.ID[errorIndexes], margin = c(10,10))
+	heatmap.2(snpCor[errorIndexes,errorIndexes], trace = "none", key = FALSE, dendrogram = "column", ColSideColors = indCols[errorIndexes], labRow = QCmetrics$Basename[errorIndexes], labCol = QCmetrics$Individual_ID[errorIndexes], margin = c(10,10))
 	if(length(errorIndexes) > 0){	
 		write.csv(QCmetrics[errorIndexes,], paste0(dataDir, "/2_gds/QCmetrics/WithinDNAmGeneticMismatchesPostQC.csv"), row.names = FALSE)
 		}
@@ -963,8 +957,8 @@ QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 ### check if samples with same Individual ID are genetically identical.
 
 errorIndexes<-NULL
-for(each in unique(QCmetrics$Individual.ID)){
-	ind<-which(QCmetrics$Individual.ID == each)
+for(each in unique(QCmetrics$Individual_ID)){
+	ind<-which(QCmetrics$Individual_ID == each)
 	snpCor.tmp<-snpCor[ind,ind]
 	if(min(snpCor.tmp, na.rm = TRUE)< 0.8){
 	  ## count number of samples with which each sample looks identical to

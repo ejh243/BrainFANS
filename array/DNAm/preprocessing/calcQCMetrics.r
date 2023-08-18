@@ -169,9 +169,9 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
 	print("Calculating Horvath's pan tissue epigenetic age")	
 	data(coef)
 	DNAmAge<-agep(gfile, coef=coef)
-	if(!is.null(dim(DNAmAge))){
-		DNAmAge<-DNAmAge$custom_age
-	}
+	#if(!is.null(dim(DNAmAge))){
+	#DNAmAge<-DNAmAge[,"custom_age"]
+	#}
 	DNAmAge[!QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,DNAmAge)
 }
@@ -324,7 +324,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 
 closefn.gds(gfile)
 
-write.csv(QCmetrics, paste0(qcOutFolder,"/QCMetricsPostSampleCheck.csv"))
+write.csv(QCmetrics, paste0(dataDir, "/2_gds/QCmetrics/QCMetricsPostSampleCheck.csv"))
 
 # save QC metrics and SNP correlations to generate QC report
 if(file.exists(genoFile)){
