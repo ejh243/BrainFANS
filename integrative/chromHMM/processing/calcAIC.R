@@ -14,7 +14,7 @@
 rm(list=ls()) 
 
 ## set working directory
-setwd("/lustre/home/jms260/BrainFANS/")
+setwd("/lustre/projects/Research_Project-MRC190311/scripts/")
 
 ## load arguments
 args = commandArgs(trailingOnly=TRUE)
