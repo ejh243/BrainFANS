@@ -3,19 +3,18 @@ This readme explains the content of the scripts for running the WGBS analysis pi
 	REQUISITES:
 		Scripts submitted from the scripts/sequencing folder.
 		Users require a username folder in the BSSeq/logFiles directory.
+		sampleSheet.csv in a specific format is required in the metadata folder
+		samples.txt is a text file required in the metadata folder comprising a list of the samplenames
 		
 #### Data pre-processing:
 
-1. scoping.sh
-
-2. sbatch --array=<number of batch jobs> WGBS/jobSubmissionScripts/batchRunAlignment.sh <data-type/project-name> [<STEPS>]
+1. sbatch --array=0-<number of samples-1> BSSeq/jobSubmission/1_batchRunAlignment.sh <data-type/project-name> [<STEPS>]
 
 Parameters in [] are optional.
 
-	This script searchs within raw data folders for all fastq files
+	This script searches within raw data folders for all fastq files
 	Then submits a batch script to process one set of paired samples at a time
 
-		This script:
 		* executes preScripts/fastqc.sh
 			* finds paired fastq files
 			* runs fastqc
@@ -23,14 +22,21 @@ Parameters in [] are optional.
 		* executes preScripts/trimGalore.sh
 			* runs trim galore
 
-		* executes WGBS/preprocessing/2_alignment.sh 
+		* executes BSSeq/preprocessing/alignment.sh 
 
-	<data-type/project-name> datatype slash separated from the name of the project folder i.e. WGBS/epiGaba
+	<data-type/project-name> datatype slash separated from the name of the project folder i.e. BSSeq/epiGaba
 
 	-optional-
 	
 	[<STEPS>] option of either FASTQC, TRIM or ALIGN. The first runs only fastqc on the samples, the second trims and the latter runs only the alignment. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run the whole script. 
 
 
+2. sbatch --array=0-<number of different tissue types-1> BSSeq/jobSubmission/2_batchComputeCorr.sh <data-type/project-name>
 
+	This script uses ${METADIR}/samplesheet.csv to compute the methylation correlation between samples and withinn a tissue type.
+	Then submits a batch script to process one tissue type at a time
+
+		* executes BSSeq/preprocessing/computeCorr.r
+
+	<data-type/project-name> datatype slash separated from the name of the project folder i.e. BSSeq/epiGaba
 

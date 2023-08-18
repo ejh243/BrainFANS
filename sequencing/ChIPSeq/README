@@ -7,7 +7,6 @@ This readme explains the content of the scripts for running the ChIP analysis pi
 		
 #### Data pre-processing:
 
-1. scoping.sh
 
 2. sbatch --array=<number of batch jobs> ChIPSeq/jobSubmissionScripts/batchRunAlignment.sh <project-name> [<STEPS>]
 
