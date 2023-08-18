@@ -57,7 +57,7 @@ rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
 auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 rawbetas<-rawbetas[auto.probes,]
 
-cellTypes<-unique(QCmetrics$Cell.type)
+cellTypes<-unique(QCmetrics$Cell_Type)
 cellTypes<-cellTypes[!is.na(cellTypes)]
 cellTypes<-sort(cellTypes)
 
@@ -91,7 +91,7 @@ print("Identifying outliers")
 studentPCA<-list()
 studentPCA[[1]]<-matrix(NA, nrow = nrow(QCmetrics), ncol = ncol(betas.scores))
 for(i in 1:nrow(QCmetrics)){
-	keep<-QCmetrics$Basename[which(QCmetrics$Cell.type == QCmetrics$Cell.type[i])]
+	keep<-QCmetrics$Basename[which(QCmetrics$Cell_Type == QCmetrics$Cell_Type[i])]
 	## exclude itself
 	keep<-keep[keep != QCmetrics$Basename[i]]
 	if(length(keep) > 1){
@@ -113,37 +113,37 @@ QCmetrics$studentCTOutlier<-studentCTOutlier
 #----------------------------------------------------------------------#
 
 # for each sample quantify how similar to cell type average it is
-cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier]), mean, na.rm = TRUE)
+cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier]), mean, na.rm = TRUE)
 rownames(cellMeanPCA)<-cellMeanPCA[,1]
 cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
 
-cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier]), sd, na.rm = TRUE)
+cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier]), sd, na.rm = TRUE)
 rownames(cellSDPCA)<-cellSDPCA[,1]
 cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
 maxSD<-rep(NA, nrow(QCmetrics))
 for(i in 1:nrow(QCmetrics)){
-	if(QCmetrics$Cell.type[i] %in% colnames(cellMeanPCA)){
-		maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell.type[i]])/cellSDPCA[1:2,QCmetrics$Cell.type[i]])
+	if(QCmetrics$Cell_Type[i] %in% colnames(cellMeanPCA)){
+		maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell_Type[i]])/cellSDPCA[1:2,QCmetrics$Cell_Type[i]])
 	} 
 }
 
 #----------------------------------------------------------------------#
 # CALCULATE INDIVIDUAL FACS SCORE
 #----------------------------------------------------------------------#
-keepCols<-c("Individual.ID", "Sex", "Age", "Phenotype", "Tissue.Centre")
+keepCols<-c("Individual_ID", "Sex", "Age", "Phenotype", "Tissue.Centre")
 keepCols<-keepCols[keepCols %in% colnames(QCmetrics)]
 uniqueIDs<-unique(QCmetrics[,keepCols])
-indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell.type != "Total")], by = list(QCmetrics$Individual.ID[which(QCmetrics$Cell.type != "Total")]), FUN = median, na.rm = TRUE)
-nFACs<-table(QCmetrics$Individual.ID[QCmetrics$Cell.type != "Total"])
+indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell_Type != "Total")], by = list(QCmetrics$Individual_ID[which(QCmetrics$Cell_Type != "Total")]), FUN = median, na.rm = TRUE)
+nFACs<-table(QCmetrics$Individual_ID[QCmetrics$Cell_Type != "Total"])
 
-uniqueIDs<-cbind(uniqueIDs, indFACSEff$x[match(uniqueIDs$Individual.ID, as.character(indFACSEff$Group.1))], as.numeric(nFACs[uniqueIDs$Individual.ID]))
+uniqueIDs<-cbind(uniqueIDs, indFACSEff$x[match(uniqueIDs$Individual_ID, as.character(indFACSEff$Group.1))], as.numeric(nFACs[uniqueIDs$Individual_ID]))
 colnames(uniqueIDs)<-c(keepCols, "FACsEffiency", "nFACS")
 
 write.csv(uniqueIDs, paste0(qcOutFolder, "/IndividualFACsEffciencyScores.csv"))
 
 # exclude individuals who hd very poor FACS sorts
-QCmetrics$passFACS<-QCmetrics$Individual.ID %in% uniqueIDs$Individual.ID[which(uniqueIDs$FACsEffiency < 5)]
+QCmetrics$passFACS<-QCmetrics$Individual_ID %in% uniqueIDs$Individual_ID[which(uniqueIDs$FACsEffiency < 5)]
 
 
 #----------------------------------------------------------------------#
@@ -154,7 +154,7 @@ QCmetrics$passFACS<-QCmetrics$Individual.ID %in% uniqueIDs$Individual.ID[which(u
 studentPCA[[2]]<-matrix(NA, nrow = nrow(QCmetrics), ncol = ncol(betas.scores))
 for(i in 1:nrow(QCmetrics)){
 	if(QCmetrics$passFACS[i]){
-		keep<-QCmetrics$Basename[which(QCmetrics$Cell.type == QCmetrics$Cell.type[i] & QCmetrics$passFACS)]
+		keep<-QCmetrics$Basename[which(QCmetrics$Cell_Type == QCmetrics$Cell_Type[i] & QCmetrics$passFACS)]
 		# exclude itself
 		keep<-keep[keep != QCmetrics$Basename[i]]
 		if(length(keep) > 1){
@@ -177,18 +177,18 @@ QCmetrics$studentCTOutlier2<-studentCTOutlier
 # COMPARE TO CELL TYPE AVERAGE
 #----------------------------------------------------------------------#
 
-cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier2]), mean, na.rm = TRUE)
+cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier2]), mean, na.rm = TRUE)
 rownames(cellMeanPCA)<-cellMeanPCA[,1]
 cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
 
-cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier2]), sd, na.rm = TRUE)
+cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier2]), sd, na.rm = TRUE)
 rownames(cellSDPCA)<-cellSDPCA[,1]
 cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
 maxSD<-rep(NA, nrow(QCmetrics))
 for(i in 1:nrow(QCmetrics)){
-	if(QCmetrics$Cell.type[i] %in% colnames(cellMeanPCA)){
-	  maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell.type[i]])/cellSDPCA[1:2,QCmetrics$Cell.type[i]])
+	if(QCmetrics$Cell_Type[i] %in% colnames(cellMeanPCA)){
+	  maxSD[i]<-max(abs(betas.scores[i,1:2]-cellMeanPCA[1:2,QCmetrics$Cell_Type[i]])/cellSDPCA[1:2,QCmetrics$Cell_Type[i]])
 	}
 }
 
@@ -199,7 +199,7 @@ QCmetrics<-cbind(QCmetrics, maxSD)
 
 print("Calculating Mahalanobis distance")
 
-cellMedPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier2]), median, na.rm = TRUE)
+cellMedPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier2]), median, na.rm = TRUE)
 rownames(cellMedPCA)<-cellMedPCA[,1]
 cellMedPCA<-as.matrix(t(cellMedPCA[,-1]))
 
@@ -207,8 +207,8 @@ cellMedPCA<-as.matrix(t(cellMedPCA[,-1]))
 cov_sigmaPCA<-list()
 for(each in colnames(cellMedPCA)){
 	## only possible if > 1 sample
-	if(sum(QCmetrics$Cell.type == each & !QCmetrics$studentCTOutlier2) > 1){
-		cov_sigmaPCA[[each]]<-cov(betas.scores[which(QCmetrics$Cell.type == each & !QCmetrics$studentCTOutlier2),1:2], use = "p")
+	if(sum(QCmetrics$Cell_Type == each & !QCmetrics$studentCTOutlier2) > 1){
+		cov_sigmaPCA[[each]]<-cov(betas.scores[which(QCmetrics$Cell_Type == each & !QCmetrics$studentCTOutlier2),1:2], use = "p")
 	}
 }
 
@@ -221,14 +221,14 @@ for(each in colnames(cellMedPCA)){
 }
 
 closestCellTypePCA<-colnames(mahDistPCA)[unlist(apply(mahDistPCA, 1, which.min))]
-closestLabelledCellType<-QCmetrics$Cell.type == closestCellTypePCA
+closestLabelledCellType<-QCmetrics$Cell_Type == closestCellTypePCA
 
 # As two different antibodies used for neuronal cells used, accept if either predicted as the other
-neunIndex<-which(QCmetrics$Cell.type %in% neunCT)
+neunIndex<-which(QCmetrics$Cell_Type %in% neunCT)
 closestLabelledCellType[neunIndex[closestCellTypePCA[neunIndex] %in% neunCT]]<-TRUE
 
 # SATB2- are a composition of non neuronal cells; accept so long as predicted as non-neuronal
-satb2NegIndex<-which(QCmetrics$Cell.type == "SATB2-")
+satb2NegIndex<-which(QCmetrics$Cell_Type == "SATB2-")
 closestLabelledCellType[satb2NegIndex[!closestCellTypePCA[satb2NegIndex] %in% neunCT]]<-TRUE
 
 QCmetrics<-cbind(QCmetrics, closestCellTypePCA, closestLabelledCellType)
@@ -246,11 +246,11 @@ pcaClassify<-list("predictCellType" = matrix(data = NA, nrow = nrow(QCmetrics), 
 for(thres in outlierThres){
 	studentCTOutlier<-QCmetrics$maxStudentPCA2 > thres
 
-	cellMeanPCA<-aggregate(betas.scores[!studentCTOutlier,], by = list(QCmetrics$Cell.type[!studentCTOutlier]), mean, na.rm = TRUE)
+	cellMeanPCA<-aggregate(betas.scores[!studentCTOutlier,], by = list(QCmetrics$Cell_Type[!studentCTOutlier]), mean, na.rm = TRUE)
 	rownames(cellMeanPCA)<-cellMeanPCA[,1]
 	cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
 
-	cellSDPCA<-aggregate(betas.scores[!studentCTOutlier,], by = list(QCmetrics$Cell.type[!studentCTOutlier]), sd, na.rm = TRUE)
+	cellSDPCA<-aggregate(betas.scores[!studentCTOutlier,], by = list(QCmetrics$Cell_Type[!studentCTOutlier]), sd, na.rm = TRUE)
 	rownames(cellSDPCA)<-cellSDPCA[,1]
 	cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
@@ -272,8 +272,8 @@ for(thres in outlierThres){
 	# can overlap with multiple CT so check if it if within 2SD of mean of it's labelled CT
 	withinSDMean<-rep(FALSE, nrow(QCmetrics))
 	for(i in 1:nrow(QCmetrics)){
-		if(QCmetrics$Cell.type[i] %in% colnames(upperBound)){
-			withinSDMean[i]<-betas.scores[i,1] < upperBound[1,QCmetrics$Cell.type[i]] & betas.scores[i,1] > lowerBound[1,QCmetrics$Cell.type[i]] & betas.scores[i,2] < upperBound[2,QCmetrics$Cell.type[i]] & betas.scores[i,2] > lowerBound[2,QCmetrics$Cell.type[i]]
+		if(QCmetrics$Cell_Type[i] %in% colnames(upperBound)){
+			withinSDMean[i]<-betas.scores[i,1] < upperBound[1,QCmetrics$Cell_Type[i]] & betas.scores[i,1] > lowerBound[1,QCmetrics$Cell_Type[i]] & betas.scores[i,2] < upperBound[2,QCmetrics$Cell_Type[i]] & betas.scores[i,2] > lowerBound[2,QCmetrics$Cell_Type[i]]
 		}
 	}
 	
@@ -296,13 +296,13 @@ withinSDMean[!QCmetrics$passFACS]<-FALSE
 QCmetrics<-cbind(QCmetrics, pcaClassifyDistinctCT,withinSDMean)
 
 # keep all TOTAL samples
-closestLabelledCellType[which(QCmetrics$Cell.type == "Total")]<-TRUE
+closestLabelledCellType[which(QCmetrics$Cell_Type == "Total")]<-TRUE
 QCmetrics$predLabelledCellType<-closestLabelledCellType
-withinSDMean[which(QCmetrics$Cell.type == "Total")]<-TRUE
+withinSDMean[which(QCmetrics$Cell_Type == "Total")]<-TRUE
 QCmetrics$withinSDMean<-withinSDMean
 
 passCTCheck<-withinSDMean
-passCTCheck[which(QCmetrics$Cell.type == "Total")]<-TRUE
+passCTCheck[which(QCmetrics$Cell_Type == "Total")]<-TRUE
 QCmetrics$passCTCheck<-passCTCheck
 
 #----------------------------------------------------------------------#
@@ -325,7 +325,7 @@ QCmetrics[which(is.na(QCmetrics$withinSDMean)),colnames(QCmetrics.all)]<-QCmetri
 #QCSum<-QCSum[,-ncol(QCSum)]
 QCSum<-cbind(QCSum, QCmetrics$passFACS, QCmetrics$passCTCheck,  QCmetrics$passFACS & QCmetrics$passCTCheck)
 # retain TOTAL samples
-QCSum[which(QCSum$Cell.type == "Total" & QCSum$passQCS2 ==TRUE),ncol(QCSum)]<-TRUE
+QCSum[which(QCSum$Cell_Type == "Total" & QCSum$passQCS2 ==TRUE),ncol(QCSum)]<-TRUE
 colnames(QCSum)[(ncol(QCSum)-2):ncol(QCSum)]<-c("passCTCheck", "passFACS", "passQCS3")
 
 write.csv(QCSum, paste0(qcOutFolder,"/passQCStatusStage3AllSamples.csv"))

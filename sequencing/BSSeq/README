@@ -1,36 +1,77 @@
-This readme explains the content of the scripts for running the WGBS analysis pipeline
+This readme explains the content of the scripts for running the BSSeq analysis pipeline
 
 	REQUISITES:
 		Scripts submitted from the scripts/sequencing folder.
 		Users require a username folder in the BSSeq/logFiles directory.
-		
-#### Data pre-processing:
-
-1. scoping.sh
-
-2. sbatch --array=<number of batch jobs> WGBS/jobSubmissionScripts/batchRunAlignment.sh <data-type/project-name> [<STEPS>]
 
 Parameters in [] are optional.
 
-	This script searchs within raw data folders for all fastq files
-	Then submits a batch script to process one set of paired samples at a time
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#### Data pre-processing:
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+1. sbatch --array=<number of batch jobs> BSSeq/preprocessing/jobSubmission/1_batchRunAlignment.sh <data-type/project-name> [<STEPS>]
 
-		This script:
-		* executes preScripts/fastqc.sh
+	This script searches within raw data folders for all fastq files, then submits a batch script to preprocess and align one set of paired samples at a time
+
+	EXECUTED SCRIPTS
+		- preScripts/fastqc.sh
 			* finds paired fastq files
 			* runs fastqc
-
-		* executes preScripts/trimGalore.sh
+		- preScripts/trimGalore.sh
 			* runs trim galore
-
-		* executes WGBS/preprocessing/2_alignment.sh 
-
-	<data-type/project-name> datatype slash separated from the name of the project folder i.e. WGBS/epiGaba
-
-	-optional-
+		- BSSeq/preprocessing/alignment.sh 
+			* aligns reads
 	
-	[<STEPS>] option of either FASTQC, TRIM or ALIGN. The first runs only fastqc on the samples, the second trims and the latter runs only the alignment. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run the whole script. 
+		- BSSeq/preprocessing/calcQCMetrics.sh
+			* calculates coverage and conversion efficiency
 
+	COMMAND LINE ARGUMENTS
+	--required--
+	<data-type/project-name> datatype slash separated from the name of the project folder i.e. BSSeq/epiGaba
 
+	--optional--
+	[<STEPS>] options:	
+		[ FASTQC ]  	- run fastqc on sample
+		[ TRIM ]  	- trim sample
+		[ ALIGN ]  	- align sample
+		[ ENCODE ] 	- calculate ENCODE metrics of sample
+	Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. 
+	Default if left blank is to run the whole script. 
+	
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+2. sbatch --array=<number of different tissue types> BSSeq/preprocessing/jobSubmission/2_batchComputeCorr.sh <data-type/project-name>
 
+	This script computes the correlation within tissues. 
+	
+	EXECUTED SCRIPTS
+	- BSSeq/preprocessing/computeCorr.r
+		 * generates correlation matrix
+	
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#	
+3. sbatch BSSeq/preprocessing/jobSubmission/3_collateS1QCMetrics.sh <data-type/project-name> [<STEPS>]
 
+	This script collates the earlier QC metrics into an rmarkdown summarising the quality of the dataset.
+
+	EXECUTED SCRIPTS
+	- BSSeq/preprocessing/progressReport.sh 
+		* searches for output files from each part of the QC pipeline and reports number of files found
+	- BSSeq/preprocessing/collateENCODEQCOutput.sh 
+		* collate encode output
+	- BSSeq/preprocessing/collateS1SumStats.Rmd
+		* generates the rmarkdown
+
+	COMMAND LINE ARGUMENTS
+	--required--
+	<data-type/project-name> datatype slash separated from the name of the project folder i.e. BSSeq/epiGaba
+	
+	--optional--
+	[<STEPS>] option of either:
+			[ MULTIQC ]  	- run MultiQC to collate all fastqc output
+		[ COLLATE ]  	- collates encode and progress so far output
+		[ SUMMARY ]  	- generates an RMarkdown report with graphs showing QC
+		[ FILTER ] 	- ONLY RUNS IF SPECIFIED and generates a text file with sampleids which have passed the filtering thresholds called stage1Samples.txt in 0_metadata/
+				- will take the command line arguments as filtering options.
+	Option to combine steps with desired steps included as single string i.e. MULTIQC,COLLATE 
+	Default if left blank is to run the whole script.
+	
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#

@@ -2,8 +2,8 @@
 ##
 ## Title: Profile cell composition in bulk brain samples
 ##
-## Purpose of script: To calculate cellular composition of bulk brain DNAm
-## profiles and characterise against biological factors
+## Purpose of script: Estimates cellular composition of bulk brain DNAm
+## profiles using pretrained models and tests against biological factors
 ##
 ## Author: Eilis Hannon
 ##
@@ -17,7 +17,9 @@
 
 # takes bulk brain beta matrix and calculates cellular composition
 # data provided as R object with betas matrix and pheno data.frame
-
+# requires on execution path to robject with dnam data
+# requires on execution path to trained model parameters
+# requires on execution path to folder to output plots and tables
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
@@ -25,9 +27,10 @@
 ## set plotting colours
 library(paletteer)
 ctCols <- paletteer_d("ggsci::category10_d3")
-names(ctCols)<-c("DoubleNeg", "NeuNPos", "NEUNNeg", "Sox10Pos", "IRF8Pos", "TripleNeg", "SATB2Neg","SATB2Pos", 
-"SOX6Neg", "SOX6Pos")
-
+names(ctCols)<-c("NeuNNeg_SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg_SOX10Pos", "NeuNNeg_Sox10Neg_IRF8Pos", "NeuNNeg_Sox10Neg_IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos_SOX6Neg", "NeuNPos_SOX6Pos")
+group.labels<-c("NeuNNeg/SOX10Neg", "NeuNPos", "NeuNNeg", "NeuNNeg/SOX10Pos", "NeuNNeg/Sox10Neg/IRF8Pos", "NeuNNeg/Sox10Neg/IRF8Neg", "SATB2Neg","SATB2Pos", 
+"NeuNPos/SOX6Neg", "NeuNPos/SOX6Pos")
 
 args<-commandArgs(trailingOnly = TRUE)
 bulkPath <- args[1]
@@ -50,10 +53,31 @@ library(corrplot)
 
 load(modelPath)
 load(bulkPath)
+pos <- position_dodge(0.9)
 
-# remove fetal samples from brain region analysis
-pheno$BrainRegion[which(pheno$Age < 0)]<-NA
+#----------------------------------------------------------------------#
+# SUMMARISE DATASET
+#----------------------------------------------------------------------#
 
+
+if("BrainRegion" %in% colnames(pheno)){
+	sumStat<-cbind(table(pheno$BrainRegion),
+		aggregate(Age ~ BrainRegion, pheno, mean)$Age,
+		aggregate(Age ~ BrainRegion, pheno, sd)$Age,
+		aggregate(Age ~ BrainRegion, pheno, min)$Age,
+		aggregate(Age ~ BrainRegion, pheno, max)$Age,
+		table(pheno$BrainRegion, pheno$Sex))
+
+	write.csv(sumStat, file = file.path(plotPath, "SummariseDataset.csv"))
+}
+
+if("AgeBin" %in% colnames(pheno)){
+	sumStat<-cbind(table(droplevels(pheno$AgeBin)), 
+	aggregate(Age ~ AgeBin, pheno,min)$Age, 
+	aggregate(Age ~ AgeBin, pheno,max)$Age, 
+	table(droplevels(pheno$AgeBin),pheno$Sex))
+		write.csv(sumStat, file = file.path(plotPath, "SummariseDatasetByAgeBin.csv"))
+}
 
 #----------------------------------------------------------------------#
 # CALCULATE CELL COMPOSITION
@@ -74,92 +98,82 @@ save(predCCANOVA, predCCIDOL, file = paste0(strsplit(bulkPath, "\\.")[[1]][1], "
 ## reformat into single data.frame for plotting
 sumOut<-NULL
 for(i in 1:length(predCCANOVA)){
-	sumOut<-rbind(sumOut, data.frame("Method" = "ANOVA", "Model" = i, "BrainRegion" = pheno$BrainRegion, "Age" = pheno$Age, "CETYGO" = predCCANOVA[[i]][,"CETYGO"], "SumProp" = rowSums(predCCANOVA[[i]][,1:(ncol(predCCANOVA[[i]])-2)])))
+	sumOut<-rbind(sumOut, data.frame("Method" = "ANOVA", "Model" = i, "BrainRegion" = pheno$BrainRegion, "Age" = pheno$Age, "Sex" = pheno$Sex, "Batch" = pheno$Sentrix_ID, "CETYGO" = predCCANOVA[[i]][,"CETYGO"], "SumProp" = rowSums(predCCANOVA[[i]][,1:(ncol(predCCANOVA[[i]])-2)])))
 	if(!is.null(predCCIDOL[[i]])){
-		sumOut<-rbind(sumOut, data.frame("Method" = "IDOL", "Model" = i, "BrainRegion" = pheno$BrainRegion, "Age" = pheno$Age, "CETYGO" = predCCIDOL[[i]][,"CETYGO"], "SumProp" = rowSums(predCCIDOL[[i]][,1:(ncol(predCCIDOL[[i]])-2)])))
+		sumOut<-rbind(sumOut, data.frame("Method" = "IDOL", "Model" = i, "BrainRegion" = pheno$BrainRegion, "Age" = pheno$Age, "Sex" = pheno$Sex, "Batch" = pheno$Sentrix_ID, "CETYGO" = predCCIDOL[[i]][,"CETYGO"], "SumProp" = rowSums(predCCIDOL[[i]][,1:(ncol(predCCIDOL[[i]])-2)])))
 	}
 }
 
 sumOut$Model<-as.factor(sumOut$Model)
 
 #----------------------------------------------------------------------#
-# CREATE PLOTS
+# TEST CETYGO AGAINST BRAIN REGION, SEX & AGE
 #----------------------------------------------------------------------#
-pos <- position_dodge(0.9)
 
-## For each brain region plot distribution of predicted cellular composition
-for(br in unique(pheno$BrainRegion)){
-	fig1a<-list()
+pheno$Age2<-pheno$Age^2
+
+## reset PFC as baseline region
+if(length(unique(pheno$BrainRegion)) > 1){  
+	lmOut<-NULL
 	for(i in 1:length(predCCANOVA)){
-		cellTypes <- colnames(predCCANOVA[[i]])[1:(ncol(predCCANOVA[[i]])-2)]
-		tmp<-data.frame(predCCANOVA[[i]][which(pheno$BrainRegion == br), cellTypes])
-		tmp_long<- gather(tmp, "PredCT", "Proportion", cellTypes)
-		fig1a[[i]]<-ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
-		  geom_violin(position = pos, scale = 'width')  +
-		  stat_summary(fun = "mean", 
-					   geom = "point", 
-					   position = pos, col = "white") + scale_fill_manual(values = ctCols[cellTypes]) + theme(legend.position = "none")
+		model<-lm(predCCANOVA[[i]][,"CETYGO"] ~ Age + Age2 + Sex + relevel(as.factor(pheno$BrainRegion), "BA9"), data = pheno)
+		lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[-1,c(1,4)]))))
 	}
-	ggarrange(plotlist=fig1a, nrow = 2, ncol = 4)
-	ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnAcrossModels",br,"SamplesANOVA.pdf")),  units = "in", width = 18, height = 8)
-
-	fig1b<-list()
+	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(relevel(as.factor(pheno$BrainRegion), "BA9"))[-1], paste0)))
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOANOVA.csv"))
+	lmOut<-NULL
 	for(i in 1:length(predCCIDOL)){
 		if(!is.null(predCCIDOL[[i]])){
-		cellTypes <- colnames(predCCIDOL[[i]])[1:(ncol(predCCIDOL[[i]])-2)]
-		tmp<-data.frame(predCCIDOL[[i]][which(pheno$BrainRegion == br), cellTypes])
-		tmp_long<- gather(tmp, "PredCT", "Proportion", cellTypes)
-		fig1b[[i]]<-ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
-		  geom_violin(position = pos, scale = 'width')  +
-		  stat_summary(fun = "mean", 
-					   geom = "point", 
-					   position = pos, col = "white") + scale_fill_manual(values = ctCols[cellTypes]) + theme(legend.position = "none")
-		} else{
-			fig1b[[i]]<-ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT)) + geom_blank()
+		model<-lm(predCCIDOL[[i]][,"CETYGO"] ~ Age + Age2 + Sex + relevel(as.factor(pheno$BrainRegion), "BA9"), data = pheno)
+		lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[-1,c(1,4)]))))
 		}
 	}
-	ggarrange(plotlist=fig1b, nrow = 2, ncol = 4)
-	ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnAcrossModels",br,"SamplesIDOL.pdf")),  units = "in", width = 18, height = 8)
-}
-
-## plot for each panel all brain regions 
-
-for(i in 1:length(predCCANOVA)){
-	fig1a<-list()
-	cellTypes <- colnames(predCCANOVA[[i]])[1:(ncol(predCCANOVA[[i]])-2)]
-	for(br in unique(pheno$BrainRegion)){
-		tmp<-data.frame(predCCANOVA[[i]][which(pheno$BrainRegion == br), cellTypes])
-		tmp_long<- gather(tmp, "PredCT", "Proportion", cellTypes)
-		fig1a[[i]]<-ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
-		  geom_violin(position = pos, scale = 'width')  +
-		  stat_summary(fun = "mean", 
-					   geom = "point", 
-					   position = pos, col = "white") + scale_fill_manual(values = ctCols[cellTypes]) + theme(legend.position = "none")
+	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(relevel(as.factor(pheno$BrainRegion), "BA9"))[-1], paste0)))
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOIDOL.csv"))
+	
+	## exclude CER
+	lmOut<-NULL
+	for(i in 1:length(predCCANOVA)){
+		model<-lm(predCCANOVA[[i]][,"CETYGO"] ~ Age + Age2 + Sex + relevel(as.factor(pheno$BrainRegion), "BA9"), data = pheno, subset = pheno$BrainRegion != "CEREB")
+		lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[-1,c(1,4)]))))
 	}
-	ggarrange(plotlist=fig1a, nrow = 2, ncol = 4)
-	ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnAcrossRegionsPanel",i,"SamplesANOVA.pdf")),  units = "in", width = 18, height = 8)
-
-	fig1b<-list()
+	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(droplevels(relevel(as.factor(pheno$BrainRegion), "BA9"), exclude = "CEREB"))[-1], paste0)))
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOANOVAExcludeCER.csv"))
+	lmOut<-NULL
 	for(i in 1:length(predCCIDOL)){
 		if(!is.null(predCCIDOL[[i]])){
-		cellTypes <- colnames(predCCIDOL[[i]])[1:(ncol(predCCIDOL[[i]])-2)]
-		tmp<-data.frame(predCCIDOL[[i]][which(pheno$BrainRegion == br), cellTypes])
-		tmp_long<- gather(tmp, "PredCT", "Proportion", cellTypes)
-		fig1b[[i]]<-ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
-		  geom_violin(position = pos, scale = 'width')  +
-		  stat_summary(fun = "mean", 
-					   geom = "point", 
-					   position = pos, col = "white") + scale_fill_manual(values = ctCols[cellTypes]) + theme(legend.position = "none")
-		} else{
-			fig1b[[i]]<-ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT)) + geom_blank()
+		model<-lm(predCCIDOL[[i]][,"CETYGO"] ~ Age + Age2 + Sex + relevel(as.factor(pheno$BrainRegion), "BA9"), data = pheno, subset = pheno$BrainRegion != "CEREB")
+		lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[-1,c(1,4)]))))
 		}
 	}
-	ggarrange(plotlist=fig1b, nrow = 2, ncol = 4)
-	ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnAcrossRegionsPanel",i,"SamplesIDOL.pdf")),  units = "in", width = 18, height = 8)
+	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(droplevels(relevel(as.factor(pheno$BrainRegion), "BA9"), exclude = "CEREB"))[-1], paste0)))
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOIDOLExcludeCER.csv"))
+	
+} else {
+	lmOut<-NULL
+	for(i in 1:length(predCCANOVA)){
+		model<-lm(predCCANOVA[[i]][,"CETYGO"] ~ Age + Age2 + Sex + Sentrix_ID, data = pheno)
+		null<-lm(predCCANOVA[[i]][,"CETYGO"] ~ Age + Age2 + Sex, data = pheno)
+		lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[c("Age", "Age2", "SexM"),c(1,4)]), anova(model, null)[2,6])))
+	}
+	colnames(lmOut)<-c("Panel","AgeEst", "AgeP", "Age2Est", "Age2P", "SexEst", "SexP", "BatchP")
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOANOVA.csv"))
+	
+	lmOut<-NULL
+	for(i in 1:length(predCCIDOL)){
+		if(!is.null(predCCIDOL[[i]])){
+			model<-lm(predCCIDOL[[i]][,"CETYGO"] ~ Age + Age2 + Sex + Sentrix_ID, data = pheno)
+			null<-lm(predCCIDOL[[i]][,"CETYGO"] ~ Age + Age2 + Sex, data = pheno)
+			lmOut<-rbind(lmOut, c(i, c(t(summary(model)$coefficients[c("Age", "Age2", "SexM"),c(1,4)]), anova(model, null)[2,6])))
+		}
+	}
+	colnames(lmOut)<-c("Panel","AgeEst", "AgeP", "Age2Est", "Age2P", "SexEst", "SexP", "BatchP")
+	write.csv(lmOut, file = paste0(plotPath, "RegressionAgainstCETYGOIDOL.csv"))
 }
 
-
-## plot CETYGO grouped by brain region
+#----------------------------------------------------------------------#
+# PLOT CETYGO AGAINST BRAIN REGION
+#----------------------------------------------------------------------#
 
 y_lim<-range(sumOut$CETYGO)
 fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYGO, fill = BrainRegion))  +
@@ -167,109 +181,40 @@ fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYG
   stat_summary(fun = "mean", 
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
-  ylim(y_lim)
+  ylim(y_lim) + theme(axis.text.x=element_blank(), text = element_text(size = 20))      + xlab("Reference Panel")
   
  fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = BrainRegion))  +
   geom_violin(position = pos, scale = 'width')  +
   stat_summary(fun = "mean", 
                geom = "point", 
                position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
-  ylim(y_lim)
-ggarrange(fig2a, fig2b, nrow = 2, ncol = 1)
-ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossModels.pdf"),  units = "in", width = 12, height = 8)
-
-## plot CETYGO separately for each brain region
+  ylim(y_lim) + theme(text = element_text(size = 20))      + xlab("Reference Panel") 
+		
+ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
+ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanels.pdf"),  units = "in", width = 12, height = 8)
 
 for(br in unique(pheno$BrainRegion)){
-	fig3a<-list()
-	for(i in 1:length(predCCANOVA)){
-		pheno$BrainRegion == br
-		fig3a[[i]]<-ggplot(na.omit(subset(sumOut, BrainRegion == br)), aes(x=Model, y=CETYGO, fill = Method))  +
-			geom_violin(position = pos, scale = 'width')  +
-			stat_summary(fun = "mean", 
-               geom = "point", 
-               position = pos) + 
-			geom_vline(xintercept = c(1:length(predCCANOVA))+ 0.5, linetype="dotted") +
-			ylim(y_lim) + theme(legend.position = "none")
-	}
-	ggarrange(plotlist=fig3a, nrow = 2, ncol = 4)
-	ggsave(filename = file.path(plotPath, paste0("ViolinPlotCETYGOAcrossModels",br,"Samples.pdf")),  units = "in", width = 12, height = 8)
-
+	fig3a<-ggplot(na.omit(subset(sumOut, BrainRegion == br & Method == "ANOVA")), aes(x=Model, y=CETYGO))  +
+		geom_violin(position = pos, scale = 'width')  +
+		stat_summary(fun = "mean", 
+		   geom = "point", 
+		   position = pos) + 
+		geom_vline(xintercept = c(1:length(predCCANOVA))+ 0.5, linetype="dotted") +
+		ylim(y_lim) + theme(legend.position = "none")  + xlab("Reference Panel")
+	fig3b<-ggplot(na.omit(subset(sumOut, BrainRegion == br & Method == "IDOL")), aes(x=Model, y=CETYGO))  +
+		geom_violin(position = pos, scale = 'width')  +
+		stat_summary(fun = "mean", 
+		   geom = "point", 
+		   position = pos) + 
+		geom_vline(xintercept = c(1:length(predCCANOVA))+ 0.5, linetype="dotted") +
+		ylim(y_lim) + theme(legend.position = "none")  + xlab("Reference Panel")
+	ggarrange(plotlist=list(fig3a, fig3b), nrow = 2, common.legend = TRUE)
+	ggsave(filename = file.path(plotPath, paste0("ViolinPlotCETYGOAcrossPanels",br,"Samples.pdf")),  units = "in", width = 12, height = 8)
 }
 
-## plot cell composition against age
-fig4a<-list()
-fig4b<-list()
-for(i in 1:length(predCCANOVA)){
-	cellTypes <- colnames(predCCANOVA[[i]])[1:(ncol(predCCANOVA[[i]])-2)]
-	tmp_long<-gather(as.data.frame(predCCANOVA[[i]]), "PredCT", "Proportion", cellTypes)
-	tmp_long$Age<-pheno$Age
-	
-	fig4a[[i]] <- ggplot(tmp_long, aes(x=Age, y=Proportion, color = PredCT))  +
-	  geom_point() +
-     geom_smooth(method = "lm", alpha = .15, aes(fill = PredCT)) + theme(legend.position = "none") + scale_color_manual(values = ctCols[cellTypes])
-
-
-	if(!is.null(predCCIDOL[[i]])){
-		tmp_long<-gather(as.data.frame(predCCIDOL[[i]]), "PredCT", "Proportion", cellTypes)
-		tmp_long$Age<-pheno$Age	
-		fig4b[[i]] <- ggplot(tmp_long, aes(x=Age, y=Proportion, color = PredCT))  +
-		geom_point() +
-		geom_smooth(method = "lm", alpha = .15, aes(fill = PredCT)) + theme(legend.position = "none") + scale_color_manual(values = ctCols[cellTypes])
-	}else{
-			fig4b[[i]]<-ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT)) + geom_blank() + theme(legend.position = "none")
-	}
-	  
- }
-ggarrange(plotlist=fig4a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsANOVA.pdf"),  units = "in", width = 12, height = 8)
-
-ggarrange(plotlist=fig4b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsIDOL.pdf"),  units = "in", width = 12, height = 8)
-
-## zoom in on childhood
-
-for(i in 1:length(predCCANOVA)){
-	fig4a[[i]] <- fig4a[[i]] + xlim(-1,18)
-	if(!is.null(predCCIDOL[[i]])){
-		fig4b[[i]] <- fig4b[[i]] + xlim(-1,18)
-	}
-}
- ggarrange(plotlist=fig4a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsANOVAUnder18.pdf"),  units = "in", width = 12, height = 8)
-
-ggarrange(plotlist=fig4b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsIDOLUnder18.pdf"),  units = "in", width = 12, height = 8)
-
-## fetal and early postnatal
-
-for(i in 1:length(predCCANOVA)){
-	fig4a[[i]] <- fig4a[[i]] + xlim(-0.75,2)
-	if(!is.null(predCCIDOL[[i]])){
-		fig4b[[i]] <- fig4b[[i]] + xlim(-0.75,2)
-	}
-}
- ggarrange(plotlist=fig4a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsANOVAUnder2.pdf"),  units = "in", width = 12, height = 8)
-
-ggarrange(plotlist=fig4b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsIDOLUnder2.pdf"),  units = "in", width = 12, height = 8)
-
-## omit childhood
-
-for(i in 1:length(predCCANOVA)){
-	fig4a[[i]] <- fig4a[[i]] + xlim(18, 110)
-	if(!is.null(predCCIDOL[[i]])){
-		fig4b[[i]] <- fig4b[[i]] + xlim(18, 110)
-	}
-}
- ggarrange(plotlist=fig4a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsANOVAAdult.pdf"),  units = "in", width = 12, height = 8)
-
-ggarrange(plotlist=fig4b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotPredPropnagainstAgeAcrossModelsIDOLAdult.pdf"),  units = "in", width = 12, height = 8)
-
-## plot error against age
+#----------------------------------------------------------------------#
+# PLOT CETYGO AGAINST AGE
+#----------------------------------------------------------------------#
 
 fig5a<-list()
 fig5b<-list()
@@ -279,8 +224,8 @@ for(i in 1:length(predCCANOVA)){
 
 	fig5a[[i]] <- ggplot(tmp_long, aes(x=Age, y=CETYGO))  +
 	  geom_point() +
-     geom_smooth(method = "lm", alpha = .15) + theme(legend.position = "none")
-
+     geom_smooth(method = "lm", alpha = .15) + theme(legend.position = "none")  +theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18))  + xlab("Reference Panel")
 
 	if(!is.null(predCCIDOL[[i]])){
 	tmp_long<-as.data.frame(predCCIDOL[[i]])
@@ -290,54 +235,124 @@ for(i in 1:length(predCCANOVA)){
 	  geom_point() +
      geom_smooth(method = "lm", alpha = .15) + theme(legend.position = "none")
 	}else{
-			fig5b[[i]]<-ggplot(tmp_long, aes(x=Age, y=CETYGO)) + geom_blank() + theme(legend.position = "none")
+			fig5b[[i]]<-ggplot(tmp_long, aes(x=Age, y=CETYGO)) + geom_blank() + theme(legend.position = "none")  +theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18))  + xlab("Reference Panel")
 	}
+}
+
+ggarrange(plotlist=fig5a, nrow = 2, ncol = 4, common.legend = TRUE)
+ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossPanelsANOVA.pdf"),  units = "in", width = 12, height = 8)
+
+ggarrange(plotlist=fig5b, nrow = 2, ncol = 4, common.legend = TRUE)
+ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossPanelsIDOL.pdf"),  units = "in", width = 12, height = 8)
+
+
+if("AgeBin" %in% colnames(pheno)){
+	sumOut$AgeBin <- pheno$AgeBin
+	fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYGO, fill = AgeBin))  +
+	  geom_violin(position = pos, scale = 'width')  +
+	  stat_summary(fun = "mean", 
+				   geom = "point", 
+				   position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+	  ylim(y_lim)  +theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18))  + xlab("Reference Panel")
 	  
- }
-## zoom in on childhood
- ggarrange(plotlist=fig5a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsANOVA.pdf"),  units = "in", width = 12, height = 8)
-
-ggarrange(plotlist=fig5b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsIDOL.pdf"),  units = "in", width = 12, height = 8)
-for(i in 1:length(predCCANOVA)){
-	fig5a[[i]] <- fig5a[[i]] + xlim(-1,18)
-	fig5b[[i]] <- fig5b[[i]] + xlim(-1,18)
-}
- ggarrange(plotlist=fig5a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsANOVAUnder18.pdf"),  units = "in", width = 12, height = 8)
-
-ggarrange(plotlist=fig5b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsIDOLUnder18.pdf"),  units = "in", width = 12, height = 8)
-
-## omit childhood
-
-for(i in 1:length(predCCANOVA)){
-	fig5a[[i]] <- fig5a[[i]] + xlim(18, 110)
-	fig5b[[i]] <- fig5b[[i]] + xlim(18, 110)
-}
- ggarrange(plotlist=fig5a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsANOVAAdult.pdf"),  units = "in", width = 12, height = 8)
-
-ggarrange(plotlist=fig5b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsIDOLAdult.pdf"),  units = "in", width = 12, height = 8)
-
-
-## fetal and early postnatal
-
-for(i in 1:length(predCCANOVA)){
-	fig5a[[i]] <- fig5a[[i]] + xlim(-0.75,2)
-	fig5b[[i]] <- fig5b[[i]] + xlim(-0.75,2)
+	 fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = AgeBin))  +
+	  geom_violin(position = pos, scale = 'width')  +
+	  stat_summary(fun = "mean", 
+				   geom = "point", 
+				   position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+	  ylim(y_lim) +theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18))  + xlab("Reference Panel") 
+		
+	ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
+	ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsByAgeBin.pdf"),  units = "in", width = 12, height = 8)
 }
 
-ggarrange(plotlist=fig4a, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsANOVAUnder2.pdf"),  units = "in", width = 12, height = 8)
+#----------------------------------------------------------------------#
+# PLOT CETYGO AGAINST SEX
+#----------------------------------------------------------------------#
 
-ggarrange(plotlist=fig4b, nrow = 2, ncol = 4)
-ggsave(filename = file.path(plotPath, "ScatterPlotCETYGOagainstAgeAcrossModelsIDOLUnder2.pdf"),  units = "in", width = 12, height = 8)
+y_lim<-range(sumOut$CETYGO)
+fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYGO, fill = Sex))  +
+  geom_violin(position = pos, scale = 'width')  +
+  stat_summary(fun = "mean", 
+               geom = "point", 
+               position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+  ylim(y_lim)  + theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18)) + theme(legend.position = "none", text=element_text(size=21), axis.text.x = element_blank()) + xlab("Reference Panel")
+  
+ fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = Sex))  +
+  geom_violin(position = pos, scale = 'width')  +
+  stat_summary(fun = "mean", 
+               geom = "point", 
+               position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+  ylim(y_lim) + theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18)) + theme(legend.position = "none", text=element_text(size=21), axis.text.x = element_blank()) + xlab("Reference Panel")
+		
+ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
+ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsBySex.pdf"),  units = "in", width = 12, height = 8)
+
+#----------------------------------------------------------------------#
+# PLOT CETYGO AGAINST BATCH
+#----------------------------------------------------------------------#
+
+y_lim<-range(sumOut$CETYGO)
+fig2a <- ggplot(na.omit(subset(sumOut, Method == "ANOVA")), aes(x=Model, y=CETYGO, fill = Batch))  +
+  geom_violin(position = pos, scale = 'width')  +
+  stat_summary(fun = "mean", 
+               geom = "point", 
+               position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+  ylim(y_lim)  +theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18)) + xlab("Experimental Batch")
+  
+ fig2b <- ggplot(na.omit(subset(sumOut, Method == "IDOL")), aes(x=Model, y=CETYGO, fill = Batch))  +
+  geom_violin(position = pos, scale = 'width')  +
+  stat_summary(fun = "mean", 
+               geom = "point", 
+               position = pos) + geom_vline(xintercept = c(1:length(predCCANOVA))+0.5, linetype="dotted") +
+  ylim(y_lim) +theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=18)) + xlab("Experimental Batch")
+		
+ggarrange(fig2a, fig2b, nrow = 2, ncol = 1, common.legend = TRUE)
+ggsave(filename = file.path(plotPath, "ViolinPlotCETYGOAcrossPanelsByBatch.pdf"),  units = "in", width = 12, height = 8)
 
 
-## corplot of all cell type predictions 
+#----------------------------------------------------------------------#
+# PLOT DISTRIBUTION OF PREDICTED CELLULAR COMPOSITION: PANEL 8
+#----------------------------------------------------------------------#
+
+# calc neuronal & glial proportions
+
+relCC<-predCCIDOL[[8]][,c("NeuNNeg_Sox10Neg_IRF8Pos", "NeuNPos_SOX6Neg", "NeuNPos_SOX6Pos", "NeuNNeg_SOX10Pos","NeuNNeg_Sox10Neg_IRF8Neg")]
+relCC<-cbind(relCC[,"NeuNPos_SOX6Neg"]+relCC[,"NeuNPos_SOX6Pos"], relCC[,"NeuNNeg_Sox10Neg_IRF8Pos"]+relCC[,"NeuNNeg_SOX10Pos"]+relCC[,"NeuNNeg_Sox10Neg_IRF8Neg"], relCC)
+colnames(relCC)[1:2]<-c("neuronal", "glial")
+
+tmp<-data.frame(predCCIDOL[[8]])
+tmp_long <- gather(tmp, "PredCT", "Proportion")
+tmp_long <- subset(tmp_long, PredCT %in% names(ctCols))
+tmp_long$BrainRegion<-pheno$BrainRegion
+tmp_long<-na.omit(tmp_long)
+ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
+		  geom_violin(position = pos, scale = 'width')  +
+		  stat_summary(fun = "mean", 
+					   geom = "point", 
+					   position = pos, col = "white") + scale_fill_manual(values = ctCols[unique(tmp_long$PredCT)], drop = TRUE, labels = group.labels[match(sort(unique(tmp_long$PredCT)), names(ctCols))]) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesPanel8.pdf")),  units = "in", width = 18, height = 8)
+
+
+ctMeans<-cbind(colMeans(relCC), apply(relCC, 2, sd))
+
+write.csv(ctMeans, file = file.path(plotPath, "CellCompositionPanel8IDOLSummaryStats.csv"))
+#----------------------------------------------------------------------#
+# CORPLOT OF ALL CELL TYPE PREDICTIONS 
+#----------------------------------------------------------------------#
+
+
 matPredANOVA<-NULL
 matPredIDOL<-NULL
 matError<-NULL
@@ -356,37 +371,121 @@ for(i in 1:length(predCCANOVA)){
 }
 
 corMatPred<-cor(matPredANOVA)
-pdf(file.path(plotPath, "CorMatPredCompositionANOVA.pdf"), width = 12, height =12)
-corrplot.mixed(corMatPred, order = 'hclust',tl.pos = "lt")
+pdf(file.path(plotPath, "CorMatPredCompositionANOVA.pdf"), width = 15, height =12)
+corrplot.mixed(corMatPred, order = 'hclust',tl.pos = "lt", tl.cex = 2, number.cex = 1.5, cl.cex = 1.5)
 dev.off()
 
 
 corMatPred<-cor(matPredIDOL)
-pdf(file.path(plotPath, "CorMatPredCompositionIDOL.pdf"), width = 12, height =12)
-corrplot.mixed(corMatPred, order = 'hclust',tl.pos = "lt")
+pdf(file.path(plotPath, "CorMatPredCompositionIDOL.pdf"), width = 15, height =12)
+corrplot.mixed(corMatPred, order = 'hclust',tl.pos = "lt", tl.cex = 2, number.cex = 1.5, cl.cex = 1.5)
 dev.off()
 
 
 corMatError<-cor(matError)
-pdf(file.path(plotPath, "CorMatCETYGO.pdf"), width = 12, height =12)
-corrplot.mixed(corMatError, order = 'hclust',tl.pos = "lt")
-dev.off()
-
-## limit to adults
-
-corMatPred<-cor(matPredANOVA[which(pheno$Age > 18),])
-pdf(file.path(plotPath, "CorMatPredCompositionANOVAAdults.pdf"), width = 12, height =12)
-corrplot.mixed(corMatPred, order = 'hclust',tl.pos = "lt")
+pdf(file.path(plotPath, "CorMatCETYGO.pdf"), width = 15, height =12)
+corrplot.mixed(corMatError, order = 'hclust',tl.pos = "lt", tl.cex = 2, number.cex = 1.5, cl.cex = 1.5)
 dev.off()
 
 
-corMatPred<-cor(matPredIDOL[which(pheno$Age > 18),])
-pdf(file.path(plotPath, "CorMatPredCompositionIDOLAdults.pdf"), width = 12, height =12)
-corrplot.mixed(corMatPred, order = 'hclust',tl.pos = "lt")
-dev.off()
 
 
-corMatError<-cor(matError[which(pheno$Age > 18),])
-pdf(file.path(plotPath, "CorMatCETYGOAdults.pdf"), width = 12, height =12)
-corrplot.mixed(corMatError, order = 'hclust',tl.pos = "lt")
-dev.off()
+#----------------------------------------------------------------------#
+# EXTRACT BEST PREDICTION FOR EACH CELL TYPE
+#----------------------------------------------------------------------#
+
+predCCBest<-cbind(predCCANOVA[[1]][,c("M1_NeuNNeg_SOX10Neg", "M1_NeuNPos")], predCCIDOL[[5]][,c("IDOL_M5_NeuNNeg_Sox10Neg_IRF8Pos","IDOL_M5_NeuNNeg_Sox10Neg_IRF8Neg")], predCCANOVA[[3]][,c("M3_SATB2Neg", "M3_SATB2Pos")], predCCANOVA[[6]][,c("M6_NeuNNeg", "M6_NeuNPos_SOX6Pos", "M6_NeuNPos_SOX6Neg")], predCCIDOL[[4]][,"IDOL_M4_NeuNNeg_SOX10Pos"])
+colnames(predCCBest)[10]<-"NeuNNeg_SOX10Pos"
+colnames(predCCBest)<-gsub("M._", "", colnames(predCCBest))
+colnames(predCCBest)<-gsub("IDOL_", "", colnames(predCCBest))
+
+
+ctMeans<-cbind(colMeans(predCCBest), apply(predCCBest, 2, sd))
+
+write.csv(ctMeans, file = file.path(plotPath, "CellCompositionBestSummaryStats.csv"))
+#----------------------------------------------------------------------#
+# TEST AGAINST AGE,SEX, BRAIN REGION
+#----------------------------------------------------------------------#
+
+lmOut<-NULL
+if(length(unique(pheno$BrainRegion)) > 1){  
+	for(j in 1:ncol(predCCBest)){
+		model<-lm(predCCBest[,j] ~ Age + Age2 + Sex + relevel(as.factor(pheno$BrainRegion), "BA9"), data = pheno)
+		lmOut<-rbind(lmOut, c(colnames(predCCBest)[j], c(t(summary(model)$coefficients[-1,c(1,4)]))))
+	}
+	colnames(lmOut)<-c("Panel","AgeEst", "Age2P", "Age2Est", "Age2P", "SexEst", "SexP", c(outer(c("Est_", "P_"), levels(relevel(as.factor(pheno$BrainRegion), "BA9"))[-1], paste0)))
+	write.csv(lmOut, file = file.path(plotPath, "RegressionofAgeSexBrainRegionAgainstCellCompositionBest.csv"))
+} else {
+	for(j in 1:ncol(predCCBest)){
+		model<-lm(predCCBest[,j] ~ Age + Age2 + Sex + Sentrix_ID, data = pheno)
+		null<-lm(predCCBest[,j] ~ Age + Age2 + Sex, data = pheno)
+		lmOut<-rbind(lmOut, c(colnames(predCCBest)[j], c(t(summary(model)$coefficients[c("Age", "Age2", "SexM"),c(1,2,4)])), anova(model,null)[2,6]))
+	}
+
+	colnames(lmOut)<-c("CT", "AgeEst", "AgeSE", "AgeP", "Age2Est", "Age2SE", "Age2P", "SexEst", "SexSE", "SexP", "BatchP")
+	write.csv(lmOut, file = file.path(plotPath, "RegressionofAgeSexAgainstCellCompositionBest.csv"))
+}
+
+#----------------------------------------------------------------------#
+# PLOT DISTRIBUTION OF PREDICTED CELLULAR COMPOSITION
+#----------------------------------------------------------------------#
+ 
+tmp<-data.frame(predCCBest)
+tmp_long<- gather(tmp, "PredCT", "Proportion")
+tmp_long$BrainRegion<-pheno$BrainRegion
+tmp_long<-na.omit(tmp_long)
+ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
+		  geom_violin(position = pos, scale = 'width')  +
+		  stat_summary(fun = "mean", 
+					   geom = "point", 
+					   position = pos, col = "white") + scale_fill_manual(values = ctCols, labels = group.labels) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesBest.pdf")),  units = "in", width = 18, height = 8)
+
+ggplot(tmp_long, aes(x=PredCT, y=Proportion, fill = PredCT))  +
+		  geom_violin(position = pos, scale = 'width')  +
+		  stat_summary(fun = "mean", 
+					   geom = "point", 
+					   position = pos, col = "white") + scale_fill_manual(values = ctCols, labels = group.labels) +
+			facet_wrap(vars(BrainRegion), nrow = 2) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+			
+ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesBestByRegion.pdf")),  units = "in", width = 18, height = 8)
+
+tmp_long$Sex<-pheno$Sex
+ggplot(tmp_long, aes(x=Sex, y=Proportion, fill = Sex))  +
+		  geom_violin(position = pos, scale = 'width')  +
+		  stat_summary(fun = "mean", 
+					   geom = "point", 
+					   position = pos, col = "white") + 
+			facet_wrap(vars(PredCT), nrow = 2)
+			
+ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesBestBySex.pdf")),  units = "in", width = 18, height = 8)
+
+for(br in unique(pheno$BrainRegion)){
+	tmp<-data.frame(predCCBest[which(pheno$BrainRegion == br), ])
+	tmp_long<- gather(tmp, "PredCT", "Proportion")
+	tmp_long$Age<-pheno$Age[which(pheno$BrainRegion == br)]
+	tmp_long$Sex<-pheno$Sex[which(pheno$BrainRegion == br)]
+	ggplot(tmp_long, aes(x=Age, y=Proportion, color = PredCT))  +
+			geom_point() +
+			geom_smooth(method = "lm", alpha = .15, aes(fill = PredCT)) + theme(legend.position = "none") + scale_color_manual(values = ctCols) +
+	  facet_wrap(vars(PredCT), nrow = 2)
+
+	ggsave(filename = file.path(plotPath, paste0("ScatterplotPredPropnAgainstAgeSamplesBest",br,".pdf")),  units = "in", width = 18, height = 8)
+	
+	ggplot(tmp_long, aes(x=Sex, y=Proportion, fill = Sex))  +
+		  geom_violin(position = pos, scale = 'width')  +
+		  stat_summary(fun = "mean", 
+					   geom = "point", 
+					   position = pos, col = "white") + 
+			facet_wrap(vars(PredCT), nrow = 2)
+			
+	ggsave(filename = file.path(plotPath, paste0("ViolinPlotPredPropnSamplesBestBySex",br,".pdf")),  units = "in", width = 18, height = 8)
+}
+

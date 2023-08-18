@@ -23,12 +23,11 @@
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 refDir <- args[2]
-
 gdsFile <-file.path(dataDir, "/2_gds/raw.gds")
 normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
 qcOutFolder<-file.path(dataDir, "/2_gds/QCmetrics")
 normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
-
+source(args[3])
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
@@ -41,13 +40,22 @@ setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
+
 # filter samples
-QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/passQCStatusStage3AllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
-passQC<-QCSum$Basename[which(QCSum$passQCS3)]
+if(ctCheck){
+	QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/passQCStatusStage3AllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
+	passQC<-QCSum$Basename[which(QCSum$passQCS3)]
 
-QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
-QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
+	QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
+	QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
+} else {
+	QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
+	passQC<-QCSum$Basename[which(QCSum$passQCS2)]
 
+	QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostSampleCheck.csv"), stringsAsFactors = FALSE)
+	QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
+
+}
 cellTypes<-unique(QCmetrics$Cell.type)
 
 # create new gfile with only samples that pass QC
@@ -97,22 +105,29 @@ add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
 # NORMALISE CELL TYPES SEPARATELY
 #----------------------------------------------------------------------#
 
-celltypeNormbeta<-matrix(NA, nrow = nrow(meth), ncol = ncol(meth))
-rownames(celltypeNormbeta)<-rownames(rawbetas)
-colnames(celltypeNormbeta)<-colnames(rawbetas)
-for(each in cellTypes){
-	index<-which(QCmetrics$Cell.type == each)
-	if(length(index) > 2){
-		celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
+if(length(cellTypes) > 1){
+
+	celltypeNormbeta<-matrix(NA, nrow = nrow(meth), ncol = ncol(meth))
+	rownames(celltypeNormbeta)<-rownames(rawbetas)
+	colnames(celltypeNormbeta)<-colnames(rawbetas)
+	for(each in cellTypes){
+		index<-which(QCmetrics$Cell.type == each)
+		if(length(index) > 2){
+			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
+		}
 	}
+	add.gdsn(normfile, 'celltypenormbeta', val = celltypeNormbeta, replace = TRUE)
+
+	save(celltypeNormbeta, QCmetrics, file = normData)
+} else{
+
+	save(normbeta, QCmetrics, file = normData)
 }
 
 #----------------------------------------------------------------------#
 # SAVE AND CLOSE
 #----------------------------------------------------------------------#
 
-add.gdsn(normfile, 'celltypenormbeta', val = celltypeNormbeta, replace = TRUE)
 
 closefn.gds(normfile)
 
-save(celltypeNormbeta, QCmetrics, file = normData)
