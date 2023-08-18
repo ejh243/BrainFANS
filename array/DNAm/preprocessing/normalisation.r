@@ -23,12 +23,11 @@
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 refDir <- args[2]
-
 gdsFile <-file.path(dataDir, "/2_gds/raw.gds")
 normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
 qcOutFolder<-file.path(dataDir, "/2_gds/QCmetrics")
 normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
-
+source(args[3])
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
@@ -41,6 +40,7 @@ setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
+
 # filter samples
 if(ctCheck){
 	QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/passQCStatusStage3AllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
@@ -49,7 +49,7 @@ if(ctCheck){
 	QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
 	QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 } else {
-	QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/passQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
+	QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 	passQC<-QCSum$Basename[which(QCSum$passQCS2)]
 
 	QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostSampleCheck.csv"), stringsAsFactors = FALSE)
