@@ -2,31 +2,98 @@ This readme explains the content of the scripts for running the ChIP analysis pi
 
 	REQUISITES:
 		Scripts submitted from the scripts/sequencing folder.
-		The ${DATADIR} variable of the config file edited to be specific to the dataset.
-		Users require a username folder in the ATACSeq/logFiles directory.
-		
-#### Data pre-processing:
-
-
-2. sbatch --array=<number of batch jobs> ChIPSeq/jobSubmissionScripts/batchRunAlignment.sh <project-name> [<STEPS>]
-
+		Users require a username folder in the ChIPSeq/logFiles directory.
+	
 Parameters in [] are optional.
 
-	This script searchs within raw data folders for all fastq files
-	Then submits a batch script to process one set of paired samples at a time
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#### Data pre-processing:
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+1. sbatch --array=<number of batch jobs> ChIPSeq/preprocessing/jobSubmission/1_batchRunAlignment.sh <project-name> [<STEPS>]
 
-		This script:
-		* executes preScripts/fastqc.sh
-			* finds paired fastq files
-			* runs fastqc
+	This script searches within raw data folders for all fastq files then submits a batch script to preprocess and align one set of paired samples at a time.
 
-		* executes preScripts/trimGalore.sh
-			* runs trim galore
+	EXECUTED SCRIPTS
+	- preScripts/fastqc.sh
+		* finds paired fastq files
+		* runs fastqc
+	- preScripts/fastp.sh
+		* trims samples using fastp
+	- ChIPSeq/preprocessing/alignment.sh 
+		* runs bowtie2 to align samples to hg38		
+	- ChIPSeq/preprocessing/calcENCODEQCMetrics.sh
+		 * the environment encodeqc must be activated 
+		 * calculates library complexity metrics
 
-		* executes ChIPSeq/preprocessing/2_alignment.sh 
+	COMMAND LINE ARGUMENTS
+	--required--
+	<project-name> the name of the project folder in the main datatype data directory
 
-	<project-name> the name of the project folder in the main data type data directory
+	--optional--
+	[<STEPS>] option of either:	
+		[ FASTQC ]  	- run fastqc on sample
+		[ TRIM ]  	- trim sample
+		[ ALIGN ]  	- align sample
+		[ ENCODE ] 	- calculate ENCODE metrics of sample
+	Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. 
+	Default if left blank is to run the whole script. 
+	
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#	
+2. sbatch --array=<number of batch jobs> ChIPSeq/preprocessing/jobSubmission/2_batchRunPeakCalling.sh <project-name> [control] [<STEPS>]
+	
+	This script runs peak calling on the samples as individuals and calculates the fraction of reads in peaks.
+	
+	EXECUTED SCRIPTS
+	- ChIPSeq/preprocessing/samplePeaks.sh 
+		* uses macs to call either broad or narrow peaks depending on the histone mark (as found in sampleSheet.csv 'target' column)
+	- ChIPSeq/preprocessing/calcFrip.sh
+		 * counts reads in peaks
 
-	-optional- 
+	COMMAND LINE ARGUMENTS
+	--required--
+	<project-name> the name of the project folder in the main datatype data directory
+	
+	--optional--
+	[control]  - if specified, sampleSheet.csv is searched for the sampleID of the control sample (must be in a column titled controlID)
+	
+	[<STEPS>] options:
+		[ PEAKS ]  	- call peaks on samples
+		[ FRIP ]  	- calculate fraction of reads in peaks
+	Default if left blank is to run the whole script. 
 
-	[<STEPS>] option of either FASTQC, TRIM or ALIGN. The first runs only fastqc on the samples, the second trims and the latter runs only the alignment. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run the whole script. 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+3. sbatch --array=<number of batch jobs/10> ChIPSeq/preprocessing/jobSubmission/3_batchCalcQCMetrics.sh  <project-name>
+
+	This script uses the R ChIPQC package to check the quality metrics of the dataset
+	
+	EXECUTED SCRIPTS
+	- ChIPSeq/preprocessing/calcQCMetrics.r
+		* generates a sampleSheetForChipQC.csv 
+		* generates a ChipQC object
+		
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+4. sbatch ChIPSeq/preprocessing/jobSubmission/4_collateStage1QCMetrics.sh <data-type/project-name> [<STEPS>]
+
+	This script collates the earlier QC metrics into an rmarkdown summarising the quality of the dataset.
+	
+	EXECUTED SCRIPTS
+	- ChIPSeq/preprocessing/progressReport.sh 
+		* searches for output files from each part of the QC pipeline and reports number of files found
+	- ChIPSeq/preprocessing/collateFlagStatOutput.sh 
+		* collate flagstat output
+	- ChIPSeq/preprocessing/collateS1SumStats.Rmd
+		* generates the rmarkdown
+	
+	COMMAND LINE ARGUMENTS
+	--required--
+	<project-name> the name of the project folder in the main datatype data directory	
+	
+	--optional--
+	[<STEPS>] options:
+		[ MULTIQC ]  	- run MultiQC to collate all fastqc output
+		[ COLLATE ]  	- collates encode and progress so far output
+		[ SUMMARY ]  	- generates an RMarkdown report with graphs showing QC
+	Option to combine steps with desired steps included as single string i.e. MULTIQC,COLLATE 
+	Default if left blank is to run the whole script.
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------#

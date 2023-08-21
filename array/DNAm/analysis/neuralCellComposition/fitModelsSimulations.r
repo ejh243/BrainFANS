@@ -1,8 +1,8 @@
 ##---------------------------------------------------------------------#
 ##
-## Title: Derive models for cell composition in brain
+## Title: Profile accuracy of deconvolution of cell composition heterogeneity from simulations
 ##
-## Purpose of script: To train a series of models to predict difference combinations of neural cell types
+## Purpose of script: Trains and tests prediction of specified combination of neural cell types against reconstructed bulk profiles
 ##
 ## Author: Eilis Hannon
 ##
@@ -56,8 +56,7 @@ load(normData)
 load(file.path(refPath, "AllProbeIlluminaAnno.Rdata"))
 
 colnames(pheno.all)[3]<-"CellType" # need to rename for use with IDOL functions
-pheno.all$CellType<-gsub("\\+", "Pos", pheno.all$CellType) ## need to remove the "+" and "-"
-pheno.all$CellType<-gsub("\\-", "Neg", pheno.all$CellType) ## need to remove the "+" and "-"
+pheno.all$CellType<-sub("/", "_", pheno.all$CellType) # need to remove "/" from cell type labels
 
 probeAnnot<-probeAnnot[rownames(norm.all),]
 
@@ -78,11 +77,11 @@ norm.all<-norm.all[-remove,]
 probes<-probes[row.names(norm.all),]
 norm.all<-norm.all[which(probes$Weksburg_CommonSNP_Af_within10bpSBE == "" & probes$Illumina_CommonSNP_Af_within10bpSBE == ""),]
 
-
+## select reference panel for training
 refPanels<-read.csv(refPanelPath, stringsAsFactors = FALSE)
 modelNum<-refPanels[i,1]
 cellTypes <- unlist(strsplit(refPanels[i,2], ";"))
-cellTypes<-sort(cellTypes)
+cellTypes<-sub("/", "_", sort(cellTypes))
 pheno.all<-pheno.all[pheno.all$CellType %in% cellTypes,]
 
 norm.all<-norm.all[,pheno.all$Basename]

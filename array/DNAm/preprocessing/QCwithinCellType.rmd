@@ -44,11 +44,11 @@ passQC<-QCSum$Basename[QCSum[,"passQCS2"]]
 nStart<-nrow(QCSum)
 nExclude<-sum(!QCSum[,"passQCS2"])
 
-nCTStart<-table(QCmetrics$Cell.type)
+nCTStart<-table(QCmetrics$Cell_Type)
 
 QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
-nCTMid<-table(QCmetrics$Cell.type)
+nCTMid<-table(QCmetrics$Cell_Type)
 
 ctCounts<-cbind(nCTStart, nCTMid)
 colnames(ctCounts)<-c("Profiled", "PassQCStage1")
@@ -58,7 +58,7 @@ rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
 auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
 rawbetas<-rawbetas[auto.probes,]
 
-cellTypes<-sort(unique(QCmetrics$Cell.type))
+cellTypes<-sort(unique(QCmetrics$Cell_Type))
 cellCols<-brewer.pal(n = length(cellTypes), name = "Paired")
 cellColsTrans<-rgb(t(col2rgb(cellCols)), max = 255, alpha = 0.5)
 #cellCols<-c("darkgreen", "darkblue", "darkmagenta", "deeppink", "darkgray", "black", "yellowgreen", "orangered4")
@@ -71,7 +71,7 @@ if(length(grep("rs", rownames(rawbetas))) > 0){
   rawbetas<-rawbetas[-grep("rs", rownames(rawbetas)),]
 }
 
-sample_anno<-QCmetrics[,c("Age","Sex", "Cell.type")[c("Age","Sex", "Cell.type") %in% colnames(QCmetrics)]]
+sample_anno<-QCmetrics[,c("Age","Sex", "Cell_Type")[c("Age","Sex", "Cell_Type") %in% colnames(QCmetrics)]]
 if("Age" %in% colnames(sample_anno)){
   sample_anno$Age<-as.numeric(sample_anno$Age)
 }
@@ -118,11 +118,11 @@ We will use principal components to classify samples into cell types and determi
 ```{r PCAbefore, fig.width = 15, fig.height = 8, echo = FALSE}
 par(mfrow = c(1,2))
 par(mar = c(4,4,0.5,0.5))
-plot(betas.scores[,1], betas.scores[,2],col = cellCols[as.factor(QCmetrics$Cell.type)], pch = 16, xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5)
+plot(betas.scores[,1], betas.scores[,2],col = cellCols[as.factor(QCmetrics$Cell_Type)], pch = 16, xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5)
 
-plot(betas.scores[,3], betas.scores[,4],col = cellCols[as.factor(QCmetrics$Cell.type)], pch = 16, xlab = "PC3", ylab = "PC4", cex.axis = 1.5, cex.lab = 1.5)
+plot(betas.scores[,3], betas.scores[,4],col = cellCols[as.factor(QCmetrics$Cell_Type)], pch = 16, xlab = "PC3", ylab = "PC4", cex.axis = 1.5, cex.lab = 1.5)
 
-legend("bottomright", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell.type)))
+legend("bottomright", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell_Type)))
 
 
 
@@ -139,7 +139,7 @@ par(mar = c(6,4,0.5,0.5))
 par(mgp = c(2,0.75,0))
 for(i in 1:ncol(betas.scores)){
   
-  boxplot(betas.scores[,i] ~ QCmetrics$Cell.type, col = cellCols, ylab = paste0("PC", i), xlab = "", cex.lab = 1.5, cex.axis = 1.5, xaxt = "n")
+  boxplot(betas.scores[,i] ~ QCmetrics$Cell_Type, col = cellCols, ylab = paste0("PC", i), xlab = "", cex.lab = 1.5, cex.axis = 1.5, xaxt = "n")
   text(x = 1:length(cellTypes),
      y = par("usr")[3] - diff(par("usr")[3:4])*0.05,
      labels = cellTypes,
@@ -162,11 +162,11 @@ Below are boxplots of the within cell type studentized PCs. The dashed horizonta
 par(mfrow = c(2,1))
 par(mar = c(4,4,0.5,0.5), mgp=c(2,0.75,0))
 for(i in 1:2){
-	boxplot(studentPCA[[1]][,i] ~ QCmetrics$Cell.type ,col = cellCols, pch = 16,ylab = "Studentized value", cex.axis = 1.5, cex.lab = 1.5, main = paste0("PC", i), xlab = "")
+	boxplot(studentPCA[[1]][,i] ~ QCmetrics$Cell_Type ,col = cellCols, pch = 16,ylab = "Studentized value", cex.axis = 1.5, cex.lab = 1.5, main = paste0("PC", i), xlab = "")
 	abline(h=c(1,1.5,2,3), lty = 2)
 	abline(h=c(1,1.5,2,3)*-1, lty = 2)
 }
-legend("topleft", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell.type)))
+legend("topleft", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell_Type)))
 ```
 
 We can look at which samples are included to define the representative profile as we apply more stringent thresholds. This should "clean" up the previous PCA plot.
@@ -175,16 +175,16 @@ We can look at which samples are included to define the representative profile a
 
 #par(mfrow = c(2,2))
 #for(i in 1:ncol(pcaClassify$withinSDMean)){
- # plot(betas.scores[,1], betas.scores[,2], pch = #c(3,16)[as.factor(pcaClassify$withinSDMean[,i])], col = #cellCols[as.factor(QCmetrics$Cell.type)], xlab = "PC1", ylab = "PC2", cex = 1.2, #cex.lab = 1.5, cex.axis = 1.5)
+ # plot(betas.scores[,1], betas.scores[,2], pch = #c(3,16)[as.factor(pcaClassify$withinSDMean[,i])], col = #cellCols[as.factor(QCmetrics$Cell_Type)], xlab = "PC1", ylab = "PC2", cex = 1.2, #cex.lab = 1.5, cex.axis = 1.5)
 #}
-#legend("topleft", pch = 16, col = cellCols, #levels(as.factor(QCmetrics$Cell.type)))
+#legend("topleft", pch = 16, col = cellCols, #levels(as.factor(QCmetrics$Cell_Type)))
 
 par(mfrow = c(2,2))
 for(i in 1:ncol(pcaClassify$withinSDMean)){
   keep<-which(QCmetrics$maxStudentPCA < c(1,1.5,2,3)[i])
-  plot(betas.scores[keep,1], betas.scores[keep,2], pch = 16, col = cellCols[as.factor(QCmetrics$Cell.type)][keep], xlab = "PC1", ylab = "PC2", cex = 1.2, cex.lab = 1.5, cex.axis = 1.5, main = paste0("Studentized threshold +/- ", c(1,1.5,2,3)[i]))
+  plot(betas.scores[keep,1], betas.scores[keep,2], pch = 16, col = cellCols[as.factor(QCmetrics$Cell_Type)][keep], xlab = "PC1", ylab = "PC2", cex = 1.2, cex.lab = 1.5, cex.axis = 1.5, main = paste0("Studentized threshold +/- ", c(1,1.5,2,3)[i]))
 }
-legend("bottomright", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell.type)))
+legend("bottomright", pch = 16, col = cellCols, levels(as.factor(QCmetrics$Cell_Type)))
 
 
 ```
@@ -194,7 +194,7 @@ Here we can see how many samples of each type are excluded from this analysis.
 ```{r, echo = FALSE}
 studCounts<-NULL
 for(i in 1:ncol(pcaClassify$withinSDMean)){
-  studCounts<-rbind(studCounts, table(QCmetrics$Cell.type[QCmetrics$maxStudentPCA > c(1,1.5,2,3)[i]]))
+  studCounts<-rbind(studCounts, table(QCmetrics$Cell_Type[QCmetrics$maxStudentPCA > c(1,1.5,2,3)[i]]))
 }
 
 studCounts<-cbind("Threshold" = c(1,1.5,2,3), studCounts)
@@ -210,13 +210,13 @@ kbl(studCounts) %>%
 
 For individuals, where the FACs sorting did not generate distinct cellular populations, this will disrupt the prediction of for all cell types. Therefore we will first identify these individuals and exclude them. 
 
-For each sample we can determine how similar it is to the average profile for the labelled cell type. We can combine the sample level scores into an individual level score, which is used to rank the FACs sorting. Below we will visualise the individual level FAC effciency scores. 
+For each sample we can determine how similar it is to the average profile for the labelled cell type. We can combine the sample level scores into an individual level score, which is used to rank the FACs sorting. Below we will visualise the individual level FAC efficiency scores. 
 
 ```{r}
 uniqueIDs<-read.csv(paste0(qcOutFolder, "/IndividualFACsEffciencyScores.csv"), row.names = 1, stringsAsFactors = FALSE)
 
-boxplot(uniqueIDs$FACsEffiency ~ uniqueIDs$Tissue.Centre, xlab = "", ylab = "Median SD from mean")
-abline(h=nSDThres)
+#boxplot(uniqueIDs$FACsEffiency ~ uniqueIDs$Tissue.Centre, xlab = "", ylab = "Median SD from mean")
+#abline(h=nSDThres)
 
 boxplot(uniqueIDs$FACsEffiency ~ uniqueIDs$nFACS, xlab = "Number of fractions", ylab = "Median SD from mean")
 abline(h=nSDThres)
@@ -231,11 +231,11 @@ Let's visualise some good examples.
 ```{r, fig.width = 15, fig.height = 10, echo = FALSE}
 
 
-	cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier]), mean, na.rm = TRUE)
+	cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier]), mean, na.rm = TRUE)
 	rownames(cellMeanPCA)<-cellMeanPCA[,1]
 	cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
 
-	cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier]), sd, na.rm = TRUE)
+	cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier]), sd, na.rm = TRUE)
 	rownames(cellSDPCA)<-cellSDPCA[,1]
 	cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
@@ -244,16 +244,16 @@ Let's visualise some good examples.
 	
 
 uniqueIDs<-uniqueIDs[order(uniqueIDs$FACsEffiency),]
-goodFACS<-c(uniqueIDs$Indidivual.ID[head(which(uniqueIDs$nFACS > 2), n = 3)], uniqueIDs$Indidivual.ID[head(which(uniqueIDs$nFACS > 3), n = 3)])
-badFACS<-uniqueIDs$Indidivual.ID[tail(which(uniqueIDs$nFACS > 2), n = 3)]
+goodFACS<-c(uniqueIDs$Individual_ID[head(which(uniqueIDs$nFACS > 2), n = 3)], uniqueIDs$Individual_ID[head(which(uniqueIDs$nFACS > 3), n = 3)])
+badFACS<-uniqueIDs$Individual_ID[tail(which(uniqueIDs$nFACS > 2), n = 3)]
 
 x_lim<-range(betas.scores[,1])
 y_lim<-range(betas.scores[,2])
 par(mfrow = c(2,3))
 for(each in goodFACS){
 
-	index<-which(QCmetrics$Indidivual.ID == each)
-	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell.type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
+	index<-which(QCmetrics$Individual_ID == each)
+	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell_Type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
 	for(i in 1:ncol(cellMeanPCA)){
 		polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[match(colnames(cellMeanPCA)[i], cellTypes)], lwd = 2, col = cellColsTrans[match(colnames(cellMeanPCA)[i], cellTypes)])
 	}
@@ -264,29 +264,29 @@ for(each in goodFACS){
 All individuals with score > 5 are excluded as having suboptimal FACs sorting. 
 
 ```{r, fig.width = 15, fig.height = 15}
-badFACS<-uniqueIDs$Indidivual.ID[which(uniqueIDs$FACsEffiency >= 5)]
+badFACS<-uniqueIDs$Individual_ID[which(uniqueIDs$FACsEffiency >= 5)]
 
 par(mfrow = c(3,3))
 for(each in badFACS){
 
-	index<-which(QCmetrics$Indidivual.ID == each)
+	index<-which(QCmetrics$Individual_ID == each)
 	if(length(index > 1)){
-    	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell.type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
+    	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell_Type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
     	for(i in 1:ncol(cellMeanPCA)){
     		polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[match(colnames(cellMeanPCA)[i], cellTypes)], lwd = 2, col = cellColsTrans[match(colnames(cellMeanPCA)[i], cellTypes)])
     	}
-    	mtext(side = 3, adj =1, signif(uniqueIDs$FACsEffiency[match(each, uniqueIDs$Indidivual.ID)],2))
+    	mtext(side = 3, adj =1, signif(uniqueIDs$FACsEffiency[match(each, uniqueIDs$Individual_ID)],2))
 	}
 	
 }
 
 ```
 
-In total we identified, `r length(which(uniqueIDs$FACsEffiency >= 5))` individuals with sub optimal FACs sorting and all `r sum(!QCmetrics$passFACS & QCmetrics$Cell.type != "Total")` samples for these individuals were excluded.
+In total we identified, `r length(which(uniqueIDs$FACsEffiency >= 5))` individuals with sub optimal FACs sorting and all `r sum(!QCmetrics$passFACS & QCmetrics$Cell_Type != "Total")` samples for these individuals were excluded.
 
 ```{r}
 
-kbl(table(QCmetrics$Cell.type, QCmetrics$passFACS)) %>%
+kbl(table(QCmetrics$Cell_Type, QCmetrics$passFACS)) %>%
   kable_styling(bootstrap_options = c("striped", "hover"), font_size = 10)
 
 ```
@@ -302,7 +302,7 @@ The exclusion of these individuals should give us more refined average profiles,
 
 ```{r, echo = FALSE}
 
-tab1<-table(QCmetrics$Cell.type,QCmetrics$predLabelledCellType)
+tab1<-table(QCmetrics$Cell_Type,QCmetrics$predLabelledCellType)
 percCon1<-sum(QCmetrics$predLabelledCellType)/nrow(QCmetrics)*100
 
 ```
@@ -341,7 +341,7 @@ panel.cor <- function(x, y){
 }
 # Customize upper panel
 upper.panel<-function(x, y){
-  points(x,y, pch = 16, col = cellCols[as.factor(QCmetrics$Cell.type)])
+  points(x,y, pch = 16, col = cellCols[as.factor(QCmetrics$Cell_Type)])
   abline(a = 0, b = 1)
 }
 # Create the plots
@@ -359,7 +359,7 @@ Below are a series of boxplots to look at the distribution of the distances to g
 y_lim<-range(mahDistPCA)
 par(mfrow = c(2,3))
 for(each in colnames(mahDistPCA)){
-	boxplot(mahDistPCA[,each] ~ QCmetrics$Cell.type, main = paste("Comparision with ", each), col = rainbow(5), ylab = "Mahalanobis distance", xlab = "Labelled cell type")
+	boxplot(mahDistPCA[,each] ~ QCmetrics$Cell_Type, main = paste("Comparision with ", each), col = rainbow(5), ylab = "Mahalanobis distance", xlab = "Labelled cell type")
 }
 ```
 
@@ -370,11 +370,11 @@ for(each in colnames(mahDistPCA)){
 
 ```{r, echo = FALSE}
 
-	cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier2]), mean, na.rm = TRUE)
+	cellMeanPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier2]), mean, na.rm = TRUE)
 	rownames(cellMeanPCA)<-cellMeanPCA[,1]
 	cellMeanPCA<-as.matrix(t(cellMeanPCA[,-1]))
 
-	cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell.type[!QCmetrics$studentCTOutlier2]), sd, na.rm = TRUE)
+	cellSDPCA<-aggregate(betas.scores[!QCmetrics$studentCTOutlier2,], by = list(QCmetrics$Cell_Type[!QCmetrics$studentCTOutlier2]), sd, na.rm = TRUE)
 	rownames(cellSDPCA)<-cellSDPCA[,1]
 	cellSDPCA<-as.matrix(t(cellSDPCA[,-1]))
 
@@ -388,7 +388,7 @@ Given the overlap of different cell types, we define a regular polytope in 2 dim
 
 
 ```{r}
-tab2<-table(QCmetrics$Cell.type, QCmetrics$withinSDMean)
+tab2<-table(QCmetrics$Cell_Type, QCmetrics$withinSDMean)
 percCon2<-sum(QCmetrics$withinSDMean)/sum(QCmetrics$passFACS)*100
 ```
 
@@ -417,7 +417,7 @@ par(mfrow = c(3,2))
 for(i in 1:ncol(lowerBound)){
   plot(betas.scores[,1], betas.scores[,2], xlab = "PC 1", ylab = "PC 2",  type = "n",cex.axis = 2, cex.lab = 2,cex = 1.2, main = colnames(lowerBound)[i], cex.main = 2)
   # just plot points labelled as that cell type
-    sInd<-which(QCmetrics$Cell.type == colnames(lowerBound)[i])
+    sInd<-which(QCmetrics$Cell_Type == colnames(lowerBound)[i])
   points(betas.scores[sInd,1], betas.scores[sInd,2], pch = c(4,16)[as.factor(QCmetrics$withinSDMean[sInd])], col = c("grey", "black")[as.factor(QCmetrics$withinSDMean[sInd])])
   polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[i], lwd = 2)
   
@@ -452,7 +452,7 @@ All Total samples are retained.
 
 ```{r}
 
-passTab<- table(QCmetrics$passCTCheck, QCmetrics$Cell.type)
+passTab<- table(QCmetrics$passCTCheck, QCmetrics$Cell_Type)
 
 pander(passTab)
 
@@ -463,9 +463,9 @@ We can look at how clean the samples we have retained by looking at how many SD 
 
 ```{r}
 
-boxplot(QCmetrics$maxSD ~ QCmetrics$Cell.type, xlab = "Cell type", ylab = "nSD from mean",col = cellCols)
+boxplot(QCmetrics$maxSD ~ QCmetrics$Cell_Type, xlab = "Cell type", ylab = "nSD from mean",col = cellCols)
 
-boxplot(QCmetrics$maxSD[QCmetrics$passCTCheck] ~ QCmetrics$Cell.type[QCmetrics$passCTCheck], xlab = "Cell type", ylab = "nSD from mean",col = cellCols)
+boxplot(QCmetrics$maxSD[QCmetrics$passCTCheck] ~ QCmetrics$Cell_Type[QCmetrics$passCTCheck], xlab = "Cell type", ylab = "nSD from mean",col = cellCols)
 
 ```
 
@@ -494,7 +494,7 @@ passQC<-QCSum$Basename[QCSum[,"passQCS3"]]
 QCmetrics<-QCmetrics[match(colnames(rawbetas), QCmetrics$Basename),]
 
 
-#plot(betas.scores[passQC,1], betas.scores[passQC,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(QCmetrics$Cell.type)], pch = 16,cex.axis = 2, cex.lab = 2,cex = 1.2)
+#plot(betas.scores[passQC,1], betas.scores[passQC,2], xlab = "PC 1", ylab = "PC 2", col = cellCols[as.factor(QCmetrics$Cell_Type)], pch = 16,cex.axis = 2, cex.lab = 2,cex = 1.2)
 #legend("topright", pch = 16, col = cellCols, colnames(lowerBound),cex = 1.2)
 
 ```
@@ -507,7 +507,7 @@ Boxplots to separate cell types should also look cleaner.
 par(mfrow = c(3,2))
 for(i in 1:ncol(betas.scores)){
   
-  boxplot(betas.scores[,i] ~ QCmetrics$Cell.type, col = cellCols, ylab = paste0("PC", i), xlab = "", subset = rownames(betas.scores) %in% passQC)
+  boxplot(betas.scores[,i] ~ QCmetrics$Cell_Type, col = cellCols, ylab = paste0("PC", i), xlab = "", subset = rownames(betas.scores) %in% passQC)
   
 }
 ```
@@ -522,7 +522,7 @@ Where multiple samples from the same individual are identified as not resembling
 ```{r, fig.width = 15, fig.height = 15, echo = FALSE}
 ## for any individual with multiple incorrect sample labels, plot all samples to diagnose.
 
-countInd<-table(QCmetrics$Indidivual.ID[!QCmetrics$passCTCheck])
+countInd<-table(QCmetrics$Individual_ID[!QCmetrics$passCTCheck])
 multIn<-names(countInd)[countInd > 1]
 
 x_lim<-range(betas.scores[,1])
@@ -530,8 +530,8 @@ y_lim<-range(betas.scores[,2])
 par(mfrow = c(3,3))
 for(each in multIn){
 
-	index<-which(QCmetrics$Indidivual.ID == each)
-	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell.type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
+	index<-which(QCmetrics$Individual_ID == each)
+	plot(betas.scores[index,1], betas.scores[index,2],col = cellCols[as.factor(QCmetrics$Cell_Type)][index], pch = c(18,16)[as.factor(QCmetrics$passCTCheck)][index], xlab = "PC1", ylab = "PC2", cex.axis = 1.5, cex.lab = 1.5, cex = 4, main = each, xlim = x_lim, ylim = y_lim)
 	for(i in 1:ncol(cellMeanPCA)){
 		polygon(c(lowerBound[1,i], lowerBound[1,i], upperBound[1,i], upperBound[1,i]), c(lowerBound[2,i],upperBound[2,i],upperBound[2,i],lowerBound[2,i] ), border = cellCols[match(colnames(cellMeanPCA)[i], cellTypes)], lwd = 2, col = cellColsTrans[match(colnames(cellMeanPCA)[i], cellTypes)])
 	}

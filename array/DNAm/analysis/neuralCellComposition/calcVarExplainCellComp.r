@@ -42,8 +42,13 @@ library(variancePartition)
 load(bulkPath)
 load(cellPath)
 
+## filter out child samples
+betas<-betas[, which(pheno$Age > 17)]
+pheno<-pheno[which(pheno$Age > 17),]
+
+
 # apply to PCAs
-pcaBetas <- prcomp(na.omit(t(betas[, which(pheno$Age > 17)])))
+pcaBetas <- prcomp(na.omit(t(betas)))
 pcaBetasProp <- pcaBetas$sdev^2/sum(pcaBetas$sdev^2)
 pcaBetasScore <- pcaBetas$x[,which(pcaBetasProp > 0.01)]
 
