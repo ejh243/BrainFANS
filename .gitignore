@@ -17,3 +17,5 @@ JobSubmissionScripts/
 LogFiles/
 SNPdata/
 **/*.log
+
+sequencing/longReadseq/*
