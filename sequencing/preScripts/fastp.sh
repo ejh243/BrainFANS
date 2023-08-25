@@ -41,7 +41,15 @@ echo "Looking for trimmed files in" ${TRIMDIR}
 if [ ! -s ${TRIMDIR}/fastp_reports/${sampleName}_fastp.json ]    
 then
    echo "Trimmed fastq not found so trimming"
+   if [ -z "$f2" ];
+   then
+   echo "Single end read detected"
+   fastp --length_required=27 --thread=8 --in1=${f1} --out1=${TRIMDIR}/${outf1} --html=${TRIMDIR}/fastp_reports/${sampleName}_fastp.html --json=${TRIMDIR}/fastp_reports/${sampleName}_fastp.json 
+
+   else
+   echo "Paired end data"
    fastp --detect_adapter_for_pe --length_required=27 --thread=8 --in1=${f1} --in2=${f2} --out1=${TRIMDIR}/${outf1} --out2=${TRIMDIR}/${outf2} --html=${TRIMDIR}/fastp_reports/${sampleName}_fastp.html --json=${TRIMDIR}/fastp_reports/${sampleName}_fastp.json
+   fi
 fi
 
 if [[ $? == 0 ]]

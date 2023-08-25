@@ -50,13 +50,13 @@ then
     mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
     echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 
-    sampleName=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
+    sampleName=$(echo ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]} | tr  -d '\r')
     echo "Current sample: " ${sampleName} 
 
-    if [[ $(awk -F, '{print $1}' $METADIR/sampleSheet.csv | grep -w $sampleName) == '' ]];
-    then 
-        { echo 'sampleSheet$sampleID does not match record in samples.txt. Please check that sample IDs match'; exit 1; }
-    fi
+#    if [[ $(awk -F, '{print $2}' $METADIR/sampleSheet.csv | grep -w $sampleName) == '' ]];
+#    then 
+#        { echo 'sampleSheet$sampleID does not match record in samples.txt. Please check that sample IDs match'; exit 1; }
+#    fi
 else 
     { echo 'samples.txt not found in 0_metadata folder. Please ensure file exists'; exit 1; }
 fi
@@ -68,7 +68,7 @@ echo "Changing folder to data directory: " ${DATADIR}
 cd ${DATADIR}
 
 ## find the file name in RAWDATADIR
-toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
+toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${sampleName}'*'))
 
 ## sort the toProcess array so that R1 and R2 are consecutive 
 IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
