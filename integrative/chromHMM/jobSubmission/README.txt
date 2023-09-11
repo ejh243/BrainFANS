@@ -1,0 +1,1 @@
+submit bootstrap binairse in increments of two as the script splits the data into half and then binarises iteratively over the two splits of the data set, generating a folder for each split
