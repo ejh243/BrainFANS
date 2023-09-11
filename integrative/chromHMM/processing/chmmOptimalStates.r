@@ -15,11 +15,16 @@
 ## clear the R environment
 rm(list=ls()) 
 
-## set working directory
-modelDir<-"/lustre/projects/Research_Project-MRC190311/integrative/chromHMM/chromMVal/4_model/"
-  setwd("/lustre/projects/Research_Project-MRC190311/integrative/chromHMM/chromMVal/4_model/")
+## load arguments
+args = commandArgs(trailingOnly=TRUE)
+if (length(args)==0){
+    project<-"rizzardiPrelim"
+    } else {
+  project<-args[1]
+}
 
-col<- wes_palette("Darjeeling1", 15, type = "continuous")
+source("/lustre/projects/Research_Project-MRC190311/scripts/integrative/chromHMM/config/config.r")
+
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -27,11 +32,15 @@ col<- wes_palette("Darjeeling1", 15, type = "continuous")
 library(tidyverse)
 library(magrittr)
 library(ggfortify)
+library(wesanderson)
+col<- wes_palette("Darjeeling1", 15, type = "continuous")
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
 #----------------------------------------------------------------------#
 corrModel<- read.table('compare/comparedModel.txt', header = TRUE, sep = '\t')
+#corrModel<- read.table('compare/ref_15.txt', header = TRUE, sep = '\t')
+
 ## the maximum correlation of each state in the selected model between its best matching state in each other model
 
 # remove reference model  
@@ -106,6 +115,8 @@ ggplot(data=all, aes(x=model, y=ratio)) +
   scale_x_continuous("Model", labels = as.character(corrModel$State), breaks = corrModel$State)
 
 kmean<- kmeans(emisALL, 11)
+#kmean<- kmeans(emisALL, 12)
+
 autoplot(kmean, emisALL, frame=TRUE)+
   theme_bw()
 

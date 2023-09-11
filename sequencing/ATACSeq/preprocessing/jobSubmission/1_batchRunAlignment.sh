@@ -48,7 +48,7 @@ if test -f ${METADIR}/samples.txt;
 then 
     ## create an array from the file
     mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
-    echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
+    echo "Number of sample IDs found:" ${#SAMPLEIDS[@]} 
 
     sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
     ## find the file name in RAWDATADIR
@@ -65,15 +65,15 @@ then
     echo "Current sample: " ${sampleID} ##
 
 
-    ## if number of flags is 1 ($PROJECT), then run all steps
-    if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
-    then
-        ## run sequencing QC and trimming on fastq files        
-        module load FastQC 
+        ## if number of flags is 1 ($PROJECT), then run all steps
+        if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
+        then
+            ## run sequencing QC and trimming on fastq files        
+            module load FastQC 
 
-        cd ${SCRIPTDIR}
-        sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
-    fi
+            cd ${SCRIPTDIR}
+            sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
+        fi
 
     if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
     then
