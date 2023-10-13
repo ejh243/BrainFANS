@@ -1,0 +1,10 @@
+## Data filepaths
+export DATADIR=<data path>${PROJECT}
+
+export METADIR=${DATADIR}/0_metadata
+export RAWDATADIR=${DATADIR}/1_raw
+export GDSDIR=${DATADIR}/2_gds
+export NORMDIR=${DATADIR}/3_normalised
+export SNPDIR=<path to SNP data >
+
+export REFDIR=<path to references folder>
