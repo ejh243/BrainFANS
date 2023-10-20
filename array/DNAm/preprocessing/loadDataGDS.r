@@ -21,6 +21,7 @@
 #----------------------------------------------------------------------#
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
+source(args[2])
 gdsFile <-file.path(dataDir, "2_gds/raw.gds")
 
 #----------------------------------------------------------------------#
@@ -28,15 +29,23 @@ gdsFile <-file.path(dataDir, "2_gds/raw.gds")
 #----------------------------------------------------------------------#
 
 library(bigmelon)
-#library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
-library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-library(IlluminaHumanMethylationEPICmanifest)
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-library(IlluminaHumanMethylation450kmanifest)
+if(arrayType=='450K'){
+  #library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+  library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+  library(IlluminaHumanMethylation450kmanifest)
+}
+if(arrayType=='EPICv1'){
+  library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+  library(IlluminaHumanMethylationEPICmanifest)
+}
+if(arrayType=='EPICv2'){
+  library(IlluminaHumanMethylationEPICv2anno.20a1.hg38)
+  library(IlluminaHumanMethylationEPICv2manifest)
+}
 library(devtools)
 devtools::load_all(path = "../functionsR")
 
-
+print('Step 1')
 
 
 #----------------------------------------------------------------------#
@@ -51,7 +60,7 @@ if(!"Basename" %in% colnames(sampleSheet)){
 }
 
 print(paste(nrow(sampleSheet), "samples identified from sample sheet to be loaded"))
-
+print('Step 2')
 ## check unique experimental IDs
 
 if(nrow(sampleSheet) == length(unique(sampleSheet$Basename))){
@@ -67,7 +76,7 @@ nProbes <- sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), readIDAT,
 scanDate <- unlist(sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), getScanDate))
 
 sampleSheet<-cbind(sampleSheet, nProbes, scanDate)
-
+print('Step 3')
 ## load data separately
 loadGroups<-split(gsub("1_raw/|_Red.idat", "", names(nProbes)), as.factor(nProbes))
 
@@ -109,11 +118,20 @@ for(i in 1:length(loadGroups)){
 	## update feature data
 	if(updateProbes){
 		print("Updating Feature data")
-		if(nProbes[1] > 650000){
-			annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
-		} else {
-			annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylation450kanno.ilmn12.hg19")
-		}
+    if(arrayType=='450K'){
+		  annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+    }
+    if(arrayType=='EPICv1'){
+		  annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+    }
+    if(arrayType=='EPICv2'){
+		  annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylationEPICv2anno.20a1.hg38")
+    }
+#    if(nProbes[1] > 650000){
+#			annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
+#		} else {
+#			annoObj <-  minfi::getAnnotationObject("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+#		}
 		all <- minfi:::.availableAnnotation(annoObj)$defaults
 		newfData <- do.call(cbind, lapply(all, function(wh) {
 				minfi:::.annoGet(wh, envir = annoObj@data)
@@ -142,7 +160,7 @@ for(i in 1:length(loadGroups)){
 }
 # close any gds that are open
 showfile.gds(closeall=TRUE, verbose=TRUE)
-
+print('Step 4')
 #----------------------------------------------------------------------#
 # MERGE GDS
 #----------------------------------------------------------------------#
@@ -216,4 +234,4 @@ if(length(loadGroups) > 1){
 } else{
 	file.rename(gdsFile.sub, gdsFile)
 }
-
+print('Step 5')
