@@ -84,9 +84,9 @@ library(lme4)
 library(lmerTest)
 library(plm)
 library(lmtest)
-#library(GenABEL)
 library(doParallel)
 library(car)
+source("../functionsR/R/utils_DNAm.r")
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
@@ -156,6 +156,7 @@ nullSim<-NULL
 
 commonDMPs<-NULL
 ctDMPs<-NULL
+fpDMPs<-NULL
 for(simNum in 1:nSim){
 	message("Simulation: ", simNum, " of ", nSim)
 
@@ -207,7 +208,7 @@ for(simNum in 1:nSim){
 			# create matrix of betas with induced effects
 			testbetas<-celltypeNormbeta[sigProbes,]+diffs
 
-			outtab.sig<-foreach(i=1:nrow(testbetas), .combine = "rbind") %dopar% runEWAS(testbetas[i,], QCmetrics, status)
+			outtab.sig<-foreach(i=1:nrow(testbetas), .combine = "rbind") %dopar% runSimEWAS(testbetas[i,], QCmetrics, status)
 			
 			# merge signif results with null results to generate summary statistics
 			outtab.sim<-outtab.null
@@ -216,18 +217,32 @@ for(simNum in 1:nSim){
 			sumSim[rowNum,2+seq(1,6*6, 6)]<-colSums(outtab.sim < 9e-8)
 			sumSim[rowNum,3+seq(1,6*6, 6)]<-colSums(outtab.sim[sigProbes,] < 9e-8)
 			sumSim[rowNum,4+seq(1,6*6, 6)]<-colSums(outtab.sim[-sigProbes,] < 9e-8)
+			
+			# substract those significant in both ME and Int from ME count
+			methodMaxP<-data.frame("LM" = apply(outtab.sim[,1:2], 1, max), "MLM" = apply(outtab.sim[,3:4], 1, max), "CRR" = apply(outtab.sim[,5:6], 1, max))
+			sumSim[rowNum,2+seq(1,6*6, 12)]<-sumSim[rowNum,2+seq(1,6*6, 12)] - colSums(methodMaxP < 9e-8)
+			sumSim[rowNum,3+seq(1,6*6, 12)]<-sumSim[rowNum,3+seq(1,6*6, 12)] - colSums(methodMaxP[sigProbes,] < 9e-8)
+			sumSim[rowNum,4+seq(1,6*6, 12)]<-sumSim[rowNum,4+seq(1,6*6, 12)] - colSums(methodMaxP[-sigProbes,] < 9e-8)
+			
 			# handle quirk of R converting 1 row matrix to vector!!
 			if(length(ctSpecific) > 1){
-				sumSim[rowNum,5+seq(1,6*6, 6)]<-colSums(outtab.sim[ctSpecific,] < 9e-8)
-				sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[commonProbes,] < 9e-8)
+				sumSim[rowNum,5+seq(1,6*6, 6)]<-colSums(outtab.sim[ctSpecific,] < 9e-8)	
+				sumSim[rowNum,5+seq(1,6*6, 12)]<-sumSim[rowNum,5+seq(1,6*6, 12)] - colSums(methodMaxP[ctSpecific,] < 9e-8)
+				
 			} else {
 				if(length(ctSpecific) == 1){
 					sumSim[rowNum,5+seq(1,6*6, 6)]<-as.numeric(outtab.sim[ctSpecific,] < 9e-8)
-					sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[commonProbes,] < 9e-8)
+					sumSim[rowNum,5+seq(1,6*6, 12)]<-sumSim[rowNum,5+seq(1,6*6, 12)] - as.numeric(methodMaxP[ctSpecific,] < 9e-8)
 				} else{
 					sumSim[rowNum,5+seq(1,6*6, 6)]<-0
-					sumSim[rowNum,6+seq(1,6*6, 6)]<-0
 				}
+			}
+			
+			if(length(commonProbes) > 0){
+				sumSim[rowNum,6+seq(1,6*6, 6)]<-colSums(outtab.sim[commonProbes,] < 9e-8)
+				sumSim[rowNum,6+seq(1,6*6, 12)]<-sumSim[rowNum,6+seq(1,6*6, 12)] - colSums(methodMaxP[commonProbes,] < 9e-8)
+			}else{
+				sumSim[rowNum,6+seq(1,6*6, 6)]<-0
 			}
 						
 			sumSim[rowNum,7+seq(1,6*6, 6)]<-apply(outtab.sim, 2, estlambda)
@@ -237,7 +252,11 @@ for(simNum in 1:nSim){
 			commonDMPs<-rbind(commonDMPs, cbind(outtab.sim[commonProbes,], ctEWAS[commonProbes,]))
 			
 			## collate sum stats of ctSpecificDMPs
-			ctDMPs<-rbind(ctDMPs, cbind(outtab.sim[ctSpecific,], ctEWAS[ctSpecific,]))			
+			ctDMPs<-rbind(ctDMPs, cbind(outtab.sim[ctSpecific,], ctEWAS[ctSpecific,]))
+
+			## collate sum stats of false positives
+			fpIndex<-which(apply(outtab.sim, 1, min) < 9e-8)
+			fpDMPs<-rbind(fpDMPs, cbind(outtab.sim[fpIndex,], ctEWAS[fpIndex,]))
 		}
 	}
 }
