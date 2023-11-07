@@ -202,6 +202,11 @@ data.frame(pheno$sampleID, mergeStats[,c(1,8)],fripStats[,4]) %>%
 
 ### 1.1 Data Summary
 
+In total there were `r signif(sum(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million reads generated across all samples, with a mean of 
+`r signif(mean(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million). 
+
+The median number of reads was  `r signif(median(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million per sample (IQR = `r signif(sd(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million).
+
 ```{r hists}
 xlab <- c('Number of Reads', '% unique reads' ,'' , 'Number of Reads', '% unique reads')
 read<-c('R1','R1','','R2', 'R2')
@@ -215,6 +220,7 @@ for (x in 1:5){
 }
 p<-p[- 3] # remove the null list item
 grid.arrange(grobs = p,ncol=2)
+knitr::knit_exit()
 ```
 
 For narrow-peak histone experiments, each replicate should have 20 million usable fragments. For broad-peak histone experiments, each replicate should have 45 million usable fragments. A fragment is defined as the sequencing output corresponding to one location in the genome. If single-ended sequencing is performed, one read is considered a fragment. If paired-ended sequencing is performed, one pair of reads is considered a fragment.

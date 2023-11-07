@@ -25,6 +25,8 @@ echo "Loading config file for project: " $1
 export PROJECT=$1
 source ./DNAm/config/config.txt 
 
+echo "Random seed: " $1
+
 module load R/3.6.3-foss-2020a
 
 Rscript DNAm/analysis/methodsDevelopment/simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID}

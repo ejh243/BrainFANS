@@ -1,13 +1,13 @@
 #!/bin/sh
 #SBATCH --export=ALL # export all environment variables to the batch job.
-#SBATCH -p pq # submit to the serial queue
+#SBATCH -p mrcq # submit to the serial queue
 #SBATCH --time=25:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=2 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=integrative/chromHMM/logFiles/learnModel-%A_%a.o
-#SBATCH --error=integrative/chromHMM/logFiles/learnModel-%A_%a.e
+#SBATCH --output=integrative/chromHMM/logFiles/%u/learnModel-%A_%a.o
+#SBATCH --error=integrative/chromHMM/logFiles/%u/learnModel-%A_%a.e
 #SBATCH --job-name=learnModel
 
 # This performs learnmodel on merged binarisation files 
@@ -37,19 +37,23 @@ fi
 
 #-----------------------------------------------------------------------#
 
-mkdir -p ${MODELDIR}
+mkdir -p ${QCDIR} #also creates MODELDIR
 module load Java
 
 echo 
 echo 'Started learning model at:'
 date -u
 
-java -mx6000M -jar ${CHROMHMM}/ChromHMM.jar LearnModel -p 0 ${MERGEDIR} ${MODELDIR} ${SLURM_ARRAY_TASK_ID} hg38
+java -mx6000M -jar ${CHROMHMM}/ChromHMM.jar LearnModel -p 0 ${MERGEDIR} ${MODELDIR} ${SLURM_ARRAY_TASK_ID} hg38 > $QCDIR/output.${SLURM_ARRAY_TASK_ID}.txt
 
 if [[ $? == 0 ]]
 then 
 	echo "Model(s) learned"
+
 fi
+
+echo 'Writing likelihood'
+grep "       " $QCDIR/output.${SLURM_ARRAY_TASK_ID}.txt | tail -n 1 | awk '{print $2}' > $QCDIR/likelihood.${SLURM_ARRAY_TASK_ID}.txt
 
 echo 'EXIT CODE: ' $?
 

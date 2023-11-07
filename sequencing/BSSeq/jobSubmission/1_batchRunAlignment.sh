@@ -126,5 +126,5 @@ then
 	mv *${SLURM_ARRAY_JOB_ID}*${SLURM_ARRAY_TASK_ID}* ${SLURM_ARRAY_JOB_ID}
 	
 else
-	echo "File list not found"
+	echo "Sample list not found"
 fi

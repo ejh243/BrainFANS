@@ -26,7 +26,7 @@ def find_err(error, files):
                         outfile.write((sample[1].rstrip().lstrip())+'\t')
                     elif 'EXIT' in sample[0]:
                         outfile.write(sample[1].rstrip().lstrip()+'\t')
-            with open(file+'.e', 'r') as file:
+            with open(file+'.o', 'r') as file:
                 content=file.read()
                 if (error in content):
                         outfile.write(error+'\n')

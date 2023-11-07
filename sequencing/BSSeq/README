@@ -3,8 +3,10 @@ This readme explains the content of the scripts for running the BSSeq analysis p
 	REQUISITES:
 		Scripts submitted from the scripts/sequencing folder.
 		Users require a username folder in the BSSeq/logFiles directory.
+		sampleSheet.csv in a specific format is required in the metadata folder
+		samples.txt is a text file required in the metadata folder comprising a list of the samplenames
 
-Parameters in [] are optional.
+Parameters in [] are optional.		
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------#
 #### Data pre-processing:
@@ -49,16 +51,6 @@ Parameters in [] are optional.
 	
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------#	
 3. sbatch BSSeq/preprocessing/jobSubmission/3_collateS1QCMetrics.sh <data-type/project-name> [<STEPS>]
-
-	This script collates the earlier QC metrics into an rmarkdown summarising the quality of the dataset.
-
-	EXECUTED SCRIPTS
-	- BSSeq/preprocessing/progressReport.sh 
-		* searches for output files from each part of the QC pipeline and reports number of files found
-	- BSSeq/preprocessing/collateENCODEQCOutput.sh 
-		* collate encode output
-	- BSSeq/preprocessing/collateS1SumStats.Rmd
-		* generates the rmarkdown
 
 	COMMAND LINE ARGUMENTS
 	--required--

@@ -10,8 +10,8 @@
 ##
 ##---------------------------------------------------------------------#
 
-## set working directory
-setwd("~/BrainFANS/sequencing")
+# ## set working directory
+# setwd("~/BrainFANS/sequencing")
 
 ## clear the R environment
 rm(list=ls()) 
@@ -57,7 +57,7 @@ if (length(args)==0){
                 "OLIG2_BS")
 }
 
-source("~/BrainFANS/sequencing/BSSeq/config/config.r")
+source("BSSeq/config/config.r")
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
