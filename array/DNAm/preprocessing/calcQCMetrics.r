@@ -27,22 +27,40 @@ args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 refDir <- args[2]
 
+source(args[3])
+
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
+
+gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, NA))
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
 library(e1071)
-library(bigmelon)
 
+if(is.na(gdsObj)){
+	message("No data to load")
+} else{
+	if(gdsObj){
+		message("Loading data from gds object")
+		library(bigmelon)
+	} else {
+		if(!gdsObj){
+			message("Loading data from mset object")	
+			library(wateRmelon)
+		}
+}
+}
+
+	
 #----------------------------------------------------------------------#
 # IMPORT DATA
 #----------------------------------------------------------------------#
 setwd(dataDir)
-gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
 
 # load sample sheet
 sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), stringsAsFactors = FALSE)
@@ -51,8 +69,25 @@ if(!"Basename" %in% colnames(sampleSheet)){
 	sampleSheet$Basename<-paste(sampleSheet$Chip.ID, sampleSheet$Chip.Location, sep = "_")
 }
 
-# ensure sample sheet is in same order as data
-sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
+if(gdsObj){
+
+	gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
+	# ensure sample sheet is in same order as data
+	sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
+	# extract a few useful matrices
+	rawbetas<-betas(gfile)[,]
+}else {
+	if(!gdsObj){
+		load(msetFile)
+		# ensure sample sheet is in same order as data
+		sampleSheet<-sampleSheet[match(colnames(msetEPIC), sampleSheet$Basename),]
+		# extract a few useful matrices
+		rawbetas<-betas(msetEPIC)
+}
+}
+
+
+
 
 ## see if any QC data already exists
 if(file.exists(qcData)){
@@ -69,10 +104,9 @@ if(file.exists(qcData)){
 	print("QC object initiated")
 }
 
-QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
+#QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
 
-# extract a few useful matrices
-rawbetas<-betas(gfile)[,]
+
 
 #----------------------------------------------------------------------#
 # CALCULATE QC METRICS
@@ -80,10 +114,20 @@ rawbetas<-betas(gfile)[,]
 # calculate median M & U intensity
 if(!"M.median" %in% colnames(QCmetrics)){
 	print("Calculating signal intensity statistics")
-	m_intensities<-methylated(gfile)
-	u_intensities<-unmethylated(gfile)
-	M.median<-unlist(apply.gdsn(m_intensities, 2, median, na.rm = TRUE))
-	U.median<-unlist(apply.gdsn(u_intensities, 2, median, na.rm = TRUE))
+	if(gdsObj){
+		m_intensities<-methylated(gfile)
+		u_intensities<-unmethylated(gfile)
+		M.median<-unlist(apply.gdsn(m_intensities, 2, median, na.rm = TRUE))
+		U.median<-unlist(apply.gdsn(u_intensities, 2, median, na.rm = TRUE))
+	} else {
+		if(!gdsObj){
+			m_intensities <- methylated(msetEPIC)
+			u_intensities <- unmethylated(msetEPIC)
+			M.median <- apply(m_intensities, 1, median)
+			U.median <- apply(u_intensities, 1, median)
+		}
+	
+	}
 	intens.ratio<-M.median/U.median
 	# exclude really poor intensity samples from beginning so rest of QC is not dominated by them
 	intensPASS<-M.median > 500
@@ -95,20 +139,39 @@ if(!"M.median" %in% colnames(QCmetrics)){
 	intensPASS<-QCmetrics$intensPASS
 }
 
+
+
+
 # calculate bisulfite conversion statistic
 if(!"bisulfCon" %in% colnames(QCmetrics)){	
-	print("Calculating cisulfite conversion statistics")
-	bisulfCon<-bscon(gfile)
+	print("Calculating bisulfite conversion statistics")
+	if(gdsObj){
+		bisulfCon<-bscon(gfile)
+	} else {
+		if(!gdsObj){
+			bisulfCon<-bscon(msetEPIC)
+	}
+		
 	bisulfCon[which(intensPASS == FALSE)]<-NA
 	QCmetrics<-cbind(QCmetrics,bisulfCon)
+}
 }
 
 # PCA of control-probe intensities
 if(!"PC1_cp" %in% colnames(QCmetrics)){	
 	print("Calculating PCs of control probes")
 	# exclude really poor intensity samples
-	qc.meth<-QCmethylated(gfile)[,QCmetrics$intensPASS]
-	qc.unmeth<-QCunmethylated(gfile)[,QCmetrics$intensPASS]
+	
+		if(gdsObj){
+			qc.meth<-QCmethylated(gfile)[,QCmetrics$intensPASS]
+			qc.unmeth<-QCunmethylated(gfile)[,QCmetrics$intensPASS]
+	} #else {
+		#if(!gdsObj){
+			#qc.meth <-
+			#qc.unmeth <- 
+		#}
+	#}
+	
 	# remove negative controls
 	qc.meth<-qc.meth[grep("Negative", rownames(qc.meth), invert=TRUE),]
 	qc.unmeth<-qc.unmeth[grep("Negative", rownames(qc.unmeth), invert=TRUE),]
@@ -154,11 +217,16 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 # detection p value filtering at this stage only interested in sample filtering, will repeat later for probe filtering
 if(!"pFilter" %in% colnames(QCmetrics)){	
 	print("Running pfilter")
-	pFOut<-apply.gdsn(node = pvals(gfile), margin = 2, FUN = function(x,
-            y, z) {
-            (sum(x > y, na.rm = TRUE)) < ((sum(!is.na(x)) * z)/100)
-        }, as.is = "logical", y = 0.05, z = 1)
-
+	if(gdsObj){
+		pFOut<-apply.gdsn(node = pvals(gfile), margin = 2, FUN = function(x,
+				y, z) {
+				(sum(x > y, na.rm = TRUE)) < ((sum(!is.na(x)) * z)/100)
+			}, as.is = "logical", y = 0.05, z = 1)
+	} else {
+		if(!gdsObj){
+			pFOut<-pfilter(msetEPIC)
+		}
+	}
 	pFOut[!QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut)
 }
@@ -166,23 +234,37 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 
 # calc Horvaths epigenetic age
 if(!"DNAmAge" %in% colnames(QCmetrics)){
-	print("Calculating Horvath's pan tissue epigenetic age")	
-	data(coef)
-	DNAmAge<-agep(gfile, coef=coef)
-	#if(!is.null(dim(DNAmAge))){
-	#DNAmAge<-DNAmAge[,"custom_age"]
-	#}
-	DNAmAge[!QCmetrics$intensPASS]<-NA
+	print("Calculating Horvath's pan tissue epigenetic age")
+	if(arrayType != "EPICv2"){
+		data(coef)
+		if(gdsObj){
+			DNAmAge<-agep(gfile, coef=coef)
+		} else {
+			if(!gdsObj){
+				DNAmAge<-agep(msetEPIC, coef=coef)
+			}
+		}
+		#if(!is.null(dim(DNAmAge))){
+		#DNAmAge<-DNAmAge[,"custom_age"]
+		#}
+		DNAmAge[!QCmetrics$intensPASS]<-NA
+	} else {
+		DNAmAge<-rep(NA, nrow(QCmetrics))
+	}
 	QCmetrics<-cbind(QCmetrics,DNAmAge)
 }
 
 # calc Cortical Clock Age
 if(!"CCDNAmAge" %in% colnames(QCmetrics)){	
-	print("Calculating Shireby's Cortical Clock epigenetic age")	
-	CC_coef<-read.csv(paste0(refDir, "/CortexClock/CorticalClockCoefficients.csv"), stringsAsFactors = FALSE)
-	anti.trafo= function(x,adult.age=20) { ifelse(x<0, (1+adult.age)*exp(x)-1, (1+adult.age)*x+adult.age) }
-	CCDNAmAge<-	anti.trafo(as.numeric(CC_coef[1,2] + t(rawbetas[CC_coef[-1,1],])  %*% CC_coef[-1,2]))
-	CCDNAmAge[!QCmetrics$intensPASS]<-NA
+	print("Calculating Shireby's Cortical Clock epigenetic age")
+	if(arrayType != "EPICv2"){
+		CC_coef<-read.csv(paste0(refDir, "/CortexClock/CorticalClockCoefficients.csv"), stringsAsFactors = FALSE)
+		anti.trafo= function(x,adult.age=20) { ifelse(x<0, (1+adult.age)*exp(x)-1, (1+adult.age)*x+adult.age) }
+		CCDNAmAge<-	anti.trafo(as.numeric(CC_coef[1,2] + t(rawbetas[CC_coef[-1,1],])  %*% CC_coef[-1,2]))
+		CCDNAmAge[!QCmetrics$intensPASS]<-NA
+	} else {
+		CCDNAmAge<-rep(NA, nrow(QCmetrics))
+	}
 	QCmetrics<-cbind(QCmetrics,CCDNAmAge)
 }
 
@@ -190,8 +272,14 @@ if(!"CCDNAmAge" %in% colnames(QCmetrics)){
 # check effect of normalisation
 if(!"rmsd" %in% colnames(QCmetrics)){
 print("Calculating effect of normalisation")
-	dasen(gfile, node="normbeta")
-	normbetas<-index.gdsn(gfile, "normbeta")[,]
+	if(gdsObj){
+		dasen(gfile, node="normbeta")
+		normbetas<-index.gdsn(gfile, "normbeta")[,]
+	} else {
+		if(!gdsObj){
+			normbetas<-betas(dasen(msetEPIC))
+		}
+	}
 	qualDat<-qual(rawbetas, normbetas)
 	qualDat[which(intensPASS == FALSE),]<-NA
 	QCmetrics<-cbind(QCmetrics,qualDat)
@@ -212,11 +300,17 @@ if(!"nNAsPer" %in% colnames(QCmetrics)){
 
 if(!"predSex" %in% colnames(QCmetrics)){	
 	print("Performing sex prediction from sex chromosome profiles")	
-	x.probes<-which(fData(gfile)$chr == "chrX")
-	y.probes<-which(fData(gfile)$chr == "chrY")
-	ints.auto<-methylated(gfile)[c(x.probes, y.probes),]+unmethylated(gfile)[c(x.probes, y.probes),]
-	ints.X<-methylated(gfile)[x.probes,]+unmethylated(gfile)[x.probes,]
-	ints.Y<-methylated(gfile)[y.probes,]+unmethylated(gfile)[y.probes,]
+	if(gdsObj){
+		x.probes<-which(fData(gfile)$chr == "chrX")
+		y.probes<-which(fData(gfile)$chr == "chrY")
+		ints.auto<-methylated(gfile)[c(x.probes, y.probes),]+unmethylated(gfile)[c(x.probes, y.probes),]
+		ints.X<-methylated(gfile)[x.probes,]+unmethylated(gfile)[x.probes,]
+		ints.Y<-methylated(gfile)[y.probes,]+unmethylated(gfile)[y.probes,]
+	} #else {
+		#if(!gdsObj){
+		
+		#}
+	#}
 
 	x.cp<-colMeans(ints.X, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
 	y.cp<-colMeans(ints.Y, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
@@ -322,7 +416,9 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 # SAVE AND CLOSE
 #----------------------------------------------------------------------#
 
-closefn.gds(gfile)
+if(gdsObj){
+	closefn.gds(gfile)
+}
 
 write.csv(QCmetrics, paste0(dataDir, "/2_gds/QCmetrics/QCMetricsPostSampleCheck.csv"))
 
