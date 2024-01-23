@@ -27,7 +27,7 @@ git pull
 
 ![Screenshot of new issue button](docs/Images/development-pipeline/new-issue-button.png)
 
-### Select the relevant template for your report:
+### Select the relevant template for your report
 
 - Bug: Make a report for any bugs you have encountered in the repository
 - Code refactor: Make suggestions for how code can be optimised/improved
@@ -56,8 +56,6 @@ git checkout -b <branch-name>
 ## Step Four: Work on resolving the issue
 
 ### Setup
-
-
 
 Before making any commits, run `git status` to check you are indeed in your development branch.
 
@@ -149,7 +147,6 @@ Please:
 - Convert `[ ]`to `[x]` for any checkboxes that are relevant to the pull request
 
 ### Assign people and labels to the request
-
 
 ![Screenshot of applying labels](docs/Images/development-pipeline/assign-labels.png)
 
