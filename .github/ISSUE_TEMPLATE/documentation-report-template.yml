@@ -1,0 +1,38 @@
+name: Documentation Report
+description: File a fault in the documentation
+title: "[Documentation Fault]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your input, your suggestions are very useful to us!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: dropdown
+    id: type
+    attributes:
+      label: "Fault type"
+      description: Please specify the type of fault in the documentation
+      multiple: true
+      options:
+        - Spelling error
+        - Page removal required
+        - New page required
+        - Incorrect information given
+    validations:
+      required: true
+  - type: textarea
+    id: Fault
+    attributes:
+      label: Please describe the fault in detail
+      description: Where is the fault and how can it be improved?
+      placeholder: "On [page] the following is incorrect..."
+    validations:
+      required: true
