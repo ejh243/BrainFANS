@@ -116,7 +116,7 @@ Next, run these two commands sequentially:
 
 ```console
 # Pull any changes from the remote repository that have occurred since step one
-git pull
+git pull origin master
 
 # Push your changes to the remote repository
 git push origin <branch-name>
@@ -153,5 +153,32 @@ Please:
 
 ![Screenshot of applying labels](docs/Images/development-pipeline/assign-labels.png)
 
-### Click 
+### Click 'Create pull request'
 
+![Screenshot of create pull request button](docs/Images/development-pipeline/create-pull-request.png)
+
+## Step Six: Finalise the pull request
+
+### Code review
+
+From here, someone else (assignee) should complete a code review of your changes.
+
+### Merge branches
+
+Once the code review has been completed, the branches can be merged. At this stage, any merge conflicts should be resolved. This is usually a simple case of choosing which lines to keep from each file.
+
+If this proves difficult, add someone else onto the assignee list of the pull request.
+
+### Delete the development branch
+
+The development branch is no longer required, GitHub should prompt the user to delete the branch safely after the merge has been completed.
+
+### Mark related issues as complete
+
+Go back to the issues that were resolved with this pull request and mark them as completed
+
+![Screenshot of closing an issue](docs/Images/development-pipeline/close-issue.png)
+
+## Step Seven
+
+There is no step seven, you are done.
