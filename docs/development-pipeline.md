@@ -111,7 +111,7 @@ Sometimes it makes sense to make changes to multiple files at a time (especially
 
 ## Step Five: Creating a pull request
 
-Once you have finished your solution to the issue, it is time to create a pull request in order to merge your contributions into the main branch of the repository.
+Once you have finished resolving the issue, it is time to create a pull request in order to merge your contributions into the main branch of the repository.
 
 *If this feels scary, don't worry. Because you made a separate branch in [step three](#step-three-create-a-new-branch) you are not in danger of messing up the repository.*
 
