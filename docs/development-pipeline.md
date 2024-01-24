@@ -178,7 +178,7 @@ Labels -> Relevant tags for the pull request
 
 ### Code review
 
-From here, someone else (assignee) should complete a code review of your changes.
+From here, someone else (the reviewer) should complete a code review of your changes.
 
 ### Merge branches
 
