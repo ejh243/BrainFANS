@@ -66,7 +66,7 @@ Create a new development branch with a name that is relevant to the issue that y
 
 ```console
 # Creates new branch and moves you onto this branch
-git checkout -b <branch-name>
+git checkout -b <your-branch-name>
 ```
 
 ## Step Four: Resolve the issue
@@ -83,7 +83,7 @@ If this is not the branch you created in [step three](#step-three-create-a-new-b
 
 ```console
 # Switch to the development branch you created in step three
-git checkout <branch-name>
+git checkout <your-branch-name>
 ```
 
 ### Making commits
@@ -121,10 +121,10 @@ To begin, run these two commands sequentially:
 
 ```console
 # Pull any changes from the remote repository that may have changed since step one
-git pull origin <branch-name>
+git pull origin <your-branch-name>
 
 # Push your changes to the remote repository
-git push origin <branch-name>
+git push origin <your-branch-name>
 ```
 
 Using `git pull` and then `git push` might be unecessary in some circumstances. But it is a good habit to get into, especially as more people work on the repository (it will save you time later, trust me).
