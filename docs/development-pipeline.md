@@ -212,7 +212,7 @@ git branch
 
 ### Mark related issues as complete
 
-Go back to the issues that were resolved with this pull request and mark them as completed
+Go back to the issues that were resolved with this pull request and mark them as completed/closed.
 
 ![Screenshot of closing an issue](images/development-pipeline/close-issue.png)
 
