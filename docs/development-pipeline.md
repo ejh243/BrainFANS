@@ -67,7 +67,7 @@ Add relevant personnel to assignees section and add further labels if they are r
 Create a new development branch with a name that is relevant to the issue that you are resolving:
 
 ```console
-# Creates new branch and moves you onto this branch
+# Creates new branch and moves you onto your branch
 git checkout -b <your-branch-name>
 ```
 
@@ -86,6 +86,9 @@ If this is not the branch you created in [step three](#step-three-create-a-new-b
 ```console
 # Switch to the development branch you created in step three
 git checkout <your-branch-name>
+
+# Check that you are indeed on your branch (this is very important)
+git status
 ```
 
 ### Making commits
