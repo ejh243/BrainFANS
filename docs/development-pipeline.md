@@ -18,11 +18,14 @@ If you are ever unsure about one of the steps described in this document, please
 If this is your first contribution, please use the following command to clone the repository to a personal directory of yours:
 
 ```console
-# Creates a copy/clone of the online repository found on GitHub
+# Move to the directory you want the repository to be cloned to
+cd path/to/directory
+
+# Create a copy/clone of the online repository found on GitHub
 git clone https://github.com/ejh243/BrainFANS.git
 ```
 
-For subsequent contributions, navigate to the location of your personal BrainFANS repository and pull the latest changes:
+For subsequent contributions, navigate to the location of your **personal** BrainFANS repository and pull the latest changes:
 
 ```console
 cd path/to/BrainFANS
