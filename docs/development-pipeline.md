@@ -21,11 +21,11 @@ git pull
 
 ### Go to the issues tab
 
-![Screenshot of location of issues tab](Images/development-pipeline/issues-location.png)
+![Screenshot of location of issues tab](images/development-pipeline/issues-location.png)
 
 ### Click submit issue
 
-![Screenshot of new issue button](Images/development-pipeline/new-issue-button.png)
+![Screenshot of new issue button](images/development-pipeline/new-issue-button.png)
 
 ### Select the relevant template for your report
 
@@ -36,17 +36,17 @@ git pull
 
 ### Fill in issue report
 
-![Screenshot of filling in issue](Images/development-pipeline/fill-in-issues.png)
+![Screenshot of filling in issue](images/development-pipeline/fill-in-issues.png)
 
 ### Assign relevant tags (if applicable)
 
 Add relevant personnel to assignees section and add further labels if they are relevant.
 
-![Screenshot of applying labels](Images/development-pipeline/assign-labels.png)
+![Screenshot of applying labels](images/development-pipeline/assign-labels.png)
 
 ### Submit the issue report
 
-![Screenshot of submission button](Images/development-pipeline/submit-issue-button.png)
+![Screenshot of submission button](images/development-pipeline/submit-issue-button.png)
 
 ## Step Three: Create a new branch
 
@@ -63,7 +63,7 @@ git checkout -b <branch-name>
 
 Before making any commits, run `git status` to check you are indeed in your development branch.
 
-![Screenshot of the output of git status](Images/development-pipeline/branch-check.png)
+![Screenshot of the output of git status](images/development-pipeline/branch-check.png)
 
 If this is not the branch you created in [step three](#step-three-create-a-new-branch), please run the following:
 
@@ -103,7 +103,7 @@ Once you have finished your solution to the issue, it is time to create a pull r
 
 First, run `git status` to check you are indeed in your development branch.
 
-![Screenshot of the output of git status](Images/development-pipeline/branch-check.png)
+![Screenshot of the output of git status](images/development-pipeline/branch-check.png)
 
 If this is not the branch you created in [step three](#step-three-create-a-new-branch), please run the following:
 
@@ -128,15 +128,15 @@ git push origin <branch-name>
 
 Move to the pull request tab
 
-![Screenshot of the location of pull requests](Images/development-pipeline/pull-request-location.png)
+![Screenshot of the location of pull requests](images/development-pipeline/pull-request-location.png)
 
 Click on 'New pull request'
 
-![Screenshot of the location of pull request button](Images/development-pipeline/pull-request-button.png)
+![Screenshot of the location of pull request button](images/development-pipeline/pull-request-button.png)
 
 Select 'master' for the base field and [your development branch] for the compare field
 
-![Screenshot of the compare and base](Images/development-pipeline/pull-request-branch-selection.png)
+![Screenshot of the compare and base](images/development-pipeline/pull-request-branch-selection.png)
 
 Click on 'Create pull request'
 
@@ -152,11 +152,11 @@ Please:
 
 ### Assign people and labels to the request
 
-![Screenshot of applying labels](Images/development-pipeline/assign-labels.png)
+![Screenshot of applying labels](images/development-pipeline/assign-labels.png)
 
 ### Click 'Create pull request'
 
-![Screenshot of create pull request button](Images/development-pipeline/create-pull-request.png)
+![Screenshot of create pull request button](images/development-pipeline/create-pull-request.png)
 
 ## Step Six: Finalise the pull request
 
@@ -178,7 +178,7 @@ The development branch is no longer required, GitHub should prompt the user to d
 
 Go back to the issues that were resolved with this pull request and mark them as completed
 
-![Screenshot of closing an issue](Images/development-pipeline/close-issue.png)
+![Screenshot of closing an issue](images/development-pipeline/close-issue.png)
 
 ## Step Seven
 
