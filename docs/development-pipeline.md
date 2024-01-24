@@ -53,13 +53,13 @@ Before you make any changes to the repository, we recommend that you create an i
 - Documentation: Report any faults in the documentation
 - Enhancement: Suggest any features that should be added/altered
 
-### Fill in issue report
+### Fill in the issue report
 
 ![Screenshot of filling in issue](images/development-pipeline/fill-in-issues.png)
 
 ### Assign relevant tags (if applicable)
 
-Add relevant personnel to assignees section and add further labels if they are relevant.
+Add relevant personnel to assignees section, assignees will be notified of the issue. Most of the time you will be at least adding yourself (unless you don't plan to address the issue). You can also add further labels to the issue if they are relevant (obvious labels will be added for you).
 
 ![Screenshot of applying labels](images/development-pipeline/assign-labels.png)
 
