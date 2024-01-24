@@ -92,7 +92,7 @@ If this is not the branch you created in [step three](#step-three-create-a-new-b
 # Switch to the development branch you created in step three
 git checkout <your-branch-name>
 
-# Check that you are indeed on your branch (this is very important)
+# Check that you are indeed on your branch (yes, this is very important)
 git status
 ```
 
@@ -110,16 +110,16 @@ git add path/to/file
 git commit -m "Enter your commit message here"
 ```
 
-To make the above easier for you, get into the habit of using `git status` often (think of it as the git version of `ls`). Using `git status` will show you which files have been changed and the path to said files (which you can copy and paste).
+To make the above easier for you, get into the habit of using `git status` often (think of it as the git version of `ls`). Using `git status` will show you which files have been changed and the path to said files (which you can then copy and paste to the terminal).
 
 ![Important section ahead 2](images/development-pipeline/important-section.png)
 
 There are two good rules of thumb for your commit messages:
 
 1) The message should complete the sentence: "If applied, this commit will [commit-message]"
-2) Don't use the word **and**, be succint. Committing small changes will make this easier
+2) Don't use the word **and**, be succint. If you only commit small changes this will be much easier
 
-Sometimes it makes sense to make changes to multiple files at a time (especially if they share the same issue). Don't commit loads of files at the same time out of laziness however, that defeats the point of version control.
+Sometimes it makes sense to make changes to multiple files at the same time (especially if they share the same issue). Don't commit loads of files at the same time out of laziness however, that defeats the point of version control.
 
 ## Step Five: Creating a pull request
 
@@ -151,7 +151,7 @@ Click on 'New pull request'
 
 ![Screenshot of the location of pull request button](images/development-pipeline/pull-request-button.png)
 
-Select 'master' for the base field and [your development branch] for the compare field
+Select 'master' for the **base field** and [your development branch] for the **compare field**
 
 ![Screenshot of the compare and base](images/development-pipeline/pull-request-branch-selection.png)
 
@@ -174,9 +174,9 @@ Click on 'Create pull request'
 
 Reviewers -> Assinged people will be notified to review your changes and provide feedback (code review)
 \
-Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process
+Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process, we reccommend at least assigning yourself
 \
-Labels -> Relevant tags for the pull request
+Labels -> Relevant tags for the pull request (best to pick the same ones as used in the issue being addressed)
 
 ![Screenshot of applying labels](images/development-pipeline/assign-labels-pull-request.png)
 
@@ -202,7 +202,7 @@ The development branch is no longer required, GitHub should prompt the user to d
 
 ![Screenshot of delete branch button](images/development-pipeline/delete-branch-button.png)
 
-This will only delete the branch on GitHub, not the branch on your copy of the repository. In order to delete this branch complete the following:
+However, this will only delete the branch on GitHub, not the branch on your copy of the repository. In order to delete your branch locally, please complete the following:
 
 ```console
 # Ensure that there are no uncommited changes to the branch
@@ -212,11 +212,11 @@ git status
 # If the last line of the output of git status is 
 # 'nothing to commit, working tree clean', you can continue safely
 
-# Delele the branch
+# Delete the branch
 git checkout master
 git branch -d <your-branch-name>
 
-# Verify the deletion
+# Verify the deletion (your branch should not appear in the output)
 git branch
 ```
 
