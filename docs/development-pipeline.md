@@ -69,7 +69,7 @@ Add relevant personnel to assignees section, assignees will be notified of the i
 
 ## Step Three: Create a new branch
 
-Create a new development branch with a name that is relevant to the issue that you are resolving:
+Switch back over to the teminal and create a new development branch with a name that is relevant to the issue that you are resolving:
 
 ```console
 # Creates new branch and moves you onto your branch
