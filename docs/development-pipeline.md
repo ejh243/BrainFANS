@@ -111,22 +111,9 @@ Sometimes it makes sense to make changes to multiple files at a time (especially
 
 ## Step Five: Creating a pull request
 
-### Pull request setup
-
 Once you have finished your solution to the issue, it is time to create a pull request in order to merge your contributions into the main branch of the repository.
 
 *If this feels scary, don't worry. Because you made a separate branch in [step three](#step-three-create-a-new-branch) you are not in danger of messing up the repository.*
-
-First, run `git status` to check you are indeed in your development branch.
-
-![Screenshot of the output of git status](images/development-pipeline/branch-check.png)
-
-If this is not the branch you created in [step three](#step-three-create-a-new-branch), please run the following:
-
-```console
-# Switch to your development branch
-git checkout <branch-name>
-```
 
 ### Pull and push
 
