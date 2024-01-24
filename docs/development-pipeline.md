@@ -36,11 +36,11 @@ git pull origin master
 
 ## Step Two: Submit an issue
 
-### Go to the issues tab
+### Go to the issues tab on GitHub
 
 ![Screenshot of location of issues tab](images/development-pipeline/issues-location.png)
 
-### Click submit issue
+### Click 'New issue'
 
 ![Screenshot of new issue button](images/development-pipeline/new-issue-button.png)
 
