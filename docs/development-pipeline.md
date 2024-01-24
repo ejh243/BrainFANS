@@ -1,8 +1,8 @@
 # The Development Pipeline
 
-The following is how to make a change to the BrainFANS repository through the command line (and your favourite text editor). Some text editors like VScode and Sublime Text can elimate the need to remember git commands. We recommend that you use the terminal for your first couple of contributions.
+The following document details how to make a change to the [BrainFANS](https://github.com/ejh243/BrainFANS) repository through the command line (and your favourite text editor). Some text editors like VScode and Sublime Text can elimate the need to remember git commands. We recommend that you use the terminal for your first couple of contributions in order to become more familiar with the process.
 
-If you are ever unsure about one of the steps lined out in this document, don't hesitate to ask Sam Fletcher <s.o.fletcher@exeter.ac.uk>.
+If you are ever unsure about one of the steps described in this document, please ask Sam Fletcher (<s.o.fletcher@exeter.ac.uk>) for further clarification.
 
 ## Contents
 
@@ -11,7 +11,7 @@ If you are ever unsure about one of the steps lined out in this document, don't 
 3) [**Create a new branch**](#step-three-create-a-new-branch)
 4) [**Resolve the issue**](#step-four-resolve-the-issue)
 5) [**Create the pull request**](#step-five-creating-a-pull-request)
-6) [**Finalise pull request**](#step-six-finalise-the-pull-request)
+6) [**Finalise the pull request**](#step-six-finalise-the-pull-request)
 
 ## Step One: Get the latest version of BrainFANS
 
