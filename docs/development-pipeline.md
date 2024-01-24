@@ -2,6 +2,8 @@
 
 The following is how to make a change to the BrainFANS repository through the command line (and your favourite text editor). Some text editors like VScode and Sublime Text can elimate the need to remember git commands. We recommend that you use the terminal for your first couple of contributions.
 
+If you are ever unsure about one of the steps lined out in this document, don't hesitate to ask Sam Fletcher <s.o.fletcher@exeter.ac.uk>.
+
 ## Contents
 
 1) [**Get the latest version of BrainFANS**](#step-one-get-the-latest-version-of-brainfans)
