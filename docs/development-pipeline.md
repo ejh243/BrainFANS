@@ -75,8 +75,8 @@ git checkout -b <your-branch-name>
 
 ### Setup
 
-**THIS IS IMPORTANT**
-\
+![Important section ahead 2](images/development-pipeline/important-section.png)
+
 Before making any commits, run `git status` to check you are indeed in your development branch.
 
 ![Screenshot of the output of git status](images/development-pipeline/branch-check.png)
