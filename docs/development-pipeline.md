@@ -36,6 +36,8 @@ git pull
 
 ### Fill in issue report
 
+![Screenshot of filling in issue](Images/development-pipeline/fill-in-issues.png)
+
 ### Assign relevant tags (if applicable)
 
 Add relevant personnel to assignees section and add further labels if they are relevant.
@@ -43,6 +45,8 @@ Add relevant personnel to assignees section and add further labels if they are r
 ![Screenshot of applying labels](Images/development-pipeline/assign-labels.png)
 
 ### Submit the issue report
+
+![Screenshot of submission button](Images/development-pipeline/submit-issue-button.png)
 
 ## Step Three: Create a new branch
 
