@@ -48,10 +48,10 @@ Before you make any changes to the repository, we recommend that you create an i
 
 ### Select the relevant template for your report
 
-- Bug: Make a report for any bugs you have encountered in the repository
+- Bug: Make a report for any bugs you have encountered in the repository (*i.e.* Unexpected/unwanted behaviour)
 - Code refactor: Make suggestions for how code can be optimised/improved
 - Documentation: Report any faults in the documentation
-- Enhancement: Suggest any features that should be added
+- Enhancement: Suggest any features that should be added/altered
 
 ### Fill in issue report
 
