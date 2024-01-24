@@ -178,7 +178,7 @@ Labels -> Relevant tags for the pull request
 
 ### Code review
 
-From here, someone else (the reviewer) should complete a code review of your changes. A separate document will be available in the future detailing how this process is expected to play out.
+From here, someone else (the reviewer) should complete a code review of your changes. A separate document will be available in the future detailing how this process is expected to play out. For now, please consult [Google's code review guide](https://google.github.io/eng-practices/review/reviewer/).
 
 ### Merge branches
 
@@ -189,6 +189,26 @@ If this proves difficult, add someone else onto the assignee list of the pull re
 ### Delete the development branch
 
 The development branch is no longer required, GitHub should prompt the user to delete the branch safely after the merge has been completed.
+
+![Screenshot of delete branch button](images/development-pipeline/delete-branch-button.png)
+
+This will only delete the branch on GitHub, not the branch on your copy of the repository. In order to delete this branch complete the following:
+
+```console
+# Ensure that there are no uncommited changes to the branch
+git checkout <your-branch-name>
+git status
+
+# If the last line of the output of git status is 
+# 'nothing to commit, working tree clean', you can continue safely
+
+# Delele the branch
+git checkout master
+git branch -d <your-branch-name>
+
+# Verify the deletion
+git branch
+```
 
 ### Mark related issues as complete
 
