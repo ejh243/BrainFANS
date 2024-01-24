@@ -133,7 +133,7 @@ Using `git pull` and then `git push` might be unecessary in some circumstances. 
 
 ### Return to github to finalise the pull request
 
-Move to the pull request tab
+Move to the pull request tab on GitHub
 
 ![Screenshot of the location of pull requests](images/development-pipeline/pull-request-location.png)
 
@@ -147,6 +147,8 @@ Select 'master' for the base field and [your development branch] for the compare
 
 Click on 'Create pull request'
 
+![Screenshot of the create pull request button](images/development-pipeline/create-pull-request-button.png)
+
 ### Fill in the pull request template
 
 There will be a default pull request template for you to fill in.
@@ -159,7 +161,13 @@ Please:
 
 ### Assign people and labels to the request
 
-![Screenshot of applying labels](images/development-pipeline/assign-labels.png)
+Reviewers -> Assinged people will be notified to review your changes and provide feedback (code review)
+\
+Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process
+\
+Labels -> Relevant tags for the pull request
+
+![Screenshot of applying labels](images/development-pipeline/assign-labels-pull-request.png)
 
 ### Click 'Create pull request'
 
