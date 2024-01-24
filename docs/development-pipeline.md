@@ -151,10 +151,11 @@ Click on 'Create pull request'
 
 ### Fill in the pull request template
 
-There will be a default pull request template for you to fill in.
+![Screenshot of the pull request template](images/development-pipeline/pull-request-template-boxes.png)
 
-Please:
+**PLEASE COMPLETE THE FOLLOWING:**
 
+- Give your pull request a title
 - Fill in the description with what you have done
 - Replace [number] with the number of the issue that the pull request resolves
 - Convert `[ ]`to `[x]` for any checkboxes that are relevant to the pull request
