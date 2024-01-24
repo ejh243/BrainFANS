@@ -16,6 +16,7 @@ The following is how to make a change to the BrainFANS repository through the co
 If this is your first contribution, please use the following command to clone the repository to a personal directory of yours:
 
 ```console
+# Creates a copy/clone of the online repository found on GitHub
 git clone https://github.com/ejh243/BrainFANS.git
 ```
 
@@ -23,7 +24,9 @@ For subsequent contributions, navigate to the location of your personal BrainFAN
 
 ```console
 cd path/to/BrainFANS
-git pull
+
+# Updates your local BrainFANS to the latest online version
+git pull origin master
 ```
 
 ## Step Two: Submit an issue
@@ -70,6 +73,8 @@ git checkout -b <branch-name>
 
 ### Setup
 
+**THIS IS IMPORTANT**
+\
 Before making any commits, run `git status` to check you are indeed in your development branch.
 
 ![Screenshot of the output of git status](images/development-pipeline/branch-check.png)
@@ -77,7 +82,7 @@ Before making any commits, run `git status` to check you are indeed in your deve
 If this is not the branch you created in [step three](#step-three-create-a-new-branch), please run the following:
 
 ```console
-# Switch to your development branch
+# Switch to the development branch you created in step three
 git checkout <branch-name>
 ```
 
@@ -94,6 +99,8 @@ git add path/to/file
 # Commit the changes
 git commit -m "Enter your commit message here"
 ```
+
+To make the above easier for you, get into the habit of using `git status` often (think of it as the git version of `ls`). Using `git status` will show you which files have been changed and the path to said files (which you can copy and paste).
 
 **Important**: There are two good rules of thumb for your commit messages:
 
