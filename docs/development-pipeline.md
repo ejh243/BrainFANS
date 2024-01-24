@@ -36,6 +36,8 @@ git pull origin master
 
 ## Step Two: Submit an issue
 
+Before you make any changes to the repository, we recommend that you create an issue on GitHub. This will make it easier for others to know who is working on what. It is also a great way of documenting  the overall changes that you are planning to make. If you are solving an issue someone else has already made, this step can be skipped.
+
 ### Go to the issues tab on GitHub
 
 ![Screenshot of location of issues tab](images/development-pipeline/issues-location.png)
