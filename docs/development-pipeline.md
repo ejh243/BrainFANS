@@ -178,7 +178,7 @@ Labels -> Relevant tags for the pull request
 
 ### Code review
 
-From here, someone else (the reviewer) should complete a code review of your changes.
+From here, someone else (the reviewer) should complete a code review of your changes. A separate document will be available in the future detailing how this process is expected to play out.
 
 ### Merge branches
 
