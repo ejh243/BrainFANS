@@ -117,15 +117,17 @@ Once you have finished your solution to the issue, it is time to create a pull r
 
 ### Pull and push
 
-Next, run these two commands sequentially:
+To begin, run these two commands sequentially:
 
 ```console
-# Pull any changes from the remote repository that have occurred since step one
-git pull origin master
+# Pull any changes from the remote repository that may have changed since step one
+git pull origin <branch-name>
 
 # Push your changes to the remote repository
 git push origin <branch-name>
 ```
+
+Using `git pull` and then `git push` might be unecessary in some circumstances. But it is a good habit to get into, especially as more people work on the repository (it will save you time later, trust me).
 
 ### Return to github to finalise the pull request
 
