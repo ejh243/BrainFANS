@@ -2,6 +2,15 @@
 
 The following is how to make a change to the BrainFANS repository through the command line (and your favourite text editor). Some text editors like VScode and Sublime Text can elimate the need to remember git commands. We recommend that you use the terminal for your first couple of contributions.
 
+## Contents
+
+1) [**Get the latest version of BrainFANS**](#step-one-get-the-latest-version-of-brainfans)
+2) [**Submit an issue**](#step-two-submit-an-issue)
+3) [**Create a new branch**](#step-three-create-a-new-branch)
+4) [**Resolve the issue**](#step-four-resolve-the-issue)
+5) [**Create the pull request**](#step-five-creating-a-pull-request)
+6) [**Finalise pull request**](#step-six-finalise-the-pull-request)
+
 ## Step One: Get the latest version of BrainFANS
 
 If this is your first contribution, please use the following command to clone the repository to a personal directory of yours:
@@ -57,7 +66,7 @@ Create a new development branch with a name that is relevant to the issue that y
 git checkout -b <branch-name>
 ```
 
-## Step Four: Work on resolving the issue
+## Step Four: Resolve the issue
 
 ### Setup
 
