@@ -1,21 +1,40 @@
+# Config files
 */config.txt
+*/config.r
 
-*/logFiles/*
-*/*/logFiles/*
-EURSamples.txt
-*.html
+# Log and Error files
+*.log
+*.err
+*.o
+*.e
+
+# Specific html files (avoiding website html files)
+sequencing/**/*.html
+
+# Web Dependencies
+/node_modules
+
+# Web Production
+/documentation/build
+
+# Generated files
+.docusaurus
+.cache-loader
+/documentation/node_modules/.cache/webpack/client-production-en/*
+/documentation/node_modules/.cache/webpack/server-production-en/*
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Extra (needs work)
 *.csv
-DNAm/rmdConfig*
-
-*/*/misc/*
-
-*/*/config/*.*
-
 *.pdf
-
-JobSubmissionScripts/
-LogFiles/
-SNPdata/
-**/*.log
-
 sequencing/longReadseq/*
