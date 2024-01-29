@@ -3,7 +3,7 @@ sidebar_position: 1
 slug: /
 ---
 
-# Welcome to the BrainFANS wiki!
+# Welcome to the BrainFANS wiki
 
 Welcome to the documentation website for our comprehensive repository of genomic, regulatory, epigenomic, and transcriptomic data from human brain tissue. Our repository represents a valuable resource for researchers aiming to delve into the molecular underpinnings of complex neurological conditions such as schizophrenia and autism. Through the utilization of advanced methodologies, including fluorescence-activated nuclei sorting (FANS), we have curated a rich collection of data from both developing and adult human brains. 
 
