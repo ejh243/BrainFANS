@@ -12,7 +12,7 @@
 sequencing/**/*.html
 
 # Web Dependencies
-/node_modules
+documentation/node_modules
 
 # Web Production
 /documentation/build
@@ -20,8 +20,6 @@ sequencing/**/*.html
 # Generated files
 .docusaurus
 .cache-loader
-/documentation/node_modules/.cache/webpack/client-production-en/*
-/documentation/node_modules/.cache/webpack/server-production-en/*
 
 # Misc
 .DS_Store
