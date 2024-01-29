@@ -5,7 +5,7 @@ sidebar_position: 1
 
 The following document details how to make a change to the [BrainFANS](https://github.com/ejh243/BrainFANS) repository through the command line (and your favourite text editor). Some text editors like VScode and Sublime Text can elimate the need to remember git commands. We recommend that you use the terminal for your first couple of contributions in order to become more familiar with the process.
 
-If you are ever unsure about one of the steps described in this document, please ask Sam Fletcher (<s.o.fletcher@exeter.ac.uk>) for further clarification.
+If you are ever unsure about one of the steps described in this document, please ask Sam Fletcher s.o.fletcher@exeter.ac.uk for further clarification.
 
 ## Contents
 
@@ -43,11 +43,11 @@ Before you make any changes to the repository, we recommend that you create an i
 
 ### Go to the issues tab on GitHub
 
-![Screenshot of location of issues tab](/documentation/static/development-pipeline/issues-location.png)
+![Screenshot of location of issues tab](/development-pipeline/issues-location.png)
 
 ### Click 'New issue'
 
-![Screenshot of new issue button](/documentation/static/development-pipelinenew-issue-button.png)
+![Screenshot of new issue button](/development-pipeline/new-issue-button.png)
 
 ### Select the relevant template for your report
 
@@ -58,17 +58,17 @@ Before you make any changes to the repository, we recommend that you create an i
 
 ### Fill in the issue report
 
-![Screenshot of filling in issue](/documentation/static/development-pipelinefill-in-issues.png)
+![Screenshot of filling in issue](/development-pipeline/fill-in-issues.png)
 
 ### Assign relevant tags (if applicable)
 
 Add relevant personnel to assignees section, assignees will be notified of the issue. Most of the time you will be at least adding yourself (unless you don't plan to address the issue). You can also add further labels to the issue if they are relevant (obvious labels will be added for you).
 
-![Screenshot of applying labels](/documentation/static/development-pipelineassign-labels.png)
+![Screenshot of applying labels](/development-pipeline/assign-labels.png)
 
 ### Submit the issue report
 
-![Screenshot of submission button](/documentation/static/development-pipelinesubmit-issue-button.png)
+![Screenshot of submission button](/development-pipeline/submit-issue-button.png)
 
 ## Step Three: Create a new branch
 
@@ -83,11 +83,11 @@ git checkout -b <your-branch-name>
 
 ### Setup
 
-![Important section ahead 1](/documentation/static/development-pipelineimportant-section.png)
+![Important section ahead 1](/development-pipeline/important-section.png)
 
 Before making any commits, run `git status` to check you are indeed in your development branch.
 
-![Screenshot of the output of git status](/documentation/static/development-pipelinebranch-check.png)
+![Screenshot of the output of git status](/development-pipeline/branch-check.png)
 
 If this is not the branch you created in [step three](#step-three-create-a-new-branch), please run the following:
 
@@ -115,7 +115,7 @@ git commit -m "Enter your commit message here"
 
 To make the above easier for you, get into the habit of using `git status` often (think of it as the git version of `ls`). Using `git status` will show you which files have been changed and the path to said files (which you can then copy and paste to the terminal).
 
-![Important section ahead 2](/documentation/static/development-pipelineimportant-section.png)
+![Important section ahead 2](/development-pipeline/important-section.png)
 
 There are two good rules of thumb for your commit messages:
 
@@ -148,23 +148,23 @@ Using `git pull` and then `git push` might be unecessary in some circumstances. 
 
 Move to the pull request tab on GitHub
 
-![Screenshot of the location of pull requests](/documentation/static/development-pipelinepull-request-location.png)
+![Screenshot of the location of pull requests](/development-pipeline/pull-request-location.png)
 
 Click on 'New pull request'
 
-![Screenshot of the location of pull request button](/documentation/static/development-pipelinepull-request-button.png)
+![Screenshot of the location of pull request button](/development-pipeline/pull-request-button.png)
 
 Select 'master' for the **base field** and [your development branch] for the **compare field**
 
-![Screenshot of the compare and base](/documentation/static/development-pipelinepull-request-branch-selection.png)
+![Screenshot of the compare and base](/development-pipeline/pull-request-branch-selection.png)
 
 Click on 'Create pull request'
 
-![Screenshot of the create pull request button](/documentation/static/development-pipelinecreate-pull-request-button.png)
+![Screenshot of the create pull request button](/development-pipeline/create-pull-request-button.png)
 
 ### Fill in the pull request template
 
-![Screenshot of the pull request template](/documentation/static/development-pipelinepull-request-template-boxes.png)
+![Screenshot of the pull request template](/development-pipeline/pull-request-template-boxes.png)
 
 **PLEASE COMPLETE THE FOLLOWING:**
 
@@ -181,11 +181,11 @@ Assignees -> Assigned people will be responsible for overseeing the pull request
 \
 Labels -> Relevant tags for the pull request (best to pick the same ones as used in the issue being addressed)
 
-![Screenshot of applying labels](/documentation/static/development-pipelineassign-labels-pull-request.png)
+![Screenshot of applying labels](/development-pipeline/assign-labels-pull-request.png)
 
 ### Click 'Create pull request'
 
-![Screenshot of create pull request button](/documentation/static/development-pipelinecreate-pull-request.png)
+![Screenshot of create pull request button](/development-pipeline/create-pull-request.png)
 
 ## Step Six: Finalise the pull request
 
@@ -203,7 +203,7 @@ If this proves difficult, add someone else onto the assignee list of the pull re
 
 The development branch is no longer required, GitHub should prompt the user to delete the branch safely after the merge has been completed.
 
-![Screenshot of delete branch button](/documentation/static/development-pipelinedelete-branch-button.png)
+![Screenshot of delete branch button](/development-pipeline/delete-branch-button.png)
 
 However, this will only delete the branch on GitHub, not the branch on your copy of the repository. In order to delete your branch locally, please complete the following:
 
@@ -227,7 +227,7 @@ git branch
 
 Go back to the issues that were resolved with this pull request and mark them as completed/closed.
 
-![Screenshot of closing an issue](/documentation/static/development-pipelineclose-issue.png)
+![Screenshot of closing an issue](/development-pipeline/close-issue.png)
 
 ## Step Seven
 
