@@ -1,0 +1,8 @@
+{
+  "label": "BrainFANS Analyses",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "This holds the analyses that have been ran using DNAm BrainFANS scripts."
+  }
+}
