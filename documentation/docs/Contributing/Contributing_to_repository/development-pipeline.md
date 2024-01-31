@@ -3,11 +3,11 @@ sidebar_position: 1
 ---
 # The Development Pipeline
 
-The following document details how to make a change to the [BrainFANS](https://github.com/ejh243/BrainFANS) repository through the command line (and your favourite text editor). Some text editors like VScode and Sublime Text can elimate the need to remember git commands. We recommend that you use the terminal for your first couple of contributions in order to become more familiar with the process.
+The following document details how to make a change to the [BrainFANS](https://github.com/ejh243/BrainFANS) repository through the command line (and your favourite text editor). Some text editors like VScode and Sublime Text can eliminate the need to remember git commands. We recommend that you use the terminal for your first couple of contributions in order to become more familiar with the version control process.
 
-If you are ever unsure about one of the steps described in this document, please ask Sam Fletcher s.o.fletcher@exeter.ac.uk for further clarification.
+If you are ever unsure about one of the steps described in this document, please ask Sam Fletcher (s.o.fletcher@exeter.ac.uk) for further clarification.
 
-## Contents
+## Overview of Process
 
 1) [**Get the latest version of BrainFANS**](#step-one-get-the-latest-version-of-brainfans)
 2) [**Submit an issue**](#step-two-submit-an-issue)
@@ -18,7 +18,7 @@ If you are ever unsure about one of the steps described in this document, please
 
 ## Step One: Get the latest version of BrainFANS
 
-If this is your first contribution, please use the following command to clone the repository to a personal directory of yours:
+If this is your first contribution, please use the following unix commands to clone the repository to a personal directory of yours:
 
 ```console
 # Move to the directory you want the repository to be cloned to
@@ -33,15 +33,15 @@ For subsequent contributions, navigate to the location of your **personal** Brai
 ```console
 cd path/to/BrainFANS
 
-# Updates your local BrainFANS to the latest online version
+# Updates your local BrainFANS to the latest version in the GitHub repository
 git pull origin master
 ```
 
 ## Step Two: Submit an issue
 
-Before you make any changes to the repository, we recommend that you create an issue on GitHub. This will make it easier for others to know who is working on what. It is also a great way of documenting  the overall changes that you are planning to make. If you are solving an issue someone else has already made, this step can be skipped.
+Before you make any changes to the repository, we recommend that you create an issue on GitHub. This will make it easier for others to know who is working on what. It is also a great way of documenting  the extent of the changes that you are planning to make and that you are already working on a solution. If you are solving an issue someone else has already logged, this step can be skipped.
 
-### Go to the issues tab on GitHub
+### Open the issues tab on GitHub
 
 ![Screenshot of location of issues tab](/development-pipeline/issues-location.png)
 
@@ -52,7 +52,7 @@ Before you make any changes to the repository, we recommend that you create an i
 ### Select the relevant template for your report
 
 - Bug: Make a report for any bugs you have encountered in the repository (*i.e.* Unexpected/unwanted behaviour)
-- Code refactor: Make suggestions for how code can be optimised/improved
+- Code refactor: Make suggestions for how code can be optimised or improved
 - Documentation: Report any faults in the documentation
 - Enhancement: Suggest any features that should be added/altered
 
@@ -62,7 +62,7 @@ Before you make any changes to the repository, we recommend that you create an i
 
 ### Assign relevant tags (if applicable)
 
-Add relevant personnel to assignees section, assignees will be notified of the issue. Most of the time you will be at least adding yourself (unless you don't plan to address the issue). You can also add further labels to the issue if they are relevant (obvious labels will be added for you).
+Add relevant personnel to assignees section, assignees will be notified of the issue. If you are planning on address the issue yourself, remember to assign yourself.  You can also add further labels to the issue if they are relevant (obvious labels related to the type of issue template you have selected will be added for you).
 
 ![Screenshot of applying labels](/development-pipeline/assign-labels.png)
 
@@ -72,10 +72,10 @@ Add relevant personnel to assignees section, assignees will be notified of the i
 
 ## Step Three: Create a new branch
 
-Switch back over to the teminal and create a new development branch with a name that is relevant to the issue that you are resolving:
+Switch back over to the terminal and create a new development branch with a name that is relevant to the issue that you are resolving:
 
 ```console
-# Creates new branch and moves you onto your branch
+# Creates new branch and automatically moves you onto this branch
 git checkout -b <your-branch-name>
 ```
 
@@ -95,7 +95,7 @@ If this is not the branch you created in [step three](#step-three-create-a-new-b
 # Switch to the development branch you created in step three
 git checkout <your-branch-name>
 
-# Check that you are indeed on your branch (yes, this is very important)
+# Check that you are indeed on your branch (!! this is very important !!)
 git status
 ```
 
@@ -103,7 +103,7 @@ git status
 
 Edit the relevant files in your favourite text editor one at a time.
 
-Once a **small** change has been made use:
+Once a **small** and complete change has been made use:
 
 ```console
 # Stage the relevant file to be committed
@@ -120,7 +120,7 @@ To make the above easier for you, get into the habit of using `git status` often
 There are two good rules of thumb for your commit messages:
 
 1) The message should complete the sentence: "If applied, this commit will [commit-message]"
-2) Don't use the word **and**, be succint. If you only commit small changes this will be much easier
+2) Don't use the word **and**, be succinct. If you only commit small changes this will be much easier
 
 Sometimes it makes sense to make changes to multiple files at the same time (especially if they share the same issue). Don't commit loads of files at the same time out of laziness however, that defeats the point of version control.
 
@@ -175,9 +175,9 @@ Click on 'Create pull request'
 
 ### Assign people and labels to the request
 
-Reviewers -> Assinged people will be notified to review your changes and provide feedback (code review)
+Reviewers -> Assigned people will be notified to review your changes and provide feedback (code review)
 \
-Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process, we reccommend at least assigning yourself
+Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process, we recommend at least assigning yourself
 \
 Labels -> Relevant tags for the pull request (best to pick the same ones as used in the issue being addressed)
 
@@ -231,4 +231,4 @@ Go back to the issues that were resolved with this pull request and mark them as
 
 ## Step Seven
 
-There is no step seven, you are done.
+Celebrate your first successful contribution to the pipeline!
