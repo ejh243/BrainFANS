@@ -18,7 +18,7 @@ These pipelines had been developed by the Complex Disease Epigenomics Group at t
 :::note[Navigation bar]
 Using the navigation bar at the top of this page, you can find more specific information.
 
-[**User information**](../User_Information/intro.md): Pages to help users understand how to use the pipelines and see previous analyses conducted
+[**User information**](../User-information/intro.md): Pages to help users understand how to use the pipelines and see previous analyses conducted
 \
-[**Developer information**](../Developer_Information/intro.md): Pages to help developers understand our coding conventions and how to contribute to the repository and documentation
+[**Developer information**](../Developer-information/intro.md): Pages to help developers understand our coding conventions and how to contribute to the repository and documentation
 :::
