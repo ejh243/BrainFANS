@@ -1,6 +1,6 @@
 {
   "label": "DNA methylation Analyses",
-  "position": 1,
+  "position": 4,
   "link": {
     "type": "generated-index",
     "description": "The analyses that have been ran using DNA methylation BrainFANS scripts are given here."
