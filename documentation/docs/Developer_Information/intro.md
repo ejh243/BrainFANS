@@ -1,8 +1,8 @@
 ---
 sidebar_position: 1
-slug: /Analyses
+slug: /Developer_Information
 ---
 
-# Analyses
+# Developer Information
 
-The Analyses for BrainFANS can be found here. Use the navigation bar on the left to search through the different pipelines included in the BrainFANS repository.
+This set of pages is designed to aid developers in contributing to the BrainFANS repository and documentation. In addition to these topics, you can also find: our design principles; coding style and conventions; and relevant tutorials.
