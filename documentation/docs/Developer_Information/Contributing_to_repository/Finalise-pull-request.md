@@ -49,3 +49,11 @@ Go back to the issues that were resolved with this pull request and mark them as
 :::
 
 ![Screenshot of closing an issue](/development-pipeline/close-issue.png)
+
+## Celebrate the completion of your contribution
+
+Congratulations! You have completed a contribution. As you contribute more, this process will become second nature.
+
+:::tip[Future contributions]
+If this was your first contribution, we recommend you continue to use this guide for your next few contributions as well
+:::
