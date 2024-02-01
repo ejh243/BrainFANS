@@ -8,7 +8,7 @@ description: Making changes to the code to resolve the issue
 
 ## Setup
 
-:::warning[Important check]
+:::warning[Check this]
 Before making any commits, run `git status` to check you are indeed in your development branch.
 :::
 
