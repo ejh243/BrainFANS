@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-slug: /Developer_Information
+slug: /Developer-information
 ---
 
 # Developer Information
