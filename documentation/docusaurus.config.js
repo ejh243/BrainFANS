@@ -80,12 +80,6 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'homeSidebar',
-            position: 'left',
-            label: 'Home',
-          },
-          {
-            type: 'docSidebar',
             sidebarId: 'userSidebar',
             position: 'left',
             label: 'User Information', // Change this line to alter navbar
