@@ -1,8 +1,8 @@
 ---
 sidebar_position: 1
-slug: /Documentation
+slug: /User-information
 ---
 
-# Documentation
+# User Information
 
-The documentation for BrainFANS can be found here. Use the navigation bar on the left to search through the different pipelines included in the BrainFANS repository.
+This set of pages is designed to aid users in understaning how to use the BrainFANS pipelines, repository and documentation.
