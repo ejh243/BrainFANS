@@ -80,27 +80,15 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'homeSidebar',
+            sidebarId: 'userSidebar',
             position: 'left',
-            label: 'Home',
+            label: 'User Information', // Change this line to alter navbar
           },
           {
             type: 'docSidebar',
-            sidebarId: 'documentationSidebar',
+            sidebarId: 'developerSidebar',
             position: 'left',
-            label: 'Documentation',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'contributingSidebar',
-            position: 'left',
-            label: 'How to contribute',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'analysesSidebar',
-            position: 'left',
-            label: 'Analyses',
+            label: 'Developer Information', // Change this line to alter navbar
           },
           {
             href: 'https://github.com/ejh243/BrainFANS',
