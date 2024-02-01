@@ -11,7 +11,7 @@ Before making any contributions to the BrainFANS repository, you need to choose 
 We recommend doing this so that your pull request (at the end of this guide) is easier to process, and therefore more likely to be accepted. It also helps us with documenting how the repository is changing over time.
 
 :::note
-Note that you can [**create your own issue**](../../User_Information/Creating_issues/Creating_an_issue.md), if you already have an idea in mind. Please still check the open issues first to ensure issues are not duplicated.
+Note that you can [**create your own issue**](/User_Information/Creating_issues/Creating-an-issue.md), if you already have an idea in mind. Please still check the open issues first to ensure issues are not duplicated.
 :::
 
 Once you have chosen an issue, assign yourself (or ask to be assigned) to the issue. This is required for two reasons:

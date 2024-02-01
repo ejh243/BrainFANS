@@ -31,7 +31,7 @@ Descriptions for the different templates we offer are given below:
 
 ## Fill in the issue report
 
-Use the boxes provided to explain the particular issue you have. For you first issue, we recommend checking out the [next page](./Good_issue_practices.md).
+Use the boxes provided to explain the particular issue you have. For you first issue, we recommend checking out the [next page](./Good-issue-practices.md).
 
 ![Screenshot of filling in issue](/development-pipeline/fill-in-issues.png)
 

@@ -14,7 +14,7 @@ Before making any commits, run `git status` to check you are indeed in your deve
 
 ![Screenshot of the output of git status](/development-pipeline/branch-check.png)
 
-If this is not the branch you created in [step three](#step-three-create-a-new-branch), please run the following:
+If this is not the branch you created in [step three](./Creating-new-branch.md), please run the following:
 
 ```console
 # Switch to the development branch you created in step three

@@ -83,7 +83,7 @@ git checkout -b <your-branch-name>
 
 ### Setup
 
-![Important section ahead 1](/development-pipeline/important-section.png)
+
 
 Before making any commits, run `git status` to check you are indeed in your development branch.
 
@@ -115,7 +115,6 @@ git commit -m "Enter your commit message here"
 
 To make the above easier for you, get into the habit of using `git status` often (think of it as the git version of `ls`). Using `git status` will show you which files have been changed and the path to said files (which you can then copy and paste to the terminal).
 
-![Important section ahead 2](/development-pipeline/important-section.png)
 
 There are two good rules of thumb for your commit messages:
 
