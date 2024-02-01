@@ -8,7 +8,9 @@ description: Create a pull request on GitHub
 
 Now that you have finished resolving the issue, it is time to create a pull request in order to create a formal request to merge your contributions into the main/development branch of the repository.
 
+:::tip[Don't worry]
 *If this feels scary, don't worry. Because you made a separate branch in [step three](./Creating-new-branch.md) you are not in danger of messing up the repository.*
+:::
 
 ## Pull and push
 
