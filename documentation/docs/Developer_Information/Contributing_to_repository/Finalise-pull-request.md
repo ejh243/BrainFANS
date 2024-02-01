@@ -1,10 +1,10 @@
 ---
 sidebar_position: 6
-title: "Step Six: Finalise the pull request"
+title: "Step 6: Finalise the pull request"
 description: Complete a code review, fix merge conflicts and merge
 ---
 
-# Step Six: Finalise the pull request
+# Step 6: Finalise the pull request
 
 ## Code review
 

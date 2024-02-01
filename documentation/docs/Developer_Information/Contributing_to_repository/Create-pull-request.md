@@ -1,10 +1,10 @@
 ---
 sidebar_position: 5
-title: "Step Five: Creating a pull request"
+title: "Step 5: Creating a pull request"
 description: Create a pull request on GitHub
 ---
 
-# Step Five: Creating a pull request
+# Step 5: Creating a pull request
 
 Now that you have finished resolving the issue, it is time to create a pull request in order to create a formal request to merge your contributions into the main/development branch of the repository.
 
