@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 title: "Step Five: Creating a pull request"
 description: Create a pull request on GitHub
 ---
