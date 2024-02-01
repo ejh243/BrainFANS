@@ -35,4 +35,3 @@ yarn-error.log*
 # Extra (needs work)
 *.csv
 *.pdf
-sequencing/longReadseq/*
