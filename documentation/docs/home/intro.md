@@ -5,7 +5,7 @@ slug: /
 
 # Welcome to the BrainFANS repository
 
-Welcome to the documentation website for our comprehensive repository of processing pipelines for regulatory genomic data including SNP array, dna modifications and ChIP/ATAC-Seq. This website serves as a gateway to access detailed information for those that want to either *use* or *contribute* to the development of these pipelines.
+Welcome to the documentation website for our comprehensive repository of processing pipelines for regulatory genomic data including SNP array, DNA modifications and ChIP/ATAC-Seq. This website serves as a gateway to access detailed information for those that want to either *use* or *contribute* to the development of these pipelines.
 
 Our objective with this repository was to:
 
