@@ -17,75 +17,70 @@ This readme explains the content of the scripts for running the ATAC analysis pi
 
 Parameters in [] are optional.
 
-#### 1. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/1_batchRunAlignment.sh <project-name> [STEPS]
+#### 1. sbatch --array="number of batch jobs" ATACSeq/jobSubmission/1_batchRunAlignment.sh (project name) [STEPS]
 
 This script searchs within raw data folders for all fastq files
 Then submits a batch script to process one sample
-	* executes fastqc.sh
-
-	* executes fastp.sh
-		
-	* executes ATACSeq/preprocessing/1_alignment.sh 
-
-	* executes ATACSeq/preprocessing/2_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
+* executes fastqc.sh
+* executes fastp.sh
+* executes ATACSeq/preprocessing/1_alignment.sh
+* executes ATACSeq/preprocessing/2_calcENCODEQCMetrics.sh ${sampleID}_sorted_chr1.bam
 	
-	<project-name> the name of the project folder in the main data type data directory
+(project-name) the name of the project folder in the main data type data directory
 	
-	-optional- 
+##### -optional- 
 
-	[STEPS] option of either FASTQC, TRIM, ALIGN or ENCODE. The first runs only fastqc on the samples, the second trims, the third runs only the alignment and the last calculates the ENCODE QC metrics. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run all steps. 
+[STEPS] option of either FASTQC, TRIM, ALIGN or ENCODE. The first runs only fastqc on the samples, the second trims, the third runs only the alignment and the last calculates the ENCODE QC metrics. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run all steps. 
 
 ### Post-alignment processing
 
-#### 2. sbatch --array=<number of batch jobs/10> ATACSeq/jobSubmission/2_batchCalcQCMetrics.sh  <project-name>
+#### 2. sbatch --array=<number of batch jobs/10> ATACSeq/jobSubmission/2_batchCalcQCMetrics.sh  (project-name)
 
 This script uses the ATACseqQC R package to generate the fragment distribution and calculate some summary statistics. It splits the samples into groups of 10 to run in parallel, so batch number should be the number of samples divided by 10.
 e.g. If there are 50 samples, batch number should be 0-5, producing 5 batches of 10 samples each.
 If the number of samples is less than 10, set batch number to 0.
-	* executes ATACSeq/preprocessing/3_fragmentDistribution.r <aligned-dir> <array-number>
+* executes ATACSeq/preprocessing/3_fragmentDistribution.r (aligned-dir) (array-number)
  
 ### Peak calling by sample
 
-#### 3. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/3_batchRunPeakCalling.sh <project-name> [STEPS]
+#### 3. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/3_batchRunPeakCalling.sh (project-name) [STEPS]
 
 This script searchs within aligned data folders for all bam files
 Then submits a batch script to process one sample
-	* executes ATACSeq/preprocessing/4_shiftAlignedReadsPE.sh 
-		* takes a filtered bam file converts to a tagalign file, calculate CC scores and shifts reads ready for peak calling
-
-	* executes ATACSeq/preprocessing/5_samplePeaks.sh
-		* which runs MAC peak calling with shifted tagAlign files and with BAM files and paired end reads
-		* it then filters the peaks to exclude those that overlap with blacklisted regions
-
-	* executes ATACSeq/preprocessing/6_calcFrip.sh 
-		* calculates fraction of reads in peaks for each set of peaks
+* executes ATACSeq/preprocessing/4_shiftAlignedReadsPE.sh 
+	* takes a filtered bam file converts to a tagalign file, calculate CC scores and shifts reads ready for peak calling
+* executes ATACSeq/preprocessing/5_samplePeaks.sh
+	* which runs MAC peak calling with shifted tagAlign files and with BAM files and paired end reads
+	* it then filters the peaks to exclude those that overlap with blacklisted regions
+* executes ATACSeq/preprocessing/6_calcFrip.sh 
+	* calculates fraction of reads in peaks for each set of peaks
 	
-  -optional- 
+##### -optional- 
 
-	[<STEPS>] option to either SHIFT, PEAKS or FRIP. The first one shift reads, the second one performs peak calling and the third calculates fraction of reads in peaks. 
+[STEPS] option to either SHIFT, PEAKS or FRIP. The first one shift reads, the second one performs peak calling and the third calculates fraction of reads in peaks. 
 
-#### 4. sbatch ATACSeq/jobSubmission/4_collateStage1QCMetrics.sh  <project-name> [STEPS]
+#### 4. sbatch ATACSeq/jobSubmission/4_collateStage1QCMetrics.sh  (project-name) [STEPS]
 
 This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment. It also runs the following utility scripts.
-	* executes ATACSeq/preprocessing/7_progressReport.sh 
-		* identifies how many samples have been successful at each stage of the processing pipeline and for each fastq file, how far through the process it has progressed.
+* executes ATACSeq/preprocessing/7_progressReport.sh 
+	* identifies how many samples have been successful at each stage of the processing pipeline and for each fastq file, how far through the process it has progressed.
 
-	* executes ATACSeq/preprocessing/9_countMTReads.sh
-		* collates counts of the number of reads aligned to MT chromosome
+* executes ATACSeq/preprocessing/9_countMTReads.sh
+	* collates counts of the number of reads aligned to MT chromosome
 
-	* executes ATACSeq/preprocessing/9_collateFlagStatOutput.sh 
-		* collates flagstat summary of aligned sorted reads.
+* executes ATACSeq/preprocessing/9_collateFlagStatOutput.sh 
+	* collates flagstat summary of aligned sorted reads.
 
-	* executes ATACSeq/preprocessing/collateDataQualityStats.Rmd
-		* generates Rmarkdown report summarising stage 1 qc metrics
+* executes ATACSeq/preprocessing/collateDataQualityStats.Rmd
+	* generates Rmarkdown report summarising stage 1 qc metrics
 
   !FILTER option not available 
 	#* executes ATACSeq/preprocessing/10.2_filterOnS1SumStats.r [min. no reads] [min. Alignment rate] [min. no filtered reads]
 		#* outputs a list file of samples that have passed the set thresholds. If optional parameters not specified, defaults are 10, 80 and 20.
 
-  -optional- 
+##### -optional- 
 
-	[STEPS] option of either MULTIQC, COLLATE, SUMMARY. They may be combined, with desired steps included as single string, i.e. MULIQC,COLLATE. Default if left blank is to run all of them.
+[STEPS] option of either MULTIQC, COLLATE, SUMMARY. They may be combined, with desired steps included as single string, i.e. MULIQC,COLLATE. Default if left blank is to run all of them.
 
 
 #### 5. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/5_batchFormatSexChrs.sh <project ID>
