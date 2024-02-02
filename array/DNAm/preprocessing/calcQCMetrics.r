@@ -111,7 +111,7 @@ if(file.exists(qcData)){
 
 #QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
 
-if(grep("V2", arrayVersion)){
+if(grep("V2", arrayVersion, ignore.case=TRUE)){
 manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
 manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
 print("loaded EpicV2 manifest")
@@ -203,7 +203,7 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 if(!"PC1_betas" %in% colnames(QCmetrics)){
 	print("Calculating PCs of autosomal beta values")
 	# filter to autosomal only
-	if(grep("V2", arrayVersion)){
+	if(grep("V2", arrayVersion, ignore.case=TRUE)){
     auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
   } else {
     auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
@@ -243,28 +243,27 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut)
 }
 
-
+# NOTE this currently averages beta values accross duplicated probes
 # calc Horvaths epigenetic age
 if(!"DNAmAge" %in% colnames(QCmetrics)){
 	print("Calculating Horvath's pan tissue epigenetic age")
-	if(arrayType != "EPICv2"){
-		data(coef)
-		if(gdsObj){
-			DNAmAge<-agep(gfile, coef=coef)
-		} else {
-			if(!gdsObj){
-				DNAmAge<-agep(msetEPIC, coef=coef)
-			}
-		}
-		#if(!is.null(dim(DNAmAge))){
-		#DNAmAge<-DNAmAge[,"custom_age"]
-		#}
-		DNAmAge[!QCmetrics$intensPASS]<-NA
-	} else {
-		DNAmAge<-rep(NA, nrow(QCmetrics))
-	}
-	QCmetrics<-cbind(QCmetrics,DNAmAge)
-}
+	if(grep("V2", arrayVersion, ignore.case=TRUE)){
+        DNAmAge<-agep(epicv2clean(betas(gfile)[]))
+      } else {
+        data(coef)
+        if(gdsObj){
+          DNAmAge<-agep(gfile, coef=coef)
+        } else {
+          if(!gdsObj){
+            DNAmAge<-agep(msetEPIC, coef=coef)
+          }
+        }
+      }
+      colnames(DNAmAge)[1] <- "DNAmAge"
+      DNAmAge[!QCmetrics$intensPASS]<-NA
+      QCmetrics<-cbind(QCmetrics,DNAmAge)
+  }  
+ 
 
 # calc Cortical Clock Age
 if(!"CCDNAmAge" %in% colnames(QCmetrics)){	
