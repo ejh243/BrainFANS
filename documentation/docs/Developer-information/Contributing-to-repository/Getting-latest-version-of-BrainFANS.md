@@ -20,22 +20,15 @@ git clone https://github.com/ejh243/BrainFANS.git
 
 ## Getting the latest version of the repository
 
-For subsequent contributions, navigate to the location of your **personal** BrainFANS repository and pull the latest changes:
+For subsequent contributions, navigate to the location of your **personal** BrainFANS repository and pull the latest changes.
+
+Most contributions will be a part of an existing development branch. For example, if the issue you are resolving relates to atac pipeline, then you should have the latest version of the `atac-develop` pipeline. In order to avoid merge conflicts, pull the latest changes for the branch that you plan to work off of with these unix commands:
 
 ```console
+# Change directory to location of your local BrainFANS repository
 cd path/to/BrainFANS
 
-# Updates your local BrainFANS to the latest version in the GitHub repository
-git pull origin master
-```
-
-Most contributions will be a part of an existing development branch. For example, if the issue you are resolving relates to atac pipeline, then you should have the latest version of the `atac-develop` pipeline.
-
-If you are working on a specific branch of BrainFANS, you will need to pull that branch to your local repository:
-
-```console
-cd path/to/BrainFANS
-
-# Updates your local BrainFANS to the latest version in the GitHub repository
-git pull origin <branch-name>
+# Updates your local BrainFANS repository development branch
+# to the latest version that exists on GitHub
+git pull origin <development-branch-name>
 ```
