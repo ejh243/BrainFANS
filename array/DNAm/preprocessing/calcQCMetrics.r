@@ -80,7 +80,7 @@ if(gdsObj){
 	# ensure sample sheet is in same order as data
 	sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
 	# extract a few useful matrices
-	rawbetas<-betas(gfile)[,]
+	#rawbetas<-betas(gfile)[,]
 }else {
 	if(!gdsObj){
 		load(msetFile)
@@ -160,10 +160,9 @@ if(!"bisulfCon" %in% colnames(QCmetrics)){
 		if(!gdsObj){
 			bisulfCon<-bscon(msetEPIC)
 	}
-		
+}
 	bisulfCon[which(intensPASS == FALSE)]<-NA
 	QCmetrics<-cbind(QCmetrics,bisulfCon)
-}
 }
 
 # PCA of control-probe intensities
