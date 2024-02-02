@@ -40,9 +40,13 @@ Which will return: $E=mc^2$
 You can use a double $ sign to make mathematical expression have their own box:
 
 ```markdown
-$$E=mc^2$$
+$$
+E=mc^2
+$$
 ```
 
 Which would return:
 
-$$E=mc^2$$
+$$
+E=mc^2
+$$
