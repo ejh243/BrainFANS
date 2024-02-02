@@ -322,11 +322,17 @@ if(!"nNAsPer" %in% colnames(QCmetrics)){
 # PREDICT SEX
 #----------------------------------------------------------------------#
 
+# NOTE threshold for M prediction not valid for epicV2 data
 if(!"predSex" %in% colnames(QCmetrics)){	
 	print("Performing sex prediction from sex chromosome profiles")	
 	if(gdsObj){
-		x.probes<-which(fData(gfile)$chr == "chrX")
-		y.probes<-which(fData(gfile)$chr == "chrY")
+		if(grep("V2", arrayVersion, ignore.case=TRUE)){
+        x.probes<-which(manifest$CHR == "chrX")
+        y.probes<-which(manifest$CHR == "chrY")
+      } else {
+        x.probes<-which(fData(gfile)$chr == "chrX")
+        y.probes<-which(fData(gfile)$chr == "chrY")
+      }
 		ints.auto<-methylated(gfile)[c(x.probes, y.probes),]+unmethylated(gfile)[c(x.probes, y.probes),]
 		ints.X<-methylated(gfile)[x.probes,]+unmethylated(gfile)[x.probes,]
 		ints.Y<-methylated(gfile)[y.probes,]+unmethylated(gfile)[y.probes,]
