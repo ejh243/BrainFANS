@@ -34,9 +34,12 @@ msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
 configFile <- paste0(dataDir, "/config.r")
+epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
+
 
 gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, NA))
 
+source(configFile)
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
@@ -108,7 +111,11 @@ if(file.exists(qcData)){
 
 #QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
 
-
+if(grep("V2", arrayVersion)){
+manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
+manifest <- manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
+print("loaded EpicV2 manifest")
+}
 
 #----------------------------------------------------------------------#
 # CALCULATE QC METRICS
