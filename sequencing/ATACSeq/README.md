@@ -35,6 +35,7 @@ Then submits a batch script to process one sample
 
 	[STEPS] option of either FASTQC, TRIM, ALIGN or ENCODE. The first runs only fastqc on the samples, the second trims, the third runs only the alignment and the last calculates the ENCODE QC metrics. Option to combine steps with desired steps included as single string, i.e. FASTQC,TRIM. Default if left blank is to run all steps. 
 
+### Post-alignment processing
 
 #### 2. sbatch --array=<number of batch jobs/10> ATACSeq/jobSubmission/2_batchCalcQCMetrics.sh  <project-name>
 
@@ -42,6 +43,8 @@ This script uses the ATACseqQC R package to generate the fragment distribution a
 e.g. If there are 50 samples, batch number should be 0-5, producing 5 batches of 10 samples each.
 If the number of samples is less than 10, set batch number to 0.
 	* executes ATACSeq/preprocessing/3_fragmentDistribution.r <aligned-dir> <array-number>
+ 
+### Peak calling by sample
 
 #### 3. sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/3_batchRunPeakCalling.sh <project-name> [STEPS]
 
@@ -93,6 +96,8 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
 		
 #### 6. sbatch ATACSeq/jobSubmission/6_sexCheck.sh  <project ID>
 	* executes ATACSeq/preprocessing/sexChrPeaks.sh which performs peak calling on the sex chromomes, filter and read counts
+ 
+### Genotype concordance
 
 #### 7.1 sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_batchRunGenotypeConcordance.sh <project ID> [OPTIONS]
   * executes /ATACSeq/preprocessing/compareBamWithGenotypes.sh which prepares bam file for comparison with verifyBamID
@@ -105,10 +110,12 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
   [OPTIONS] option of GENCHECK and COMPARE. COMPARE performs comparison of bam file with genotype. GENCHEK to collate results from the previous steps.
   
   * executes /ATACSeq/preprocessing/collateSampleChecks.Rmd which collates the results from previous sex check and Genotype check
-  
+    
 #### 7.2 sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_2_batchRunGenotypeSearch.sh <project ID> 
   * Outputs a summary of stats from previous step and finds any sample that might be contaminated.
   * Contaminated samples will go to a created file potentialSwitches.txt. If this file is not empty, searchBestGenoMatch.sh is executed and an alternative Genotype search is done for the sample.
+
+### Peak calling by group
 
 #### 8. sbatch --array=<number of cell fractions> ATACSeq/jobSubmission/8_batchPeakCallingByGroup.sh <project ID> [GROUPS] [STEPS]
   * executes /general/processing/makeGroupAnalysisFile.r which creates a txt file (samplesForGroupAnalysis.txt) with samples classified by fraction/tissue
@@ -123,6 +130,7 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
   [GROUPS] Peak calling by group can be done either by PASS (all samples that passed Stage 1 Quality control) or by FRACTION (samples grouped by their fraction).
   [STEPS] option to either PEAK or FRIP. The first performs peak calling, the second calculates fraction of reads in peaks between and within subsets.
   
+### Advanced analysis
 
 #### Still to be developed
 
