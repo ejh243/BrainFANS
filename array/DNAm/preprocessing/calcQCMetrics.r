@@ -113,7 +113,7 @@ if(file.exists(qcData)){
 
 if(grep("V2", arrayVersion)){
 manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-manifest <- manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
+manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
 print("loaded EpicV2 manifest")
 }
 
@@ -202,9 +202,9 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 if(!"PC1_betas" %in% colnames(QCmetrics)){
 	print("Calculating PCs of autosomal beta values")
 	# filter to autosomal only
-	auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
+	auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
 
-	pca <- prcomp(t(na.omit(rawbetas[auto.probes,QCmetrics$intensPASS])))
+	pca <- prcomp(t(na.omit(betas(gfile)[,][auto.probes,QCmetrics$intensPASS])))
 	betas.scores = pca$x
 	colnames(betas.scores) = paste(colnames(betas.scores), '_betas', sep='')
 	betas.pca<-pca$sdev^2/sum(pca$sdev^2)
@@ -212,7 +212,6 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 	rownames(betas.scores)<-QCmetrics$Basename	
 	# only save PCs which explain > 1% of the variance
 	QCmetrics<-cbind(QCmetrics,betas.scores[,which(betas.pca > 0.01)])
-
 }
 
 # Identify outlier samples 
