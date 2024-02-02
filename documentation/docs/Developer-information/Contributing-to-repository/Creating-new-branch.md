@@ -14,9 +14,7 @@ If you do not follow this step you will not be able to push any of your changes 
 
 
 ```console
-# Moves to the development branch you plan to stem off of
-git checkout <development-branch-name>
-
-# Creates new branch and automatically moves you onto this branch
-git checkout -b <your-branch-name>
+# Creates new branch off of the provided development branch
+# and automatically moves you onto this branch
+git checkout -b <development-branch-name> <your-branch-name>
 ```
