@@ -24,7 +24,9 @@ git checkout <your-branch-name>
 git status
 ```
 
-This is important, if you are on the wrong branch when making commits you run the risk of creating merge conflicts.
+:::danger[Important] 
+If you are on the wrong branch when making commits you run the risk of creating merge conflicts that can be difficult to resolve
+:::
 
 If you have skipped ahead and already made commits, please type the following into the terminal:
 
