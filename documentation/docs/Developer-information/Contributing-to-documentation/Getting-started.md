@@ -25,7 +25,7 @@ Simply click next at the bottom of this page, you can start with the contributio
 This covers issues that require:
 - Adding internal links to existing pages
 - Changing the configuration files for this website
-- Adding new pages that are not generated from [templates](/User-information/Analyses/Templates.md)
+- Adding new pages that are **not** generated from [templates](/User-information/Analyses/Templates.md)
 - Creating non markdown files (mdx files, css files etc.)
 - Adding images
 - General directory structure changes
