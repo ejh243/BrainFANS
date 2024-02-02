@@ -4,9 +4,9 @@
 ##
 ## Purpose of script: From GDS file generate summary metrics for stages 1 & 2 of quality control filtering
 ##
-## Author: Eilis Hannon
+## Author: Eilis Hannon (adapted to include EPIC V2 data by Emma Walker)
 ##
-## Date Created: 2020
+## Date Created: 2020 (edited Feb 2024)
 ##
 ##---------------------------------------------------------------------#
 
@@ -33,6 +33,7 @@ gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
+configFile <- paste0(dataDir, "/config.r")
 
 gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, NA))
 
@@ -41,6 +42,7 @@ gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, 
 #----------------------------------------------------------------------#
 
 library(e1071)
+library(data.table)
 
 if(is.na(gdsObj)){
 	message("No data to load")
