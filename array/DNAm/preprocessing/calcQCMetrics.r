@@ -368,7 +368,7 @@ if(!"predSex" %in% colnames(QCmetrics)){
 # check duplicate samples using SNPs on array
 if(!exists("snpCor")){
 	print("Calculating pairwise correlations across SNP probes")	
-	rsbetas<-rawbetas[grep("rs", rownames(rawbetas)),]
+	rsbetas<-betas(gfile)[,][grep("rs", rownames(betas(gfile)[,])),]
 	snpCor<-cor(rsbetas, use = "pairwise.complete.obs")
 }
 
@@ -382,7 +382,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	geno.all<-geno
 	geno<-geno[match(QCmetrics$Genotype.IID, geno$IID),]
 	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
-	betas.rs<-rawbetas[rsIDs,]
+	betas.rs<-betas(gfile)[,][rsIDs,]
 
 	# first check direction of minor alleles
 	cors<-vector(length = length(rsIDs))
