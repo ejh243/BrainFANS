@@ -313,8 +313,8 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
 # count number of missing values
 if(!"nNAsPer" %in% colnames(QCmetrics)){
 	print("Counting the number of missing beta values per sample")
-	nNAs<-colSums(is.na(rawbetas))
-	nNAsPer<-nNAs/nrow(rawbetas)*100
+	nNAs<-colSums(is.na(betas(gfile)[,]))
+	nNAsPer<-nNAs/nrow(betas(gfile)[,])*100
 	QCmetrics<-cbind(QCmetrics,nNAs, nNAsPer)
 }
 
