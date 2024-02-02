@@ -283,22 +283,32 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
      
 
 
-# check effect of normalisation
-if(!"rmsd" %in% colnames(QCmetrics)){
-print("Calculating effect of normalisation")
-	if(gdsObj){
-		dasen(gfile, node="normbeta")
-		normbetas<-index.gdsn(gfile, "normbeta")[,]
-	} else {
-		if(!gdsObj){
-			normbetas<-betas(dasen(msetEPIC))
-		}
-	}
-	qualDat<-qual(rawbetas, normbetas)
-	qualDat[which(intensPASS == FALSE),]<-NA
-	QCmetrics<-cbind(QCmetrics,qualDat)
-	
-}
+    
+    # check effect of normalisation
+    if(!"rmsd" %in% colnames(QCmetrics)){
+      print("Calculating effect of normalisation")
+      if(gdsObj){
+        
+        if(grep("V2", arrayVersion, ignore.case=TRUE)){
+          normbeta <- adjustedDasen(
+            onetwo = manifest$Infinium_Design_Type,
+            chr = manifest$CHR,
+            mns = read.gdsn(methylated(gfile)),
+            uns = read.gdsn(unmethylated(gfile)))
+          add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
+        } else {
+        dasen(gfile, node="normbeta")
+        normbetas<-index.gdsn(gfile, "normbeta")[,]
+        }
+      } else {
+        if(!gdsObj){
+          normbetas<-betas(dasen(msetEPIC))
+        }
+      } 
+      qualDat<-qual(betas(gfile)[,], normbeta)
+      qualDat[which(intensPASS == FALSE),]<-NA
+      QCmetrics<-cbind(QCmetrics,qualDat)
+    }
 
 # count number of missing values
 if(!"nNAsPer" %in% colnames(QCmetrics)){
