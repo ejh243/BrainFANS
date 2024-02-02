@@ -198,11 +198,16 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 	QCmetrics<-cbind(QCmetrics,ctrlprobes.scores[,which(ctrl.pca > 0.01)])
 }
 
+
 # perform PCA on beta values
 if(!"PC1_betas" %in% colnames(QCmetrics)){
 	print("Calculating PCs of autosomal beta values")
 	# filter to autosomal only
-	auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
+	if(grep("V2", arrayVersion)){
+    auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
+  } else {
+    auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
+  }
 
 	pca <- prcomp(t(na.omit(betas(gfile)[,][auto.probes,QCmetrics$intensPASS])))
 	betas.scores = pca$x
