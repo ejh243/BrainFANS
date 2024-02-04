@@ -347,13 +347,13 @@ if(!"predSex" %in% colnames(QCmetrics)){
 	
 	# base prediction on y chromosome
 	predSex.y<-rep(NA, length(y.cp))
-	predSex.y[which(y.cp > 1.1 & intensPASS == TRUE)]<-"M"
-	predSex.y[which(y.cp < 0.9 & intensPASS == TRUE)]<-"F"
+	predSex.y[which(y.cp > 1.0 & intensPASS == TRUE)]<-"M"
+	predSex.y[which(y.cp < 0.5 & intensPASS == TRUE)]<-"F"
 	
 	# base prediction on x chromosome
 	predSex.x<-rep(NA, length(x.cp))
-	predSex.x[which(x.cp < 0.995 & intensPASS == TRUE)]<-"M"
-	predSex.x[which(x.cp > 1.005 & intensPASS == TRUE)]<-"F"
+	predSex.x[which(x.cp < 1 & intensPASS == TRUE)]<-"M"
+	predSex.x[which(x.cp > 1.01 & intensPASS == TRUE)]<-"F"
 	
 	# check for consistent prediction
 	predSex<-rep(NA, length(x.cp))
