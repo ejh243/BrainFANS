@@ -27,7 +27,7 @@ args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 refDir <- args[2]
 
-source(args[3])
+#source(args[3])
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
@@ -382,7 +382,11 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	geno.all<-geno
 	geno<-geno[match(QCmetrics$Genotype.IID, geno$IID),]
 	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
-	betas.rs<-betas(gfile)[,][rsIDs,]
+	if(grep("V2", arrayVersion, ignore.case=TRUE)){
+      betas.rs<-epicv2clean(betas(gfile)[,])[rsIDs,]
+  } else {
+      betas.rs<-betas(gfile)[,][rsIDs,]
+  }
 
 	# first check direction of minor alleles
 	cors<-vector(length = length(rsIDs))
