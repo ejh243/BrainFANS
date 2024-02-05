@@ -27,7 +27,7 @@ args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 refDir <- args[2]
 
-source(args[3])
+#source(args[3])
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
@@ -388,6 +388,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
     } else {
       betas.rs<-betas(gfile)[,][rsIDs,]
     }
+
 
 	# first check direction of minor alleles
 	cors<-vector(length = length(rsIDs))
