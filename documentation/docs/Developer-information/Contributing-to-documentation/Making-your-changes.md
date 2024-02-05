@@ -11,6 +11,17 @@ The pages for this website can be found in the directory: `/documentation/docs`.
 
 ## Simple changes to existing pages
 
+:::danger[Reserved keywords]
+Due to the way docusaurus is generating html files from markdown files, there are a few reserved keywords that can break the site if used incorrectly (*i.e.* used in normal sentences). These keywords are case sensitive and are only accounted for if they are the first word on a line (not if they appear in the middle of a sentence). 
+\
+Common keywords include:
+* export
+* import
+* const
+* Lines beginning with @
+* Lines beginning with }, {, ), (
+:::
+
 Most pages on this website are written in markdown (if you are not familiar with markdown please refer to this [popular guide](https://www.markdowntutorial.com)), making it easy to contribute to the documentation. Markdown pages are automatically converted to html files by docusaurus at build time.
 
 If the changes you plan to make are simply making changes to existing pages, then you can make your changes, commit them and follow the rest of the guide for how to contribute to the repository given [on these pages](/Developer-information/Contributing-to-repository/Resolving-the-issue.md). The next steps (pull request, merging *etc.* are the same here as they are there).
