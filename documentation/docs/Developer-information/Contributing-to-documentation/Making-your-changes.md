@@ -67,9 +67,9 @@ In order to put images onto your pages you need to upload the file into `/docume
 Docusaurus knows where to look for images by default so you only need to provide the path to the image starting at `static` like so:
 
 ```markdown
-![name of image goes here](/img/dna.png)
+![name of image link](/img/dna.ico)
 ```
-![name of image goes here](/img/dna.png)
+![name of image link](/img/dna.ico)
 
 ## Next steps
 
