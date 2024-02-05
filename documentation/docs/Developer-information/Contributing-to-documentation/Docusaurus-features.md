@@ -50,3 +50,39 @@ Which would return:
 $$
 E=mc^2
 $$
+
+## Using tabs
+
+Docusaurus enables you to use tabs to separate out cases. This could be useful if your page needs to describe similar information but in different use cases (for example, how to use a script for different data types, or on different operating systems):
+
+```md
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+  <TabItem value="Mac" label="Mac" default>
+    Do xxx for mac
+  </TabItem>
+  <TabItem value="Linux" label="Linux">
+    Do yyy for linux
+  </TabItem>
+  <TabItem value="Windows" label="Windows">
+    Do zzz for windows
+  </TabItem>
+</Tabs>
+```
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+  <TabItem value="Mac" label="Mac" default>
+    Do xxx for mac
+  </TabItem>
+  <TabItem value="Linux" label="Linux">
+    Do yyy for linux
+  </TabItem>
+  <TabItem value="Windows" label="Windows">
+    Do zzz for windows
+  </TabItem>
+</Tabs>
