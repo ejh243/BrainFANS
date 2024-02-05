@@ -4,6 +4,9 @@ title: Running the website locally
 description: Learn how to build and serve the website locally
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Running the website locally
 
 If you are making more significant changes to the website, or just want to know how your changes will look on these pages, we recommend that you build and serve the website off of your local machine. The benefits of doing this are two fold. First, you can see how your changes will actually look on these pages and second, you can check for any build errors. Build errors can be quite common when working on building new pages, linking images or cross-linking to other pages. These are very difficult to spot and if such breaking changes are merged into the master branch, the website will not deploy the new version until they are fixed. 
@@ -60,47 +63,46 @@ Provided `npm run build` did not return any errors you will now be able to view 
 
 If you are running the website on an ssh connection (ISCA users), you will not be able to view the website immediately like you would if running locally. One more step is required in ssh tunnelling. This process creates a secret pathway between your machine and the server that is running the website, allowing you to connect to the web address.
 
-### MobaXterm users
+<Tabs>
+  <TabItem value="Mac/Linux" label="Mac/Linux" default>
+    You can create an ssh tunnel to the server via the following command:
 
-At the top of your window you should see a 'Tunneling' (American English spelling) button. Click this button.
+    ```console
+    ssh -L 3000:[remote server]:3000 [ssh login]@[ssh server]
+    ```
 
-![Screenshot of MobaXterm navbar](/SSH-tunnelling/MobaXterm-navbar.png)
+    The above assumes the forward port is 3000, change this if the output of `npm run serve` says otherwise. For the other fields consult the below list:
 
-A window will now pop up, click 'New SSH tunnel'.
+    * Remote server -> This is the name of the node you ran the server on (for ISCA users: look at your command history, you'll see 'xxxyyy@mrc-compzzz' or 'xxxyyy@compzzz', paste the text after the '@' in this box)
+    * SSH login -> This is the user name you use to login to the SSH server
+    * SSH server -> This is the domain of the SSH server (for ISCA users, this will be: login.isca.ex.ac.uk)
+  </TabItem>
+  <TabItem value="MobaXterm" label="MobaXterm">
+    At the top of your window you should see a 'Tunneling' (American English spelling) button. Click this button.
 
-![Screenshot of MobaXterm new SSH tunnel button](/SSH-tunnelling/MobaXterm-new-tunnel-button.png)
+    ![Screenshot of MobaXterm navbar](/SSH-tunnelling/MobaXterm-navbar.png)
 
-You'll now need to fill in each of the boxes in this new window. Below should help with this:
+    A window will now pop up, click 'New SSH tunnel'.
 
-* Forwarded port -> This is likely 3000. It is the number seen after 'localhost:' displayed in the output of `npm run serve`
-* SSH server -> This is the domain of the SSH server (for ISCA users, this will be: login.isca.ex.ac.uk)
-* SSH login -> This is the user name you use to login to the SSH server
-* SSH port -> The port number of the SSH server (likely 22)
-* Remote server -> This is the name of the node you ran the server on (for ISCA users: look at your command history, you'll see 'xxxyyy@mrc-compzzz' or 'xxxyyy@compzzz', paste the text after the '@' in this box)
-* Remote port -> This will be the same as the forwarded port (likely 3000)
+    ![Screenshot of MobaXterm new SSH tunnel button](/SSH-tunnelling/MobaXterm-new-tunnel-button.png)
 
-Click save, name the tunnel and hit start.
+    You'll now need to fill in each of the boxes in this new window. Below should help with this:
 
-![Screenshot of tunnel](/SSH-tunnelling/MobaXterm-tunnel.png)
+    * Forwarded port -> This is likely 3000. It is the number seen after 'localhost:' displayed in the output of `npm run serve`
+    * SSH server -> This is the domain of the SSH server (for ISCA users, this will be: login.isca.ex.ac.uk)
+    * SSH login -> This is the user name you use to login to the SSH server
+    * SSH port -> The port number of the SSH server (likely 22)
+    * Remote server -> This is the name of the node you ran the server on (for ISCA users: look at your command history, you'll see 'xxxyyy@mrc-compzzz' or 'xxxyyy@compzzz', paste the text after the '@' in this box)
+    * Remote port -> This will be the same as the forwarded port (likely 3000)
 
-You will be prompted for your password (the one you use to connect to the SSH server), enter this and hit OK.
+    Click save, name the tunnel and hit start.
 
-![Screenshot of password box](/SSH-tunnelling/MobaXterm-password-box.png)
+    ![Screenshot of tunnel](/SSH-tunnelling/MobaXterm-tunnel.png)
 
-You should now be able to go to connect to http://localhost:3000/BrainFANS/ (or whatever the address given in the output of `npm run serve` is). 
+    You will be prompted for your password (the one you use to connect to the SSH server), enter this and hit OK.
 
+    ![Screenshot of password box](/SSH-tunnelling/MobaXterm-password-box.png)
 
-### Mac/Linux users
-
-You can create an ssh tunnel to the server via the following command:
-
-```console
-ssh -L 3000:[remote server]:3000 [ssh login]@[ssh server]
-```
-
-The above assumes the forward port is 3000, change this if the output of `npm run serve` says otherwise. For the other fields consult the below list:
-
-* Remote server -> This is the name of the node you ran the server on (for ISCA users: look at your command history, you'll see 'xxxyyy@mrc-compzzz' or 'xxxyyy@compzzz', paste the text after the '@' in this box)
-* SSH login -> This is the user name you use to login to the SSH server
-* SSH server -> This is the domain of the SSH server (for ISCA users, this will be: login.isca.ex.ac.uk)
-
+    You should now be able to go to connect to http://localhost:3000/BrainFANS/ (or whatever the address given in the output of `npm run serve` is). 
+  </TabItem>
+</Tabs>
