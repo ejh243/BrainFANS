@@ -1,8 +1,0 @@
-{
-  "label": "Completed Analyses",
-  "position": 3,
-  "link": {
-    "type": "generated-index",
-    "description": "Find records of analyses that have been previously completed using BrainFANS pipelines. Details of inputs, parameters and more are detailed."
-  }
-}
