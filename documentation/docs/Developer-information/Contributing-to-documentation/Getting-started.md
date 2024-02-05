@@ -16,7 +16,7 @@ With an issue chosen, you will need to determine the scope of your changes. Plea
 
 This covers issues that require:
 * Small changes to existing pages
-* Adding new pages from the given [templates](/User-information/Analyses/Templates.md)
+* Adding new pages from templates
 
 Simply click next at the bottom of this page, you can start with the contribution process straight away.
 
@@ -25,7 +25,7 @@ Simply click next at the bottom of this page, you can start with the contributio
 This covers issues that require:
 - Adding internal links to existing pages
 - Changing the configuration files for this website
-- Adding new pages that are **not** generated from [templates](/User-information/Analyses/Templates.md)
+- Adding new pages that are **not** generated from templates
 - Creating non markdown files (mdx files, css files etc.)
 - Adding images
 - General directory structure changes
