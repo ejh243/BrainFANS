@@ -34,7 +34,7 @@ description: [Desciption shows up on directory landing page]
 These lines are not a requirement, but adding them allows the pages to be ordered and easily identified. The `sidebar_position` is the most important line of metadata for organisational purposes. You can also specify the `slug` of the web page in the metadata if you wish (be careful with duplicate names of pages if using this feature). 
 
 :::tip[Special features]
-Docusaurus has extra features thanks to mdx which can help with page customisation (for example: this tip box). Go to the next page to learn more about these features.
+Docusaurus has extra features thanks to mdx which can help with page customisation (for example: this tip box). Go to the [next page](./Docusaurus-features.md) to learn more about these features.
 :::
 
 ## Adding new directories
@@ -65,6 +65,8 @@ In order to put images onto your pages you need to upload the file into `/docume
 Docusaurus knows where to look for images by default so you only need to provide the path to the image starting at `static` like so:
 
 ```markdown
+# The name of the image link will show if the image is not loaded
+# for some reason
 ![name of image link](/img/dna.ico)
 ```
 ![name of image link](/img/dna.ico)
