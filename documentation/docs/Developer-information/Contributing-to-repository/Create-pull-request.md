@@ -29,19 +29,19 @@ Using `git pull` and then `git push` might be unecessary in some circumstances. 
 
 ## Return to github to finalise the pull request
 
-Move to the pull request tab on GitHub
+Move to the pull request tab on GitHub:
 
 ![Screenshot of the location of pull requests](/development-pipeline/pull-request-location.png)
 
-Click on 'New pull request'
+Click on 'New pull request':
 
 ![Screenshot of the location of pull request button](/development-pipeline/pull-request-button.png)
 
-Select 'master' for the **base field** and [your development branch] for the **compare field**
+Select the development branch you are working off of for the **base field** and your new development branch for the **compare field**:
 
 ![Screenshot of the compare and base](/development-pipeline/pull-request-branch-selection.png)
 
-Click on 'Create pull request'
+Click on 'Create pull request':
 
 ![Screenshot of the create pull request button](/development-pipeline/create-pull-request-button.png)
 
@@ -51,9 +51,9 @@ Click on 'Create pull request'
 
 **PLEASE COMPLETE THE FOLLOWING:**
 
-- Give your pull request a title
-- Fill in the description with what you have done
-- Replace [number] with the number of the issue that the pull request resolves
+- Give your pull request a title (What is the main feature this pull request brings)
+- Fill in the description with what you have done (be specific)
+- Replace [number] with the numbers of any issues that the pull request resolves
 - Convert `[ ]`to `[x]` for any checkboxes that are relevant to the pull request
 
 ## Assign people and labels to the request
@@ -62,7 +62,7 @@ Reviewers -> Assigned people will be notified to review your changes and provide
 \
 Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process, we recommend at least assigning yourself
 \
-Labels -> Relevant tags for the pull request (best to pick the same ones as used in the issue being addressed)
+Labels -> Relevant tags for the pull request (best to pick the same ones as used in the issues being addressed)
 
 ![Screenshot of applying labels](/development-pipeline/assign-labels-pull-request.png)
 

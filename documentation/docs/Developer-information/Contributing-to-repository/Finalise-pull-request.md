@@ -24,7 +24,7 @@ In most cases your branch is no longer required, GitHub should prompt the user t
 
 If you created a new development branch in [step 3](./Creating-new-branch.md), this will not apply to you. If unsure, notify an admin.
 
-Clicking the 'delete branch' button will only delete the branch on GitHub, not the branch on your copy of the repository. In order to delete your branch locally, please complete the following:
+Clicking the 'delete branch' button will only delete the branch on GitHub, not the branch on your copy of the repository. If you want to delete your branch locally, please complete the following:
 
 ```bash
 # Ensure that there are no uncommited changes to the branch
@@ -55,5 +55,5 @@ Go back to the issues that were resolved with this pull request and mark them as
 Congratulations! You have completed a contribution. As you contribute more, this process will become second nature.
 
 :::tip[Future contributions]
-If this was your first contribution, we recommend you continue to use this guide for your next few contributions as well
+If this was your first contribution, we recommend you continue to use this guide for your next few contributions as well.
 :::
