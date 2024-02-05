@@ -289,7 +289,7 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
       print("Calculating effect of normalisation")
       if(gdsObj){
         
-        if(grep("V2", arrayVersion, ignore.case=TRUE)){
+        if(toupper(arrayType) == "V2"){
           normbeta <- adjustedDasen(
             onetwo = manifest$Infinium_Design_Type,
             chr = manifest$CHR,
@@ -298,11 +298,11 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
           add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
         } else {
         dasen(gfile, node="normbeta")
-        normbetas<-index.gdsn(gfile, "normbeta")[,]
+        normbeta<-index.gdsn(gfile, "normbeta")[,]
         }
       } else {
         if(!gdsObj){
-          normbetas<-betas(dasen(msetEPIC))
+          normbeta<-betas(dasen(msetEPIC))
         }
       } 
       qualDat<-qual(betas(gfile)[,], normbeta)
@@ -326,7 +326,7 @@ if(!"nNAsPer" %in% colnames(QCmetrics)){
 if(!"predSex" %in% colnames(QCmetrics)){	
 	print("Performing sex prediction from sex chromosome profiles")	
 	if(gdsObj){
-		if(grep("V2", arrayVersion, ignore.case=TRUE)){
+		if(toupper(arrayType) == "V2"){
         x.probes<-which(manifest$CHR == "chrX")
         y.probes<-which(manifest$CHR == "chrY")
       } else {
