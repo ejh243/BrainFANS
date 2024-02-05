@@ -10,7 +10,7 @@ description: Update or clone the repository to your local machine
 
 If this is your first contribution, please use the following unix commands to clone the repository to a personal directory of yours:
 
-```console
+```bash
 # Move to the directory you want the repository to be cloned to
 cd path/to/directory
 
@@ -24,7 +24,7 @@ For subsequent contributions, navigate to the location of your **personal** Brai
 
 Most contributions will be a part of an existing development branch. For example, if the issue you are resolving relates to atac pipeline, then you should have the latest version of the `atac-develop` pipeline. In order to avoid merge conflicts, pull the latest changes for the branch that you plan to work off of with these unix commands:
 
-```console
+```bash
 # Change directory to location of your local BrainFANS repository
 cd path/to/BrainFANS
 

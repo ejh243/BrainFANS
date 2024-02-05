@@ -16,7 +16,7 @@ Before making any commits, run `git status` to check you are indeed in your deve
 
 If this is not the branch you created in [step three](./Creating-new-branch.md), please run the following:
 
-```console
+```bash
 # Switch to the development branch you created in step three
 git checkout <your-branch-name>
 
@@ -30,7 +30,7 @@ If you are on the wrong branch when making commits you run the risk of creating 
 
 If you have skipped ahead and already made commits, please type the following into the terminal:
 
-```console
+```bash
 # Clears any commits you have made (this does not delete your hard work)
 git reset --soft HEAD
 ```
@@ -41,7 +41,7 @@ Edit the relevant files in your favourite text editor one at a time.
 
 Once a **small** and complete change has been made use:
 
-```console
+```bash
 # Stage the relevant file to be committed
 git add path/to/file
 

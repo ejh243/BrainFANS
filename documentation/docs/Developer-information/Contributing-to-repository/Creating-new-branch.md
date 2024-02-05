@@ -13,7 +13,7 @@ If you do not follow this step you will not be able to push any of your changes 
 :::
 
 
-```console
+```bash
 # Creates new branch off of the provided development branch
 # and automatically moves you onto this branch
 git checkout -b <development-branch-name> <your-branch-name>

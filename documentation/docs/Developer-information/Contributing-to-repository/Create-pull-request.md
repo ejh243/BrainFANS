@@ -16,7 +16,7 @@ Now that you have finished resolving the issue, it is time to create a pull requ
 
 To begin, run these two commands sequentially:
 
-```console
+```bash
 # Pull any changes from the remote repository that may have changed since step one
 # This is recommeded to protect you from finding merge conflicts later on
 git pull origin <your-branch-name>

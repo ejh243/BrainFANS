@@ -6,24 +6,24 @@ description: Making changes to resolve documentation issues
 
 # Step 3: Making your changes
 
-The pages for this website can be found in the directory: `/documentation/docs`.  
+The pages for this website can be found in the directory: `/documentation/docs`. Pages are generally organised with the same names as what is seen in the search bar in your web browser. For example, this page can be found in `documentation/docs/Developer-information/Contributing-to-documentation/Making-your-changes`.  
 
 
 ## Simple changes to existing pages
 
-Most pages on this website are written in markdown (if you are not familiar with markdown please refer to this [popular guide](https://www.markdowntutorial.com)), making it easy to contribute to the documentation. Markdown pages are automatically converted to html files by docusaurus at deploy time.
+Most pages on this website are written in markdown (if you are not familiar with markdown please refer to this [popular guide](https://www.markdowntutorial.com)), making it easy to contribute to the documentation. Markdown pages are automatically converted to html files by docusaurus at build time.
 
 If the changes you plan to make are simply making changes to existing pages, then you can make your changes, commit them and follow the rest of the guide for how to contribute to the repository given [on these pages](/Developer-information/Contributing-to-repository/Resolving-the-issue.md). The next steps (pull request, merging *etc.* are the same here as they are there).
 
 ## Adding new files
 
-If you are adding new pages to the website please follow the current file structure so that we can keep the wiki organised. Currently, you will see that the wiki is split into two folders (Developer information and User information). These folders contain the markdown files that are converted to html files at build time. Subdirectories of these two show up on the left hand side of the webpages in exactly the way one would expect. If you are unsure on where to place your files, ask on GitHub (either on the issue you are working on, or in the [discussions page](https://github.com/ejh243/BrainFANS/discussions/categories/q-a)).
+If you are adding new pages to the website please follow the current directory structure so that we can keep the wiki organised. Currently, you will see that the wiki is split into two main directories (Developer information and User information). These directories contain the markdown files that are converted to html files at build time. Subdirectories of these two show up on the left hand side of the webpages in exactly the way one would expect. If you are unsure on where to place your files, ask on GitHub (either on the issue you are working on, or in the [discussions page](https://github.com/ejh243/BrainFANS/discussions/categories/q-a)).
 
 ### Markdown metadata
 
-If you take a look at the head of any existing file you will see the metadata like the following:
+If you take a look at the head of any existing file you will see metadata like the following:
 
-```markdown title="Making-your-changes.md"
+```markdown title="A-markdown-file.md"
 ---
 sidebar_position: [position in the sidebar]
 title: [Name of the page]
@@ -31,9 +31,7 @@ description: [Desciption shows up on directory landing page]
 ---
 ```
 
-These lines are not a requirement, but adding them allows the pages to be ordered and easily identified. You can also specify the `slug` of the web page in the metadata if you wish (be careful with duplicate names of pages if using this feature). 
-
-### Special features
+These lines are not a requirement, but adding them allows the pages to be ordered and easily identified. The `sidebar_position` is the most important line of metadata for organisational purposes. You can also specify the `slug` of the web page in the metadata if you wish (be careful with duplicate names of pages if using this feature). 
 
 :::tip[Special features]
 Docusaurus has extra features thanks to mdx which can help with page customisation (for example: this tip box). Go to the next page to learn more about these features.
@@ -41,7 +39,7 @@ Docusaurus has extra features thanks to mdx which can help with page customisati
 
 ## Adding new directories
 
-If you are creating entirely new directories, please include a `_category_.json` file into the new directory. These help with organising the directories in the navbar on the left hand side of the screen.
+If you are creating entirely new directories, please include a `_category_.json` file into the new directory. These help with organising the directories in the navbar on the left hand side of the website.
 
 In general, one can use the following as a template for this file:
 
@@ -60,7 +58,7 @@ For more information on this file, you can consult the [official documentation](
 
 ## Adding images
 
-In order to put images onto your pages you need to upload the file into `/documentation/static`. Ideally put these images into a new folder or a folder that exists already to help with file organisation. 
+In order to put images onto your pages you need to upload the file into `/documentation/static`. Ideally put these images into a new directory or a directory that exists already to help with file organisation. 
 
 ### Referencing the images in markdown
 

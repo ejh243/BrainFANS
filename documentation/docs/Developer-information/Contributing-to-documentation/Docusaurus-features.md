@@ -56,6 +56,7 @@ $$
 Docusaurus enables you to use tabs to separate out cases. This could be useful if your page needs to describe similar information but in different use cases (for example, how to use a script for different data types, or on different operating systems):
 
 ```md
+# These import statements can be inserted anywhere in the file
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -71,6 +72,8 @@ import TabItem from '@theme/TabItem';
   </TabItem>
 </Tabs>
 ```
+
+Which outputs:
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -89,4 +92,4 @@ import TabItem from '@theme/TabItem';
 
 ## Additional features
 
-There are more features available that a developer may find interesting. If you want to look into any of these features, head over to the [official docusaurus documentation](https://docusaurus.io/docs/markdown-features).
+There are more features available that a developer may find useful. If you want to look into any of these features, head over to the [official docusaurus documentation](https://docusaurus.io/docs/markdown-features).

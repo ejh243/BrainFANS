@@ -26,7 +26,7 @@ If you created a new development branch in [step 3](./Creating-new-branch.md), t
 
 Clicking the 'delete branch' button will only delete the branch on GitHub, not the branch on your copy of the repository. In order to delete your branch locally, please complete the following:
 
-```console
+```bash
 # Ensure that there are no uncommited changes to the branch
 git checkout <your-branch-name>
 git status
