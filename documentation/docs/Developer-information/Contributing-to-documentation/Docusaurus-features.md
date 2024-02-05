@@ -90,6 +90,15 @@ import TabItem from '@theme/TabItem';
   </TabItem>
 </Tabs>
 
+## Mermaid diagrams
+
+Docusaurus enables the user to make a large number of different diagrams that appear in text. The advantage in this lies with the ability for each develoeper to make a change to the diagram. Embedding images of diagrams works when only one person is working on documentation, but this does not scale well when others need to make changes to such diagrams. Mermaid allows for diagrams to be written in codeblocks:
+
+```mermaid
+graph TD;
+    A-->B;
+```
+
 ## Additional features
 
 There are more features available that a developer may find useful. If you want to look into any of these features, head over to the [official docusaurus documentation](https://docusaurus.io/docs/markdown-features).
