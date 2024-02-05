@@ -86,3 +86,7 @@ import TabItem from '@theme/TabItem';
     Do zzz for windows
   </TabItem>
 </Tabs>
+
+## Additional features
+
+There are more features available that a developer may find interesting. If you want to look into any of these features, head over to the [official docusaurus documentation](https://docusaurus.io/docs/markdown-features).
