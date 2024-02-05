@@ -16,8 +16,7 @@ REQUISITES:
 Parameters in [] are optional.
 ### 1. Pre-analysis
 
-
-#### 1.1 `sbatch --array="number of batch jobs" ATACSeq/jobSubmission/1_batchRunAlignment.sh (project name) [STEPS]`
+ 1.1 ) `sbatch --array="number of batch jobs" ATACSeq/jobSubmission/1_batchRunAlignment.sh (project name) [STEPS]`
 
 Performs pre-analysis of ATAC-seq data, including pre-alignment quality control, alignment and post-alignment quality control of samples. 
 
@@ -39,7 +38,7 @@ Performs pre-analysis of ATAC-seq data, including pre-alignment quality control,
 
 ### 2. Post-alignment processing
 
-#### 2.1 `sbatch --array=<number of batch jobs/10> ATACSeq/jobSubmission/2_batchCalcQCMetrics.sh  (project-name)`
+ 2.1) `sbatch --array=<number of batch jobs/10> ATACSeq/jobSubmission/2_batchCalcQCMetrics.sh  (project-name)`
 
 This script uses the ATACseqQC R package to generate the fragment distribution and calculate some summary statistics. It splits the samples into groups of 10 to run in parallel, so batch number should be the number of samples divided by 10.
 e.g. If there are 50 samples, batch number should be 0-5, producing 5 batches of 10 samples each.
@@ -48,7 +47,7 @@ If the number of samples is less than 10, set batch number to 0.
  
 ### 3. Peak calling by sample
 
-#### 3.1 `sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/3_batchRunPeakCalling.sh (project-name) [STEPS]`
+3.1) `sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/3_batchRunPeakCalling.sh (project-name) [STEPS]`
 
 This script searchs within aligned data folders for all bam files
 Then submits a batch script to process one sample
@@ -64,7 +63,7 @@ Then submits a batch script to process one sample
 
 [STEPS] option to either SHIFT, PEAKS or FRIP. The first one shift reads, the second one performs peak calling and the third calculates fraction of reads in peaks. 
 
-#### 3.2 `sbatch ATACSeq/jobSubmission/4_collateStage1QCMetrics.sh  (project-name) [STEPS]`
+3.2) `sbatch ATACSeq/jobSubmission/4_collateStage1QCMetrics.sh  (project-name) [STEPS]`
 
 This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment. It also runs the following utility scripts.
 * executes ATACSeq/preprocessing/7_progressReport.sh 
@@ -87,18 +86,18 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
 
 [STEPS] option of either MULTIQC, COLLATE, SUMMARY. They may be combined, with desired steps included as single string, i.e. MULIQC,COLLATE. Default if left blank is to run all of them.
 
-#### 3.3 `sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/5_batchFormatSexChrs.sh <project ID>`
+3.3) `sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/5_batchFormatSexChrs.sh <project ID>`
 
 	* executes ./ATACSeq/preprocessing/subsetSexChrs.sh for all samples that pass stage 1 filtering
 		* subsets tagalign files to X and Y chromosome reads
 	* requires a file in METADATA folder called passStage1SampleList.txt which lists the samples to be included for sex check
  
-#### 3.4 `sbatch ATACSeq/jobSubmission/6_sexCheck.sh  <project ID>`
+3.4) `sbatch ATACSeq/jobSubmission/6_sexCheck.sh  <project ID>`
 	* executes ATACSeq/preprocessing/sexChrPeaks.sh which performs peak calling on the sex chromomes, filter and read counts
  
 ### 4. Genotype concordance
 
-#### 4.1 `7.1 sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_batchRunGenotypeConcordance.sh <project ID> [OPTIONS]`
+4.1) `7.1 sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_batchRunGenotypeConcordance.sh <project ID> [OPTIONS]`
   * executes /ATACSeq/preprocessing/compareBamWithGenotypes.sh which prepares bam file for comparison with verifyBamID
     * creates an recalibration file for base quality scores to be adjusted.
   * requires a file in METADATA folder called matchedVCFIDs.txt which lists the samples with their matched vcfID.
@@ -110,13 +109,13 @@ This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment.
   
   * executes /ATACSeq/preprocessing/collateSampleChecks.Rmd which collates the results from previous sex check and Genotype check
     
-#### 4.2 `7.2 sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_2_batchRunGenotypeSearch.sh <project ID> `
+4.2) `7.2 sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_2_batchRunGenotypeSearch.sh <project ID> `
   * Outputs a summary of stats from previous step and finds any sample that might be contaminated.
   * Contaminated samples will go to a created file potentialSwitches.txt. If this file is not empty, searchBestGenoMatch.sh is executed and an alternative Genotype search is done for the sample.
 
 ### 5. Peak calling by group
 
-#### 5.1 `8. sbatch --array=<number of cell fractions> ATACSeq/jobSubmission/8_batchPeakCallingByGroup.sh <project ID> [GROUPS] [STEPS]`
+5.1) `8. sbatch --array=<number of cell fractions> ATACSeq/jobSubmission/8_batchPeakCallingByGroup.sh <project ID> [GROUPS] [STEPS]`
 * executes /general/processing/makeGroupAnalysisFile.r which creates a txt file (samplesForGroupAnalysis.txt) with samples classified by fraction/tissue
     * tissue can be specified, default is "prefrontal cortex|PFC"
     
