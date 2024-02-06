@@ -12,7 +12,7 @@ Now you have created a pull request, someone else (the reviewer that was assigne
 
 ## Merge branches
 
-Once the code review has been completed, the branches can be merged. At this stage, any merge conflicts should be resolved. This is usually a simple case of choosing which lines to keep from each file.
+Once the code review has been completed and approved, the branches can be merged. At this stage, any merge conflicts should be resolved. This is usually a simple case of choosing which lines to keep from each file.
 
 If this proves difficult, add someone else onto the assignee list of the pull request.
 
@@ -44,8 +44,10 @@ git branch
 
 ## Mark related issues as complete
 
-:::info[Clean up]
 Go back to the issues that were resolved with this pull request and mark them as completed/closed. This is necessary as it cleans up the issues page, making it easier to navigate.
+
+:::info[Automation]
+GitHub allows issues to be autocompleted if the issues are linked to the pull request (located in the developments section of the pull request).
 :::
 
 ![Screenshot of closing an issue](/development-pipeline/close-issue.png)

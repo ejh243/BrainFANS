@@ -37,7 +37,7 @@ Click on 'New pull request':
 
 ![Screenshot of the location of pull request button](/development-pipeline/pull-request-button.png)
 
-Select the development branch you are working off of for the **base field** and your new development branch for the **compare field**:
+Select the development branch you are working off of for the **base field** and your newly created branch for the **compare field**:
 
 ![Screenshot of the compare and base](/development-pipeline/pull-request-branch-selection.png)
 

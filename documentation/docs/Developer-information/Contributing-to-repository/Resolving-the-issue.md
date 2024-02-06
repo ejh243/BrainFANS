@@ -25,7 +25,7 @@ git status
 ```
 
 :::danger[Important] 
-If you are on the wrong branch when making commits you run the risk of creating merge conflicts that can be difficult to resolve
+If you are on the wrong branch when making commits you run the risk of creating merge conflicts that can be difficult to resolve. If you make commits to a development (or master) branch, you will not be able to push these commits at all (due to branch protection rules).
 :::
 
 If you have skipped ahead and already made commits, please type the following into the terminal:
