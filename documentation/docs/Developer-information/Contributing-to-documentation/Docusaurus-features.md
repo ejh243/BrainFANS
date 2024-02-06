@@ -94,10 +94,30 @@ import TabItem from '@theme/TabItem';
 
 Docusaurus enables the user to make a large number of different diagrams that appear in text. The advantage in this lies with the ability for each develoeper to make a change to the diagram. Embedding images of diagrams works when only one person is working on documentation, but this does not scale well when others need to make changes to such diagrams. Mermaid allows for diagrams to be written in codeblocks:
 
+````markdown
+
 ```mermaid
-graph TD;
-    A-->B;
+pie title Number of samples per cell type
+    "NeuN+" : 386
+    "Sox10+" : 202
+    "IRF8+" : 50
+    "Astrocytes" : 98
 ```
+
+````
+
+Which returns:
+
+```mermaid
+pie title Number of samples per cell type
+    "NeuN+" : 386
+    "Sox10+" : 202
+    "IRF8+" : 50
+    "Astrocytes" : 98
+```
+
+There are a large number of different diagrams one can create with mermaid. These include: pie charts, Gannt charts, flowcharts, relationship diagrams and much much more. For a full list of the different diagrams one can produce (and the syntax behind them) please consult [mermaid's official documentation](https://mermaid.js.org/syntax/flowchart.html).
+
 
 ## Additional features
 
