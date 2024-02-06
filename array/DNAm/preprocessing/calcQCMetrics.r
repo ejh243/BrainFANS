@@ -111,7 +111,7 @@ if(file.exists(qcData)){
 
 #QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
 
-if(grep("V2", arrayVersion, ignore.case=TRUE)){
+if(toupper(arrayType) == "V2"){
 manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
 manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
 print("loaded EpicV2 manifest")
@@ -203,7 +203,7 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 if(!"PC1_betas" %in% colnames(QCmetrics)){
 	print("Calculating PCs of autosomal beta values")
 	# filter to autosomal only
-	if(grep("V2", arrayVersion, ignore.case=TRUE)){
+	if(toupper(arrayType) == "V2"){
     auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
   } else {
     auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
@@ -247,7 +247,7 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 # calc Horvaths epigenetic age
 if(!"DNAmAge" %in% colnames(QCmetrics)){
 	print("Calculating Horvath's pan tissue epigenetic age")
-	if(grep("V2", arrayVersion, ignore.case=TRUE)){
+	if(toupper(arrayType) == "V2"){
         DNAmAge<-agep(epicv2clean(betas(gfile)[]))
       } else {
         data(coef)
@@ -345,6 +345,8 @@ if(!"predSex" %in% colnames(QCmetrics)){
 	x.cp<-colMeans(ints.X, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
 	y.cp<-colMeans(ints.Y, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
 	
+
+	if(toupper(arrayType) == "V2"){
 	# base prediction on y chromosome
 	predSex.y<-rep(NA, length(y.cp))
 	predSex.y[which(y.cp > 1.0 & intensPASS == TRUE)]<-"M"
@@ -354,6 +356,19 @@ if(!"predSex" %in% colnames(QCmetrics)){
 	predSex.x<-rep(NA, length(x.cp))
 	predSex.x[which(x.cp < 1 & intensPASS == TRUE)]<-"M"
 	predSex.x[which(x.cp > 1.01 & intensPASS == TRUE)]<-"F"
+	} else {
+
+	# base prediction on y chromosome
+	predSex.y<-rep(NA, length(y.cp))
+	predSex.y[which(y.cp > 1.1 & intensPASS == TRUE)]<-"M"
+	predSex.y[which(y.cp < 0.9 & intensPASS == TRUE)]<-"F"
+	
+	# base prediction on x chromosome
+	predSex.x<-rep(NA, length(x.cp))
+	predSex.x[which(x.cp < 0.995 & intensPASS == TRUE)]<-"M"
+	predSex.x[which(x.cp > 1.005 & intensPASS == TRUE)]<-"F"
+
+	}
 	
 	# check for consistent prediction
 	predSex<-rep(NA, length(x.cp))
@@ -383,7 +398,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	geno<-geno[match(QCmetrics$Genotype.IID, geno$IID),]
 	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
 	
-	  if(grep("V2", arrayVersion, ignore.case=TRUE)){
+	  if(toupper(arrayType) == "V2"){
       betas.rs<-epicv2clean(betas(gfile)[,])[rsIDs,]
     } else {
       betas.rs<-betas(gfile)[,][rsIDs,]
