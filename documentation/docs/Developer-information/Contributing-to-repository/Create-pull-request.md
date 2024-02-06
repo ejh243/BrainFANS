@@ -58,7 +58,7 @@ Click on 'Create pull request':
 
 ## Assign people and labels to the request
 
-Reviewers -> Assigned people will be notified to review your changes and provide feedback (code review)
+Reviewers -> Assigned people will be notified to review your changes and provide feedback (code review). Your pull request cannot be accepted until a reviewer has approved your commits.
 \
 Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process, we recommend at least assigning yourself
 \
