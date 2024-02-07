@@ -44,8 +44,11 @@ Most contributions will be a part of an existing development branch. For example
     # Move to the location of the BrainFANS repository
     cd path/to/BrainFANS
 
+    # Move over to the development branch
+    git checkout <development-branch-name>
+
     # Pulls (and merges) the latest changes to the development branch
-    git pull <development-branch-name> 
+    git pull origin <development-branch-name> 
     ```
   </TabItem>
 </Tabs>
