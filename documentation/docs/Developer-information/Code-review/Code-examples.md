@@ -225,7 +225,7 @@ def factorial(n):
 
 The above is obviously an egregious use of comments. Python is readable enough that none of the above comments are particularly required. However, hopefully you can see that explaining "*what*" really does not help the reader.
 
-Sometimes, explaining *what* the code does feel like a necessity. In such cases we refer back to our stance on [complex code](#complexity). If the code is complex enough that *what*-based comments are required, then the code would likely benefit from being refactored.
+Sometimes, explaining *what* the code does feel like a necessity. In such cases we refer back to our stance on [complex code](#complexity). If the code is complex enough that *what*-based comments are required, then the code would likely benefit from being refactored. The exception to this is *regular expressions*. If the code uses regex, then the comments should explain what the code is doing. Computers read regex, humans do not (well, not easily).
 
 ## Scalability/Expandability
 
