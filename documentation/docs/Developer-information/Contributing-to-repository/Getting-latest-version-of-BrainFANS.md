@@ -12,7 +12,7 @@ Most contributions will be a part of an existing development branch. For example
 
 <Tabs>
   <TabItem value="New-user" label="First time cloning BrainFANS" default>
-     Please use the following unix commands to clone the specific development branch of the repository to a personal directory of yours:
+     Please use the following git commands to clone the specific development branch of the repository to a personal directory of yours:
 
     ```bash
     # Move to the directory you want the repository to be cloned to

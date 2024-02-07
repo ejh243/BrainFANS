@@ -34,7 +34,7 @@ From here, the reviewer should check through the changes that have been made to 
 
 <Tabs>
   <TabItem value="New-user" label="If you do not have BrainFANS locally" default>
-    If you do not already have BrainFANS on your local machine, you will need to clone the repository (the specific branch) on to it.
+    If you do not already have BrainFANS on your local machine, you will need to clone the development branch, use the follow git commands to achieve this:
 
     ```bash
     # Move to the directory you want the repository to be cloned to

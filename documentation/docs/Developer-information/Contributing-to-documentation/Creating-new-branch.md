@@ -12,7 +12,7 @@ If you do not already have the BrainFANS repository on your local machine, pleas
 
 Start by creating a new branch off of the **web-development** (not master) branch so that changes to the documentation are easy to track and follow.
 
-To create a new branch off of the web-development branch, head over to the terminal and use the following unix commands:
+To create a new branch off of the web-development branch, head over to the terminal and use the following git commands:
 
 ```bash
 # Change your directory to the position of your local BrainFANS repository
