@@ -28,14 +28,11 @@ Sometimes, the number of files that have changed for a single pull request can b
 
 ## Reviewing changes
 
-From here, the reviewer should check through the changes that have been made to the code base. GitHub provides the reviewer with a side-by-side view for each of the changes made. Sometimes however, GitHub is unable to show the difference between two files (for example, a change to a .png file or .pdf *etc.*). In these cases, it is best to pull these changes to your local machine to inspect them properly. Some reviewers may prefer to pull the changes made to their local machine regardless (due to a preference with their text editor for example). To do this, use the terminal to obtain the branch the pull request refers to (If you do not have a local version of BrainFANS, you will need to [clone the repository first](/Developer-information/Contributing-to-repository/Getting-latest-version-of-BrainFANS.md)):
+From here, the reviewer should check through the changes that have been made to the code base. GitHub provides the reviewer with a side-by-side view for each of the changes made. Sometimes however, GitHub is unable to show the difference between two files (for example, a change to a .png file or .pdf *etc.*). In these cases, it is best to pull these changes to your local machine to inspect them properly. Some reviewers may prefer to pull the changes made to their local machine regardless (due to a preference with their text editor for example). To do this, use the terminal to obtain the branch the pull request refers to:
 
 ```bash
-# Obtains the latest version of the branch in the pull request
-git pull origin <branch-name>
-
-# Switches over to the pulled branch
-git checkout <branch-name>
+# Clones the specific development branch to your local machine
+git clone -b <branch-name> https://github.com/ejh243/BrainFANS.git
 ```
 
 ## Leaving comments
