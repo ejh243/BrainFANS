@@ -26,9 +26,10 @@ If you have already cloned the branch you are working off of in the past, there 
 # Move to the location of the BrainFANS repository
 cd path/to/BrainFANS
 
-# Change current branch to the branch you wish to work off of
-git checkout <branch-name>
+# Fetches latest changes to the repository
+git fetch
 
-# Pull the latest changes
-git pull origin <branch-name>
+# Switches you over to the latest version of the specific development branch 
+# you plan to work off of
+git checkout -b <development-branch-name> origin/<development-branch-name>
 ```

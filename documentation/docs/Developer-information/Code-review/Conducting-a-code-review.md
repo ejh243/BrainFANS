@@ -3,6 +3,8 @@ sidebar_position: 1
 title: "Conducting a code review"
 description: "Learn how to complete a code review"
 ---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Conducting a code review
 
@@ -30,10 +32,34 @@ Sometimes, the number of files that have changed for a single pull request can b
 
 From here, the reviewer should check through the changes that have been made to the code base. GitHub provides the reviewer with a side-by-side view for each of the changes made. Sometimes however, GitHub is unable to show the difference between two files (for example, a change to a .png file or .pdf *etc.*). In these cases, it is best to pull these changes to your local machine to inspect them properly. Some reviewers may prefer to pull the changes made to their local machine regardless (due to a preference with their text editor for example). To do this, use the terminal to obtain the branch the pull request refers to:
 
-```bash
-# Clones the specific development branch to your local machine
-git clone -b <branch-name> https://github.com/ejh243/BrainFANS.git
-```
+<Tabs>
+  <TabItem value="New-user" label="If you have not cloned BrainFANS before" default>
+    If you do not already have BrainFANS on your local machine, you will need to clone the repository (the specific branch) on to it.
+
+    ```bash
+    # Move to the directory you want the repository to be cloned to
+    cd path/to/directory
+
+    # Create a copy/clone of the online repository found on GitHub
+    git clone -b <development-branch-name> https://github.com/ejh243/BrainFANS.git
+    ```
+  </TabItem>
+  <TabItem value="Existing-user" label="If you already have BrainFANS cloned">
+    If you have a version of BrainFANS already on your local machine, use these commands in the terminal:
+
+    ```bash
+    # Move to the location of the BrainFANS repository
+    cd path/to/BrainFANS
+
+    # Fetches latest changes to the repository
+    git fetch
+
+    # Switches you over to the latest version of the specific development branch
+    git checkout -b <branch-name> origin/<branch-name>
+    ```
+  </TabItem>
+</Tabs>
+
 
 ## Leaving comments
 
