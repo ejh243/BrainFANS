@@ -8,7 +8,7 @@ description: Complete a code review, fix merge conflicts and merge
 
 ## Code review
 
-Now you have created a pull request, someone else (the reviewer that was assigned to the pull request) should complete a code review of your changes. A separate document will be available in the future detailing how this process is expected to play out. For now, please consult [Google's code review guide](https://google.github.io/eng-practices/review/reviewer/).
+Now you have created a pull request, someone else (the reviewer that was assigned to the pull request) should complete a code review of your changes. To learn more about code reviews and some best practices, head over to [these pages](/category/introduction-to-code-reviews).
 
 ## Merge branches
 
