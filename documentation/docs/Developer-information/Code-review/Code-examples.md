@@ -6,15 +6,15 @@ description: "Examples of good and bad code and what to comment on"
 
 # Examples of good and bad code
 
-When conducting a code review, there are many aspects the reviewer should be looking out for. These aspects have been laid out in [this list](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review). This page aims to give good and bad examples of code for each of the points on the list. Code is written in python as *generally* python is easy to read for those new to programming.
+When conducting a code review, there are many aspects the reviewer should be looking out for. These aspects have been laid out in [this list](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review). This page aims to give good and bad examples of code for each of the points on the list. Code is written in python as, *generally*, python is easy to read for those new to programming. To keep consistency across code examples, all code will centre around the factorial function. If you have not heard of this function (or want a reminder), please follow [this link](https://en.wikipedia.org/wiki/Factorial).
 
 ## Design
 
 This is a rather abstract concept and goes beyond the following example, the full description given in the [list](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review) is more general than the example given.
 
-Suppose you have the file `main.py`. At some point in `main.py`, the factorial function is required (for some calculation). Suppose further that `main.py` is currently using an external package (like numpy) to source this function.
+Suppose you have the file: `main.py`. At some point in `main.py`, the factorial function is required (for some calculation). Suppose further that `main.py` is currently using an external package (like numpy) to source this function.
 
-Now assume that a new pull request is made where the contributor has made their own version of the factorial function, claiming that their version is better. This is an example of bad design. If the external, original version of the factorial function is used in other files, accepting this pull request would result in inconsistencies. In this specific example, the reprucussions would not be too bad. However, consider the same example but in a scenario where it wasn't a factorial function but a much more complex library of functions. It is highly unlikely that the newer code written by the contributor is better than the previously used code (that was likely written by a whole team of people). Even in the case the new code is objectively better (faster), it may produce slightly different results to the original code that is used across the rest of the repository, introducing inconsistencies. 
+Now assume that a new pull request is made where the contributor has made their own version of the factorial function, claiming that their version is better. This is an example of bad design. If the external, original version of the factorial function is used in other files, accepting this pull request would result in inconsistencies. In this specific example, the reprucussions would not be too bad. However, consider the same example but in a scenario where it wasn't a factorial function but a much more complex library of functions. It is highly unlikely that the newer code (written by the contributor) is better than the previously used code (that was probably written by a whole team of clever people). Even in the case the new code is objectively better (*e.g.* faster), it may produce slightly different results to the original code that is used across the rest of the repository, introducing inconsistencies. 
 
 
 ## Functionality
@@ -117,7 +117,9 @@ def factorial(n):
 
 ## Readability
 
-Readability is inherently subjective. If the reviewer is unable to read some code (or gets lost), it is likely not their fault, but the code's.
+Readability is inherently subjective. If the reviewer is unable to read some code (or gets lost), it is likely not their fault, but the code's. 
+
+Typically understandability and readability go hand in hand, so a combinatation of the two should be considered.
 
 ```python title="Bad code"
 # In general, this is hard to read as one does not have any context for what
@@ -138,9 +140,16 @@ def factorial(n):
     return result
 ```
 
+:::info[too far the other way]
+It should be noted that you can go too far the other way with 'readability' when it comes to naming code objects. Using too many words or being overly descriptive can paradoxically decrease code readability and understandability.
+\
+The classic 'joke' is:
+> There are only two hard things in Computer Science: cache invalidation and naming things. - Phil Karlton
+:::
+
 ## Maintainability
 
-Code that is maintainable would be easy for someone else to come along and make ammendments if someone else came along. We are going to stick with the factorial function here for consistency across examples. In order for this to make sense, we are going to reintroduce the error checking that was seen in [functionality](#functionality). Recall that factorial is not defined for strings, non-integers and negative integers. Below we will make two functions that implement error handling in two ways.
+Code that is maintainable would be easy for someone else to come along to the script (or source code) and make ammendments to it. We are going to stick with the factorial function here for consistency across examples. In order for this to make sense, we are going to reintroduce the error checking that was seen in [functionality](#functionality). Recall that factorial is not defined for strings, non-integers and negative integers. Below we will make two functions that implement error handling in two ways.
 
 ```python title="Bad code"
 # This is not only hard to read, but would you be comfortable changing this
@@ -167,7 +176,7 @@ def factorial(n):
 
 ```python title="Better code"
 # This code uses negation to remove the edge cases first, instead of nesting
-# the code deep into the function. With comments, this code would be even better
+# the code deep into the function. With comments, this code might be even better
 def factorial(n):
     if not isinstance(n, int) or n < 0:
         return None
@@ -177,16 +186,18 @@ def factorial(n):
     return result
 ```
 
+Maintainability is not limited to deeply nested code, this is just one example of how code can be difficult to maintain due to it being poorly written.
+
 ## Comments
 
-A good rule of thumb is comments explain *why, not what*. To see the difference the below examples will have the same code, but the comments will either explain *what* or *why*.
+A good rule of thumb is comments explain *why, not what*. To see the difference, the examples below have the same code, but the comments will either explain *what* or *why*.
 
 ```python title="Commenting on what"
 # Define the factorial function
 def factorial(n):
-    # Checks if the input is not less than zero or not an integer
+    # Checks if the input is not an integer or less than zero
     if not isinstance(n, int) or n < 0:
-        # Returns None if the input is not less than zero or not an integer
+        # Returns None if the input is not an integer or less than zero
         return None
     # Initialises 'result' to be 1
     result = 1
@@ -200,7 +211,7 @@ def factorial(n):
 
 ```python title="Commenting on why"
 def factorial(n):
-    # Factorial function is not defined for non-negative integers
+    # The factorial function is not defined for non-negative integers,
     # error handling is required in case the user does not enter such. 
     if not isinstance(n, int) or n < 0:
         return None
@@ -212,7 +223,7 @@ def factorial(n):
     return result
 ```
 
-The above is obviously an egregious use of comments. Python is readable enough that none of the above comments are particularly required. However, hopefully you can see that explaining *what* really does not help the reader.
+The above is obviously an egregious use of comments. Python is readable enough that none of the above comments are particularly required. However, hopefully you can see that explaining "*what*" really does not help the reader.
 
 Sometimes, explaining *what* the code does feel like a necessity. In such cases we refer back to our stance on [complex code](#complexity). If the code is complex enough that *what*-based comments are required, then the code would likely benefit from being refactored.
 
@@ -251,7 +262,12 @@ def factorial(n):
     return result
 ```
 
-Note that you can go too far the other way. Sometimes a line of code is very niche and is only required once in an entire codebase. You do not need to bundle every line of code into a function or a class method. A good rule of thumb is the *DRY* principle. That is *Don't repeat yourself*. If code is repeated across a codebase (or *will* be repeated in the near future), making such code scalable is beneficial for satisfying the other points on this list.
+:::info[Going too far the other way]
+Sometimes a line of code is very niche and is only required once in an entire codebase. You do not need to bundle every line of code into a function or a class method. 
+> A good rule of thumb is the *DRY* principle. That is *Don't repeat yourself*.
+
+If code is repeated across a codebase (or *will* be repeated in the **near** future), making such code scalable is beneficial for satisfying the other points on this list.
+:::
 
 ## Style
 
@@ -271,26 +287,26 @@ def some_other_function(l, m, n, o, p):
           do_something()
 ```
 
-Above is a simple case where indentation changes throughout the codebase. Python does not actually care how many spaces are used for indentation (so the user could use 1 space, 2 spaces, 4, 5 *etc.*). No number of spaces is technicaly correct, but consistency here makes the codebase more readable.
+Above is a simple case where indentation changes throughout the codebase. Python does not actually care how many spaces are used for indentation (so the user could use 1 space, 2 spaces, 4, 5 *etc.*). No number of spaces is technically correct, but consistency here makes the codebase more readable.
 
 ```python title="Better code"
 def some_function(i, j, k):
-  do_something()
+    do_something()
 
 def factorial(n):
-  result = 1
-  for i in range(1, n + 1):
-    result = result * i
-  return result
+    result = 1
+    for i in range(1, n + 1):
+        result = result * i
+    return result
 
 def some_other_function(l, m, n, o, p):
-  do_something()
+    do_something()
 ```
 
 The above is certainly more readable despite the individual lines of code being exactly the same between examples.
 
 ## Documentation
 
-As mentioned documentation is not really a requirement in a pull request. The relevant documentation can be changed at a later point in time if needs be. What does matter is the internal documentation of scripts (or source code). What we mean by this is a description of what a file does in the file preamble, or what a function does in its docstring. These are generally very useful to include in a codebase as it helps dramastically with its future use. In the event a user or developer wants to find the correct file for their needs, high level descriptions of files, classes and functions will likely be incredibly useful to them.
+As mentioned [here](./Conducting-a-code-review.md#documentation), documentation is not really a requirement in a pull request. The relevant documentation can be changed at a later point in time if needs be. What does matter is the internal documentation of scripts (or source code). What we mean by this is a description of what a file does in the file preamble, or what a function does in its docstring. These are generally very useful to include in a codebase as it helps dramastically with its future use. In the event that a user or developer wants to find the correct file for their needs, high level descriptions of files, classes and functions will likely be incredibly useful to them.
 
 Suppose that our factorial function is amongst a sea of other useful mathematical functions in a bigger python file. If the top of said file included a preamble, explaining the purpose of the file and who created it, future developers will have a much easier time working with the codebase. If no preamble was given, the factorial function might not be seen by future developers and they may end up creating the function themselves (which can be a waste of time with more complex functions).
