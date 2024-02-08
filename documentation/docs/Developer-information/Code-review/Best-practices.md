@@ -26,7 +26,7 @@ To illustrate this point, consider the below code blocks (comments are reviewer 
 def factorial(n): 
     result = 1
     for i in range(1, n + 1):
-        result *= i
+        result = result * i
     return result
 ```
 
@@ -39,7 +39,7 @@ def factorial(n):
 def factorial(n):
     result = 1
     for i in range(1, n + 1):
-        result *= i
+        result = result * i
     return result
 ```
 
@@ -51,7 +51,34 @@ The full expression is:
 
 In general, if the pull request has changes that improve the existing code, you should accept it. For a definition of "better", we suggest the reader consults our [list of what to look for in a code review](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review). 
 
-The exception to this rule is when the pull request adds uneeded functionality. For example, someone could be adding a script that implements PCA (from scratch) to some pipeline. This might work well with the current codebase and even be functional. But there is no point in reinventing the wheel, other tools do this already (and likely do it better). Such a change should be rejected. 
+The exception to this rule is when the pull request adds uneeded functionality. For example, someone could be adding a script that implements PCA (from scratch) to some pipeline. This might work well with the current codebase and even be functional. But there is no point in reinventing the wheel, other tools do this already (and likely do it better). Such a change should be rejected.
+
+## Justify your comments
+
+As a reviewer, it is not very helpful to the reviewee if you give unjustified comments. Be a little more specific with your comments and explain *why* the line (or section) is a problem. If you are unsure of why some line is incorrect, try starting the comment with "I *suggest* changing this because...". This shows that you think there is a problem with the code without definitively stating such. 
+
+To illustrate, here are some examples of good and bad reviews:
+
+```python title="A bad review"
+# This function doesn't work for me 
+def factorial(n): 
+    for i in range(1, n + 1):
+        result = result * i 
+    return result
+```
+
+
+```python title="A good review"
+# I think this doesn't work because 'result' has not been defined yet.
+# I suggest that the code should initialise 'result' to some number
+# before this loop. I think this is because on the initial loop (i=1)
+# 'result' doesn't have a value and so python doesn't know how to interpret
+# [empty] * 1.
+def factorial(n):
+    for i in range(1, n + 1):
+        result = result * i 
+    return result
+```
 
 
 ## On the matter of style
