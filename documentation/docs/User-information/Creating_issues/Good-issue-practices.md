@@ -8,13 +8,6 @@ description: Learn about what makes a good issue
 
 It is often difficult to get your problem across effectively when writing an issue. We implemented templates into the repository to help with this. However, if you are new to creating issues we still advise that you read through this list of best practices. Conforming to these will help developers have a deeper understanding of the issue, which in turn will make it much easier to work on it (resulting in a faster resolution).
 
-:::info[Good first issues]
-Some issues have been tagged with *good first issue*. If you are particularly struggling with creating an issue, these can be a helpful starting point. Note that you can filter by label to see only these issues:
-
-<center>
-![Screenshot of filtering by label for good first issue](/good-issue-practices/Finding-good-first-issues.png)
-</center>
-:::
 
 ## Make sure the issue does not already exist
 
