@@ -30,10 +30,23 @@ Sometimes, the number of files that have changed for a single pull request can b
 
 ## Reviewing changes
 
-From here, the reviewer should check through the changes that have been made to the code base. GitHub provides the reviewer with a side-by-side view for each of the changes made. Sometimes however, GitHub is unable to show the difference between two files (for example, a change to a .png file or .pdf *etc.*). In these cases, it is best to pull these changes to your local machine to inspect them properly. Some reviewers may prefer to pull the changes made to their local machine regardless (due to a preference with their text editor for example). To do this, use the terminal to obtain the branch the pull request refers to:
+From here, the reviewer should check through the changes that have been made to the code base. GitHub provides the reviewer with a side-by-side view for each of the changes made. Sometimes however, GitHub is unable to show the difference between two files (for example, a change to a .png file or .pdf *etc.*). In these cases, it is best to pull these changes to your local machine to inspect them properly. Some reviewers may prefer to pull the changes made to their local machine regardless (due to a preference with their text editor for example).
+
+As of 2020 you also have access to GitHub codespaces, which is just vscode ran inside your web browser. However, this is a paid service if you use it for longer than 120 hours a month. Provided you don't use the service for longer than 120 hours a month, we recommend using this for code reviews for simplicity. Use the tabs below to find out how to use codespaces or view changes locally on your own machine.
 
 <Tabs>
-  <TabItem value="New-user" label="If you do not have BrainFANS locally" default>
+  <TabItem value="codespaces" label="GitHub Codespaces" default>
+    If you wish to use GitHub codespaces, simply go to any commit and click on the 'Review in codespace' button on the top right.
+
+    ![Screenshot of codespaces button](/code-reviews/codespaces.png)
+
+    Now select 'Create new codebase' (this only appears if you do not currently have a codespace open)
+
+    ![Screenshot of new-codespace button](/code-reviews/new-codespace.png)
+
+    This will load up VScode in your browser with the majority of its features enabled (cannot use WSL, Dev Containers, SSH *etc.*). In this window you will have access to the terminal, which can be useful for conducting small unit tests. You can also comment any line of code (in the exact same way you can on GitHub). To find out more about commenting, see [the next section](#leaving-comments).
+  </TabItem>
+  <TabItem value="New-user" label="If you do not have BrainFANS locally">
     If you do not already have BrainFANS on your local machine, you will need to clone the development branch, use the follow git commands to achieve this:
 
     ```bash
