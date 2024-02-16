@@ -10,8 +10,8 @@ import TabItem from '@theme/TabItem';
 
 When another contributor creates a pull request they will assign others to review their commits. This is a required step in the contribution process and new feature branches cannot be merged without an approved code review. If you have not conducted a code review (or submitted a pull request) before, this page will help get you up to speed.
 
-:::info[Good headspace]
-If you, the reviewer, are having a rough day (or simply have a lot of other work to do). We recommend you do not conduct a code review whilst in this headspace. Submitting a pull request can be a scary prospect for developers (especially newer developers). A bad mood will be reflected in your review and is likely to discourage future contributions, a lack of contributions will lead to a lack of codebase improvements. A late code review is better than an overly negative one.
+:::warning[Good headspace]
+If you, the reviewer, are having a rough day (or simply have a lot of other work to do). We recommend you do not conduct a code review whilst in this headspace. Submitting a pull request can be a scary prospect for developers (especially newer developers). A bad mood will be reflected in your review and is likely to discourage future contributions, a lack of contributions will lead to a lack of codebase improvements. **A late code review is better than an overly negative one.**
 :::
 
 ## Starting the code review
@@ -24,6 +24,8 @@ This will bring you to a page on GitHub that displays every change that has been
 
 ![Screenshot of commits tab in code review](/code-reviews/switch-to-commits.png)
 
+![Screenshot of commits list](/code-reviews/commit-list.png)
+
 :::info[Large number of changed files]
 Sometimes, the number of files that have changed for a single pull request can be very large. As a reviewer, if you feel like too many files have been changed for a single pull request, communicate this to the developer that has submitted the pull request. It can be very difficult to keep track of a large number of changes, making the associated code review difficult. Generally, a large number of files being changed signfies that the pull request is doing too many things at once. Pull requests should ideally tackle a single feature, not multiple.
 :::
@@ -32,17 +34,17 @@ Sometimes, the number of files that have changed for a single pull request can b
 
 From here, the reviewer should check through the changes that have been made to the code base. GitHub provides the reviewer with a side-by-side view for each of the changes made. Sometimes however, GitHub is unable to show the difference between two files (for example, a change to a .png file or .pdf *etc.*). In these cases, it is best to pull these changes to your local machine to inspect them properly. Some reviewers may prefer to pull the changes made to their local machine regardless (due to a preference with their text editor for example).
 
-As of 2020 you also have access to GitHub codespaces, which is just vscode ran inside your web browser. However, this is a paid service if you use it for longer than 120 hours a month. Provided you don't use the service for longer than 120 hours a month, we recommend using this for code reviews for simplicity. Use the tabs below to find out how to use codespaces or view changes locally on your own machine.
+As of 2020 you also have access to GitHub codespaces, which is just vscode ran inside your web browser. However, this is a paid service if you use it for longer than 120 hours a month. Provided you don't use the service for longer than 120 hours a month, we recommend using this for code reviews for simplicity. Use the tabs below to find out how to use codespaces or view changes locally on your own machine. For the official documentation for codespaces, please consult [this page](https://docs.github.com/en/codespaces/developing-in-a-codespace/using-github-codespaces-for-pull-requests).
 
 <Tabs>
   <TabItem value="codespaces" label="GitHub Codespaces" default>
-    If you wish to use GitHub codespaces, simply go to any commit and click on the 'Review in codespace' button on the top right.
+    If you wish to use GitHub codespaces, simply go to the top right of the pull request page and click on the '<> Code' button. Then select 'Create codespace...'.
 
-    ![Screenshot of codespaces button](/code-reviews/codespaces.png)
+    ![Screenshot of codespaces button](/code-reviews/create-new-codespace.png)
 
-    Now select 'Create new codebase' (this only appears if you do not currently have a codespace open)
+    If you already have a code space (for a different pull request), you can use the + icon to create a new one specifically for this pull request.
 
-    ![Screenshot of new-codespace button](/code-reviews/new-codespace.png)
+    ![Screenshot of new codespaces button](/code-reviews/new-codespace.png)
 
     This will load up VScode in your browser with the majority of its features enabled (cannot use WSL, Dev Containers, SSH *etc.*). In this window you will have access to the terminal, which can be useful for conducting small unit tests. You can also comment any line of code (in the exact same way you can on GitHub). To find out more about commenting, see [the next section](#leaving-comments).
   </TabItem>
@@ -83,8 +85,6 @@ Sometimes you may want to make a comment for a selection of lines in a file. You
 :::
 
 ![Screenshot of blue plus button](/code-reviews/add-comment-button.png)
-
-![Screenshot of comment box](/code-reviews/add-comment-box.png)
 
 Some converse is likely to occur during this stage between the reviewer and the reviewee. These conversations are incredibly important and we recommend that both parties look at our list of [best practices](./Best-practices.md).
 
