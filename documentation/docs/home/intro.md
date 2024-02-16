@@ -3,12 +3,22 @@ sidebar_position: 1
 slug: /
 ---
 
-# Welcome to the BrainFANS wiki
+# Welcome to the BrainFANS repository
 
-Welcome to the documentation website for our comprehensive repository of genomic, regulatory, epigenomic, and transcriptomic data from human brain tissue. Our repository represents a valuable resource for researchers aiming to delve into the molecular underpinnings of complex neurological conditions such as schizophrenia and autism. Through the utilization of advanced methodologies, including fluorescence-activated nuclei sorting (FANS), we have curated a rich collection of data from both developing and adult human brains. 
+Welcome to the documentation website for our comprehensive repository of processing pipelines for regulatory genomic data including SNP array, DNA modifications and ChIP/ATAC-Seq. This website serves as a gateway to access detailed information for those that want to either *use* or *contribute* to the development of these pipelines.
 
-This website serves as a gateway to access detailed information about the analysis pipelines designed for high-performance computing systems, how to contribute and recordings of the analysis that is completed/underway. 
-\
+Our objective with this repository was to:
+
+* Enable automated pre-processing of large 'omics data on high-performance computing systems
+* Facilitate standardized pre-processing of 'omics data across projects
+* Document analyses performed as part of multifaceted brain cell-specific 'omic projects
+
+These pipelines had been developed by the Complex Disease Epigenomics Group at the University of Exeter. While our primary focus is on establishing standardized processes for projects within our group, our repository represents a valuable resource for researchers aiming to delve into the molecular underpinnings of complex phenotypes such as schizophrenia and autism. 
+
 :::note[Navigation bar]
-Using the navigation bar at the top of this page, you can be redirected to more specific information.
+Using the navigation bar at the top of this page, you can find more specific information.
+
+[**User information**](../User-information/intro.md): Pages to help users understand how to use the pipelines and see previous analyses conducted
+\
+[**Developer information**](../Developer-information/intro.md): Pages to help developers understand our coding conventions and how to contribute to the repository and documentation
 :::

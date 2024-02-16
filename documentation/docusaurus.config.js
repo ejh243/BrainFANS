@@ -14,24 +14,20 @@ const config = {
   tagline: 'Documentation for BrainFANS repository',
   favicon: 'img/dna.ico',
 
-  // Set the production url of your site here
+  // Production url for the site (configured for github pages)
   url: 'https://ejh243.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/BrainFANS/',
   trailingSlash: false,
 
   // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'ejh243', // Usually your GitHub org/user name.
-  projectName: 'BrainFANS', // Usually your repo name.
+  organizationName: 'ejh243', // GitHub user/org name.
+  projectName: 'BrainFANS', // Repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
+  // useful metadata like html lang. 
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -66,10 +62,15 @@ const config = {
     },
   ],
 
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
+      // This is the image and text that eppears in the top left of the page
       image: 'img/dna.png',
       navbar: {
         title: 'BrainFANS',
@@ -80,27 +81,15 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'homeSidebar',
+            sidebarId: 'userSidebar', // This references the sidebar in sidebars.js
             position: 'left',
-            label: 'Home',
+            label: 'User Information', // Change this line to alter the navbar name
           },
           {
             type: 'docSidebar',
-            sidebarId: 'documentationSidebar',
+            sidebarId: 'developerSidebar', // This references the sidebar in sidebars.js
             position: 'left',
-            label: 'Documentation',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'contributingSidebar',
-            position: 'left',
-            label: 'How to contribute',
-          },
-          {
-            type: 'docSidebar',
-            sidebarId: 'analysesSidebar',
-            position: 'left',
-            label: 'Analyses',
+            label: 'Developer Information', // Change this line to alter the navbar name
           },
           {
             href: 'https://github.com/ejh243/BrainFANS',
@@ -116,6 +105,7 @@ const config = {
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
+        additionalLanguages: ['bash'],
       },
     }),
 };
