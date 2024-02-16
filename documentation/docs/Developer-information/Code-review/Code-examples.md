@@ -34,6 +34,7 @@ def factorial(n):
 # The function now outputs the correct value but does not handle edge cases
 # such as the user inputting a letter instead of a number etc.
 def factorial(n):
+    result = 1
     for i in range(1, n + 1):
         result = result * i
     return result
