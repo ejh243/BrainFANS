@@ -38,7 +38,7 @@ As of 2020 you also have access to GitHub codespaces, which is just vscode ran i
 
 <Tabs>
   <TabItem value="codespaces" label="GitHub Codespaces" default>
-    If you wish to use GitHub codespaces, simply go to the top right of the pull request page and click on the '<> Code' button. Then select 'Create codespace...'.
+    If you wish to use GitHub codespaces, simply go to the top right of the pull request page and click on the '\<\> Code' button. Then select 'Create codespace...'.
 
     ![Screenshot of codespaces button](/code-reviews/create-new-codespace.png)
 
