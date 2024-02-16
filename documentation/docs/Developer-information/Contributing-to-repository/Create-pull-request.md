@@ -12,20 +12,28 @@ Now that you have finished resolving the issue, it is time to create a pull requ
 *If this feels scary, don't worry. Because you made a separate branch in [step three](./Creating-new-branch.md) you are not in danger of messing up the repository.*
 :::
 
-## Pull and push
+## Pushing to the remote repository
 
-To begin, run these two commands sequentially:
+To begin, run this command in the terminal:
 
 ```bash
-# Pull any changes from the remote repository that may have changed since step one
-# This is recommeded to protect you from finding merge conflicts later on
+# Push your changes to the remote repository
+git push origin <your-branch-name>
+```
+
+:::warning[multiple people working on the same branch]
+If you are working on the same branch with other people and the branch has already been published (pushed for the first time) to the online repository, please run the following instead:
+
+```bash
+# Pull the latest changes from the remote repository
 git pull origin <your-branch-name>
 
 # Push your changes to the remote repository
 git push origin <your-branch-name>
 ```
 
-Using `git pull` and then `git push` might be unecessary in some circumstances. But it is a good habit to get into, especially as more people work on the repository (it will save you time later, trust me).
+This will ensure that you are not causing any merge conflicts when you go to push your changes. `git pull` will merge the version online with your local version of the branch. Warnings of merge conflicts will appear in the terminal if they are apparent at this stage. Fix these before pushing.
+:::
 
 ## Return to github to finalise the pull request
 
@@ -37,7 +45,7 @@ Click on 'New pull request':
 
 ![Screenshot of the location of pull request button](/development-pipeline/pull-request-button.png)
 
-Select the development branch you are working off of for the **base field** and your new development branch for the **compare field**:
+Select the development branch you are working off of for the **base field** and your newly created branch for the **compare field**:
 
 ![Screenshot of the compare and base](/development-pipeline/pull-request-branch-selection.png)
 
@@ -58,7 +66,7 @@ Click on 'Create pull request':
 
 ## Assign people and labels to the request
 
-Reviewers -> Assigned people will be notified to review your changes and provide feedback (code review)
+Reviewers -> Assigned people will be notified to review your changes and provide feedback (code review). Your pull request cannot be accepted until a reviewer has approved your commits.
 \
 Assignees -> Assigned people will be responsible for overseeing the pull request and the merge process, we recommend at least assigning yourself
 \

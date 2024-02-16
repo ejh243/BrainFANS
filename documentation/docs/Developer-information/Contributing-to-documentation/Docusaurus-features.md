@@ -11,7 +11,7 @@ Thanks to mdx and react (javascript framework), the pages on this wiki are more 
 
 ## Admonitions
 
-Considering you are on this page, you have likely seen these special blocks already. Docusaurus enables you to create five different kinds of admonitions: note, info, tip, warning and danger. You can create these admonitions on your pages by using the following syntax:
+Docusaurus enables you to create five different kinds of admonition blocks: note, info, tip, warning and danger. You can create these admonitions on your pages by using the following syntax:
 
 ```markdown
 :::info[name of info box]
@@ -24,6 +24,8 @@ Which has output:
 :::info[name of info box]
 This is an info box that has **markdown** _capabilites_
 :::
+
+These blocks can be useful when you wish for some text (especially important information and warnings) to stand out on the page.
 
 ## Mathematics
 

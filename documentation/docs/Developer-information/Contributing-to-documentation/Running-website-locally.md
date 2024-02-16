@@ -51,6 +51,10 @@ npm run serve
 
 :::info[build warnings]
 During the `npm run build` stage, any warnings (or errors) will be written to the terminal. Take your time reading these errors/warnings. In the majority of cases, the error messages are very informative and will point you in the right direction in order to fix them.
+
+<centre>
+![Screenshot of build errors](/SSH-tunnelling/build-errors.png)
+</centre>
 :::
 
 ## Viewing the website
