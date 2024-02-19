@@ -365,7 +365,7 @@ if(!"predSex" %in% colnames(QCmetrics)){
 	
 	# base prediction on x chromosome
 	predSex.x<-rep(NA, length(x.cp))
-	predSex.x[which(x.cp < 0.995 & intensPASS == TRUE)]<-"M"
+	predSex.x[which(x.cp < 0.996 & intensPASS == TRUE)]<-"M"
 	predSex.x[which(x.cp > 1.005 & intensPASS == TRUE)]<-"F"
 
 	}
