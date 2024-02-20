@@ -107,7 +107,6 @@ if(file.exists(qcData)){
 	print("QC object initiated")
 }
 
-#QCmetrics$Age<-as.numeric(as.character(QCmetrics$Age))
 
 if(toupper(arrayType) == "V2"){
 manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
@@ -118,6 +117,8 @@ print("loaded EpicV2 manifest")
 if(toupper(arrayType) == "HM450K"){
 load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+colnames(manifest) <- c("CHR", "Infinium_Design_Type")
+manifest$CHR <- paste0("chr", manifest$CHR)
 print("loaded hm450k manifest")
 rm(probeAnnot)
 }
@@ -210,7 +211,7 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 if(!"PC1_betas" %in% colnames(QCmetrics)){
 	print("Calculating PCs of autosomal beta values")
 	# filter to autosomal only
-	if(toupper(arrayType) == "V2"){
+	if(toupper(arrayType) == "V2" | toupper(arrayType) == "HM450K"){
     auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
   } else {
     auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
