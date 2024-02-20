@@ -334,7 +334,7 @@ if(!"nNAsPer" %in% colnames(QCmetrics)){
 if(!"predSex" %in% colnames(QCmetrics)){	
 	print("Performing sex prediction from sex chromosome profiles")	
 	if(gdsObj){
-		if(toupper(arrayType) == "V2"){
+		if(toupper(arrayType) == "V2" | toupper(arrayType) == "HM450K"){
         x.probes<-which(manifest$CHR == "chrX")
         y.probes<-which(manifest$CHR == "chrY")
       } else {
