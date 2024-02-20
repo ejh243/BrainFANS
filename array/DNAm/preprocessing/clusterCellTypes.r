@@ -22,14 +22,17 @@
 
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
-config <- args[2]
-
-source(config)
+refDir <- args[2]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
+configFile <- paste0(dataDir, "/config.r")
+epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
+
+source(configFile)
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -74,7 +77,8 @@ if(toupper(arrayType) == "V2" | toupper(arrayType) == "HM450K"){
     auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
   } else {
     auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
-  }rawbetas<-rawbetas[auto.probes,]
+  }
+  rawbetas<-rawbetas[auto.probes,]
 
 cellTypes<-unique(QCmetrics$Cell_Type)
 cellTypes<-cellTypes[!is.na(cellTypes)]
