@@ -22,16 +22,11 @@ cd $SLURM_SUBMIT_DIR
 ## format paths in config file with project name
 echo "Loading config file for project: " $1
 export PROJECT=$1
-source ./DNAm/config/config.txt 
+source /lustre/projects/Research_Project-MRC190311/DNAm/${PROJECT}/config.txt 
 
-## load R config file
-## default file used unless alternative provided on command line
-if [ -z "$2" ];
-then
-    RCONFIG=$SLURM_SUBMIT_DIR/DNAm/config/config.r
-else
-    RCONFIG=$2
-fi
+## load R config file from project directory
+ RCONFIG=/lustre/projects/Research_Project-MRC190311/DNAm/${PROJECT}/config.r
+
 
 ## load modules
 module load Pandoc
