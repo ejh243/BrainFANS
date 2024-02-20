@@ -45,7 +45,7 @@ Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${RCONFIG}
 ## mv markdown report to correct location
 #mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
 
-#Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${RCONFIG}
+#Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
 
 
 #Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${RCONFIG} $USER
