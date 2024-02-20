@@ -27,8 +27,6 @@ args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 refDir <- args[2]
 
-#source(args[3])
-
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
@@ -116,6 +114,15 @@ manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
 manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
 print("loaded EpicV2 manifest")
 }
+
+if(toupper(arrayType) == "HM450K"){
+load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
+manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+print("loaded hm450k manifest")
+rm(probeAnnot)
+}
+
+
 
 #----------------------------------------------------------------------#
 # CALCULATE QC METRICS
