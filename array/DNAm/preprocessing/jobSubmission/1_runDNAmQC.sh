@@ -40,7 +40,7 @@ Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${RCONFIG}
 
 #Rscript DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR}
 
-#Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
+#Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args $USER ${DATADIR} ${RCONFIG}
 
 ## mv markdown report to correct location
 #mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
