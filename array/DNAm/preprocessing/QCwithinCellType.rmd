@@ -20,19 +20,23 @@ library(RColorBrewer)
 library(kableExtra)
 
 
-source(args[3]) ### change the content of this file to run QC with different thresholds
-
 dataDir <- args[2]
 setwd(dataDir) 
 
+refDir <-args[3]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+configFile <- paste0(dataDir, "/config.r")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 #load(qcData)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
+source(configFile)
+
+
+# load manifests
 if(toupper(arrayType) == "V2"){
 manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
 manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
