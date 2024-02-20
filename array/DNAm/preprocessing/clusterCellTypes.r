@@ -45,6 +45,22 @@ setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
+if(toupper(arrayType) == "V2"){
+manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
+manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
+print("loaded EpicV2 manifest")
+}
+
+if(toupper(arrayType) == "HM450K"){
+load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
+manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+colnames(manifest) <- c("CHR", "Infinium_Design_Type")
+manifest$CHR <- paste0("chr", manifest$CHR)
+print("loaded hm450k manifest")
+rm(probeAnnot)
+}
+
+
 QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 passQC<-QCSum$Basename[QCSum[,"passQCS2"]]
 
@@ -54,8 +70,11 @@ QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 rawbetas<-gfile[,, node = "betas"]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
-auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
-rawbetas<-rawbetas[auto.probes,]
+if(toupper(arrayType) == "V2" | toupper(arrayType) == "HM450K"){
+    auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
+  } else {
+    auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
+  }rawbetas<-rawbetas[auto.probes,]
 
 cellTypes<-unique(QCmetrics$Cell_Type)
 cellTypes<-cellTypes[!is.na(cellTypes)]
