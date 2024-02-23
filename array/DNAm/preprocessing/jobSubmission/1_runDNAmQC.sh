@@ -55,6 +55,10 @@ Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${RCONFIG}
 
 #Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
 
+mkdir -p ${GDSDIR}/QCmetrics/CETYGO
+
+# Rscript DNAm/preprocessing/CETYGOdeconvolution.r ${DATADIR}
+
 ## print finish date and time
 echo Job finished on:
 date -u
