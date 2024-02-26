@@ -18,6 +18,7 @@ library(pheatmap)
 library(pander)
 library(RColorBrewer)
 library(kableExtra)
+library(data.table)
 
 
 dataDir <- args[2]
