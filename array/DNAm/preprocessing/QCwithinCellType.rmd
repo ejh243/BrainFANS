@@ -28,6 +28,7 @@ refDir <-args[3]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 configFile <- paste0(dataDir, "/config.r")
+epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 #load(qcData)

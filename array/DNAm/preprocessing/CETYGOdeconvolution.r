@@ -27,11 +27,14 @@ args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+configFile <- paste0(dataDir, "/config.r")
 
 gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, NA))
 
+source(configFile)
 
-#------dataDir----------------------------------------------------------------#
+
+#----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
@@ -73,7 +76,11 @@ if(gdsObj){
 	# ensure sample sheet is in same order as data
 	sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
 	# extract a few useful matrices
+	if(toupper(arrayType) == "V2"){
+	  rawbetas<-epicv2clean(betas(gfile)[])
+} else {
 	rawbetas<-betas(gfile)[,]
+}
     closefn.gds(gfile)
 }else {
 	if(!gdsObj){
@@ -85,6 +92,8 @@ if(gdsObj){
 }
 }
 
+
+  
 
 
 #----------------------------------------------------------------------#
