@@ -46,6 +46,9 @@ export OUTPUTS_DIR=${MAIN_DIR}/path/to/outputs
 # The file extensions are added for you, do not include these in this variable
 export GWAS_PATTERN=[glob pattern]
 
+# Directory to put log files from scripts into
+export LOG_DIR=path/to/log/files
+
 # ldsc software file path
 export LD_SOFTWARE_DIR=path/to/ldsc/root/directory
 ```
