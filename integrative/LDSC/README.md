@@ -2,6 +2,8 @@
 
 The scripts in this folder are desinged to create an annotation file from peak called data (from ATAC, ChIP *etc.*), then uses [ldsc](https://github.com/bulik/ldsc) to find the partitioned heritability for the dataset (partitioned by said peaks).
 
+In order to use the ldsc tool, you need to create a conda environment as per the official [documentation](https://github.com/bulik/ldsc?tab=readme-ov-file#getting-started). Please take note of the location of this conda environment so that it can be put into the configuration file. To find the location of your conda environments, use `conda env list` in the terminal.
+
 ## File structure
 The basic file structure that is expected with these scripts is as follows:
 ```text
@@ -48,6 +50,9 @@ export GWAS_PATTERN=[glob pattern]
 
 # Directory to put log files from scripts into
 export LOG_DIR=path/to/log/files
+
+# Path to ldsc conda environment (full path)
+export LDSC_CONDA_ENVIRONMENT=path/to/conda/environment
 
 # ldsc software file path
 export LD_SOFTWARE_DIR=path/to/ldsc/root/directory
