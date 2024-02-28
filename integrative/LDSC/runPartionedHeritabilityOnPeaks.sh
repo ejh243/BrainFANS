@@ -1,8 +1,16 @@
 #!/bin/bash
 
-## use LD score regression software with cusutom annotaion derived from genomics data to estimate proportion of heritability attributitable to SNPs in these regions 
-## uses reference files downloaded from https://data.broadinstitute.org/alkesgroup/LDSCORE/
-## NB although annotations are on hg38, GWAS files don't have location information so are matched by rsID hence no issue with genome builds for GWAS traits
+# ============================================================================ #
+# Uses LD score regression software (ldsc) with cusutom annotation derived from
+# genomics data (like 1000 genomes) to estimate proportion of heritability
+# attributitable to SNPs in these regions 
+# Example reference files can be downloaded from: 
+# https://zenodo.org/records/10515792
+
+# NB: although annotations are on hg38, GWAS files don't have location 
+# information so are matched by rsID hence no issue with genome builds 
+# for GWAS traits
+# ============================================================================ #
 
 ## Compute LD scores with custom annot file.
 for chr in {1..22};
