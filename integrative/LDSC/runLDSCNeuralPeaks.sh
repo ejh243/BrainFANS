@@ -7,41 +7,53 @@
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
-#SBATCH --error=LogFiles/LDSCNeuralPeaks.err # error file
-#SBATCH --output=LogFiles/LDSCNeuralPeaks.log # output file
+# Temporary log files, job ID given to file names in case job is ran multiple
+# times in parallel
+#SBATCH --error=LDSCNeuralPeaks_%j.err
+#SBATCH --output=LDSCNeuralPeaks_%j.log
 #SBATCH --job-name=LDSCNeuralPeaks
 
-## needs to be executed from the scripts folder
+## ========= ##
+##   SETUP   ##
+## ========= ##
 
-
-## print start date and time
 echo Job started on:
 date -u
 
+# This cd is in place so that the script can be ran from anywhere.
+# The called scripts in this script are in the same directory as this one.
+script_directory=$(dirname "$0")
+cd "${script_directory}/.." || exit 1
 
-####### 
-## NOTE: Do not store confidential information in this file use the config file
-######
+configuration_directory=$1
+source "${configuration_directory}/config.txt"
 
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
+mv "${SLURM_SUBMIT_DIR}/LDSCNeuralPeaks_${SLURM_JOB_ID}.log" \
+"${LOG_DIR}/LDSCNeuralPeaks_${SLURM_JOB_ID}.log"
+mv "${SLURM_SUBMIT_DIR}/LDSCNeuralPeaks_${SLURM_JOB_ID}.err" \
+"${LOG_DIR}/LDSCNeuralPeaks_${SLURM_JOB_ID}.err"
 
-cd $SLURM_SUBMIT_DIR
+## ======== ##
+##   MAIN   ##
+## ======== ##
 
 module purge
 module load BEDOPS
 module load BEDTools
 module load R/3.6.3-foss-2020a
-#Rscript /gpfs/mrc0/projects/Research_Project-MRC190311/scripts/LDScoreRegression/createAnnotationFiles.r
+
+Rscript processing/createAnnotationFiles.r
 
 
 module purge
 module load Anaconda3/2020.02
-source activate ldsc
 
-source LDScoreRegression/config.txt
-source LDScoreRegression/runPartionedHeritabilityOnPeaks.sh
+source "${CONDA_SHELL}/profile.d/conda.sh" || \
+{ echo "profile.d/conda.sh does not exist in specified location: \
+[\${CONDA_SHELL} - ${CONDA_SHELL}]"; exit 1; }
+conda activate "${LDSC_CONDA_ENVIRONMENT}"
 
-## print start date and time
+bash jobSubmission/runPartionedHeritabilityOnPeaks.sh
+
 echo Job finished at:
 date -u
