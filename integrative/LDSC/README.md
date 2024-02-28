@@ -51,8 +51,9 @@ export GWAS_PATTERN=[glob pattern]
 # Directory to put log files from scripts into
 export LOG_DIR=path/to/log/files
 
-# Path to ldsc conda environment (full path)
+# Conda functionality
 export LDSC_CONDA_ENVIRONMENT=path/to/conda/environment
+export CONDA_SHELL=path/to/conda/etc/directory # found in conda installation
 
 # ldsc software file path
 export LD_SOFTWARE_DIR=path/to/ldsc/root/directory
