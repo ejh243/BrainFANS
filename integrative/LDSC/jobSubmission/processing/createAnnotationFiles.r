@@ -37,20 +37,23 @@ sorted_peaks <- read_peaks(peaks_file_paths, peaks_names)
 # all_regions <- bedr.merge.region(bedr.sort.region(bind_rows(sorted_peaks)))
 
 for(chr in 1:22) {
-	annot <-read.table(gzfile(paste0(baseline_file_prefix, chr, ".annot.gz")),
-										header = TRUE)
+	annotation_file <-
+		read.table(gzfile(paste0(baseline_file_prefix, chr, ".annot.gz")),
+							header = TRUE)
 
-	snps<-fread(paste0(bim_file_prefix, chr, ".bim"))
+	snps <- fread(paste0(bim_file_prefix, chr, ".bim"))
 
 	## This is in place to remove any annotation columns that are irrelevant
 	## or non-binary. Binary columns are required later for determining if a 
 	## snp resides in any of the baseline regulatory regions.
-	annot <- annot %>% select_if(function(x) all(is.integer(x) | x %in% c(0,1)))
+	annotation_file <-
+		annotation_file %>%
+		select_if(function(x) all(is.integer(x) | x %in% c(0,1)))
 	
 	## We extract the base pair position twice to get a start
 	## and end read for each SNP (SNPs are one base pair always, so we only need
 	## the start BP and add one on to this value to get the end).
-	snp_bed<-annot[,c("CHR", "BP", "BP")]
+	snp_bed<-annotation_file[,c("CHR", "BP", "BP")]
 	snp_bed<-snp_bed[order(snp_bed$CHR, snp_bed$BP),]
 	colnames(snp_bed)<-c("chr", "start", "end")
 	snp_bed$end<-snp_bed$end+1
@@ -72,11 +75,11 @@ for(chr in 1:22) {
 	## annotation files.
 	## We exclude columns one to three as these columns are always positive
 	## (chromosome, position and base).  
-	any_regulatory_feature <- as.numeric(rowSums(annot[,-c(1:3)]) > 0)
+	any_regulatory_feature <- as.numeric(rowSums(annotation_file[,-c(1:3)]) > 0)
 
 	output_annotation <-
   data.frame(snps$V1, snps$V4, snps$V2, snps$V3,
-             mergeOverlaps, any_regulatory_feature, annot$base)
+             mergeOverlaps, any_regulatory_feature, annotation_file$base)
 
 	colnames(output_annotation) <-
 	  c("CHR", "BP", "SNP", "CM", peaks_names, "AnyRegulatoryFeature", "AllSNPs")
