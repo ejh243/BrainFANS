@@ -4,20 +4,28 @@ The scripts in this folder are desinged to create an annotation file from peak c
 
 In order to use the ldsc tool, you need to create a conda environment as per the official [documentation](https://github.com/bulik/ldsc?tab=readme-ov-file#getting-started). Please take note of the location of this conda environment so that it can be put into the configuration file. To find the location of your conda environments, use `conda env list` in the terminal.
 
+GWAS traits are expected to be in sumstats.gz format. If this is not the case, please use ldsc to convert any GWAS analysis text files into this file format (munge_stats.py). The file format for sumstats is given [here](https://github.com/bulik/ldsc/wiki/Summary-Statistics-File-Format).
+
 ## File structure
 The basic file structure that is expected with these scripts is as follows:
 ```text
 Main directory for ldsc files
-├── Reference files
-│   ├── weights
-│   ├── PLINK files
-│   └── frq files
-├── Annotation files
-├── SNP lists
-├── Collection of GWAS traits
+├── reference_files
+│   ├── weights (.l2.ldscore.gz)
+│   ├── plink_files (.bim, .fam, .bed)
+│   └── frq_files
+├── annotation_files
+│   └── all annotation files (.annot.gz)
+├── SNP lists (.snp)
+├── gwas_traits (.sumstats.gz)
 └── Outputs
-    ├── Reference ldsc files from PLINK files (under annotations)
-    └── Heritability analysis outputs
+    ├── annotation_prefix_1
+    │    ├── ld scores under annotation file used (.l2.ldscore.gz, .log etc.)
+    │    └── Heritability analysis outputs (.results, .log)
+    └── annotation_prefix_2
+         ├── ld scores under annotation file used (.l2.ldscore.gz, .log etc.)
+         └── Heritability analysis outputs (.results, .log)
+
 
 Peak calls data directory
 ├── 0_metadata
@@ -25,24 +33,32 @@ Peak calls data directory
 ├── 2_trimmed
 ├── 3_aligned
 ├── 4-called-peaks
-│   └── organised peak files
+│   └── organised peak files (to be used in annotation file creation)
 └── [Downstream analysis]
 ```
 
 ## Configuration file
 
-Please save all configuration files in the same directory, ideally somewhere near the ldsc files (though this is not a requirement).
-These scripts require the following configuration files:
+Please save all configuration files in the same directory, ideally somewhere near the data files for the project (though this is not a requirement).
+You will need to parse the full (or relative) path to the folder that contains these configuration files when calling runLDSCNeuralPeaks.sh
 
 ### config.txt
 ```text
 # File paths in data directory
 export MAIN_DIR=path/to/main/data/directory
-export LD_REFERENCE_DIR=${MAIN_DIR}/path/to/reference/files
-export LD_ANNOTATION_DIR=${MAIN_DIR}/path/to/annot/files
-export LD_GWAS_TRAITS_DIR=${MAIN_DIR}/path/to/gwas/traits
+export LD_REFERENCE_DIR=${MAIN_DIR}/reference_files
+export LD_ANNOTATION_DIR=${MAIN_DIR}/annotation_files
+export LD_GWAS_TRAITS_DIR=${MAIN_DIR}/gwas_traits
 export SNP_LISTS_DIR=${MAIN_DIR}/path/to/snp/lists
 export OUTPUTS_DIR=${MAIN_DIR}/path/to/outputs
+
+# File prefixes in data directory, prefix of the file up until the component
+# before chromosome. Example: 1000G.EUR.QC
+# Note that your frq and plink files are assumed to have the same prefix
+export REFERENCE_PREFIX="prefix"
+export ANNOTATION_PREFIX="prefix"
+export SNP_LIST_PREFIX="prefix"
+export WEIGHTS_PREFIX="prefix"
 
 # (optional) Pattern for GWAS traits to consider, default is *
 # The file extensions are added for you, do not include these in this variable
