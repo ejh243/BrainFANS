@@ -42,7 +42,7 @@ module load BEDOPS
 module load BEDTools
 module load R/3.6.3-foss-2020a
 
-Rscript processing/createAnnotationFiles.r
+Rscript processing/createAnnotationFiles.r "${configuration_directory}/config.r"
 
 
 module purge
