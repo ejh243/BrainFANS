@@ -25,7 +25,7 @@ do
 done
 
 ## estimate partioned heritability for a range of GWAS traits
-gwastraits=($ls ${LD_GWAS_TRAITS_DIR}/*${GWAS_PATTERN}*.gz)
+gwastraits=$(ls "${LD_GWAS_TRAITS_DIR}/*${GWAS_PATTERN}*.gz")
 
 for filename in "${gwastraits[@]}"; 
 do
