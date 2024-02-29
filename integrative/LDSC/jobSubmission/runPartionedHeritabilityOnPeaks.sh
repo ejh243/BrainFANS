@@ -13,8 +13,7 @@
 # ============================================================================ #
 
 ## Compute LD scores with custom annotation file.
-for chr in {1..22};
-do
+for chr in {1..22}; do
   python \
 	"${LD_SOFTWARE_DIR}/ldsc.py" \
 	--l2 \
@@ -26,19 +25,18 @@ do
 done
 
 ## estimate partioned heritability for a range of GWAS traits
-gwastraits=$(ls "${LD_GWAS_TRAITS_DIR}/*${GWAS_PATTERN}*.gz")
+gwas_traits=$(ls "${LD_GWAS_TRAITS_DIR}/*${GWAS_PATTERN}*.gz")
 
-for filename in "${gwastraits[@]}"; 
-do
-  outfile=$(basename "${filename}" .sumstats.gz)
+for file_name in "${gwas_traits[@]}"; do
+  output_file=$(basename "${file_name}" .sumstats.gz)
 
 	python \
 	"${LD_SOFTWARE_DIR}/ldsc.py" \
-	--h2          "${filename}" \
+	--h2          "${file_name}" \
 	--ref-ld-chr  "${LD_ANNOTATION_DIR}/${ANNOTATION_PREFIX}/${ANNOTATION_PREFIX}." \
 	--frqfile-chr "${LD_REFERENCE_DIR}/frq_files/${REFERENCE_PREFIX}." \
 	--w-ld-chr    "${LD_REFERENCE_DIR}/weights/${WEIGHTS_PREFIX}." \
-	--out         "${OUTPUTS_DIR}/${ANNOTATION_PREFIX}/${outfile}" \
+	--out         "${OUTPUTS_DIR}/${ANNOTATION_PREFIX}/${output_file}" \
 	--overlap-annot \
 	--print-coefficients
 done
