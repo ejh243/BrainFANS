@@ -1,6 +1,12 @@
 # LDSC scripts
 
-The scripts in this folder are desinged to create an annotation file from peak called data (from ATAC, ChIP *etc.*), then uses [ldsc](https://github.com/bulik/ldsc) to find the partitioned heritability for the dataset (partitioned by said peaks).
+The scripts in this folder are desinged to create an annotation file from peak called data (from ATAC, ChIP *etc.*), then uses [ldsc](https://github.com/bulik/ldsc) to find the partitioned heritability for the dataset (partitioned by said peaks). To start, create the necessary [file structure](#file-structure) and then execute:
+
+```bash
+sbatch relative/path/to/runLDSC.sh [-r] relative/path/to/configuration/directory
+```
+
+The -r option here specifies if you want to run the rscript: createAnnotationFiles.R (which you may not want to do if this has already been ran for your particular analysis).
 
 In order to use the ldsc tool, you need to create a conda environment as per the official [documentation](https://github.com/bulik/ldsc?tab=readme-ov-file#getting-started). Please take note of the location of this conda environment so that it can be put into the configuration file. To find the location of your conda environments, use `conda env list` in the terminal.
 

@@ -24,7 +24,19 @@ date -u
 script_directory=$(dirname "$0")
 cd "${script_directory}/.." || exit 1
 
+annotation_flag=false
+
+while getopts "r" OPT; do
+  case "$OPT" in
+    r )   annotation_flag=true ;;
+    \? )  { echo "invalid argument parsed: $OPTARG"; exit 1; } ;;
+  esac
+done
+shift $((OPTIND-1))
+
 configuration_directory=$1
+
+
 source "${configuration_directory}/config.txt"
 
 mv "${SLURM_SUBMIT_DIR}/LDSCNeuralPeaks_${SLURM_JOB_ID}.log" \
@@ -36,12 +48,14 @@ mv "${SLURM_SUBMIT_DIR}/LDSCNeuralPeaks_${SLURM_JOB_ID}.err" \
 ##   MAIN   ##
 ## ======== ##
 
-module purge
-module load BEDOPS
-module load BEDTools
-module load R/3.6.3-foss-2020a
-
-Rscript processing/createAnnotationFiles.r "${configuration_directory}/config.r"
+if [ $annotation_flag ]; then
+  module purge
+  module load BEDOPS
+  module load BEDTools
+  module load R/3.6.3-foss-2020a
+  Rscript processing/createAnnotationFiles.r \
+  "${configuration_directory}/config.r"
+fi
 
 bash jobSubmission/runPartionedHeritabilityOnPeaks.sh
 
