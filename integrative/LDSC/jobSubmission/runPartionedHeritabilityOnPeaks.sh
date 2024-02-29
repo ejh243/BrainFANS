@@ -24,8 +24,8 @@ for chr in {1..22}; do
   --print-snps "${SNP_LISTS_DIR}/${SNP_LIST_PREFIX}.${chr}.snp"
 done
 
-## estimate partioned heritability for a range of GWAS traits
-gwas_traits=$(ls "${LD_GWAS_TRAITS_DIR}/*${GWAS_PATTERN}*.gz")
+## estimate partioned heritability for a given selection of GWAS traits
+gwas_traits=$(find "${LD_GWAS_TRAITS_DIR}" -name "*${GWAS_PATTERN}*.gz")
 
 for file_name in "${gwas_traits[@]}"; do
   output_file=$(basename "${file_name}" .sumstats.gz)
