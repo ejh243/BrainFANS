@@ -10,7 +10,10 @@ library(bedr)
 library(dplyr)
 
 
-read_peaks <- function(file_paths) {
+read_peaks <- function(file_paths, peaks_names) {
+	if (length(file_paths) != length(peaks_names)) {
+		stop("number of file paths does not match number of peak names given")
+	}
 	sorted_peaks <- list()
 
 	for (peak in seq_along(list_of_peaks)) {
@@ -25,7 +28,7 @@ read_peaks <- function(file_paths) {
 	return(sorted_peaks)
 }
 
-sorted_peaks <- read_peaks(peaks_file_paths)
+sorted_peaks <- read_peaks(peaks_file_paths, peaks_names)
 
 ## This bedr function is expecting one bed file, so we bind all of the peak
 ## files into one long bed file. The sort is for faster bedr processing
@@ -82,4 +85,4 @@ for(chr in 1:22) {
 	  paste0(ld_annotation_dir, "/", ld_annotation_prefix, ".", chr, ".annot.gz")
 
 	write.table(output_annotation, annotation_file_name, quote = FALSE, row.names = FALSE)
-}gg
+}
