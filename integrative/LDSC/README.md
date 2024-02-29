@@ -78,7 +78,17 @@ peaks_file_paths <-
 peaks_names <-
   c("NeuN_gapped_peak", "SOX10_gapped_peak", "CEGX_narrow_peak", ...)
 
+# Input files, bims (PLINK files) and Baseline annotations.
+# Specify the full file path and then the prefix of the file names (up to the 
+# chromosome number, e.g. 1000G.EUR.hg38.)
+# Don't forget to include the "." before the chromosome number.
+baseline_file_prefix <- "path/to/baseline/directory/baseline_file_prefix"
+bim_file_prefix <- "path/to/plink/files/directory/plink_file_prefix"
+
 # LD annotation directory (make sure this is the same as the directory pointed
 # to in config.txt)
 ld_annotation_dir <- "path/to/ld/annotation/files"
+
+# This is the prefix to use with the annotation files.
+ld_annotation_prefix <- "prefix_name"
 ```
