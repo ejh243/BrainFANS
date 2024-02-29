@@ -12,63 +12,31 @@
 # for GWAS traits
 # ============================================================================ #
 
-## Compute LD scores with custom annot file.
+## Compute LD scores with custom annotation file.
 for chr in {1..22};
 do
-  python ${LDPATH}/ldsc.py --l2 --bfile ${LDREFPATH}grch38/plink_files/1000G.EUR.hg38.${chr}\
-  --ld-wind-cm 1\
-  --annot ${LDANNOPATH}NeuralCellRegulatoryPeaks.${chr}.annot\
-  --out ${LDANNOPATH}NeuralCellRegulatoryPeaks.${chr}\
-  --print-snps ${LDREFPATH}/hapmap3_snps/hm.${chr}.snp
+  python ${LD_SOFTWARE_DIR}/ldsc.py \
+	--l2 \
+	--bfile ${LD_REFERENCE_DIR}/plink_files/${REFERENCE_PREFIX}.${chr} \
+  --ld-wind-cm 1 \
+  --annot ${LD_ANNOTATION_DIR}/${ANNOTATION_PREFIX}.${chr}.annot \
+  --out ${LD_ANNOTATION_DIR}/${ANNOTATION_PREFIX}/${ANNOTATION_PREFIX}.${chr} \
+  --print-snps ${SNP_LISTS_DIR}/${SNP_LIST_PREFIX}.${chr}.snp
 done
 
 ## estimate partioned heritability for a range of GWAS traits
-gwastraits=($ls ${LDREFPATH}/gwas_traits/Anorexia*.gz)
+gwastraits=($ls ${LD_GWAS_TRAITS_DIR}/*${GWAS_PATTERN}*.gz)
 
 for filename in ${gwastraits[@]}; 
 do
-    outfile=$(basename $filename .sumstats.gz)
-	python ${LDPATH}/ldsc.py --h2 $filename \
-	--ref-ld-chr ${LDANNOPATH}NeuralCellRegulatoryPeaks. \
+  outfile=$(basename $filename .sumstats.gz)
+
+	python ${LD_SOFTWARE_DIR}/ldsc.py \
+	--h2 $filename \
+	--ref-ld-chr ${LD_ANNOTATION_DIR}/${ANNOTATION_PREFIX}/${ANNOTATION_PREFIX}. \
 	--overlap-annot \
-	--frqfile-chr ${LDREFPATH}1000G_Phase3_frq/1000G.EUR.QC. \
-	--w-ld-chr  ${LDREFPATH}grch38/weights/weights.hm3_noMHC. --out ${OUTPATH}/$outfile \
+	--frqfile-chr ${LD_REFERENCE_DIR}/frq_files/${REFERENCE_PREFIX}. \
+	--w-ld-chr  ${LD_REFERENCE_DIR}/weights/${WEIGHTS_PREFIX}. \
+	--out ${OUTPUTS_DIR}/${ANNOTATION_PREFIX}/${outfile} \
 	--print-coefficients
 done
-
-## just limit to Neural peak sets to see if results change
-
-for chr in {1..22};
-do
-  cut -f 1-13 -d' ' ${LDANNOPATH}NeuralCellRegulatoryPeaks.${chr}.annot > ${LDANNOPATH}NeuralCellRegulatoryPeaksonly.${chr}.annot
-  python ${LDPATH}/ldsc.py --l2 --bfile ${LDREFPATH}grch38/plink_files/1000G.EUR.hg38.${chr}\
-  --ld-wind-cm 1\
-  --annot ${LDANNOPATH}NeuralCellRegulatoryPeaksonly.${chr}.annot\
-  --out ${LDANNOPATH}\NeuralCellRegulatoryPeaksonly.${chr}\
-  --print-snps ${LDREFPATH}/hapmap3_snps/hm.${chr}.snp
-done
-
-for filename in ${gwastraits[@]}; 
-do
-    outfile=$(basename $filename .sumstats.gz)
-	python ${LDPATH}/ldsc.py --h2 $filename \
-	--ref-ld-chr ${LDANNOPATH}\NeuralCellRegulatoryPeaksonly. \
-	--overlap-annot \
-	--frqfile-chr ${LDREFPATH}1000G_Phase3_frq/1000G.EUR.QC. \
-	--w-ld-chr  ${LDREFPATH}grch38/weights/weights.hm3_noMHC. --out ${OUTPATH}/$outfile.NeuralCellRegulatoryPeaksOnly \
-	--print-coefficients
-done
-
-
-
-for filename in ${gwastraits[@]}; 
-do
-    outfile=$(basename $filename .sumstats.gz)
-	python ${LDPATH}/ldsc.py --h2 $filename \
-	--ref-ld-chr ${LDANNOPATH}/NeuralCellRegulatoryPeaksonly.,${LDREFPATH}/grch38/baselineLD_v2.2/Rerun/baselineLD.Rerun. \
-	--overlap-annot \
-	--frqfile-chr ${LDREFPATH}1000G_Phase3_frq/1000G.EUR.QC. \
-	--w-ld-chr  ${LDREFPATH}grch38/weights/weights.hm3_noMHC. --out ${OUTPATH}/$outfile.NeuralCellRegulatoryPeaksVsBaselinev2.2 \
-	--print-coefficients
-done
-
