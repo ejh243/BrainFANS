@@ -20,7 +20,7 @@ for chr in {1..22}; do
 	--bfile      "${LD_REFERENCE_DIR}/plink_files/${REFERENCE_PREFIX}.${chr}" \
   --ld-wind-cm 1 \
   --annot      "${LD_ANNOTATION_DIR}/${ANNOTATION_PREFIX}.${chr}.annot" \
-  --out        "${LD_ANNOTATION_DIR}/${ANNOTATION_PREFIX}/${ANNOTATION_PREFIX}.${chr}" \
+  --out        "${OUTPUTS_DIR}/${ANNOTATION_PREFIX}/${ANNOTATION_PREFIX}.${chr}" \
   --print-snps "${SNP_LISTS_DIR}/${SNP_LIST_PREFIX}.${chr}.snp"
 done
 
@@ -33,10 +33,10 @@ for file_name in "${gwas_traits[@]}"; do
 	python \
 	"${LD_SOFTWARE_DIR}/ldsc.py" \
 	--h2          "${file_name}" \
-	--ref-ld-chr  "${LD_ANNOTATION_DIR}/${ANNOTATION_PREFIX}/${ANNOTATION_PREFIX}." \
+	--ref-ld-chr  "${OUTPUTS_DIR}/${ANNOTATION_PREFIX}/${ANNOTATION_PREFIX}." \
 	--frqfile-chr "${LD_REFERENCE_DIR}/frq_files/${REFERENCE_PREFIX}." \
 	--w-ld-chr    "${LD_REFERENCE_DIR}/weights/${WEIGHTS_PREFIX}." \
-	--out         "${OUTPUTS_DIR}/${ANNOTATION_PREFIX}/${output_file}" \
+	--out         "${OUTPUTS_DIR}/${ANNOTATION_PREFIX}/heritability/${output_file}" \
 	--overlap-annot \
 	--print-coefficients
 done
