@@ -44,15 +44,6 @@ module load R/3.6.3-foss-2020a
 
 Rscript processing/createAnnotationFiles.r "${configuration_directory}/config.r"
 
-
-module purge
-module load Anaconda3/2020.02
-
-source "${CONDA_SHELL}/profile.d/conda.sh" || \
-{ echo "profile.d/conda.sh does not exist in specified location: \
-[\${CONDA_SHELL} - ${CONDA_SHELL}]"; exit 1; }
-conda activate "${LDSC_CONDA_ENVIRONMENT}"
-
 bash jobSubmission/runPartionedHeritabilityOnPeaks.sh
 
 echo Job finished at:
