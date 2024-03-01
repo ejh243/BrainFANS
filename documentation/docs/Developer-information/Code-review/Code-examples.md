@@ -135,7 +135,7 @@ Clean code is a set of programming principles that aims for consistent naming co
 
 ## Comments
 
-A good rule of thumb is: "comments explain *why, not what*". To see the difference, the examples below have the same code, but the comments will either explain *what* or *why*.
+A good rule of thumb is: "comments explain *why, not what*". To see the difference, the examples below have the same code, but the first comments the *what* and the seconf the *why*.
 
 ```python title="Commenting on what"
 # Define the factorial function
