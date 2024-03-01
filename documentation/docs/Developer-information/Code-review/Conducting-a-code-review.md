@@ -105,7 +105,7 @@ If the above points fail, then this is a good reason to reject the pull request.
 
 The code should be functional. Alongside design, this is the most important aspect to assess in a code review. The functionality of code can be checked using test data on the reviewer's local machine (see [above](#reviewing-changes) for how to get the changes onto your local machine). If a change causes code to become non-functional (or if specific edge cases are not accounted for), the code **should not** be approved until it is fixed.
 
-Please note that the reviewer is not required to provide the reviewee with how to fix the problem (but they can if they want).
+If you, as the reviewer, can identify any non-functional code and provide suggestions for how to fix it in your comments, please do this (it would be highly appreciated). Please note however that the reviewer is not *required* to provide solutions and that the reviewee is not entilted to this treatment.
 
 ### [Important: Complexitity](./Code-examples.md#complexity)
 
