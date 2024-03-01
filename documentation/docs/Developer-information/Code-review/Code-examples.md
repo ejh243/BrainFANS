@@ -10,11 +10,13 @@ When conducting a code review, there are many aspects the reviewer should be loo
 
 ## Design
 
-This is a rather abstract concept and goes beyond the following example, the full description given in the [list](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review) is more general than the example given.
+Suppose the file `main.py` currently utilizes an external package, such as numpy, to source the factorial function. Now, imagine a new pull request introduces a customized version of the factorial function, claiming that it is superior to the original implementation.
 
-Suppose you have the file: `main.py`. At some point in `main.py`, the factorial function is required (for some calculation). Suppose further that `main.py` is currently using an external package (like numpy) to source this function.
+This scenario raises concerns about code design and consistency. If the new factorial function is accepted without considering its impact on other parts of the codebase, inconsistencies may arise. For instance, if the original factorial function is used in multiple files, accepting the new implementation could lead to discrepancies and potential errors in other areas of the codebase.
 
-Now assume that a new pull request is made where the contributor has made their own version of the factorial function, claiming that their version is better. This is an example of bad design. If the external, original version of the factorial function is used in other files, accepting this pull request would result in inconsistencies. In this specific example, the reprucussions would not be too bad. However, consider the same example but in a scenario where it wasn't a factorial function but a much more complex library of functions. It is highly unlikely that the newer code (written by the contributor) is better than the previously used code (that was probably written by a whole team of clever people). Even in the case the new code is objectively better (*e.g.* faster), it may produce slightly different results to the original code that is used across the rest of the repository, introducing inconsistencies. 
+While this example focuses on the factorial function, the same principle applies to (and is more relevant for) more complex libraries and functions. Even if the new code is deemed objectively better—such as being faster—it may produce results that differ from the original code, leading to inconsistencies across the repository.
+
+By carefully evaluating proposed code changes in the context of the existing codebase, we can avoid introducing inconsistencies and maintain the overall stability and coherence of the system.
 
 
 ## Functionality
