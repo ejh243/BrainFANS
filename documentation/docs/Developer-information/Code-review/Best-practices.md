@@ -16,7 +16,7 @@ The important thing to note here is that a code review goes both ways. All contr
 
 ## Review the **code** not the **person**
 
-The aim of a code review is to assess the changes made. Sometimes, mistakes are made or code is poorly written. The reviewer **should not** critque the developer that wrote the poorly written code. Reviewing code in this manner does not help anyone. In most cases, critiquing the person results in the developer being less likely to make contributions in the future. We do not want this, everyone should feel motivated towards contributing to the repository. The hard line is that: it is the code that should be critiqued.
+The aim of a code review is to assess the changes made. Sometimes, mistakes are made or code is poorly written. The reviewer **should not** critque the developer that wrote the poorly written code. Reviewing code in this manner does not help anyone. In most cases, critiquing the person results in the developer being less likely to make contributions in the future. We do not want this, everyone should feel motivated towards contributing to the repository. The hard line is: "it is the code that should be critiqued, not the person".
 
 To illustrate this point, consider the below code blocks (comments are reviewer comments):
 
@@ -47,7 +47,7 @@ def factorial(n):
 
 The full expression is:
 
-> There is no such thing as "perfect" code - there is only better code - Google
+> There is no such thing as "perfect" code - there is only better code -- Google
 
 In general, if the pull request has changes that improve the existing code, you should accept it. Do not constantly push back a pull request just because of a small thing you do not like. All this ends up doing is discouraging developers from contributing in the future. For a definition of "better", we suggest the reader consults our [list of what to look for in a code review](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review). 
 
@@ -86,7 +86,9 @@ def factorial(n):
 Sometimes a developer writes code in a different style to the reviewer, which can cause arguments about the best way to write your code. Maybe one developer enjoys the power of list comprehension in python, whilst the other prefers the conventional loop. As long as style doesn't severly impact the consistency of the code base, style is not a reasonable thing to comment on.
 
 :::info[Nits]
-If the reviewer really wants to comment on the code style, it is common practice that the comment begins with "*Nit:*". This way the reviewee is made aware of the changes they could make, but they are not pressured into changing their coding style if the change doesn't suit them. Please be sparing of your use of *Nit*. Flooding a code review with nits is generally a bad thing, it distracts the developer from the actual problems with the code. If your code review has a comparable number of nits to actually useful comments, please stop. 
+If the reviewer really wants to comment on the code style, it is common practice that the comment begins with "*Nit:*". This way the reviewee is made aware of the changes they *could* make, but they are not pressured into changing their coding style if the change doesn't suit them.
+
+Please be sparing with your useage of *Nit*. Flooding a code review with nits is generally a bad thing, it distracts the developer from the actual problems with the code. If your code review has a comparable number of nits to actually useful comments, please stop. 
 :::
 
 ## Write something nice

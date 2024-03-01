@@ -101,7 +101,6 @@ def factorial(n):
 These topics all roll into one for the majority of purposes. What they come down to is: Code is not just for the developer who wrote it; but for others to read, use and maintain. If the reviewer is unable to read/understand some code, it will likely be harder for other developers to work on the file in the future. 
 
 ```python title="Bad code"
-# This code is doing the same but now is much harder to read and maintain.
 # If you didn't have the preconception that this was the factorial funciton
 # would you instantly recognise what this is doing? Would you be comfortable in
 # making any changes? Can you spot the bug in this code?
@@ -128,7 +127,7 @@ def factorial(n):
     return result
 ```
 
-Note that readability/understandability/maintainability can be subjective in lots of scenarios. For now, if you, the reviewer, understands the code to a 'good enough' degree (and you are not completely lost), the code is fine and does not warrant a refactoring. There is [no such thing as perfect code](./Best-practices.md#there-is-no-perfect-code). It is very easy to go back and forth on what makes code cleaner and easier to read, but all this really ends up doing is wasting time. If the code is not completely unreadable and improves the existing code, approve the request.
+Note that readability/understandability/maintainability can be subjective in lots of scenarios. For now, if you, the reviewer, understands the code to a 'good enough' degree (and you are not completely lost), the code is fine and does not warrant a refactoring. There is [no such thing as perfect code](./Best-practices.md#there-is-no-perfect-code). It is very easy to go back and forth on what makes code cleaner and easier to read, but all this really ends up doing is wasting time. If the proposed changes are not completely unreadable and improves the existing codebase, approve the request.
 
 :::info[Clean code]
 Clean code is a set of programming principles that aims for consistent naming conventions, function structure and minimal complexity. To a degree, clean code is great for achieving the points on this list. But it also comes with the drawbacks of performance hits and sometimes (paradoxically) decreased readability and understandability. A developer can go too far the other way with readability/understandability/maintainability. Strive for 'good enough', a compromise between easy to read and easy to write.
@@ -136,7 +135,7 @@ Clean code is a set of programming principles that aims for consistent naming co
 
 ## Comments
 
-A good rule of thumb is comments explain *why, not what*. To see the difference, the examples below have the same code, but the comments will either explain *what* or *why*.
+A good rule of thumb is: "comments explain *why, not what*". To see the difference, the examples below have the same code, but the comments will either explain *what* or *why*.
 
 ```python title="Commenting on what"
 # Define the factorial function
@@ -147,7 +146,7 @@ def factorial(n):
         return None
     # Initialises 'result' to be 1
     result = 1
-    # Creates a loop that starts at index 1 and ends at index n+1
+    # Creates a loop that starts at index 1 and ends at index n
     for i in range(1, n + 1):
         # Multiplies 'result' by the current index of the for loop
         result = result * i
@@ -171,11 +170,11 @@ def factorial(n):
 
 The above is obviously an egregious use of comments. Python is readable enough that none of the above comments are particularly required. However, hopefully you can see that explaining "*what*" really does not help the reader.
 
-Sometimes, explaining *what* the code does feel like a necessity. In such cases we refer back to our stance on [complex code](#complexity). If the code is complex enough that *what*-based comments are required, then the code would likely benefit from being refactored. The exception to this is *regular expressions*. If the code uses regex, then the comments should explain what the code is doing. Computers read regex, humans do not (well, not easily).
+Sometimes, explaining *what* the code does feel like a necessity. In such cases we refer back to our stance on [complex code](#complexity). If the code is complex enough that *what*-based comments are required, then the code would likely benefit from being refactored. The exception to this is circumstances like regular expressions. If the code uses something like regex, then the comments should explain what the code is doing. Computers read regex, humans do not (well, not easily).
 
 ## Scalability/Expandability
 
-Can the code be repurposed in a new context? Again, we are going to stick with the factorial function for simplicity, spotting scalability problems is usually rather difficult (without lots of domain knowledge).
+Can the code be repurposed in a new context? We appreciate that spotting scalability problems is usually rather difficult in more complex codebases without lots of domain knowledge. Generally, you should be looking to see if some code can be modularised so that it can be repurposed elsewhere.
 
 ```python title="Bad code"
 # ... Code ... #
@@ -212,14 +211,14 @@ def factorial(n):
 A common term you might hear in programming/software engineering spaces is DRY:
 > The *DRY* principle: *Don't repeat yourself*.
 
-This principle comes from the idea that: if you repeat yourself a lot in code, making changes in the future becomes much more cumbersome. A result of taking on this principle can help a lot with making code scalable as it often results in more modular code.
+This principle comes from the idea that: if you repeat yourself a lot in code, making changes in the future becomes much more cumbersome. Taking on this principle can help a lot with making code scalable as it often results in more modular code.
 
-However, one can go too far with DRY and end up with difficult to understand code. You do not *need* code to be heavily abstracted wherever possible. The DRY principle should be used when the repetition becomes a problem, not when it might *become* a problem.
+However, one can go too far with DRY and end up with difficult to understand code. You do not *need* code to be heavily abstracted wherever possible. The DRY principle should be used when the repetition becomes a problem, not when it "might become a problem".
 :::
 
 ## Style
 
-As mentioned [here](./Conducting-a-code-review.md#useful-style), matters of style usually comes down to the reviewers personal preference. Such comments on code style are classed as 'nits' and generally should be avoided in a code review. Nits usually distract developers away from the actual problems present in the code base. Making comments about specific libraries used, variable name intracies *etc.* is not helpful to the reviewee (and usually discourages developers from contributing in the future). 
+As mentioned [here](./Conducting-a-code-review.md#useful-style), matters of style usually comes down to the reviewers personal preference. Such comments on code style are classed as 'nits' and generally should be avoided in a code review. Nits usually distract developers away from the actual problems present in the codebase. Making comments about specific libraries used, variable name intracies *etc.* is not helpful to the reviewee (and usually discourages developers from contributing in the future). 
 
 Style should only be taken into account if it helps with consistency across the codebase.
 
@@ -243,8 +242,8 @@ def some_other_function(l, m, n, o, p):
 
 ```python title="Better code"
 # Consistent style generally makes code more readable. The number of spaces
-# used for indentation might be hotly contested, but we don't care about that,
-# just stick with what is already being used.
+# used for indentation might be hotly discussed, but we don't care about how 
+# many spaces are just used. We only care about consistency across the codebase.
 def some_function(i, j, k):
     do_something()
 

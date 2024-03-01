@@ -115,11 +115,11 @@ If code is too complex, it is unlikely that these lines/files/functions will be 
 
 ### [Beneficial: Readability/Understandability/Maintainability](./Code-examples.md#readabilityunderstandabilitymaintainability)
 
-Is the code easy to read, understnad and maintain?
+Is the code easy to read, understand and maintain?
 
 These usually go hand in hand. There is some subtlety between them, but for the most part they boil down to the same question:
 
-Do you, the reviewer, feel like you would be comfortable (not happy) working with this code in the future (ignoring domain knowledge gaps)?
+Do you, the reviewer, feel like you would be comfortable (though not necessarily happy) working with this code in the future (ignoring domain knowledge gaps)?
 
 If you, the reviewer, are struggling to understand some sections of code or find yourself getting lost: **Do not** skip over it. Leave a comment and ask. Leaving a comment is the first step towards resolving problems of this type.
 
@@ -139,7 +139,7 @@ Ideally, a script (or source code) can be easily repurposed if required. A tool 
 
 ### [Useful: Style](./Code-examples.md#style)
 
-In general, style only matters for consistency. We encourage that contributors use linters to check their code for errors and some style so this is unlikely to be a big problem. Bad coding style is generally fine unless it results in the code failing one of the above points. In general you are as unlikely to change someone else's coding style as they are to change your own. Style should be about consistency with the current code base, not about personal preference.
+In general, style only matters for consistency. We encourage that contributors use linters/prettiers to check their code for errors and style so this is unlikely to be a big problem. Bad coding style is generally fine unless it results in the code failing one of the above points. In general you are as unlikely to change someone else's coding style as they are to change your own. Style should be about consistency with the current code base, not about personal preference.
 
 
 ## Finalising the code review
