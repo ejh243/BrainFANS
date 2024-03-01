@@ -94,90 +94,29 @@ def factorial(n):
 ```
 
 
-## Understandability
+## Readability/Understandability/Maintainability
 
-Understandability is inherently subjective. If the reviewer is unable to understand some code, it is likely not their fault, but the code's.
-
-```python title="Bad code"
-# This code is still doing the same computation, but the loop is now
-# much less understandable
-def factorial(n):
-    result = 1
-    [result := result * i for i in range(1, n+1)]
-    return result
-```
-
-```python title="Better code"
-# In general, this is easier to understand
-def factorial(n):
-    result = 1
-    for i in range(1, n + 1):
-        result = result * i
-    return result
-```
-
-## Readability
-
-Readability is inherently subjective. If the reviewer is unable to read some code (or gets lost), it is likely not their fault, but the code's. 
-
-Typically understandability and readability go hand in hand, so a combinatation of the two should be considered.
+These topics all roll into one for the majority of purposes. What they come down to is: Code is not just for the developer who wrote it; but for others to read, use and maintain. If the reviewer is unable to read/understand some code, it will likely be harder for other developers to work on the file in the future. 
 
 ```python title="Bad code"
-# In general, this is hard to read as one does not have any context for what
-# f, n, i and r are
+# This code is doing the same but now is much harder to read and maintain.
+# If you didn't have the preconception that this was the factorial funciton
+# would you instantly recognise what this is doing? Would you be comfortable in
+# making any changes? Can you spot the bug in this code?
 def f(n):
-    r = 1
-    for i in range(1, n + 1):
-        r *= i
-    return r
-```
-
-```python title="Better code"
-# In general, this is easier to understand
-def factorial(n):
-    result = 1
-    for i in range(1, n + 1):
-        result = result * i
-    return result
-```
-
-:::info[too far the other way]
-It should be noted that you can go too far the other way with 'readability' when it comes to naming code objects. Using too many words or being overly descriptive can paradoxically decrease code readability and understandability.
-\
-The classic 'joke' is:
-> There are only two hard things in Computer Science: cache invalidation and naming things. - Phil Karlton
-:::
-
-## Maintainability
-
-Code that is maintainable would be easy for someone else to come along to the script (or source code) and make ammendments to it. We are going to stick with the factorial function here for consistency across examples. In order for this to make sense, we are going to reintroduce the error checking that was seen in [functionality](#functionality). Recall that factorial is not defined for strings, non-integers and negative integers. Below we will make two functions that implement error handling in two ways.
-
-```python title="Bad code"
-# This is not only hard to read, but would you be comfortable changing this
-# code? In this scenario it is hard to follow the indentation and so making
-# changes might break the logic if you are not careful.
-
-# You can imagine that if the function was doing something more complex than
-# simply calculating the factorial, this would be even harder to maintain.
-def factorial(n):
-    if isinstance(n, str):
-        if isinstance(n, int):
-            if n>=0:
-                result = 1
-                for i in range(1, n + 1):
-                    result = result * i
-                return result
-            else:
-                print("input must be non-negative")
+    if isinstance(n, int):
+        if n < 0:
+            r = 1
+            [r := r * i for i in range(1, n+1)]
+            return r
         else:
-            print("input must be an integer")
+            print("invalid n")
     else:
-        print("input must be an integer")
+        print("invalid n")
 ```
 
 ```python title="Better code"
-# This code uses negation to remove the edge cases first, instead of nesting
-# the code deep into the function. With comments, this code might be even better
+# In general, this is (hopefully) easier to understand
 def factorial(n):
     if not isinstance(n, int) or n < 0:
         return None
@@ -187,7 +126,11 @@ def factorial(n):
     return result
 ```
 
-Maintainability is not limited to deeply nested code, this is just one example of how code can be difficult to maintain due to it being poorly written.
+Note that readability/understandability/maintainability can be subjective in lots of scenarios. For now, if you, the reviewer, understands the code to a 'good enough' degree (and you are not completely lost), the code is fine and does not warrant a refactoring. There is [no such thing as perfect code](./Best-practices.md#there-is-no-perfect-code). It is very easy to go back and forth on what makes code cleaner and easier to read, but all this really ends up doing is wasting time. If the code is not completely unreadable and improves the existing code, approve the request.
+
+:::info[Clean code]
+Clean code is a set of programming principles that aims for consistent naming conventions, function structure and minimal complexity. To a degree, clean code is great for achieving the points on this list. But it also comes with the drawbacks of performance hits and sometimes (paradoxically) decreased readability and understandability. A developer can go too far the other way with readability/understandability/maintainability. Strive for 'good enough', a compromise between easy to read and easy to write.
+:::
 
 ## Comments
 
@@ -263,18 +206,26 @@ def factorial(n):
     return result
 ```
 
-:::info[Going too far the other way]
-Sometimes a line of code is very niche and is only required once in an entire codebase. You do not need to bundle every line of code into a function or a class method. 
-> A good rule of thumb is the *DRY* principle. That is *Don't repeat yourself*.
+:::info[DRY]
+A common term you might hear in programming/software engineering spaces is DRY:
+> The *DRY* principle: *Don't repeat yourself*.
 
-If code is repeated across a codebase (or *will* be repeated in the **near** future), making such code scalable is beneficial for satisfying the other points on this list.
+This principle comes from the idea that: if you repeat yourself a lot in code, making changes in the future becomes much more cumbersome. A result of taking on this principle can help a lot with making code scalable as it often results in more modular code.
+
+However, one can go too far with DRY and end up with difficult to understand code. You do not *need* code to be heavily abstracted wherever possible. The DRY principle should be used when the repetition becomes a problem, not when it might *become* a problem.
 :::
 
 ## Style
 
-As mentioned [here](./Conducting-a-code-review.md#style), style is usually down to personal preference and it can sometimes be difficult to separate views on style from readability. Style should only be taken into account if it helps with consistency across the codebase.
+As mentioned [here](./Conducting-a-code-review.md#useful-style), matters of style usually comes down to the reviewers personal preference. Such comments on code style are classed as 'nits' and generally should be avoided in a code review. Nits usually distract developers away from the actual problems present in the code base. Making comments about specific libraries used, variable name intracies *etc.* is not helpful to the reviewee (and usually discourages developers from contributing in the future). 
+
+Style should only be taken into account if it helps with consistency across the codebase.
 
 ```python title="Style inconsistencies"
+# Python does not care about the number of spaces used for indentation, some
+# languages (like bash) don't care about indentation at all. 
+# But the lack of consistency here can make code less readable.
+# (especially with heavier nesting).
 def some_function(i, j, k):
      do_something()
 
@@ -288,9 +239,10 @@ def some_other_function(l, m, n, o, p):
           do_something()
 ```
 
-Above is a simple case where indentation changes throughout the codebase. Python does not actually care how many spaces are used for indentation (so the user could use 1 space, 2 spaces, 4, 5 *etc.*). No number of spaces is technically correct, but consistency here makes the codebase more readable.
-
 ```python title="Better code"
+# Consistent style generally makes code more readable. The number of spaces
+# used for indentation might be hotly contested, but we don't care about that,
+# just stick with what is already being used.
 def some_function(i, j, k):
     do_something()
 
@@ -303,11 +255,3 @@ def factorial(n):
 def some_other_function(l, m, n, o, p):
     do_something()
 ```
-
-The above is certainly more readable despite the individual lines of code being exactly the same between examples.
-
-## Documentation
-
-As mentioned [here](./Conducting-a-code-review.md#documentation), documentation is not really a requirement in a pull request. The relevant documentation can be changed at a later point in time if needs be. What does matter is the internal documentation of scripts (or source code). What we mean by this is a description of what a file does in the file preamble, or what a function does in its docstring. These are generally very useful to include in a codebase as it helps dramastically with its future use. In the event that a user or developer wants to find the correct file for their needs, high level descriptions of files, classes and functions will likely be incredibly useful to them.
-
-Suppose that our factorial function is amongst a sea of other useful mathematical functions in a bigger python file. If the top of said file included a preamble, explaining the purpose of the file and who created it, future developers will have a much easier time working with the codebase. If no preamble was given, the factorial function might not be seen by future developers and they may end up creating the function themselves (which can be a waste of time with more complex functions).
