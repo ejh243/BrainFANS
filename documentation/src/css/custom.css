@@ -28,3 +28,8 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* For hidden pages, add sidebar_class_name: hidden into markdown metadata. */
+.hidden {
+  display: none !important;
+  }
