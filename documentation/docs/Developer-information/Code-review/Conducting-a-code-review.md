@@ -137,11 +137,6 @@ Can the changed files be expanded in scope?
 
 Ideally, a script (or source code) can be easily repurposed if required. A tool might work for a specific dataset, but a better tool could work with other datasets with a few small changes. The script (or source code) does not need to be multi-purpose itself, but the ability to be such can be highly beneficial.
 
-### [Useful: Style](./Code-examples.md#style)
-
-In general, style only matters for consistency. We encourage that contributors use linters/prettiers to check their code for errors and style so this is unlikely to be a big problem. Bad coding style is generally fine unless it results in the code failing one of the above points. In general you are as unlikely to change someone else's coding style as they are to change your own. Style should be about consistency with the current code base, not about personal preference.
-
-
 ## Finalising the code review
 
 Once the reviewer has worked through all of the changes made to the code base, they can then make their decision for the pull request:

@@ -83,7 +83,44 @@ def factorial(n):
 
 ## On the matter of style
 
-Sometimes a developer writes code in a different style to the reviewer, which can cause arguments about the best way to write your code. Maybe one developer enjoys the power of list comprehension in python, whilst the other prefers the conventional loop. As long as style doesn't severly impact the consistency of the code base, style is not a reasonable thing to comment on.
+Sometimes a developer writes code in a different style to the reviewer, which can cause arguments about the *best* way to write your code. Maybe one developer enjoys the power of list comprehension in python, whilst the other prefers to use loops. Provided the style doesn't severly impact the consistency across the codebase, it is not a reasonable thing to comment on (or reject a pull request for). We encourage that contributors use linters to check their code for errors and style so this is unlikely to be a big problem.
+
+We understand that it can be difficult to read someone else's code when their style heavily differs from yours. Please be respectful of other's coding styles, in general you are as unlikely to change someone else's coding style as they are to change your own. Again, all that matters is that the style across the codebase is consistent. Consider the following examples:
+
+```python title="Inconsistent codebase"
+# Python does not care about the number of spaces used for indentation, some
+# languages (like bash) don't care about indentation at all. 
+# But the lack of consistency here can make code less readable.
+# (especially when there is heavier nesting).
+def some_function(i, j, k):
+     do_something()
+
+def factorial(n):
+  result = 1
+  for i in range(1, n + 1):
+    result = result * i
+    return result
+
+def some_other_function(l, m, n, o, p):
+          do_something()
+```
+
+```python title="Consistent codebase"
+# Consistent style generally makes code more readable. The number of spaces
+# used for indentation might be hotly discussed, but we don't care about how 
+# many spaces are just used. We only care about consistency across the codebase.
+def some_function(i, j, k):
+    do_something()
+
+def factorial(n):
+    result = 1
+    for i in range(1, n + 1):
+        result = result * i
+    return result
+
+def some_other_function(l, m, n, o, p):
+    do_something()
+```
 
 :::info[Nits]
 If the reviewer really wants to comment on the code style, it is common practice that the comment begins with "*Nit:*". This way the reviewee is made aware of the changes they *could* make, but they are not pressured into changing their coding style if the change doesn't suit them.
