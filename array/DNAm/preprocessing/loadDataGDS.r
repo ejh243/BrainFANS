@@ -186,8 +186,10 @@ if(length(loadGroups) > 1){
   ## start with betas as function to add rownames and colnames
   listBetas <- lapply(lapply(gfileList, betas), read.gdsn)
   listProbeIDs <- lapply(lapply(gfileList, index.gdsn, path = "fData/Probe_ID"), read.gdsn)
+  listSampleIDs <- lapply(gfileList, colnames)
   for(i in 1:length(listBetas)){
     rownames(listBetas[[i]]) <- listProbeIDs[[i]]
+	colnames(listBetas[[i]]) <- listSampleIDs[[i]]
   }
 
   ## get list of merged probeids
