@@ -223,7 +223,7 @@ Alongside repetition, another aspect of code that can increase scalability is: "
 # This seems harmless enough, you call the factorial function and it outputs the
 # answer. However, this function is doing TWO things. First, it evaluates the 
 # factorial then second, it prints the answer. What if we just wanted the
-# answer and not the printed sentence? This funciton is not very modular
+# answer and not the printed sentence? This function is not very modular.
 def factorial(n):
     result = 1
     for i in range(1, n + 1):
