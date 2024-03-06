@@ -14,7 +14,20 @@ Now that you have finished resolving the issue, it is time to create a pull requ
 
 ## Pushing to the remote repository
 
-To begin, run this command in the terminal:
+To begin, run these commands in the terminal:
+
+```bash
+# Get the latest changes to the repository
+git fetch origin master
+
+# Merge these changes into your branch
+git checkout <your-branch-name>
+git merge origin/<branch> # Where <branch> is the one you are working off of
+```
+
+The reason we do this is to ensure that merge conflicts can be adressed before a pull request is made. Please visit [this page](/Developer-information/merge-conflicts.md) for a thorough explanation and example of a merge conflict. If you are working with files no one else is touching, the chances of a merge conflict will be low, but this is still a good habit to get into.
+
+Once any merge conflicts that arise from the above have been resolved, you can publish your branch (push your branch to GitHub) with the following command:
 
 ```bash
 # Push your changes to the remote repository
@@ -22,7 +35,7 @@ git push origin <your-branch-name>
 ```
 
 :::warning[multiple people working on the same branch]
-If you are working on the same branch with other people and the branch has already been published (pushed for the first time) to the online repository, please run the following instead:
+If you are working on the same branch with other people and the branch has already been published (pushed for the first time), please run the following periodically through the development process:
 
 ```bash
 # Pull the latest changes from the remote repository
