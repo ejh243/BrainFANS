@@ -217,6 +217,32 @@ This principle comes from the idea that: if you repeat yourself a lot in code, m
 However, one can go too far with DRY and end up with difficult to understand code. You do not *need* code to be heavily abstracted wherever possible. The DRY principle should be used when the repetition becomes a problem, not when it "might become a problem".
 :::
 
+Alongside repetition, another aspect of code that can increase scalability is: "Functions/Classes (constructs) should do *one* thing". This is also known as the 'single-responsibility principle'. Functions that do lots of things are harder to reimplement elsewhere. Functions that do a single thing are more modular and can be repurposed. Consider the two following examples:
+
+```python title="Bad code"
+# This seems harmless enough, you call the factorial function and it outputs the
+# answer. However, this function is doing TWO things. First, it evaluates the 
+# factorial then second, it prints the answer. What if we just wanted the
+# answer and not the printed sentence? This funciton is not very modular
+def factorial(n):
+    result = 1
+    for i in range(1, n + 1):
+        result = result * i
+    print("The factorial of", n, "is", result)
+```
+
+```python title="Better code"
+# This function now does one thing, it returns the value of n!.
+# If we wanted to print the answer in a sentence, we could achieve this with
+# a different line of code (or function) outside of the factorial function.
+# This way the function can be used for a variety of purposes.
+def factorial(n):
+    result = 1
+    for i in range(1, n + 1):
+        result = result * i
+    return result
+```
+
 ## Style
 
 As mentioned [here](./Conducting-a-code-review.md#useful-style), matters of style usually comes down to the reviewers personal preference. Such comments on code style are classed as 'nits' and generally should be avoided in a code review. Nits usually distract developers away from the actual problems present in the codebase. Making comments about specific libraries used, variable name intracies *etc.* is not helpful to the reviewee (and usually discourages developers from contributing in the future). 
