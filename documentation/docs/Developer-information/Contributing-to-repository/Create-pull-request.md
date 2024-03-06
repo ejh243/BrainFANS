@@ -18,7 +18,7 @@ To begin, run these commands in the terminal:
 
 ```bash
 # Get the latest changes to the repository
-git fetch origin master
+git fetch
 
 # Merge these changes into your branch
 git checkout <your-branch-name>
