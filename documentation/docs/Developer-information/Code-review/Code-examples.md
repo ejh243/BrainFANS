@@ -10,14 +10,15 @@ When conducting a code review, there are many aspects the reviewer should be loo
 
 ## Design
 
-Suppose the file `main.py` currently utilizes an external package, such as numpy, to source the factorial function. Now, imagine a new pull request introduces a customized version of the factorial function, claiming that it is superior to the original implementation.
+Suppose the file `main.py` currently utilizes an external package, such as numpy, to source the factorial function. Now, imagine a developer creates a pull request where the developer has written their own factorial function, claiming that it is superior to the original implementation.
 
-This scenario raises concerns about code design and consistency. If the new factorial function is accepted without considering its impact on other parts of the codebase, inconsistencies may arise. For instance, if the original factorial function is used in multiple files, accepting the new implementation could lead to discrepancies and potential errors in other areas of the codebase.
+This scenario raises concerns about code design and consistency. If the new factorial function is accepted without considering its impact on other parts of the codebase, inconsistencies may arise. To see this, imagine lots of other files in the codebase are still using the external (numpy) version of the factorial function. Accepting this pull request would result in different files using different versions of the factorial function (either the newly written one or the external numpy one). If the two versions of the function differ in terms of output, input (*etc.*) then the codebase becomes more difficult to work with. When the factorial function is needed in a future file, which one should the developer pick? If another file relies on two separate scripts that each use a different version of the factorial function, will the output be as expected (perhaps the differences between the versions of the function lead to incompatibility)?
 
-While this example focuses on the factorial function, the same principle applies to (and is more relevant for) more complex libraries and functions. Even if the new code is deemed objectively better—such as being faster—it may produce results that differ from the original code, leading to inconsistencies across the repository.
+While this example focuses on the factorial function, the same principle applies to (and is more relevant for) more complex libraries, functions, classes (*etc.*). Even if the content of the pull request is deemed objectively better—such as being faster—it may produce results that differ from the original code, leading to inconsistencies across the repository.
 
 By carefully evaluating proposed code changes in the context of the existing codebase, we can avoid introducing inconsistencies and maintain the overall stability and coherence of the system.
 
+Note that this is not to say that any fundamental changes to the repository should be rejected. Maybe a 'better' version of a function *is* required for optimisation. The important aspect of 'design' is that the new code will integrate properly with the rest of the codebase. In the example scenario, if all instances of the factorial function across the codebase were changed (and it was genuinely 'better'), then the pull request can still be accepted.
 
 ## Functionality
 

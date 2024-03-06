@@ -93,13 +93,13 @@ Some converse is likely to occur during this stage between the reviewer and the 
 Code reviews can end up being very subjective, it can be difficult to decide whether or not a change to the codebase is actually an improvement. To help with this we have created an ordered list of what makes code better. The list starts with the most important aspects the reviewer should focus on and ends with the least important. For code examples that emphasise the below points, click on the sub-headings.
 
 ### [Pivotal: Design](./Code-examples.md#design)
-Above all else, the code should be written in a way such that it will integrate into the existing codebase. 
+Above all else, the code should be written in a way such that it will integrate well into the existing codebase. 
 
 Is the feature even required? 
 
 If the pull request had been accepted without a review would anything else break? 
 
-If the above points fail, then this is a good reason to reject the pull request. If scripts interact in anyway, a change to one script could impact another. If the changes and the existing repository do not mesh together well, no amount of refactoring will fix this issue. We do not want to accept pull requests that would break the existing architecture of the repository.
+If the any of the above points fail, then this is a good reason to reject the pull request. If scripts interact in anyway, a change to one script could impact another. If the changes and the existing repository do not mesh together well, no amount of refactoring will fix this issue. We do not want to accept pull requests that would break the existing architecture of the repository.
 
 ### [Critical: Functionality](./Code-examples.md#functionality)
 
