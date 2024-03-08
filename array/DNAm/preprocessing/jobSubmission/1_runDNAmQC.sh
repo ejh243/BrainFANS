@@ -38,6 +38,8 @@ module load R/3.6.3-foss-2020a
 
 Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR}
 
+chmod 777 ${DATADIR}/raw.gds
+
 mkdir -p ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR}
