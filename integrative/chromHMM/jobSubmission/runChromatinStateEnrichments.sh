@@ -26,7 +26,6 @@ date -u
 echo "Changing Folder to: "
 echo $SLURM_SUBMIT_DIR
 
-cd $SLURM_SUBMIT_DIR
 
 
 ## generate QC metrics
