@@ -46,7 +46,6 @@ then
 		#change project into folder name for binarised folder 
 		DIR=$(echo $PROJECT | tr / _)
 
-		cd $SLURM_SUBMIT_DIR
 		## rerun source so metadata folder is updated with new project
 		source ./integrative/chromHMM/config/config.txt
 

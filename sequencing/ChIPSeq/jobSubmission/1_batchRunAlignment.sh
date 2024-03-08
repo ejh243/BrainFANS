@@ -18,7 +18,6 @@ date -u
 echo
 
 ## needs to be executed from the scripts folder
-cd $SLURM_SUBMIT_DIR
 
 ## load config file provided on command line when submitting job
 echo "Loading config file for project: " $1

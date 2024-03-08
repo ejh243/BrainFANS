@@ -20,9 +20,7 @@ date -u
 	
 ## needs to be executed from the scripts folder
 echo "Changing folder to: "
-echo $SLURM_SUBMIT_DIR
 
-cd $SLURM_SUBMIT_DIR
 
 error="$1"
 LOGDIR=$( dirname $2 )

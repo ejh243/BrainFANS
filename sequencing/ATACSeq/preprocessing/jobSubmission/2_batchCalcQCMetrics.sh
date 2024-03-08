@@ -17,8 +17,6 @@ echo Job started on:
 date -u
 	
 ## needs to be executed from the scripts folder
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
 
 
 echo "Loading config file for project: " $1
