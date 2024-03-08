@@ -24,6 +24,9 @@ echo Job started on:
 date -u
 JOBNAME="QCDNAdata"
 
+# Forcibly moves the user to the scripts directory
+cd $(dirname $0)/../../../..
+
 ## needs to be executed from the scripts folder
 echo "Changing Folder to: " $SLURM_SUBMIT_DIR
 cd $SLURM_SUBMIT_DIR
