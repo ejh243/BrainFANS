@@ -92,48 +92,38 @@ Some converse is likely to occur during this stage between the reviewer and the 
 
 Code reviews can end up being very subjective, it can be difficult to decide whether or not a change to the codebase is actually an improvement. To help with this we have created an ordered list of what makes code better. The list starts with the most important aspects the reviewer should focus on and ends with the least important. For code examples that emphasise the below points, click on the sub-headings.
 
-### [Design](./Code-examples.md#design)
-Above all else, the code should be written in a way such that it will integrate into the existing codebase. 
+### [Pivotal: Design](./Code-examples.md#design)
+Above all else, the code should be written in a way such that it will integrate well into the existing codebase. 
 
 Is the feature even required? 
 
 If the pull request had been accepted without a review would anything else break? 
 
-If the above points fail, then this is a good reason to reject the pull request. If scripts interact in anyway, a change to one script could impact another. If the changes and the existing repository do not mesh together well, no amount of refactoring will fix this issue. We do not want to accept pull requests that would break the existing architecture of the repository.
+If the any of the above points fail, then this is a good reason to reject the pull request. If scripts interact in anyway, a change to one script could impact another. If the changes and the existing repository do not mesh together well, no amount of refactoring will fix this issue. We do not want to accept pull requests that would break the existing architecture of the repository.
 
-### [Functionality](./Code-examples.md#functionality)
+### [Critical: Functionality](./Code-examples.md#functionality)
 
 The code should be functional. Alongside design, this is the most important aspect to assess in a code review. The functionality of code can be checked using test data on the reviewer's local machine (see [above](#reviewing-changes) for how to get the changes onto your local machine). If a change causes code to become non-functional (or if specific edge cases are not accounted for), the code **should not** be approved until it is fixed.
 
-Please note that the reviewer is not required to provide the reviewee with how to fix the problem (but they can if they want).
+If you, as the reviewer, can identify any non-functional code and provide suggestions for how to fix it in your comments, please do this (it would be highly appreciated). Please note however that the reviewer is not *required* to provide solutions and that the reviewee is not entilted to this treatment.
 
-### [Complexitity](./Code-examples.md#complexity)
+### [Important: Complexitity](./Code-examples.md#complexity)
 
 Are indivdual lines/files/functions too complex? 
 
 If code is too complex, it is unlikely that these lines/files/functions will be touched in the future by other developers. Code that no one wants to touch is bad code and should be avoided.
 
-### [Understandability](./Code-examples.md#understandability)
+### [Beneficial: Readability/Understandability/Maintainability](./Code-examples.md#readabilityunderstandabilitymaintainability)
 
-Is the code easy to understand? 
+Is the code easy to read, understand and maintain?
 
-If you, the reviewer, are struggling to understand some sections of code, **do not** skip over it. Leave a comment and ask. Code that is easier to understand is objectively better than code that is not. Leaving a comment is the first step towards resolving this problem.
+These usually go hand in hand. There is some subtlety between them, but for the most part they boil down to the same question:
 
-### [Readability](./Code-examples.md#readability)
+Do you, the reviewer, feel like you would be comfortable (though not necessarily happy) working with this code in the future (ignoring domain knowledge gaps)?
 
-Is the code easy to read? 
+If you, the reviewer, are struggling to understand some sections of code or find yourself getting lost: **Do not** skip over it. Leave a comment and ask. Leaving a comment is the first step towards resolving problems of this type.
 
-If you, the reviewer, find yourself getting lost in the code or feel 'left in the dark' at any point do not interpret this as being your fault. In an ideal world, code will be so well written that someone that is not from a computing background would be able to understand what is happening (discounting for domain knowledge). As with understandability, leave comments for any lines you find difficult to read.
-
-### [Maintainability](./Code-examples.md#maintainability)
-
-Will the code be easy to maintain in the future? 
-
-If you, the reviewer, were given this code and asked to make some small changes, would you be comfortable in doing so? 
-
-Highly maintainable code should be easy to transfer over to other individuals for changes in the future. If code is not maintainable now, changes in the future will become harder and harder to make without failing some of the above points.
-
-### [Comments](./Code-examples.md#comments)
+### [Beneficial: Comments](./Code-examples.md#comments)
 
 Are there any comments written in plain English? 
 
@@ -141,22 +131,11 @@ Are these comments actually necessary?
 
 A good rule of thumb is that comments should explain "*why, not what*". If a comment is required to explain the *what*, then this usually signifies that the code is not written well or the idea behind the code is too complex.
 
-### [Scalability/Expandability](./Code-examples.md#scalabilityexpandability)
+### [Relevant: Scalability/Expandability](./Code-examples.md#scalabilityexpandability)
 
 Can the changed files be expanded in scope? 
 
-Ideally a script (or source code) can be easily repurposed if required. A tool might work for a specific dataset, but a better tool could work with other datasets with a few small changes. The script (or source code) does not need to be multi-purpose itself, but the ability to be such can be highly beneficial.
-
-### [Style](./Code-examples.md#style)
-
-In general, style only matters for consistency. We encourage that contributors use linters to check for their coding style so this is unlikely to be a big problem. Bad coding style is generally fine unless it results in the code failing one of the above points. In general you are as unlikely to change someone else's coding style as they are to change your own. Style should be about consistency, not about personal preference.
-
-### [Documentation](./Code-examples.md#documentation)
-
-Has the associated documentation been properly updated?
-
-This is the least important aspect of a pull request. In the event that documentation has been forgotten or incorrectly altered, an issue can be created and documentation can be created properly in the future.
-
+Ideally, a script (or source code) can be easily repurposed if required. A tool might work for a specific dataset, but a better tool could work with other datasets with a few small changes. The script (or source code) does not need to be multi-purpose itself, but the ability to be such can be highly beneficial.
 
 ## Finalising the code review
 
