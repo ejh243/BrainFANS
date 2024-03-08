@@ -108,6 +108,14 @@ git merge new-branch
 # merge commit message. 
 ```
 
+Once you save and close the file `MERGE_MSG`, you will see this in the terminal:
+
+```text
+Merge made by the 'recursive' strategy.
+ file.txt | 1 +
+ 1 file changed, 1 insertion(+)
+```
+
 Let's break down what happened here. We added one more line to `file.txt`, moved back to the master branch and created `new-file.txt`. However, after merging git knew that we wanted to update `file.txt` but keep `new-file.txt`. How did git know we wanted this? 
 
 
