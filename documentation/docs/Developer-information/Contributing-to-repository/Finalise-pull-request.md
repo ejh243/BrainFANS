@@ -19,7 +19,7 @@ Ideally your pull request should be in a state where a reviewer will take no mor
 
 ## Merge branches
 
-Once the code review has been completed and approved, the branches can be merged. At this stage, any merge conflicts should be resolved. This is usually a simple case of choosing which lines to keep from each file.
+Once the code review has been completed and approved, the branches can be merged. At this stage, any merge conflicts should be resolved. This is usually a simple case of choosing which lines to keep from each file. For an in-depth look at merge conflicts, consult [these pages](/Developer-information/merge-conflicts.md)
 
 If this proves difficult, add someone else onto the assignee list of the pull request.
 
