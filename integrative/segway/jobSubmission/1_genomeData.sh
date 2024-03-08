@@ -16,7 +16,6 @@ echo Job started on:
 date -u
 
 ## needs to be executed from the scripts folder
-echo "Changing folder to: "
 
 
 ## check chrmm project and input data project

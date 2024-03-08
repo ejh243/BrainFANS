@@ -19,7 +19,6 @@ echo Job started on:
 date -u
 	
 ## needs to be executed from the scripts folder
-echo "Changing folder to: "
 
 
 error="$1"
