@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
 #SBATCH --time=150:00:00 # Maximum wall time for the job.
@@ -26,7 +26,6 @@ date -u
 echo "Changing Folder to: "
 echo $SLURM_SUBMIT_DIR
 
-cd $SLURM_SUBMIT_DIR
 
 
 ## generate QC metrics

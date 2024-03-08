@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --export=ALL #export all enviroment variables to the batch job
 #SBATCH -p mrcq #submit to the serial queue
 #SBATCH --time=24:00:00 ##maximum wall time for the job
