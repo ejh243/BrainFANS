@@ -16,7 +16,7 @@ The important thing to note here is that a code review goes both ways. All contr
 
 ## Review the **code** not the **person**
 
-The aim of a code review is to assess the changes made. Sometimes, mistakes are made or code is poorly written. The reviewer **should not** critque the developer that wrote the poorly written code. Reviewing code in this manner does not help anyone. In most cases, critiquing the person results in the developer being less likely to make contributions in the future. We do not want this, everyone should feel motivated towards contributing to the repository. The hard line is that: it is the code that should be critiqued.
+The aim of a code review is to assess the changes made. Sometimes, mistakes are made or code is poorly written. The reviewer **should not** critque the developer that wrote the poorly written code. Reviewing code in this manner does not help anyone. In most cases, critiquing the person results in the developer being less likely to make contributions in the future. We do not want this, everyone should feel motivated towards contributing to the repository. The hard line is: "it is the code that should be critiqued, not the person".
 
 To illustrate this point, consider the below code blocks (comments are reviewer comments):
 
@@ -47,15 +47,15 @@ def factorial(n):
 
 The full expression is:
 
-> There is no such thing as "perfect" code - there is only better code - Google
+> There is no such thing as "perfect" code - there is only better code -- Google
 
-In general, if the pull request has changes that improve the existing code, you should accept it. For a definition of "better", we suggest the reader consults our [list of what to look for in a code review](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review). 
+In general, if the pull request has changes that improve the existing code, you should accept it. Do not constantly push back a pull request just because of a small thing you do not like. All this ends up doing is discouraging developers from contributing in the future. For a definition of "better", we suggest the reader consults our [list of what to look for in a code review](./Conducting-a-code-review.md#what-to-look-for-in-a-code-review). 
 
-The exception to this rule is when the pull request adds uneeded functionality. For example, someone could be adding a script that implements PCA (from scratch) to some pipeline. This might work well with the current codebase and even be functional. But there is no point in reinventing the wheel, other tools do this already (and likely do it better). Such a change should be rejected.
+The exception to this rule is when the pull request adds uneeded functionality. For example, someone could be adding a script that implements PCA (from scratch) to some pipeline. This might work well with the current codebase and even be functional. But there is no point in reinventing the wheel, other tools do this already (and likely do it better). Such a change violates our views on [Design](./Conducting-a-code-review.md#pivotal-design) and should be rejected.
 
 ## Justify your comments
 
-As a reviewer, it is not very helpful to the reviewee if you give unjustified comments. Be a little more specific with your comments and explain *why* the line (or section) is a problem. If you are unsure of why some line is incorrect, try starting the comment with "I *suggest* changing this because...". This shows that you think there is a problem with the code without definitively stating such. 
+As a reviewer, it is not very helpful to the reviewee if you give unjustified comments. Be a little more specific with your comments and explain *why* the line (or section) is a problem. If you are unsure of why some line is incorrect, try starting the comment with "I *suggest* changing this because..." or "I *think* this is wrong because...". This shows that you think there is a problem with the code without definitively stating such. 
 
 To illustrate, here are some examples of good and bad reviews:
 
@@ -83,13 +83,53 @@ def factorial(n):
 
 ## On the matter of style
 
-Sometimes a developer writes code in a different style to the reviewer, which can cause arguments about the best way to write your code. Maybe one developer enjoys the power of list comprehension in python, whilst the other prefers the conventional loop. Provided the style doesn't hamper the code's readability/understandability, differences in style is fine.
+Sometimes a developer writes code in a different style to the reviewer, which can cause arguments about the *best* way to write your code. Maybe one developer enjoys the power of list comprehension in python, whilst the other prefers to use loops. Provided the style doesn't severly impact the consistency across the codebase, it is not a reasonable thing to comment on (or reject a pull request for). We encourage that contributors use linters to check their code for errors and style so this is unlikely to be a big problem.
 
-If the reviewer still wishes to comment on the code style (despite the code remaining readable), it is common practice that the comment begins with "*Nit:*". This way the reviewee is made aware of the changes they could make, but they are not pressured into changing their coding style if the change doesn't suit them.
+We understand that it can be difficult to read someone else's code when their style heavily differs from yours. Please be respectful of other's coding styles, in general you are as unlikely to change someone else's coding style as they are to change your own. Again, all that matters is that the style across the codebase is consistent. Consider the following examples:
 
+```python title="Inconsistent codebase"
+# Python does not care about the number of spaces used for indentation, some
+# languages (like bash) don't care about indentation at all. 
+# But the lack of consistency here can make code less readable.
+# (especially when there is heavier nesting).
+def some_function(i, j, k):
+     do_something()
+
+def factorial(n):
+  result = 1
+  for i in range(1, n + 1):
+    result = result * i
+    return result
+
+def some_other_function(l, m, n, o, p):
+          do_something()
+```
+
+```python title="Consistent codebase"
+# Consistent style generally makes code more readable. The number of spaces
+# used for indentation might be hotly discussed, but we don't care about how 
+# many spaces are just used. We only care about consistency across the codebase.
+def some_function(i, j, k):
+    do_something()
+
+def factorial(n):
+    result = 1
+    for i in range(1, n + 1):
+        result = result * i
+    return result
+
+def some_other_function(l, m, n, o, p):
+    do_something()
+```
+
+:::info[Nits]
+If the reviewer really wants to comment on the code style, it is common practice that the comment begins with "*Nit:*". This way the reviewee is made aware of the changes they *could* make, but they are not pressured into changing their coding style if the change doesn't suit them.
+
+Please be sparing with your useage of *Nit*. Flooding a code review with nits is generally a bad thing, it distracts the developer from the actual problems with the code. If your code review has a comparable number of nits to actually useful comments, please stop. 
+:::
 
 ## Write something nice
 
-Code reviews all too often focus on the negatives. If you are the reviewer, find something positive to say about the code. Not every comment needs to explain how to improve a function or a specific line. Try starting off a comment with "I like the way you..." or "This is a great way to... I hope to start using this myself" (*etc.*).
+Code reviews all too often focus on the negatives. If you are the reviewer, find something positive to say about the code. Not every comment needs to explain how to improve a function or a specific line. Try starting off a comment with "I like the way you..." or "This is a great way to ... I hope to start using this myself" (*etc.*).
 
 This can make code reviews much more inviting to newer developers, which is of course a good thing.
