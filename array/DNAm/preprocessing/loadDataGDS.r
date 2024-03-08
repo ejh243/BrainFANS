@@ -34,7 +34,7 @@ library(IlluminaHumanMethylationEPICmanifest)
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(IlluminaHumanMethylation450kmanifest)
 library(devtools)
-devtools::load_all(path = "~/BrainFANS/functionsR")
+devtools::load_all(path = "../functionsR")
 
 
 
