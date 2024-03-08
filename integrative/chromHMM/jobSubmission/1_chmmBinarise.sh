@@ -54,7 +54,7 @@ fi
 echo
 
 #-----------------------------------------------------------------------#
-
+cd $SLURM_SUBMIT_DIR
 
 echo
 echo 'Starting creating cellMarkFileTable for' $PROJECT 'at:'
