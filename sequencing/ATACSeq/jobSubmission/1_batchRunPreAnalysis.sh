@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
 #SBATCH --time=48:00:00 # Maximum wall time for the job.
@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/logFiles/%u/ATACpreAnalysisS1-%A_%a.o
-#SBATCH --error=/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/logFiles/%u/ATACpreAnalysisS1-%A_%a.e
+#SBATCH --output=/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/logFiles/%u/ATACpreAnalysisS1-%A_%a.log
+#SBATCH --error=/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/logFiles/%u/ATACpreAnalysisS1-%A_%a.err
 #SBATCH --job-name=ATACpreAnalysisS1
 
 ## ===================================================================================================================##
@@ -17,12 +17,12 @@
 ## CONTACT: m.flores-payan@exeter.ac.uk                                                                               ||
 ## LAST UPDATE: February 2024                                                                                         ||
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/1_batchRunPreAnalysis.sh <projectName> <option>      ||
+## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/1_batchRunPreAnalysis.sh <config file> <option>      ||
 ## - execute from scripts directory                                                                                   ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
-## $1 -> <projectName> Name of project                                                                                ||
+## $1 -> <config file> directory of config file for project analysed
 ## $2 -> <option> Specify step to run: FASTQC, TRIM, ALIGN or ENCODE. Can be combined. Default is to                  ||
 ## run all                                                                                                            ||
 ##                                                                                                                    ||
@@ -42,14 +42,9 @@
 echo Job started on:
 date -u
 
-## needs to be executed from the scripts folder
-echo "Changing Folder to: " $SLURM_SUBMIT_DIR
-cd $SLURM_SUBMIT_DIR || exit 1
-
 ## load config file provided on command line related to the specified project
-echo "Loading config file for project: " $1
-export PROJECT=$1
-source ./ATACSeq/config/config.txt 
+source $1
+echo "Loading config file for project: " ${PROJECT}
 
 ## check directories
 echo "Project directory is: " $DATADIR 
@@ -80,9 +75,8 @@ then
     
     ## Sample(s) specified in by array number(s) from command line
     sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
-    dirs=( ${RAWDATADIR} ${RAWDATADIR_B1} ${RAWDATADIR_B2} )
-    #toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
-    toProcess=($(find "${dirs[@]}" -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
+    toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
+    
     ## sort the toProcess array so that R1 and R2 are consecutive 
     IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
     toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
@@ -95,8 +89,7 @@ then
     ## If only $1 is specified, all steps will be run
     ## option FASTQC: run sequencing QC on raw reads files        
     if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
-    then
-      
+    then      
         echo "Running step 1.1 of ATAC-seq pipeline: FASTQC"
         module load FastQC 
         cd ${SCRIPTDIR}
@@ -139,21 +132,21 @@ then
           
       ## load conda env for samstats
       module load Anaconda3
-      source activate encodeqc
+      source $SOURCE
+      conda activate encodeqc
 
       cd ${SCRIPTDIR}
       sh ./ATACSeq/preprocessing/calcENCODEQCMetrics.sh ${sampleID}
     fi
   
     ## move log files into a folder when process(es) completed
-    cd ATACSeq/logFiles/${USER}/
-    mkdir -p ${SLURM_ARRAY_JOB_ID}
-    mv *${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* ${SLURM_ARRAY_JOB_ID}
-
+    
+    LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+    mkdir -p $LOG_DIR
+    mv "./ATACSeq/logFiles/${USER}/ATACpreAnalysisS1${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}*" $LOG_DIR
 
 else
     echo "File list not found"
 fi
 
-echo 'EXIT CODE: ' $?
 
