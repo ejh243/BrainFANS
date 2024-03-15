@@ -22,7 +22,7 @@
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
-## $1 -> <config file> directory of config file for project analysed
+## $1 -> <config file> directory of config file for project analysed                                                  ||
 ## $2 -> <option> Specify step to run: FASTQC, TRIM, ALIGN or ENCODE. Can be combined. Default is to                  ||
 ## run all                                                                                                            ||
 ##                                                                                                                    ||
@@ -48,7 +48,14 @@ echo "Loading config file for project: " ${PROJECT}
 
 ## check directories
 echo "Project directory is: " $DATADIR 
-echo 'Script is running from directory: ' ${SCRIPTDIR}
+echo "Script is running from directory: " ${SCRIPTDIR}
+
+## Log files directory
+LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+
+echo "Log files will be moved to dir: " $LOG_DIR
+mkdir -p $LOG_DIR
+mv "./ATACSeq/logFiles/${USER}/ATACpreAnalysisS1${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}*" $LOG_DIR
 
 ##check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
@@ -82,9 +89,8 @@ then
     toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
     unset IFS 
     echo ${toProcess}
-    echo "R1 file found is: " $( basename ${toProcess[0]} )
-    
-    echo "Current sample: " ${sampleID} 
+    echo "R1 file found is: " $( basename ${toProcess[0]} ) 
+    echo "Sample to be used is: " ${sampleID} 
     
     ## If only $1 is specified, all steps will be run
     ## option FASTQC: run sequencing QC on raw reads files        
@@ -132,18 +138,12 @@ then
           
       ## load conda env for samstats
       module load Anaconda3
-      source $SOURCE
-      conda activate encodeqc
+      source $CONDAENV
+      conda activate $ENVDIR
 
       cd ${SCRIPTDIR}
       sh ./ATACSeq/preprocessing/calcENCODEQCMetrics.sh ${sampleID}
     fi
-  
-    ## move log files into a folder when process(es) completed
-    
-    LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
-    mkdir -p $LOG_DIR
-    mv "./ATACSeq/logFiles/${USER}/ATACpreAnalysisS1${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}*" $LOG_DIR
 
 else
     echo "File list not found"
