@@ -35,7 +35,7 @@ done
 ## estimate partioned heritability for a given selection of GWAS traits
 gwas_traits=$(find "${LD_GWAS_TRAITS_DIR}" -name "*${GWAS_PATTERN}*.gz")
 
-for file_name in "${gwas_traits[@]}"; do
+for file_name in ${gwas_traits}; do
   output_file=$(basename "${file_name}" .sumstats.gz)
 
 	python \
