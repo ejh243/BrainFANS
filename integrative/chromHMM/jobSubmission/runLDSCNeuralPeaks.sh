@@ -7,9 +7,9 @@
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
-#SBATCH --error=LogFiles/overlapChromatinAnnotations5hmc.err # error file
-#SBATCH --output=LogFiles/overlapChromatinAnnotations5hmc.log # output file
-#SBATCH --job-name=overlapChromatinAnnotations
+#SBATCH --error=LogFiles/LDSCNeuralPeaks.err # error file
+#SBATCH --output=LogFiles/LDSCNeuralPeaks.log # output file
+#SBATCH --job-name=LDSCNeuralPeaks
 
 ## needs to be executed from the scripts folder
 
@@ -25,9 +25,20 @@ date -u
 
 
 
-
-## generate QC metrics
 module purge
+module load BEDOPS
+module load BEDTools
 module load R/3.6.3-foss-2020a
-#Rscript ATACSeq/overlapChromatinAnnotations.r
-Rscript hydroxy/CGEX/overlapChromatinAnnotations.r
+#Rscript /gpfs/mrc0/projects/Research_Project-MRC190311/scripts/LDScoreRegression/createAnnotationFiles.r
+
+
+module purge
+module load Anaconda3/2020.02
+source activate ldsc
+
+source LDScoreRegression/config.txt
+source LDScoreRegression/runPartionedHeritabilityOnPeaks.sh
+
+## print start date and time
+echo Job finished at:
+date -u

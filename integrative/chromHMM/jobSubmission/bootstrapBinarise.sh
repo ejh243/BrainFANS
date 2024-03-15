@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
 #SBATCH --time=25:00:00 # Maximum wall time for the job.
@@ -46,7 +46,7 @@ then
 		#change project into folder name for binarised folder 
 		DIR=$(echo $PROJECT | tr / _)
 
-		cd $SLURM_SUBMIT_DIR
+        cd $SLURM_SUBMIT_DIR
 		## rerun source so metadata folder is updated with new project
 		source ./integrative/chromHMM/config/config.txt
 
