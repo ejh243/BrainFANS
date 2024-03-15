@@ -12,6 +12,10 @@ In order to use the ldsc tool, you need to create a conda environment as per the
 
 GWAS traits are expected to be in sumstats.gz format. If this is not the case, please use ldsc to convert any GWAS analysis text files into this file format (munge_stats.py). The file format for sumstats is given [here](https://github.com/bulik/ldsc/wiki/Summary-Statistics-File-Format).
 
+## Types of input data
+
+The data that is used to create the `.annot` files must be **peak called data**. This could take on the form of gapped, narrow or broad peaks (from MACS2, HMMRATAC *etc.*). Such data is usually in the form of a bed file (only the chromosome, start and end positions are required).
+
 ## File structure
 The basic file structure that is expected with these scripts is as follows:
 ```text
