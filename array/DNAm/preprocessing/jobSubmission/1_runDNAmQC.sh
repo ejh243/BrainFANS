@@ -28,8 +28,6 @@ JOBNAME="QCDNAdata"
 cd $(dirname $0)/../../../..
 
 ## needs to be executed from the scripts folder
-echo "Changing Folder to: " $SLURM_SUBMIT_DIR
-cd $SLURM_SUBMIT_DIR
 
 ## format paths in config file with project name
 echo "Loading config file for project: " $1
