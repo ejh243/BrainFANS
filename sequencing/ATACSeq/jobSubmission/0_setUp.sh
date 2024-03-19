@@ -116,7 +116,7 @@ module load Anaconda3
 if [ -d ${ENVDIR} ]
 then 
 	echo "ENCODEQC environment exists"
-  source $CONDAENV
+  source ${CONDAENV}
   conda activate ${ENVDIR}
   echo "List of packages included in conda environment is output in project directory"
   conda list > "/lustre/projects/Research_Project-MRC190311/ATACSeq/$1/condaEnv.txt"
@@ -124,8 +124,8 @@ then
 else
 	echo "ENCODEQC environment does not exist"
 	echo "Creating environment"
+  source ${CONDAENV}
 	conda create --prefix ${ENVDIR}
-  source $CONDAENV
 	conda activate ${ENVDIR}
 	echo "Installing SAMstats"
 	conda install -c bioconda samstats
@@ -139,7 +139,7 @@ module load Python/3.9.6-GCCcore-11.2.0-bare
 if [[ -d ${PIPENV} ]]
 then
   echo "Pip environment exists."
-  source /lustre/home/${USER}/pythonEnv/bin/activate
+  source ${PIPENV}/bin/activate
   echo "List of packages included in pip environment is output in project directory"
   pip list > "/lustre/projects/Research_Project-MRC190311/ATACSeq/$1/pipEnv.txt"
   deactivate
@@ -147,7 +147,7 @@ else
   echo "Pip environment does not exist."
   echo "Creating environment."
   python -m venv ${PIPENV}
-  source /lustre/home/${USER}/pythonEnv/bin/activate
+  source ${PIPENV}/bin/activate
   echo "Installing basic libraries needed in pipeline"
   pip install Cython
   pip install cykhash

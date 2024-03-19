@@ -1,3 +1,4 @@
+
 ## ===================================================================================================================##
 ##                               ATAC-seq pipeline STEP 1.3: Pre-analysis -- alignment                                ##
 ## ===================================================================================================================##
@@ -6,12 +7,14 @@
 ##                                                                                                                    ||
 ## DESCRIPTION: This scripts performs alignment of reads against the reference genome and subsequent processing of    ||  
 ## aligned reads, such as reads with quality < 30, unmapped, mate unmapped, secondary alignment, reads failing        || 
-## platform, remove duplicates and reads mapped to a different chromosome                                             ||
+## platform, remove duplicates and reads mapped to a different chromosome. Filters based on guide:                    ||
+## https://link.springer.com/protocol/10.1007/978-1-0716-2899-7_17                                                    ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - File in ${METADIR}/samples.txt that lists sample names.                                                          ||
 ## - Variables in config file: RAWDATADIR, TRIMDIR, ALIGNEDDIR, REFGENOME, multimap                                   ||
-## - Software: bowtie2, samtools, picard                                                                              ||
+## - Software: bowtie2, samtools, picard.                                                                             ||
+## - assign_multimapers.py can be found in https://github.com/ENCODE-DCC/atac-seq-pipeline/tree/master/src            ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <sampleName> Name of sample specified in command line. Reads should be previously trimmed                    ||
@@ -42,7 +45,7 @@ echo "Found trimmed files:" ${f[0]} ${f[1]}
 ##    ALIGNMENT    ##
 ## =============== ##
 
-## checks if aligned file for input sample already exists
+## checks if aligned file for input sample already exists (can be removed, only to avoid rewritting results when not intended)
 if [ ! -s ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]	
 then
 	echo "Running alignment for"" ${sampleName}"

@@ -6,16 +6,12 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/logFiles/%u/ATACpreAnalysisS1-%A_%a.log
-#SBATCH --error=/lustre/projects/Research_Project-MRC190311/scripts/sequencing/ATACSeq/logFiles/%u/ATACpreAnalysisS1-%A_%a.err
+#SBATCH --output=ATACpreAnalysisS1-%A_%a.log
+#SBATCH --error=ATACpreAnalysisS1-%A_%a.err
 #SBATCH --job-name=ATACpreAnalysisS1
 
 ## ===================================================================================================================##
 ##                               ATAC-seq pipeline STEP 1: Pre-analysis                                               ##
-## ===================================================================================================================##
-## PROOFREADER : Marina Flores-Payan                                                                                  ||
-## CONTACT: m.flores-payan@exeter.ac.uk                                                                               ||
-## LAST UPDATE: February 2024                                                                                         ||
 ## ===================================================================================================================##
 ## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/1_batchRunPreAnalysis.sh <config file> <option>      ||
 ## - execute from scripts directory                                                                                   ||
@@ -52,10 +48,9 @@ echo "Script is running from directory: " ${SCRIPTDIR}
 
 ## Log files directory
 LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
-
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
-mv "./ATACSeq/logFiles/${USER}/ATACpreAnalysisS1${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}*" $LOG_DIR
+mv ATACpreAnalysisS1-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
 
 ##check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]

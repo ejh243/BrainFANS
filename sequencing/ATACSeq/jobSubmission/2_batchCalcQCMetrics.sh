@@ -26,8 +26,8 @@
 ##  each. If the number of samples is less than 10, set batch number to 0                                             ||
 ## - $1 -> <config file> : directory to config file for project                                                       ||
 ##                                                                                                                    ||
-## DESCRIPTION: This script uses the ATACseqQC R package to generate the fragment distribution and calculate some     ||
-## summary statistics.                                                                                                ||
+## DESCRIPTION: This script uses the ATACseqQC R package to generate the fragment distribution, calculate periodicity ||
+## and get ratios of nucleosomefree, mono, bi, tri reads.                                                             ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -49,7 +49,7 @@ echo "Project directory is: " $DATADIR
 LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
-mv "./ATACSeq/logFiles/${USER}/ATACcalcQCS2-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}*" $LOG_DIR
+mv "ATACcalcQCS2-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}*" $LOG_DIR
 
 ##check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
