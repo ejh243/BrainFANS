@@ -49,7 +49,7 @@ echo "Project directory is: " $DATADIR
 LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
-mv "ATACcalcQCS2-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}*" $LOG_DIR
+mv ATACcalcQCS2-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
 
 ##check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
@@ -68,6 +68,6 @@ module load R/4.2.1-foss-2022a
 echo "Running step 2 of ATAC-seq pipeline: Post alignment processing (QC metrics and fragment distribution)."
 echo "Calculating QC metrics and fragment distribution for samples in batch " ${SLURM_ARRAY_TASK_ID} 
 echo "Output directory is " "${ALIGNEDDIR}/QCOutput/"
-Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/fragmentDistribution.r $PROJECT ${SLURM_ARRAY_TASK_ID} 
+Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/fragmentDistribution.r $CONFIGR ${SLURM_ARRAY_TASK_ID} 
 
 echo "QC metrics and fragment distribution calculated"

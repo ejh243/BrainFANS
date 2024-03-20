@@ -1,22 +1,20 @@
-## get the number of reads aligned to MT chromosome from samtools idxstats output
+## ====================================================================================================##
+##                    ATAC-seq pipeline STEP 4.2: Count MT chromosome reads                            ##
+## ====================================================================================================##
+## EXECUTION: sh ./sequencing/ATACSeq/preprocessing/countMTReads.sh                                    ||
+## - execute from scripts directory                                                                    ||
+##                                                                                                     ||
+## DESCRIPTION: This script gets the number of reads aligned to MT chromosome                          ||
+##                                                                                                     ||
+## OUTPUTS:                                                                                            ||
+## countMTReads.txt                                                                                    ||
+##                                                                                                     ||
+## REQUIRES:                                                                                           ||
+## - ALIGNEDDIR                                                                                        ||
+##                                                                                                     ||
+## ====================================================================================================##
 
-
-## EXECUTION
-# sh ATACSeq/countMTReads.sh 
-
-## REQUIRES the following variables in config file
-# ALIGNEDDIR
-
-## REQUIRES the following software
-# -
-
-## INPUT
-# -
-
-## OUTPUT
-# ${ALIGNEDDIR}/countMTReads.txt
-
-
+## Results will be output in txt file
 echo "Filename\tMTReads\tAllMappedReads\n" > ${ALIGNEDDIR}/countMTReads.txt
 
 for file in ${ALIGNEDDIR}/*_statsperchr.txt

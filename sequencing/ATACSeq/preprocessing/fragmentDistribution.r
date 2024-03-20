@@ -43,7 +43,7 @@ calcNucleoProps<-function(fraglen.stand){
 
 fdsPlots <- function(listSamples){
   counter = 1
-  list_plots <- vector("list", 10)
+  list_plots <-list()
   samples <- ls(listSamples)
   for(i in 1:length(listSamples)) {
     df <-data.frame(listSamples[i])
@@ -62,8 +62,8 @@ fdsPlots <- function(listSamples){
 ## ==========##
 
 args <- commandArgs()
-project <-args[6]
-source(paste0("/lustre/projects/Research_Project-MRC190311/ATACSeq/",project,"/config.r")
+configFile <-args[6]
+source(configFile)
 batchNum<-as.numeric(args[7]) ## nb starts from 0
 
 library(ATACseqQC)

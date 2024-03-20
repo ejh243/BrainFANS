@@ -1,23 +1,18 @@
-## searches for output files from each part of the QC pipeline and reports number of files found
-## then searches specifically for each sample to identify what is missing
-
-## EXECUTION
-# sh ./ATACSeq/preprocessing/7_progressReport.sh
-# assumes config file has been loaded
-# script needs to be executed from <git repo>/sequencing/
-
-## REQUIRES the following variables in config file
-# RAWDATADIR, FASTQCDIR, ALIGNEDDIR, PEAKDIR
-
-## REQUIRES the following software
-# -
-
-## INPUT
-# -
-
-## OUTPUT
-# ${METADIR}/summariseSampleProcessingProgress.csv
-
+## ===================================================================================================================##
+##                             ATAC-seq pipeline STEP 4.2: Collate QMetrics                                           ##
+## ===================================================================================================================##
+## EXECUTION: sbatch ./sequencing/ATACSeq/preprocessing/progressReport.sh                                             ||
+## - execute from scripts directory                                                                                   ||
+##                                                                                                                    ||
+## DESCRIPTION: This script collates Qmetrics from the first stage of the pipeline and checks whether all samples have||
+## undergone all steps.                                                                                                ||
+##                                                                                                                    ||
+## OUTPUT:                                                                                                            ||
+## - summariseSampleProcessingProgress.csv                                                                            ||
+##                                                                                                                    ||
+## REQUIRES:                                                                                                          ||
+## - RAWDATADIR, FASTQCDIR, ALIGNEDDIR, PEAKDIR                                                                       ||
+## ===================================================================================================================##
 
 echo "Running progress report"
 
@@ -59,31 +54,31 @@ echo "Number of ENCODE QC metric output files found " $(ls ${ALIGNEDDIR}/ENCODEM
 
 ## check for peak calling output
 
-echo "Number of MACS2 peak files (shifted tag align) found " $(ls ${PEAKDIR}/MACS/ShiftedTagAlign/*.broadPeak.filt | wc -l)
+echo "Number of MACS3 peak files (shifted tag align) found " $(ls ${PEAKDIR}/MACS/ShiftedTagAlign/*.broadPeak.filt | wc -l)
 
-echo "Number of MACS2 peak files (paired end) found " $(ls ${PEAKDIR}/MACS/BAMPE/*.broadPeak.filt | wc -l)
+echo "Number of MACS3 peak files (paired end) found " $(ls ${PEAKDIR}/MACS/BAMPE/*.broadPeak.filt | wc -l)
+
+echo "Number of MACS3 peak files (HMMRATAC) found " $(ls ${PEAKDIR}/HMMRATAC/*.sorted.filteredPeaks.gappedPeak  | wc -l)
 
 
 ## check for individual samples
-## save output in txt file
-echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS2Peaks1,MACS2Peaks2" > ${METADIR}/summariseSampleProcessingProgress.csv
+## save output in csv file
+echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS3PeaksTA,MACS3PeaksPE,MACS3HMMRATAC" > ${METADIR}/summariseSampleProcessingProgress.csv
 
 for sampleName in ${SAMPLEIDS[@]}
 do 
     toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${sampleName}'*'))
-    
+  
     ## sort the toProcess array so that R1 and R2 are consecutive 
     IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
     toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
-    unset IFS 
-
+    unset IFS
+    
     echo "Processing" ${sampleName}
     f1=$(basename ${toProcess[0]}) 
     f2=$(basename ${toProcess[1]})
-
     echo -n ${sampleName},${RAWDATADIR}, ${f1},${f2}, >> ${METADIR}/summariseSampleProcessingProgress.csv
 
-    
     if [ ! -s ${FASTQCDIR}/${f1%%.*}*fastqc.zip ]
     then
         echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
@@ -135,9 +130,16 @@ do
     
     if [ ! -s ${PEAKDIR}/MACS/BAMPE/${sampleName}.broadPeak.filt ]
     then
+        echo -n "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
+    else
+        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+    fi
+    
+    if [ ! -s ${PEAKDIR}/HMMRATAC/${sampleName}.sorted.filteredPeaks.gappedPeak ]
+    then
         echo "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo "Y" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
   
 done
