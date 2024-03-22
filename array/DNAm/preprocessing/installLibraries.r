@@ -39,3 +39,14 @@ install.packages("e1071")
 BiocManager::install("genefilter")
 install.packages("quadprog")
 
+
+#Packages for CETYGO script
+BiocManager::install(c("genefilter", "minfi"))
+install.packages("quadprog")
+
+# install devtools to install from GitHub
+install.packages("devtools")
+library(devtools)
+
+install_github("ds420/CETYGO")
+
