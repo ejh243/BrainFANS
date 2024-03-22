@@ -1,41 +1,32 @@
-name: lintr
-
 on:
   push:
-    branches: [ "master" ]
+    branches: master
   pull_request:
-    branches: [ "master" ]
+    branches: master
 
-permissions:
-  contents: read
+name: lintr
 
 jobs:
-  lintr:
-    name: Run lintr scanning
+  lint:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup R
-        uses: r-lib/actions/setup-r@4e1feaf90520ec1215d1882fdddfe3411c08e492
-
-      - name: Setup lintr
-        uses: r-lib/actions/setup-r-dependencies@4e1feaf90520ec1215d1882fdddfe3411c08e492
+      - uses: r-lib/actions/setup-r@v2
         with:
-          extra-packages: lintr
+          use-public-rspm: true
 
-      - name: Run lintr
-        run: lintr::sarif_output(lintr::lint_dir("."), "lintr-results.sarif")
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            r-lib/lintr
+            local::.
+          needs: lint
+
+      - name: Lint
+        run: lintr::lint_dir()
         shell: Rscript {0}
-        continue-on-error: true
-
-      - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: lintr-results.sarif
-          wait-for-processing: true
+        env:
+          LINTR_ERROR_ON_LINT: true
