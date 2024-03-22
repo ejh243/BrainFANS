@@ -37,6 +37,11 @@ install.packages("devtools")
 install.packages("e1071")
 
 
+#Creating QC reports
+install.packages("pander") 
+install.packages("kableExtra")
+
+
 #Additional packages for Brain Cell Proportion Prediction
 BiocManager::install("genefilter")
 install.packages("quadprog")
