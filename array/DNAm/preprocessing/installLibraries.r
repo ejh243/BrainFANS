@@ -11,7 +11,9 @@ if (!require("BiocManager", quietly = TRUE))
 	
 	
 #Bigmelon required for all scripts
-BiocManager::install("bigmelon")
+#BiocManager::install("bigmelon")
+remotes::install_github("schalkwyk/wateRmelon")
+remotes::install_github("tjgorrie/bigmelon")
 
 #GDS script
 
