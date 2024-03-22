@@ -39,6 +39,8 @@ source(configFile)
 #----------------------------------------------------------------------#
 
 library(CETYGO)
+library(gridExtra)
+
 
 if(is.na(gdsObj)){
 	message("No data to load")
@@ -61,7 +63,6 @@ if(is.na(gdsObj)){
 #----------------------------------------------------------------------#
 
 setwd(dataDir)
-library(gridExtra)
 
 # load sample sheet
 sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), stringsAsFactors = FALSE)
