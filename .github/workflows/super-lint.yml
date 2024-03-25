@@ -32,4 +32,5 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           BASH_SEVERITY: error
           LOG_LEVEL: error
+          VALIDATE_CHECKOV: false
 ...
