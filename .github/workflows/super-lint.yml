@@ -33,4 +33,5 @@ jobs:
           BASH_SEVERITY: error
           LOG_LEVEL: error
           VALIDATE_CHECKOV: false
+          CREATE_LOG_FILE: true
 ...
