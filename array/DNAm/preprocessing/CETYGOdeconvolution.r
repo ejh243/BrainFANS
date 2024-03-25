@@ -33,6 +33,8 @@ gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, 
 
 source(configFile)
 
+arrayType <- toupper(arrayType)
+
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -77,7 +79,7 @@ if(gdsObj){
 	# ensure sample sheet is in same order as data
 	sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
 	# extract a few useful matrices
-	if(toupper(arrayType) == "V2"){
+	if(arrayType == "V2"){
 	  rawbetas<-epicv2clean(betas(gfile)[])
 } else {
 	rawbetas<-betas(gfile)[,]
