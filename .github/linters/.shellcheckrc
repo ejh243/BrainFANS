@@ -1,0 +1,3 @@
+# Disables linters for source commands not being evaluated, variables not
+# being wrapped in quotes and cd commands not having "|| exit" after them
+disable=SC1090,SC2086,SC2164
