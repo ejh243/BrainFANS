@@ -26,8 +26,6 @@ dataDir <- args[1]
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 configFile <- paste0(dataDir, "/config.r")
 
-gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, NA))
-
 source(configFile)
 
 arrayType <- toupper(arrayType)
@@ -40,22 +38,8 @@ tissueType <- toupper(tissueType)
 
 library(CETYGO)
 library(gridExtra)
-
-
-if(is.na(gdsObj)){
-	message("No data to load")
-} else{
-	if(gdsObj){
-		message("Loading data from gds object")
-		library(bigmelon)
-	} else {
-		if(!gdsObj){
-			message("Loading data from mset object")	
-			library(wateRmelon)
-		}
-}
-}
-
+library(bigmelon)
+library(ggplot2)
 
 
 #----------------------------------------------------------------------#
@@ -71,30 +55,19 @@ if(!"Basename" %in% colnames(sampleSheet)){
 	sampleSheet$Basename<-paste(sampleSheet$Chip.ID, sampleSheet$Chip.Location, sep = "_")
 }
 
-if(gdsObj){
 
-	gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
-	# ensure sample sheet is in same order as data
-	sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
-	# extract a few useful matrices
-	if(arrayType == "V2"){
-	  rawbetas<-epicv2clean(betas(gfile)[])
+
+gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
+# ensure sample sheet is in same order as data
+sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
+# extract a few useful matrices
+if(arrayType == "V2"){
+	 rawbetas<-epicv2clean(betas(gfile)[])
 } else {
 	rawbetas<-betas(gfile)[,]
 }
-    closefn.gds(gfile)
-}else {
-	if(!gdsObj){
-		load(msetFile)
-		# ensure sample sheet is in same order as data
-		sampleSheet<-sampleSheet[match(colnames(msetEPIC), sampleSheet$Basename),]
-		# extract a few useful matrices
-		rawbetas<-betas(msetEPIC)
-}
-}
+closefn.gds(gfile)
 
-
-  
 
 
 #----------------------------------------------------------------------#
@@ -244,6 +217,7 @@ adultBloodCETYGO <- function(betas){
 
 # for sorted Brain tissue run on each cell type individually
 if(tissueType == "BRAIN" & cellSorted == "TRUE"){
+
   for(cell in sampleSheet$Cell_Type){
       cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
       cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
