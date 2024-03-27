@@ -30,6 +30,9 @@ normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
 configFile <- paste0(dataDir, "/config.r")
 
 source(configFile)
+
+arrayType <- toupper(arrayType)
+
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
@@ -83,20 +86,20 @@ unmeth<-unmethylated(normfile)[,]
 rawbetas<-betas(normfile)[,]
 
 # need to know which probe type
-if(toupper(arrayType) == "HM450K"){
+if(arrayType == "HM450K"){
 	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$TargetID),]
 	colnames(probeAnnot)[which(colnames(probeAnnot) == "INFINIUM_DESIGN_TYPE")]<-"designType"
 	print("loaded hm450k manifest")
 } 
 
-if(toupper(arrayType) == "V1"){
+if(arrayType == "V1"){
 	probeAnnot<-read.table(file.path(refDir, "EPICArray/EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$probeID),]
 	print("loaded EpicV1 manifest")
 }
 
-if(toupper(arrayType) == "V2"){
+if(arrayType == "V2"){
 manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
 manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
 print("loaded EpicV2 manifest")
