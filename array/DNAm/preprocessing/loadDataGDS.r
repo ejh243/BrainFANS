@@ -26,6 +26,8 @@ gdsFile <- file.path(dataDir, "2_gds/raw.gds")
 configFile <- paste0(dataDir, "/config.r")
 source(configFile)
 
+arrayType <- toupper(arrayType)
+
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
@@ -137,13 +139,13 @@ for(i in 1:length(loadGroups)){
   ## update feature data
   if(updateProbes){
     print("Updating Feature data")
-    if(toupper(arrayType) == "hm450k"){
+    if(arrayType== "hm450k"){
       annoObj <- minfi::getAnnotationObject("IlluminaHumanMethylation450kanno.ilmn12.hg19")
     }
-    if(toupper(arrayType) == "V1"){
+    if(arrayType == "V1"){
       annoObj <- minfi::getAnnotationObject("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
     }
-    if(toupper(arrayType) == "V2"){
+    if(arrayType == "V2"){
       annoObj <- minfi::getAnnotationObject("IlluminaHumanMethylationEPICv2anno.20a1.hg38")
     }
     all <- minfi:::.availableAnnotation(annoObj)$defaults
