@@ -34,6 +34,8 @@ epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
 
 source(configFile)
 
+arrayType <- toupper(arrayType)
+
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
@@ -49,13 +51,13 @@ setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
-if(toupper(arrayType) == "V2"){
+if(arrayType== "V2"){
 manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
 manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
 print("loaded EpicV2 manifest")
 }
 
-if(toupper(arrayType) == "HM450K"){
+if(arrayType == "HM450K"){
 load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
 colnames(manifest) <- c("CHR", "Infinium_Design_Type")
@@ -74,7 +76,7 @@ QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 rawbetas<-gfile[,, node = "betas"]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
-if(toupper(arrayType) == "V2" | toupper(arrayType) == "HM450K"){
+if(arrayType== "V2" | arrayType == "HM450K"){
     auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
   } else {
     auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
