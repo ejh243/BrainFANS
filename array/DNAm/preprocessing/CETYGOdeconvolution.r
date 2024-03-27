@@ -2,11 +2,8 @@
 ##
 ## Title: Run CETYGO cell type deconvolution
 ##
-## Purpose of script: Use CETYGO brain ref panal to run CETYGO on the samples
+## Purpose of script: Use CETYGO brain ref panal or blood ref panal depending on ## tissue type to run CETYGO on the samples
 ##
-## Author: Emma Walker
-##
-## Date Created: Feb 2024
 ##
 ##---------------------------------------------------------------------#
 
@@ -34,6 +31,7 @@ gdsObj<-ifelse(file.exists(gdsFile), TRUE, ifelse(file.exists(msetFile), FALSE, 
 source(configFile)
 
 arrayType <- toupper(arrayType)
+tissueType <- toupper(tissueType)
 
 
 #----------------------------------------------------------------------#
@@ -100,18 +98,19 @@ if(gdsObj){
 
 
 #----------------------------------------------------------------------#
-# DEFINE CETYGO FUNCTION
+# DEFINE CETYGO FUNCTION FOR BRAIN TISSUE
 #----------------------------------------------------------------------#
 
 adultBrainCETYGO <- function(betas, cellType){
   
-  predPropAll<-list()
-  CETYGOplots <- list()
-  propPlots <- list()
-  counter = 1
-  maxCETYGO <- 0
-  minCETYGO <- 1
+  predPropAll<-list() # store output in list
+  CETYGOplots <- list() # store CETYGO score plots in list
+  propPlots <- list() # store proportion plots in list
+  counter = 1 # counter for storing list elements from for loop
+  maxCETYGO <- 0 # vector to hold max CETYGO score from each model/ref
+  minCETYGO <- 1 # vector to hold min CETYGO score from each model/ref
   
+  # run CETYGO using both ANOVA and IDOL methods and all available cell ref panals 
   for(method in names(modelBrainCoef)){
     for(j in 1:length(modelBrainCoef[[method]])){
       if(!is.null(modelBrainCoef[[method]][[j]])){
@@ -120,9 +119,9 @@ adultBrainCETYGO <- function(betas, cellType){
     } 
   }
   
-  
+  # Find max and min CETYGO scores across all methods/ref panals to calibrate axis limits
   for(i in 1:length(predPropAll)){
-    type <- predPropAll[[1]]
+    type <- predPropAll[[i]]
     for(j in 1:length(type)){
       plotdf <- as.data.frame(type[[j]])
       
@@ -137,8 +136,9 @@ adultBrainCETYGO <- function(betas, cellType){
     }
   }
   
+  # create boxplots of CETYGO scores and proportions
   for(i in 1:length(predPropAll)){
-    type <- predPropAll[[1]]
+    type <- predPropAll[[i]]
     for(j in 1:length(type)){
       plotdf <- as.data.frame(type[[j]])
       
@@ -149,7 +149,8 @@ adultBrainCETYGO <- function(betas, cellType){
           geom_boxplot()+
           coord_cartesian(ylim=c(minCETYGO - 0.01, maxCETYGO + 0.01))+
           ggtitle(paste0(cellType, "_", names(predPropAll[i]), "-", j))+
-          theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(), plot.title = element_text(size=6))
+          theme(axis.title.x=element_blank(),axis.text.x=element_blank(),axis.ticks.x=element_blank(), plot.title = element_text(size=6))+
+          geom_hline(yintercept=0.07, linetype="dashed", color = "red")
         
         CETYGOplots[[counter]] <- pCETYGO
         
@@ -171,6 +172,7 @@ adultBrainCETYGO <- function(betas, cellType){
     }
   }
   
+  # arrange plots into to single object and save all output
   CETYGOplotFile <- paste0(dataDir, "/2_gds/QCmetrics/CETYGO/CETYGOscorePlots_", cellType, ".pdf")
   pdf(CETYGOplotFile)
   do.call(grid.arrange, c(CETYGOplots, ncol = 4))
@@ -188,11 +190,70 @@ adultBrainCETYGO <- function(betas, cellType){
 
 
 #----------------------------------------------------------------------#
-# RUN CETYGO FUNCTION ON EACH CELL TYPE
+# DEFINE CETYGO FUNCTION FOR BLOOD TISSUE
 #----------------------------------------------------------------------#
 
-for(cell in sampleSheet$Cell_Type){
-    cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
-    cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
-    adultBrainCETYGO(cellBetas, cell)
+
+adultBloodCETYGO <- function(betas){
+  
+  # run CETYGO using blood ref panal
+  rowIndex<-rownames(rawbetas)[rownames(betas) %in% rownames(modelBloodCoef)]
+  predProp<-as.data.frame(projectCellTypeWithError(betas, modelBloodCoef[rowIndex,]))
+
+
+  # boxPlot CETYGO score
+  pCETYGO <- ggplot(predProp, aes(factor(0), CETYGO))+
+    geom_boxplot()+
+  geom_hline(yintercept=0.07, linetype="dashed", color = "red")+
+    xlab("")
+  
+  #save plot
+  CETYGOplotFile <- paste0(dataDir, "/2_gds/QCmetrics/CETYGO/CETYGOscorePlot.pdf")
+  pdf(CETYGOplotFile)
+  print(pCETYGO)
+  dev.off()
+
+  
+  # box plot proportions
+  plotdf <-as.data.frame(predProp[,1:(ncol(predProp)-2)])
+  plotdf$Basename <- rownames(plotdf)
+  plotdf <- reshape2::melt(plotdf, id.vars = "Basename")
+  colnames(plotdf) <- c("Basename", "CellType", "Proportion")
+
+  p <- ggplot(plotdf, aes(x=CellType, y=Proportion)) +
+    geom_boxplot()+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  
+  # save plot
+  propPlotsFile <- paste0(dataDir, "/2_gds/QCmetrics/CETYGO/CETYGOcellPropsPlot.pdf")
+  pdf(propPlotsFile)
+  print(p)
+  dev.off()
+  
+  # save output file
+  predPropOutFile <- paste0(dataDir, "/2_gds/QCmetrics/CETYGO/CETYGOpredictedProportions.rdat")
+  save(predProp, file = predPropOutFile)
+
+}
+
+
+
+#----------------------------------------------------------------------#
+# RUN CETYGO FUNCTION 
+#----------------------------------------------------------------------#
+
+# for sorted Brain tissue run on each cell type individually
+if(tissueType == "BRAIN"){
+
+  for(cell in sampleSheet$Cell_Type){
+      cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
+      cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
+      adultBrainCETYGO(cellBetas, cell)
+  }
+} else {
+  if(tissueType == "BLOOD"){
+    adultBloodCETYGO(rawbetas)
+  } else {
+    message("tissue type not recognised")
+  }
 }
