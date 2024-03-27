@@ -4,9 +4,6 @@
 ##
 ## Purpose of script: Perform normalisation of cell-specific DNAm data
 ##
-## Author: Eilis Hannon
-##
-## Date Created: 2020
 ##
 ##---------------------------------------------------------------------#
 
