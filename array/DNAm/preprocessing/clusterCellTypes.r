@@ -25,7 +25,6 @@ dataDir <- args[1]
 refDir <- args[2]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
-msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
@@ -76,7 +75,7 @@ QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 rawbetas<-gfile[,, node = "betas"]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
-if(arrayType== "V2" | arrayType == "HM450K"){
+if(arrayType == "V2" | arrayType == "HM450K"){
     auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
   } else {
     auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
