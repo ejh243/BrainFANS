@@ -35,6 +35,11 @@ qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 
 load(qcData)
 
+if(!"Cell_Type" %in% colnames(QCmetrics)){
+  QCmetrics$Cell_Type <- NA
+}
+
+
 nSamAll<-nrow(QCmetrics)
 nSamIP<-sum(QCmetrics$intensPASS)
 
