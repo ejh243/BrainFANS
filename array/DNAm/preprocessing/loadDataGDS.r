@@ -4,9 +4,6 @@
 ##
 ## Purpose of script: from a given sample sheet load data from idats into GDS file
 ##
-## Author: Eilis Hannon
-##
-## Date Created: 2020
 ##
 ##---------------------------------------------------------------------#
 
