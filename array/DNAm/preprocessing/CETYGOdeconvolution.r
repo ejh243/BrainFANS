@@ -40,6 +40,7 @@ library(CETYGO)
 library(gridExtra)
 library(bigmelon)
 library(ggplot2)
+library(wateRmelon)
 
 
 #----------------------------------------------------------------------#
