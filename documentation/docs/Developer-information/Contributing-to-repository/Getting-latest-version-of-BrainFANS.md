@@ -7,7 +7,10 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Step 2: Get the latest version of BrainFANS
-Most contributions will be a part of an existing development branch. For example, if the issue you are resolving relates to atac pipeline, then you should have the latest version of the `atac-develop` pipeline. The commands you will need to use will change depending on the user, please pick the option below that best describes you.
+Whenever you are working with the BrainFANS repository, please ensure that you
+have the latest version of the repository. The commands you will need to use 
+will change depending on the user, please pick the option below that best 
+describes you.
 
 
 <Tabs>
@@ -31,24 +34,6 @@ Most contributions will be a part of an existing development branch. For example
 
     # Fetches latest changes to the repository
     git fetch
-
-    # Switches you over to the latest version of the specific development branch 
-    # you plan to work off of
-    git checkout -b <development-branch-name> origin/<development-branch-name>
-    ```
-  </TabItem>
-  <TabItem value="Existing-branch" label="You already have the development branch locally">
-    If you already have the development branch locally from the past, it might not be up to date with the online repository. You will need to pull the latest changes first.
-
-    ```bash
-    # Move to the location of the BrainFANS repository
-    cd path/to/BrainFANS
-
-    # Move over to the development branch
-    git checkout <development-branch-name>
-
-    # Pulls (and merges) the latest changes to the development branch
-    git pull origin <development-branch-name> 
     ```
   </TabItem>
 </Tabs>
