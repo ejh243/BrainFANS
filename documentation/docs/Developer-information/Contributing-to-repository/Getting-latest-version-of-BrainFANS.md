@@ -37,3 +37,10 @@ describes you.
     ```
   </TabItem>
 </Tabs>
+
+It is also a good idea to periodically run `git fetch` as you are working on a
+project (not every 5 minutes, but maybe once a day/week). Running `git fetch`
+will not alter your workspace, it only updates your local .git folder 
+(repository). You might have heard of `git pull`, this command implicitly runs 
+`git fetch`, but also merges any changes into your current branch. This might
+not be the desired effect.
