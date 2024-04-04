@@ -184,7 +184,7 @@ f57f4b0 add second line
 ef44a5f initial commit
 ```
 
-Our commit histories no longer line up. On the `master` branch, our fourth commit to `file.txt` is `5495b54`, whilst on `new-branch` it is `3381285`. Git no longer knows which version of `file.txt` is 'newer'. Let's see this in action by attempting a merge.
+Our commit histories no longer line up. On the `master` branch, our fourth commit to `file.txt` is `5495b54`, whilst on `new-branch` it is `3381285`. Not only this, but both commits change the same line (line 3) in the file. Git no longer knows which version of `file.txt` is 'newer' and will ask the user for help. Note that if we changed different lines in each branch, this merge conflict would not arise. Let's see the conflict in action by attempting a merge like before.
 
 ```bash
 git checkout master
