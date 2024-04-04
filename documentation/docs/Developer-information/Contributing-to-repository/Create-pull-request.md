@@ -21,8 +21,8 @@ To begin, run these commands in the terminal:
 git fetch
 
 # Merge these changes into your branch
-git checkout <your-branch-name>
-git merge origin/<branch> # Where <branch> is the one you are working off of
+git checkout your-branch-name
+git merge origin/branch # Where branch is the one you are working off of
 ```
 
 The reason we do this is to ensure that merge conflicts can be adressed before a pull request is made. Please visit [this page](/Developer-information/merge-conflicts.md) for a thorough explanation and example of a merge conflict. If you are working with files no one else is touching, the chances of a merge conflict will be low, but this is still a good habit to get into.
@@ -31,7 +31,7 @@ Once any merge conflicts that arise from the above have been resolved, you can p
 
 ```bash
 # Push your changes to the remote repository
-git push origin <your-branch-name>
+git push origin your-branch-name
 ```
 
 :::warning[multiple people working on the same branch]
@@ -39,10 +39,10 @@ If you are working on the same branch with other people and the branch has alrea
 
 ```bash
 # Pull the latest changes from the remote repository
-git pull origin <your-branch-name>
+git pull origin your-branch-name
 
 # Push your changes to the remote repository
-git push origin <your-branch-name>
+git push origin your-branch-name
 ```
 
 This will ensure that you are not causing any merge conflicts when you go to push your changes. `git pull` will merge the version online with your local version of the branch. Warnings of merge conflicts will appear in the terminal if they are apparent at this stage. Fix these before pushing.

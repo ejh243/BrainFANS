@@ -18,7 +18,7 @@ If this is not the branch you created in [step three](./Creating-new-branch.md),
 
 ```bash
 # Switch to the development branch you created in step three
-git checkout <your-branch-name>
+git checkout your-branch-name
 
 # Check that you are indeed on your branch (!! this is very important !!)
 git status

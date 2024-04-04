@@ -22,7 +22,7 @@ cd /path/to/BrainFANS
 git fetch
 
 # Create a new branch off of web-development and move to it
-git checkout -b <your-branch-name> origin/web-development
+git checkout -b your-branch-name origin/web-development
 ```
 
 Now you are on the new branch you can start making commits.
