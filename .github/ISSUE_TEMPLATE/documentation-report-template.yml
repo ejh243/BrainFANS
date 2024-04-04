@@ -25,7 +25,8 @@ body:
         - Spelling error
         - Page removal required
         - New page required
-        - Incorrect information given
+        - Incorrect/outdated information given
+        - Rewording required
     validations:
       required: true
   - type: textarea
