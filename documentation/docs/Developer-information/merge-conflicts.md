@@ -147,7 +147,7 @@ In the same way, `new-file.txt` on the master branch is seen as the newest versi
 
 ## A non-functioning merge example
 
-What happens when git *doesn't* know which file to keep. Earlier, we said that git knows 'when' the file was changed. The reason for the inverted commas here is to bring attention to the fact that 'when' isn't derived from a timestamp (or something similar). Instead, all git knows is the contents of the commit history for the repository. Git doesn't actaully know the exact time a file was modified (and even if it did, that wouldn't help things), but instead knows the history of commits for each file. 
+What happens when git *doesn't* know which file to keep. Earlier, we said that git knows 'when' the file was changed. The reason for the inverted commas here is to bring attention to the fact that 'when' isn't derived from a timestamp (or something similar). Instead, all git knows is the contents of the commit history for the repository. Git doesn't actually know the exact time a file was modified (and even if it did, that wouldn't help things), but instead knows the history of commits for each file. 
 
 A merge conflict arrises when the commit history for two versions of the same file no longer line up with each other. Let's create one such conflict now:
 
