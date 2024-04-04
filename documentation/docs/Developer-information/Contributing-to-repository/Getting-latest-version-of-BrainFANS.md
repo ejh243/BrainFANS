@@ -9,6 +9,10 @@ import TabItem from '@theme/TabItem';
 # Step 2: Get the latest version of BrainFANS
 Most contributions will be a part of an existing development branch. For example, if the issue you are resolving relates to atac pipeline, then you should have the latest version of the `atac-develop` pipeline. The commands you will need to use will change depending on the user, please pick the option below that best describes you.
 
+If you do not have a GitHub account already, please go to 
+[this page](./Git-account-creation.md) in order to set one up. At some point 
+during this guide you will no longer be able to continue, it is best you set 
+one up now.
 
 <Tabs>
   <TabItem value="New-user" label="First time cloning BrainFANS" default>
