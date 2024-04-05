@@ -6,7 +6,7 @@ This pull request will...
 
 This pull request is to address issue: #number.
 
-## Type of pull request
+## Type of pull req
 
 - [ ] Bug fix
 - [ ] New feature/enhancement
