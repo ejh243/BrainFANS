@@ -16,7 +16,9 @@ repository. If any steps are confusing (or too brief), please consult the full
 
 Do not work on the repository before assigning yourself (or asking to be 
 assigned) to an existing [issue](https://github.com/ejh243/BrainFANS/issues).
-Create an issue if none currently apply to what you want to change.
+Create an issue that follows our 
+[issue guidelines](../../User-information/Creating_issues/Good-issue-practices.md) if 
+none currently apply to what you want to change.
 
 ## Update your local repository
 
