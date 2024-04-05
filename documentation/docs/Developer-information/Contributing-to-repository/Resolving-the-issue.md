@@ -181,3 +181,9 @@ allow the factorial function to handle non-integer inputs
 So that the full sentence would read:
 > If applied, this commit will allow the factorial function to handle 
 non-integer inputs
+
+#### Your own style
+
+Provided that the message clearly states what you have done and possibly why
+(if applicable), then the style really doesn't matter. The above examples are
+just here to help developers that are struggling with this.
