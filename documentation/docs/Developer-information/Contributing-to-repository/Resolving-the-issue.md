@@ -71,10 +71,10 @@ create a commit, you need to add the changed file(s) to the index with
     ```
 
     If you ommit the `-m` flag when using `git commit`. Git will open up a file
-    called `COMMIT_MSG` which you can write your commit message into. By
-    default git will open your default text editor (if you haven't set this
-    manually, this is likely vim). To change the text editor that opens up
-    when you type `git commit`, run:
+    called `COMMIT_MSG` which you can write your commit message into. Git will 
+    open your configured text editor (if you haven't set this manually, this 
+    is likely vim). To change the text editor that opens up when you type
+    `git commit`, run:
 
     ```bash
     git config --global core.editor "your-editor-here"
@@ -89,13 +89,13 @@ often (think of it as the git version of `ls`). Using `git status` will show
 you which files have been changed and the path to said files (which you can 
 then copy and paste to the terminal).
 
-Above we mention that you should commit small changes. By 'small' we really 
+Above we mentioned that you should commit 'small' changes. By 'small' we really 
 mean [atomic](https://en.wikipedia.org/wiki/Atomic_commit). Atomic
 commits are great as they can be very helpful when identifying when a bug was
 first introduced into the pull request (or the master branch if the bug gets
 past the pull request). An atomic commit (for our purposes) is a commit that
 does one thing. If you find yourself putting 'and' or 'also' (*etc.*) into the 
-commit message, you are unlikely creating an atomic commit.
+commit message, you probably aren't creating an atomic commit.
 
 You *may* feel like you want to state the intentions of your commit or perhaps
 give caveats (things that might break, parts that don't quite work *etc.*) with
@@ -111,9 +111,10 @@ Please don't use an extra paragraph as a way of getting around commiting large
 multi-feature commits. Continue to keep your summaries short and concise and
 your commits as atomic as possile.
 
-Sometimes it makes sense to make changes to multiple files at the same time 
-(especially if they share the same issue). Don't commit loads of files at the 
-same time out of laziness however, that defeats the point of version control.
+Sometimes it makes sense to commit multiple files at the same time 
+(especially when the changes are the same across each file). Don't commit loads
+of files at the same time out of laziness however. Remember to keep commits
+atomic wherever possible.
 
 ### Example commit messages
 
@@ -127,13 +128,13 @@ example change to a small python function and some associated commit messages.
 
 ```python
 # Old code 
-def factorial(n):
-    if n < 0:
-        return None
-    result = 1
-    for i in range(1, n + 1):
-        result = result * i
-    return result
+ def factorial(n):
+     if n < 0:
+         return None
+     result = 1
+     for i in range(1, n + 1):
+         result = result * i
+     return result
 
 # New code 
  def factorial(n):
