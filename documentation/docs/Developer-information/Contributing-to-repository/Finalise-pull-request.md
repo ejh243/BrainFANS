@@ -88,8 +88,11 @@ git status
 git checkout master
 git branch -d <your-branch-name>
 
+# Remove any stale origin branches 
+git remote prune origin
+
 # Verify the deletion (your branch should not appear in the output)
-git branch
+git branch -a
 ```
 
 ## Mark related issues as complete
