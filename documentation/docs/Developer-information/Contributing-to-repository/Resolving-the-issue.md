@@ -114,3 +114,70 @@ your commits as atomic as possile.
 Sometimes it makes sense to make changes to multiple files at the same time 
 (especially if they share the same issue). Don't commit loads of files at the 
 same time out of laziness however, that defeats the point of version control.
+
+### Example commit messages
+
+It can be difficult to know how to structure your commit messages. We aren't
+fussy here, as long as it is clear what the commit does you can word it however
+you like.
+
+Online, you may see specific structures for commit messages. These are not
+required, but might help you if you are struggling. Below we consider an
+example change to a small python function and some associated commit messages.
+
+```python
+# Old code 
+def factorial(n):
+    if n < 0:
+        return None
+    result = 1
+    for i in range(1, n + 1):
+        result = result * i
+    return result
+
+# New code 
+ def factorial(n):
+~    if not isinstance(n, int) or n < 0:
+        return None
+     result = 1
+     for i in range(1, n + 1):
+         result = result * i
+     return result
+```
+
+#### Conventional commit message
+
+The conventional commit message style is of the form:
+
+```text title="COMMIT_MSG"
+type-of-change: description
+
+Optional longer description
+```
+
+So for our change above we would put
+
+```text title="COMMIT_MSG"
+fix: factorial now handles non-integer inputs
+
+factorial previously threw an error if a non-integer was inputted which caused
+problems in filexyz.py.
+```
+
+#### Complete the sentence commits
+
+For some developers, it feels awkward to start the commit message. To get
+around this, it can be beneficial to write your commit message by attempting
+to complete the following sentence:
+
+> If applied, this commit will...
+
+So in our example we would write:
+
+```text title="COMMIT_MSG"
+allow the factorial function to handle non-integer inputs
+```
+
+So that the full sentence would read:
+> If applied, this commit will allow the factorial function to handle 
+non-integer inputs
