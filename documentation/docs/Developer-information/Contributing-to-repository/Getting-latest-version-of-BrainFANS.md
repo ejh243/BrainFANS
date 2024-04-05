@@ -51,4 +51,40 @@ Most contributions will be a part of an existing development branch. For example
     git pull origin <development-branch-name> 
     ```
   </TabItem>
+  <TabItem value="Non contributor" label="You are not a contributor">
+    If you are not a BrainFANS contributor, you will not be able to submit/push
+    any of your changes directly to the repository. Instead, you will need to
+    create a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) 
+    of the repository. To create a fork, you will need to head over to the
+    GitHub page for [BrainFANS](https://github.com/ejh243/BrainFANS) and click
+    on the fork button at the top right of the page.
+
+    ![fork button](/Forks/Create-fork-button.png)
+
+    Once you have forked the repository, you should clone this to your local
+    machine by typing the following into the terminal:
+
+    ```bash
+    # Move to the directory you want the repository to be cloned to
+    cd path/to/directory
+
+    # 'Username' should be substituted with your GitHub username
+    git clone https://github.com/username/BrainFANS.git
+    ```
+
+    If you are working with a fork, you will need to periodically sync your
+    fork with the changes made in the official BrainFANS repository (and
+    subsequently use `git fetch` on your local version). You can do this by
+    clicking on the 'Sync fork' button on the fork's GitHub page.
+
+    ![Sync fork button](/Forks/Sync-fork-button.png)
+
+    To bring these changes to your local branch, type the following into the
+    terminal:
+
+    ```bash
+    cd path/to/BrainFANS
+    git fetch
+    ```
+  </TabItem>
 </Tabs>
