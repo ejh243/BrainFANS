@@ -4,6 +4,7 @@ name: Lint
 on:
   push:
     branches-ignore: [master]
+  workflow_dispatch:
 
 jobs:
   build:
