@@ -33,7 +33,7 @@ following page details how to set this up.
   </TabItem>
   <TabItem value="Linux" label="Linux Users">
     You can rather easily install git on linux using the package manager for
-    your specific distro. Examples include:
+    your specific distribution. Examples include:
 
     ```bash
     # Debian/Ubuntu
@@ -55,9 +55,9 @@ following page details how to set this up.
 ## Creating a GitHub account
 
 With git, you can immediately start version control. But in order to contribute
-to the BrainFANS repository, you will need a GitHub account. This is very
-simple and is a simple matter of going to [GitHub](https://github.com/), then
-clicking on "sign up for GitHub", then following the rest of the instructions.
+to the BrainFANS repository, you will need a GitHub account. This is a simple
+matter of going to [GitHub](https://github.com/), then clicking on "sign up 
+for GitHub", then following the rest of the instructions.
 
 Once you have signed up, please proceed to log into your account.
 
@@ -117,8 +117,9 @@ no longer allows users to use their account's password on the command line
     ```bash
     # Generates a new ssh key pair. You can replace the default name if you
     # want to organise your ssh keys, otherwise just press enter on the text
-    # prompt
-    ssh-keygen -t ed25519 -C "your_email@domain.com"
+    # prompt. Note: ed25519 is a type of encryption key
+
+    ssh-keygen -t ed25519 -C "your_email@domain.com" 
     ```
 
     Next go to [this page on GitHub](https://github.com/settings/keys) and
@@ -127,10 +128,15 @@ no longer allows users to use their account's password on the command line
     ![New ssh key button](/SSH-token/step1.png)
 
     Head back over to the terminal and navigate to wherever the ssh key was
-    generated to (be default this will be ~/.ssh/). Then extract the contents 
-    of the public key to your clipboard (A common way of doing this would be to
-    use `cat` then copy from the terminal). Be sure to get the public key and
-    not the private key (the public key has the file extension `.pub`). 
+    generated to (by default this will be ~/.ssh/). Then extract the contents 
+    of the public key to your clipboard. 
+
+    ```bash title="Example of extracting public key"
+    # You don't have to use cat, anything that prints the file is sufficient
+    cat ~/.ssh/Your-SSH-Key.pub
+    ```
+    Be sure to get the public key and not the private key (the public key has 
+    the file extension `.pub`). 
 
     Now go back to the page on GitHub and paste the public key into the box
     labelled "key". Give the key a name (the name doesn't matter) and click
