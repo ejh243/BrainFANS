@@ -179,7 +179,7 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 **Arrays ran by:** `r processedBy`
 
-**Array used:** `r arrayVersion`
+**Array used:** `r arrayType`
 
 **Date of QC:** `r format(Sys.Date(), format="%d %B %Y")`
 
