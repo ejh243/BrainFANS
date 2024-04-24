@@ -171,7 +171,7 @@ adultBrainCETYGO <- function(betas, cellType){
 adultBloodCETYGO <- function(betas){
   
   # run CETYGO using blood ref panal
-  rowIndex<-rownames(rawbetas)[rownames(betas) %in% rownames(modelBloodCoef)]
+  rowIndex<-rownames(betas)[rownames(betas) %in% rownames(modelBloodCoef)]
   predProp<-as.data.frame(projectCellTypeWithError(betas, modelBloodCoef[rowIndex,]))
 
 
