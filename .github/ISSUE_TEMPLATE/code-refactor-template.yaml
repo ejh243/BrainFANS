@@ -1,0 +1,47 @@
+name: Code Refactor Report
+description: Describe a change we can make to our code
+title: "[Code Refactor]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your input, your suggestions are very useful to us!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: file-path
+    attributes:
+      label: Path to affected file
+      description: Please provide the path to the file that requires this change
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: "Type of refactor"
+      description: Please specify the type of change that needs to be implemented
+      multiple: true
+      options:
+        - Edge case error handling
+        - Code optimisation
+        - Comment improvement
+        - Code understandability improvement
+        - Code readability improvement
+    validations:
+      required: true
+  - type: textarea
+    id: Fault
+    attributes:
+      label: Description of required code refactor
+      description: What is the problem currently and what steps can we take to ammend this?
+      placeholder: "Currently, [file] uses... It would be better to..."
+    validations:
+      required: true
