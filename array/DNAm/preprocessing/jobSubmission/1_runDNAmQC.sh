@@ -25,16 +25,15 @@ export PROJECT=$1
 source /lustre/projects/Research_Project-MRC190311/DNAm/${PROJECT}/config.txt 
 
 ## load R config file from project directory
- RCONFIG=/lustre/projects/Research_Project-MRC190311/DNAm/${PROJECT}/config.r
-
+RCONFIG=/lustre/projects/Research_Project-MRC190311/DNAm/${PROJECT}/config.r
 
 ## load modules
 module load Pandoc
-#module load R/3.6.3-foss-2020a
 module load $RVERS   # load specified R version
 echo $RVERS
 
 Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${RCONFIG}
+chmod 755 ${DATADIR}/2_gds/raw.gds
 
 mkdir -p ${GDSDIR}/QCmetrics
 
@@ -47,13 +46,13 @@ mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
 
-
 Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
 
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
+chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
