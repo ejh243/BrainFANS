@@ -36,8 +36,12 @@ export PROJECT=$1
 source $2 || exit 1
 RCONFIG=$3
 
+
+## load modules
 module load Pandoc
-module load R/3.6.3-foss-2020a
+#module load R/3.6.3-foss-2020a
+module load $RVERS   # load specified R version
+echo $RVERS
 
 Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${RPATH}
 
@@ -50,15 +54,19 @@ Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html'
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
 
-Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${RCONFIG}
+Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
 
 
-Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${RCONFIG} $USER
+Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
 
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
+
+mkdir -p ${GDSDIR}/QCmetrics/CETYGO
+
+Rscript DNAm/preprocessing/CETYGOdeconvolution.r ${DATADIR}
 
 ## print finish date and time
 echo Job finished on:
