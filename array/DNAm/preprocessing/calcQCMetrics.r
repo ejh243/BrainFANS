@@ -340,72 +340,81 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	print("Comparing against matched genotype data")
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno.all<-geno
-	geno<-geno[match(QCmetrics$Genotype.IID, geno$IID),]
-	rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
+
+	indexIID <- grep("^Genotype.IID$", names(QCmetric), ignore.case=TRUE)
+	if (length(indexIID) != 1){
+		message("Warning: Genotype.IID column is missing, unable to compare external SMP data.")
+	}else{
+	   geno<-geno[match(QCmetrics$Genotype.IID, geno$IID),]
+	   rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
 	
-	  if(arrayType == "V2"){
-      betas.rs<-epicv2clean(betas(gfile)[,])[rsIDs,]
-    } else {
-      betas.rs<-betas(gfile)[,][rsIDs,]
-    }
-
-
-	# first check direction of minor alleles
-	cors<-vector(length = length(rsIDs))
-	for(i in 1:length(rsIDs)){
-		cors[i]<-cor(geno[,i+6], betas.rs[i,], use = "pairwise.complete.obs")
-	}
-	# change minor allele in genotype data if negative correlation
-	for(each in which(cors < 0)){
-		geno[,each+6]<-(2-geno[,each+6])
-		geno.all[,each+6]<-(2-geno.all[,each+6])
-	}
-	geno.mat<-as.matrix(geno[,-c(1:6)])
-	geno.all.mat<-as.matrix(geno.all[,-c(1:6)])
-	rownames(geno.all.mat)<-geno.all$IID
-
-	genoCheck<-rep(NA, nrow(QCmetrics))
-	for(i in 1:ncol(betas.rs)){
-		if(!is.na(geno[i,1]) & QCmetrics$intensPASS[i] == TRUE){
-			genoCheck[i]<-cor(geno.mat[i,], betas.rs[,i], use = "pairwise.complete.obs")
+		if(arrayType == "V2"){
+		betas.rs<-epicv2clean(betas(gfile)[,])[rsIDs,]
+		} else {
+		betas.rs<-betas(gfile)[,][rsIDs,]
 		}
-	}
 
-	# if any incongruent perform search for best using all geno data
-	# first though check if any geno combinations present multiple times in this cohort:
-	# count how many individuals with each geno combination in sample
-	indGenoCombo<-apply(geno.all.mat, 1, paste, collapse = ";")
-	tabGeneticInd<-table(indGenoCombo)
-	#table(tabGeneticInd)
 
-	# pull out list of samples which identical genotypes across these variants
-	dupCombos<-names(tabGeneticInd[which(tabGeneticInd > 1)])
-	if(length(dupCombos) > 0){
-		dupIDs<-NULL
-		for(each in dupCombos){
-			dupIDs<-c(dupIDs, paste(rownames(geno.all.mat)[which(indGenoCombo == each)], collapse = ";"))
+		# first check direction of minor alleles
+		cors<-vector(length = length(rsIDs))
+		for(i in 1:length(rsIDs)){
+			cors[i]<-cor(geno[,i+6], betas.rs[i,], use = "pairwise.complete.obs")
 		}
-		write.csv(dupIDs, paste0(dataDir, "/2_gds/QCmetrics/IndividualsWithIdenticalGenotypeCombinationsInComparisionWithSNPData.csv"))
-	}
-		
-	
-	genoMatch<-rep(NA, nrow(QCmetrics))
-	genoMatchVal<-rep(NA, nrow(QCmetrics))
-	for(i in 1:ncol(betas.rs)){
-		if(QCmetrics$intensPASS[i] == TRUE){
-			corVals<-rep(NA, nrow(geno.all.mat))
-			for(j in 1:nrow(geno.all.mat)){
-				corVals[j]<-cor(geno.all.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
-				}
+		# change minor allele in genotype data if negative correlation
+		for(each in which(cors < 0)){
+			geno[,each+6]<-(2-geno[,each+6])
+			geno.all[,each+6]<-(2-geno.all[,each+6])
+		}
+		geno.mat<-as.matrix(geno[,-c(1:6)])
+		geno.all.mat<-as.matrix(geno.all[,-c(1:6)])
+		rownames(geno.all.mat)<-geno.all$IID
+
+		genoCheck<-rep(NA, nrow(QCmetrics))
+		for(i in 1:ncol(betas.rs)){
+			if(!is.na(geno[i,1]) & QCmetrics$intensPASS[i] == TRUE){
+				genoCheck[i]<-cor(geno.mat[i,], betas.rs[,i], use = "pairwise.complete.obs")
 			}
-		if(max(corVals, na.rm = TRUE) > 0.9){ 
-			# as possible to match multipe, save all
-			genoMatch[i]<-paste(rownames(geno.all.mat)[which(corVals > 0.9)], collapse = ";")
-			genoMatchVal[i]<-paste(corVals[which(corVals > 0.9)], collapse = ";")
 		}
+
+		# if any incongruent perform search for best using all geno data
+		# first though check if any geno combinations present multiple times in this cohort:
+		# count how many individuals with each geno combination in sample
+		indGenoCombo<-apply(geno.all.mat, 1, paste, collapse = ";")
+		tabGeneticInd<-table(indGenoCombo)
+		#table(tabGeneticInd)
+
+		# pull out list of samples which identical genotypes across these variants
+		dupCombos<-names(tabGeneticInd[which(tabGeneticInd > 1)])
+		if(length(dupCombos) > 0){
+			dupIDs<-NULL
+			for(each in dupCombos){
+				dupIDs<-c(dupIDs, paste(rownames(geno.all.mat)[which(indGenoCombo == each)], collapse = ";"))
+			}
+			write.csv(dupIDs, paste0(dataDir, "/2_gds/QCmetrics/IndividualsWithIdenticalGenotypeCombinationsInComparisionWithSNPData.csv"))
+		}
+			
+		
+		genoMatch<-rep(NA, nrow(QCmetrics))
+		genoMatchVal<-rep(NA, nrow(QCmetrics))
+		for(i in 1:ncol(betas.rs)){
+			if(QCmetrics$intensPASS[i] == TRUE){
+				corVals<-rep(NA, nrow(geno.all.mat))
+				for(j in 1:nrow(geno.all.mat)){
+					corVals[j]<-cor(geno.all.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
+					}
+				}
+			if(max(corVals, na.rm = TRUE) > 0.9){ 
+				# as possible to match multipe, save all
+				genoMatch[i]<-paste(rownames(geno.all.mat)[which(corVals > 0.9)], collapse = ";")
+				genoMatchVal[i]<-paste(corVals[which(corVals > 0.9)], collapse = ";")
+			}
+		}
+		QCmetrics<-cbind(QCmetrics,genoCheck, genoMatch, genoMatchVal)
 	}
-	QCmetrics<-cbind(QCmetrics,genoCheck, genoMatch, genoMatchVal)
+	
 }
+
+
 	
 
 #----------------------------------------------------------------------#
