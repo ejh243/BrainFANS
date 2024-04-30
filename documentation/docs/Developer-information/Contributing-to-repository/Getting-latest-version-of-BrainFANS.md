@@ -23,7 +23,7 @@ one up now.
     cd path/to/directory
 
     # Create a copy/clone of the online repository found on GitHub
-    git clone -b <branch-name> https://github.com/ejh243/BrainFANS.git
+    git clone -b branch-name https://github.com/ejh243/BrainFANS.git
     ```
   </TabItem>
   <TabItem value="Existing-user" label="You do not have the development branch locally">
@@ -38,7 +38,7 @@ one up now.
 
     # Switches you over to the latest version of the specific development branch 
     # you plan to work off of
-    git checkout -b <development-branch-name> origin/<development-branch-name>
+    git checkout -b development-branch-name origin/development-branch-name
     ```
   </TabItem>
   <TabItem value="Existing-branch" label="You already have the development branch locally">
@@ -49,10 +49,10 @@ one up now.
     cd path/to/BrainFANS
 
     # Move over to the development branch
-    git checkout <development-branch-name>
+    git checkout development-branch-name
 
     # Pulls (and merges) the latest changes to the development branch
-    git pull origin <development-branch-name> 
+    git pull origin development-branch-name 
     ```
   </TabItem>
   <TabItem value="Non contributor" label="You are not a contributor">

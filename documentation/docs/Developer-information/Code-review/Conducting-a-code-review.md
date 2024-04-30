@@ -56,7 +56,7 @@ As of 2020 you also have access to GitHub codespaces, which is just vscode ran i
     cd path/to/directory
 
     # Create a copy/clone of the online repository found on GitHub
-    git clone -b <development-branch-name> https://github.com/ejh243/BrainFANS.git
+    git clone -b development-branch-name https://github.com/ejh243/BrainFANS.git
     ```
   </TabItem>
   <TabItem value="Existing-user" label="If you already have BrainFANS locally">
@@ -70,7 +70,7 @@ As of 2020 you also have access to GitHub codespaces, which is just vscode ran i
     git fetch
 
     # Switches you over to the latest version of the specific development branch
-    git checkout -b <development-branch-name> origin/<development-branch-name>
+    git checkout -b development-branch-name origin/development-branch-name
     ```
 
     Alternatively, if you have the [GitHub cli tool](https://github.com/cli/cli) 

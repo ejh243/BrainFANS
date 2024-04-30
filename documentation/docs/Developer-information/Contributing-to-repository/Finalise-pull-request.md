@@ -78,7 +78,7 @@ Clicking the 'delete branch' button will only delete the branch on GitHub, not t
 
 ```bash
 # Ensure that there are no uncommited changes to the branch
-git checkout <your-branch-name>
+git checkout your-branch-name
 git status
 
 # If the last line of the output of git status is 
@@ -86,7 +86,7 @@ git status
 
 # Delete the branch
 git checkout master
-git branch -d <your-branch-name>
+git branch -d your-branch-name
 
 # Remove any stale origin branches 
 git remote prune origin

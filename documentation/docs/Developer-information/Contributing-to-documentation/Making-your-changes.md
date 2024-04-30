@@ -39,9 +39,9 @@ If you take a look at the head of any existing file you will see metadata like t
 
 ```markdown title="A-markdown-file.md"
 ---
-sidebar_position: [position in the sidebar]
-title: [Name of the page]
-description: [Desciption shows up on directory landing page]
+sidebar_position: position-in-the-sidebar
+title: "Name of the page"
+description: "Desciption shows up on directory landing page"
 ---
 ```
 
@@ -59,11 +59,11 @@ In general, one can use the following as a template for this file:
 
 ```json title="_category_.json"
 {
-  "label": "[Name that appears on sidebar]",
-  "position": [position in the sidebar],
+  "label": "Name that appears on sidebar",
+  "position": position-in-the-sidebar,
   "link": {
     "type": "generated-index",
-    "description": "[Description that succeeds the title on the directory landing page]"
+    "description": "Description that succeeds the title on the directory landing page"
   }
 }
 ```
