@@ -3,6 +3,8 @@ sidebar_position: 5
 title: "Step 5: Creating a pull request"
 description: Create a pull request on GitHub
 ---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Step 5: Creating a pull request
 
@@ -49,22 +51,47 @@ This will ensure that you are not causing any merge conflicts when you go to pus
 :::
 
 ## Return to github to finalise the pull request
+<Tabs>
+  <TabItem value="contributor" label="You are a contributor" default>
+    Move to the pull request tab on GitHub:
 
-Move to the pull request tab on GitHub:
+    ![Screenshot of the location of pull requests](/development-pipeline/pull-request-location.png)
 
-![Screenshot of the location of pull requests](/development-pipeline/pull-request-location.png)
+    Click on 'New pull request':
 
-Click on 'New pull request':
+    ![Screenshot of the location of pull request button](/development-pipeline/pull-request-button.png)
 
-![Screenshot of the location of pull request button](/development-pipeline/pull-request-button.png)
+    Select the development branch you are working off of for the **base field** and your newly created branch for the **compare field**:
 
-Select the development branch you are working off of for the **base field** and your newly created branch for the **compare field**:
+    ![Screenshot of the compare and base](/development-pipeline/pull-request-branch-selection.png)
 
-![Screenshot of the compare and base](/development-pipeline/pull-request-branch-selection.png)
+    Click on 'Create pull request':
 
-Click on 'Create pull request':
+    ![Screenshot of the create pull request button](/development-pipeline/create-pull-request-button.png)
+  </TabItem>
+  <TabItem value="Non-contibutor" label="You are not a contributor">
+    If you are not a contributor you just need to be a little more careful
+    that your pull request is indeed going to be merged into the master branch
+    of ejh243/BrainFANS (and not *your* fork's master branch).
 
-![Screenshot of the create pull request button](/development-pipeline/create-pull-request-button.png)
+    Move to the pull request tab of your fork on GitHub:
+
+    ![Screenshot of the location of pull requests](/development-pipeline/pull-request-location.png)
+
+    Click on 'New pull request'
+
+    ![Screenshot of the location of pull request button](/development-pipeline/pull-request-button.png)
+
+    Select the development branch you are working off of for the **base field** and your newly created branch for the **compare field**.
+    Additionallly, ensure that 'base repository' is ejh243/BrainFANS and 'head repository' is pointing to your own fork.
+
+    ![Screenshot of the compare and base](/development-pipeline/pull-request-branch-selection-fork.png)
+
+    Click on 'Create pull request':
+
+    ![Screenshot of the create pull request button](/development-pipeline/create-pull-request-button.png)
+  </TabItem>
+</Tabs>
 
 ## Fill in the pull request template
 
