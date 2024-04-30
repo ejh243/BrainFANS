@@ -57,6 +57,8 @@ install.packages("devtools")
 #---------------------------------------------------------------------#
 
 install.packages("e1071")
+library(devtools)
+devtools::install_github("EpigeneticsExeter/cdegUtilities")
 
 #---------------------------------------------------------------------#
 # INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
@@ -64,4 +66,5 @@ install.packages("e1071")
 
 BiocManager::install("genefilter")
 install.packages("quadprog")
+
 
