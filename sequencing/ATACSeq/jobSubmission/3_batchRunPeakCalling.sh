@@ -13,16 +13,16 @@
 ## ===================================================================================================================##
 ##                             ATAC-seq pipeline STEP 3: Sample Peak Calling                                          ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/3_batchRunPeakCalling.sh <config file> <option>      ||
+## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/3_batchRunPeakCalling.sh <project name> <option>     ||
 ## - execute from scripts directory                                                                                   ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
-## $1 -> <config file> directory to config file for the corresponding project                                         ||
-## $2 -> <option> Specify step to run: SHIFT, PEAKS, FRIP, HMMRATAC. Can be combined. Default is to run all           ||
+## $1 -> <project name> directory to config file for the corresponding project                                        ||
+## $2 -> <option> Specify step to run: SHIFT, PEAKS, FRIP. Can be combined. Default is to run all                     ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script performs the core analysis of the ATAC-seq pipeline, which is calling peaks at sample     ||
-## level. The three modes available in MACS3 are used for this in order to compare results.                           ||
+## level using the paired-end mode in MACS3.                                                                          ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -35,7 +35,7 @@ echo Job started on:
 date -u
 
 ## load config file provided on command line related to the specified project
-source $1
+source "/lustre/projects/Research_Project-MRC190311/ATACSeq/${1}/config.txt"
 echo "Loading config file for project: " $1
 echo "Project directory is: " $DATADIR
 
@@ -45,18 +45,19 @@ echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACPeakCallingS3-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
 
-##check array specified and exit if not
+## check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
 then 
     { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
 fi
 
 ## check step method matches required options and exit if not
-if [[ ! $2 =~ "SHIFT" ]] && [[ ! $2 =~ "PEAKS" ]] && [[ ! $2 =~ "HMMRATAC" ]] && [[ ! $2 =~ "FRIP" ]] &&[[ ! $2 == '' ]];
+if [[ ! $2 =~ "SHIFT" ]] && [[ ! $2 =~ "PEAKS" ]] && [[ ! $2 =~ "FRIP" ]] &&[[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use SHIFT, PEAKS, HMMRATAC, FRIP or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use SHIFT, PEAKS, FRIP or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
+## Collate all filtered, no duplicated, bam files
 cd ${ALIGNEDDIR}
 BAMFILES=($(ls *.filt.nodup.bam))
 echo "Number of aligned bam files: "" ""${#BAMFILES[@]}"""
@@ -69,8 +70,9 @@ echo "Number of aligned bam files: "" ""${#BAMFILES[@]}"""
 ## option SHIFT: shift aligned reads for single-end peak calling   
 if [ $# = 1 ] || [[ $2 =~ 'SHIFT' ]]
 then
-	module load BEDTools
-	module load SAMtools
+  module purge
+	module load BEDTools/2.29.2-GCC-9.3.0
+  module load SAMtools/1.11-GCC-9.3.0
 	module load R/3.6.3-foss-2020a
  
 	echo "Step 3.1 SHIFT started. Aligned reads will be shifted"
@@ -101,7 +103,6 @@ then
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
   echo "Sample(s) specified by array number in command line is/are: " ${sample}
   
-  mkdir -p ${PEAKDIR}/MACS/ShiftedTagAlign
   mkdir -p ${PEAKDIR}/MACS/BAMPE
   
   if [[ -s ${ALIGNEDDIR}/${sample}.filt.nodup.bam ]]
@@ -113,40 +114,13 @@ then
   fi
 fi
 
-## option HMMRATAC: peak calling is performed using MACS3 HMMRATAC 
-if [ $# = 1 ] || [[ $2 =~ 'HMMRATAC' ]]
-then
-  
-  module purge
-  module load BEDTools
-  module load SAMtools
-  module load Python/3.9.6-GCCcore-11.2.0-bare
-  source /lustre/home/${USER}/pythonEnv/bin/activate
-  
-  echo "Step 3.2.1 HMMRATAC started. Aligned reads will be used for peak calling using MACS3 HMMRATAC."
-  mapfile -t SAMPLES < ${METADIR}/samples.txt
-  sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
-  echo "Sample(s) specified by array number in command line is/are: " ${sample}
-  
-  mkdir -p ${PEAKDIR}/HMMRATAC
-  
-  if [[ -s ${ALIGNEDDIR}/${sample}.filt.nodup.bam ]]
-  then 
-    cd ${SCRIPTDIR}
-    
-    sh ./ATACSeq/preprocessing/sampleHMMRatac.sh ${sample}
-  else
-    echo "Aligned bam file for ${sample} not found. Peaks can't be called in aligned reads."
-  fi
-fi
-
 ## option FRIP: collate peak calling results statistics in a single csv file
 if [ $# = 1 ] || [[ $2 =~ 'FRIP' ]]
 then
 
 	module purge
-	module load BEDTools
-	module load SAMtools
+	module load BEDTools/2.29.2-GCC-9.3.0
+  module load SAMtools/1.11-GCC-9.3.0
   
   echo "Step 3.3 FRIP started. Peak calling statistics will be collated."
   mapfile -t SAMPLES < ${METADIR}/samples.txt
@@ -154,10 +128,9 @@ then
 	mkdir -p ${PEAKDIR}/QCOutput
 
 	cd ${SCRIPTDIR}/
-  ## if peak calling done on both BAMPE and Shift Tag Align modes
-  #sh ./ATACSeq/preprocessing/calcFrip.sh ${sampleName}
 
   ## Outputs a single csv file with all peak calling results for all samples
   sh ./ATACSeq/preprocessing/collateCalcFrip.sh ${SAMPLES[@]}
 	
 fi
+
