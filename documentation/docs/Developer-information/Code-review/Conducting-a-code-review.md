@@ -72,6 +72,26 @@ As of 2020 you also have access to GitHub codespaces, which is just vscode ran i
     # Switches you over to the latest version of the specific development branch
     git checkout -b development-branch-name origin/development-branch-name
     ```
+
+    Alternatively, if you have the [GitHub cli tool](https://github.com/cli/cli) 
+    installed you can directly checkout to the latest version of the pull 
+    request with:
+
+    ```bash
+    # Move to the location of the BrainFANS repository
+    cd path/to/BrainFANS
+
+    # Gets latest version of the code seen in the pull request and places you
+    # on that branch.
+    gh pr checkout pull-request-number
+    ```
+
+    The pull request number can be found in multiple areas on GitHub (for 
+    example, next to the title of the pull request). However, if you are using
+    this cli tool, you may as well use `gh pr list` to list all pull requests.
+    Alternatively, you could use `gh pr status` to see how the pull requests
+    for the repository are coming along. This has the added bonus of showing 
+    you which pull requests you are assigned as a reviewer for.
   </TabItem>
 </Tabs>
 
