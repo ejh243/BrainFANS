@@ -341,7 +341,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno.all<-geno
 
-	indexIID <- grep("^Genotype.IID$", names(QCmetric), ignore.case=TRUE)
+	indexIID <- grep("^Genotype.IID$", names(QCmetrics), ignore.case=TRUE)
 	if (length(indexIID) != 1){
 		message("Warning: Genotype.IID column is missing, unable to compare external SMP data.")
 	}else{
@@ -426,7 +426,7 @@ closefn.gds(gfile)
 write.csv(QCmetrics, paste0(dataDir, "/2_gds/QCmetrics/QCMetricsPostSampleCheck.csv"))
 
 # save QC metrics and SNP correlations to generate QC report
-if(file.exists(genoFile)){
+if(file.exists(genoFile) & length(indexIID) == 1 ){
 	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, betas.rs, rsbetas, file = qcData)
 } else {
 	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, rsbetas, file = qcData)
