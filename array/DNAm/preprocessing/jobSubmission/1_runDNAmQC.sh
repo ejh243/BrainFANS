@@ -43,7 +43,7 @@ module load Pandoc
 module load $RVERS   # load specified R version
 echo $RVERS
 
-Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${RPATH}
+Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR}
 
 mkdir -p ${GDSDIR}/QCmetrics
 
