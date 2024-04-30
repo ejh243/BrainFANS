@@ -12,6 +12,10 @@ have the latest version of the repository. The commands you will need to use
 will change depending on the user, please pick the option below that best 
 describes you.
 
+If you do not have a GitHub account already, please go to 
+[this page](./Git-account-creation.md) in order to set one up. At some point 
+during this guide you will no longer be able to continue, it is best you set 
+one up now.
 
 <Tabs>
   <TabItem value="New-user" label="First time cloning BrainFANS" default>
@@ -23,7 +27,7 @@ describes you.
     cd path/to/directory
 
     # Create a copy/clone of the online repository found on GitHub
-    git clone -b <branch-name> https://github.com/ejh243/BrainFANS.git
+    git clone -b branch-name https://github.com/ejh243/BrainFANS.git
     ```
   </TabItem>
   <TabItem value="Existing-user" label="You already have BrainFANS">
@@ -36,6 +40,60 @@ describes you.
     cd path/to/BrainFANS
 
     # Fetches latest changes to the repository
+    git fetch
+
+    # Switches you over to the latest version of the specific development branch 
+    # you plan to work off of
+    git checkout -b development-branch-name origin/development-branch-name
+    ```
+  </TabItem>
+  <TabItem value="Existing-branch" label="You already have the development branch locally">
+    If you already have the development branch locally from the past, it might not be up to date with the online repository. You will need to pull the latest changes first.
+
+    ```bash
+    # Move to the location of the BrainFANS repository
+    cd path/to/BrainFANS
+
+    # Move over to the development branch
+    git checkout development-branch-name
+
+    # Pulls (and merges) the latest changes to the development branch
+    git pull origin development-branch-name 
+    ```
+  </TabItem>
+  <TabItem value="Non contributor" label="You are not a contributor">
+    If you are not a BrainFANS contributor, you will not be able to submit/push
+    any of your changes directly to the repository. Instead, you will need to
+    create a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) 
+    of the repository. To create a fork, you will need to head over to the
+    GitHub page for [BrainFANS](https://github.com/ejh243/BrainFANS) and click
+    on the fork button at the top right of the page.
+
+    ![fork button](/Forks/Create-fork-button.png)
+
+    Once you have forked the repository, you should clone this to your local
+    machine by typing the following into the terminal:
+
+    ```bash
+    # Move to the directory you want the repository to be cloned to
+    cd path/to/directory
+
+    # 'Username' should be substituted with your GitHub username
+    git clone https://github.com/username/BrainFANS.git
+    ```
+
+    If you are working with a fork, you will need to periodically sync your
+    fork with the changes made in the official BrainFANS repository (and
+    subsequently use `git fetch` on your local version). You can do this by
+    clicking on the 'Sync fork' button on the fork's GitHub page.
+
+    ![Sync fork button](/Forks/Sync-fork-button.png)
+
+    To bring these changes to your local branch, type the following into the
+    terminal:
+
+    ```bash
+    cd path/to/BrainFANS
     git fetch
     ```
   </TabItem>

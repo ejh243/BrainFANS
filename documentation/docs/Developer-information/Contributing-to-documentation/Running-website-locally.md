@@ -74,7 +74,7 @@ If you do not know how to set up an SSH tunnel, click the relevant tab below to 
     You can create an ssh tunnel to the server via the following command:
 
     ```bash
-    ssh -L 3000:[remote server]:3000 Username@[SSSH server]
+    ssh -L 3000:remote-server:3000 Username@SSH-server
     ```
 
     The above assumes the forward port is 3000, change this if the output of `npm run serve` says otherwise. For the other fields consult the below list:
