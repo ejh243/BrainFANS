@@ -26,6 +26,7 @@ library(RColorBrewer)
 source(args[3]) ### change the content of this file to run QC with different thresholds
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 
+
 dataDir <- args[2]
 setwd(dataDir) 
 
@@ -34,6 +35,11 @@ setwd(dataDir)
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 
 load(qcData)
+
+if(!"Cell_Type" %in% colnames(QCmetrics)){
+  QCmetrics$Cell_Type <- NA
+}
+
 
 nSamAll<-nrow(QCmetrics)
 nSamIP<-sum(QCmetrics$intensPASS)
@@ -174,7 +180,7 @@ This report documents the internal quality control (QC) process of DNA methylati
 
 **Arrays ran by:** `r processedBy`
 
-**Array used:** `r arrayVersion`
+**Array used:** `r arrayType`
 
 **Date of QC:** `r format(Sys.Date(), format="%d %B %Y")`
 
