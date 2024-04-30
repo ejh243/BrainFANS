@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
 #SBATCH --time=1:00:00 # Maximum wall time for the job.
@@ -18,10 +18,7 @@ echo Job started on:
 date -u
 	
 ## needs to be executed from the scripts folder
-echo "Changing folder to: "
-echo $SLURM_SUBMIT_DIR
 
-cd $SLURM_SUBMIT_DIR
 
 FILES=()
 FILES+=$( find $1 -name '*.*')

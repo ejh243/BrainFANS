@@ -2,7 +2,7 @@
 
 ## Overview
 
-The scripts in this folder relate to the analyses performed in XXX. 
+The scripts in this folder relate to the analyses performed in [Hannon, E., Dempster, E.L., Davies, J.P. et al. Quantifying the proportion of different cell types in the human cortex using DNA methylation profiles. BMC Biol 22, 17 (2024). https://doi.org/10.1186/s12915-024-01827-y](https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-024-01827-y). 
 
 ## Requirements
 

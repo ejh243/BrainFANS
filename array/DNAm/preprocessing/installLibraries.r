@@ -1,3 +1,4 @@
+
 ##INSTALL LIBRARIES SCRIPT
 ##Installs all R packages required DNAm QC pipeline
 #Add in additional lines for Alice's errors... Git and config sourcing?
@@ -5,10 +6,30 @@ args<-commandArgs(trailingOnly = TRUE)
 
 source(args[1])
 
-#Bioconductor is required for most installations
+##---------------------------------------------------------------------#
+##
+## Title: Install required packages
+##
+## Purpose of script: installs all packages required for QC pipeline steps.
+##
+## Author: Rhiannon Haigh
+##
+## Date Created: 08/2023
+##
+##---------------------------------------------------------------------#
+
+
+#---------------------------------------------------------------------#
+# INSTALL BIOCONDUCTOR
+#---------------------------------------------------------------------#
+
+
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-	
+
+#---------------------------------------------------------------------#
+# INSTALL BIGMELON
+#---------------------------------------------------------------------#	
 	
 #Bigmelon required for all scripts
 #BiocManager::install("bigmelon")
@@ -33,8 +54,15 @@ if(arrayType=='EPICv2'){
 
 install.packages("devtools")
 
-#Calculating QC metrics
+#---------------------------------------------------------------------#
+# INSTALL PACKAGES FOR QC METRICS
+#---------------------------------------------------------------------#
+
 install.packages("e1071")
+
+#---------------------------------------------------------------------#
+# INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
+#---------------------------------------------------------------------#
 
 
 #Creating QC reports

@@ -1,0 +1,14 @@
+linters: with_defaults(
+  duplicate_argument_linter,
+  equals_na_linter,
+  length_test_linter,
+  missing_argument_linter,
+  missing_package_linter,
+  redundant_equals_linter,
+  sprintf_linter,
+  unused_import_linter,
+  cyclocomp_linter,
+  indentation_linter,
+  vector_logic_linter,
+  line_length_linter(300)
+)
