@@ -32,7 +32,9 @@ if (!require("BiocManager", quietly = TRUE))
 #---------------------------------------------------------------------#	
 	
 #Bigmelon required for all scripts
-BiocManager::install("bigmelon")
+#BiocManager::install("bigmelon")
+remotes::install_github("schalkwyk/wateRmelon")
+remotes::install_github("tjgorrie/bigmelon")
 
 #GDS script
 
@@ -62,6 +64,24 @@ install.packages("e1071")
 # INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
 #---------------------------------------------------------------------#
 
+
+#Creating QC reports
+install.packages("pander") 
+install.packages("kableExtra")
+
+
+#Additional packages for Brain Cell Proportion Prediction
 BiocManager::install("genefilter")
 install.packages("quadprog")
+
+
+#Packages for CETYGO script
+BiocManager::install(c("genefilter", "minfi"))
+install.packages("quadprog")
+
+# install devtools to install from GitHub
+install.packages("devtools")
+library(devtools)
+
+install_github("ds420/CETYGO")
 
