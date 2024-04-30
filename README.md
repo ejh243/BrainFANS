@@ -8,4 +8,13 @@ We have developed a [method using fluorescence-activated nuclei sorting (FANS)](
 
 This repository contains analysis pipelines for the pre-processing and analysis of the data generated as part of this project. They are developed for use with a HPC system with the SLURM job scheduler. 
 
+## Publications
+
+The following publications are based on analyses performed using scripts from this repository. Links to the relevant folders can be found below. 
+
+[Hannon, E., Dempster, E.L., Davies, J.P. et al. Quantifying the proportion of different cell types in the human cortex using DNA methylation profiles. BMC Biol 22, 17 (2024). https://doi.org/10.1186/s12915-024-01827-y]( https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-024-01827-y#citeas)
+
+* Pipeline version: [v1.0.0](https://github.com/ejh243/BrainFANS/releases/tag/v1.0.0) 
+* [QC Scripts](https://github.com/ejh243/BrainFANS/tree/master/array/DNAm/preprocessing)
+* [Analysis](https://github.com/ejh243/BrainFANS/tree/master/array/DNAm/analysis/neuralCellComposition)
 

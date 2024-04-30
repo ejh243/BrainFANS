@@ -18,6 +18,8 @@
 #----------------------------------------------------------------------#
 args <- commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
+Rpath <- args[2]
+
 gdsFile <- file.path(dataDir, "2_gds/raw.gds")
 
 configFile <- paste0(dataDir, "/config.r")
@@ -32,14 +34,13 @@ arrayType <- toupper(arrayType)
 library(bigmelon)
 library(IlluminaHumanMethylationEPICv2anno.20a1.hg38)
 library(IlluminaHumanMethylationEPICv2manifest)
+library(devtools)
+devtools::load_all(path = Rpath)
+#library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 library(IlluminaHumanMethylationEPICmanifest)
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(IlluminaHumanMethylation450kmanifest)
-library(devtools)
-devtools::load_all(path = "../functionsR")
-
-
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -185,8 +186,10 @@ if(length(loadGroups) > 1){
   ## start with betas as function to add rownames and colnames
   listBetas <- lapply(lapply(gfileList, betas), read.gdsn)
   listProbeIDs <- lapply(lapply(gfileList, index.gdsn, path = "fData/Probe_ID"), read.gdsn)
+  listSampleIDs <- lapply(gfileList, colnames)
   for(i in 1:length(listBetas)){
     rownames(listBetas[[i]]) <- listProbeIDs[[i]]
+	colnames(listBetas[[i]]) <- listSampleIDs[[i]]
   }
 
   ## get list of merged probeids

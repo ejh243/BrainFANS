@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --export=ALL #export all enviroment variables to the batch job
 #SBATCH -p mrcq #submit to the serial queue
 #SBATCH --time=24:00:00 ##maximum wall time for the job
@@ -18,8 +18,6 @@ date -u
 JOBNAME="QCDNAdata"
     
 ## needs to be executed from the scripts folder
-echo "Changing Folder to: " $SLURM_SUBMIT_DIR
-cd $SLURM_SUBMIT_DIR
 
 ## format paths in config file with project name
 echo "Loading config file for project: " $1
