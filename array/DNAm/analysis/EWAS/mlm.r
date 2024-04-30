@@ -48,7 +48,7 @@ library(lmerTest)
 #library(GenABEL)
 library(doParallel)
 library(devtools)
-devtools::load_all(path = "../functionsR")
+library(cdegUtilities)
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS

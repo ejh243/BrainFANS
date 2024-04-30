@@ -21,7 +21,6 @@
 #----------------------------------------------------------------------#
 args <- commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
-Rpath <- args[2]
 
 gdsFile <- file.path(dataDir, "2_gds/raw.gds")
 
@@ -35,8 +34,8 @@ source(configFile)
 library(bigmelon)
 library(IlluminaHumanMethylationEPICv2anno.20a1.hg38)
 library(IlluminaHumanMethylationEPICv2manifest)
-library(devtools)
-devtools::load_all(path = Rpath)
+library(cdegUtilities)
+
 #library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 library(IlluminaHumanMethylationEPICmanifest)
