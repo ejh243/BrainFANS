@@ -12,3 +12,4 @@ linters: with_defaults(
     vector_logic_linter,
     line_length_linter(300)
   )
+
