@@ -31,8 +31,9 @@ elif [[ $2 =~ 'END' ]];
 then
     echo "ATTENTION! This will also change all files in 1_raw to read/write/execute permissions for those in your group"
     files=($(find ${REPO_DIR} -path -prune -o -user ${USER} -print))
-    for file in ${files[@]}
-    chmod 774 $file
+    for file in "${files[@]}"; do
+        chmod 774 $file
+    done
 fi
 
 
