@@ -10,6 +10,4 @@ linters: with_defaults(
     cyclocomp_linter,
     indentation_linter,
     vector_logic_linter,
-    line_length_linter(300)
-  )
-
+    line_length_linter(300))
