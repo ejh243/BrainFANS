@@ -32,6 +32,7 @@ cd $(dirname $0)/../../../..
 ## format paths in config file with project name
 echo "Loading config file for project: " $1
 export PROJECT=$1
+
 # the second input should be config file
 source $2 || exit 1
 RCONFIG=$3
@@ -39,11 +40,13 @@ RCONFIG=$3
 
 ## load modules
 module load Pandoc
-#module load R/3.6.3-foss-2020a
 module load $RVERS   # load specified R version
 echo $RVERS
 
 Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR}
+
+chmod 755 ${DATADIR}/2_gds/raw.gds
+
 
 mkdir -p ${GDSDIR}/QCmetrics
 
@@ -56,13 +59,13 @@ mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
 
-
 Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
 
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
+chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
