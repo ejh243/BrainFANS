@@ -60,22 +60,16 @@ install.packages("devtools")
 
 install.packages("e1071")
 
+
 #---------------------------------------------------------------------#
 # INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
 #---------------------------------------------------------------------#
-
 
 #Creating QC reports
 install.packages("pander") 
 install.packages("kableExtra")
 
-
 #Additional packages for Brain Cell Proportion Prediction
-BiocManager::install("genefilter")
-install.packages("quadprog")
-
-
-#Packages for CETYGO script
 BiocManager::install(c("genefilter", "minfi"))
 install.packages("quadprog")
 
@@ -84,4 +78,4 @@ install.packages("devtools")
 library(devtools)
 
 install_github("ds420/CETYGO")
-
+install_github("EpigeneticsExeter/cdegUtilities")
