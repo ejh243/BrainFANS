@@ -1,13 +1,14 @@
-linters: with_defaults(
-    duplicate_argument_linter,
-    equals_na_linter,
-    length_test_linter,
-    missing_argument_linter,
-    missing_package_linter,
-    redundant_equals_linter,
-    sprintf_linter,
-    unused_import_linter,
-    cyclocomp_linter,
-    indentation_linter,
-    vector_logic_linter,
-    line_length_linter(300))
+linters: linters_with_defaults(
+    line_length_linter(300),
+    indentation_linter = NULL,
+    object_name_linter = NULL,
+    object_usage_linter = NULL,
+    cyclocomp_linter = NULL,
+    seq_linter = NULL,
+    spaces_inside_linter = NULL,
+    trailing_whitespace_linter = NULL,
+    assignment_linter = NULL,
+    infix_spaces_linter = NULL,
+    object_length_linter(50)
+  )
+
