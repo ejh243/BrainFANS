@@ -69,21 +69,28 @@ if(sexCheck){
  	QCSum<-cbind(QCSum, NA)
 }
 colnames(QCSum)[ncol(QCSum)]<-"sexCheck"
-if(snpCheck){
+
+if(snpCheck & "genoCheck"%in% colnames(QCmetrics)){
 	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
 }else{
  	QCSum<-cbind(QCSum, NA)
 }
 colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
 
-QCSum<-cbind(QCSum, rowSums(QCSum[,c("passQCS1", "sexCheck", "snpCheck")], na.rm = TRUE) == rowSums(!is.na(QCSum[,c("passQCS1", "sexCheck", "snpCheck")])))
+# if neither sex check or snp check performed stage two pass status is copied from stage one 
+cols<-c("passQCS1", "sexCheck", "snpCheck")
+cols<-cols[cols %in% colnames(QCSum)]
+if(length(cols) > 1){
+	QCSum<-cbind(QCSum, rowSums(QCSum[,cols], na.rm = TRUE) == rowSums(!is.na(QCSum[,cols])))
+} else {
+	QCSum<-cbind(QCSum, QCSum[,"passQCS1"])
+}
 colnames(QCSum)[ncol(QCSum)]<-"passQCS2"
 rownames(QCSum)<-QCmetrics$Basename
 
 write.csv(cbind(QCmetrics[,c("Basename", "Sample_ID", "Individual_ID", "Cell_Type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
 
 QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
-
 
 
 ```
