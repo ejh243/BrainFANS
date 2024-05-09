@@ -7,7 +7,10 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Step 2: Get the latest version of BrainFANS
-Most contributions will be a part of an existing development branch. For example, if the issue you are resolving relates to atac pipeline, then you should have the latest version of the `atac-develop` pipeline. The commands you will need to use will change depending on the user, please pick the option below that best describes you.
+Whenever you are working with the BrainFANS repository, please ensure that you
+have the latest version of the repository. The commands you will need to use 
+will change depending on the user, please pick the option below that best 
+describes you.
 
 If you do not have a GitHub account already, please go to 
 [this page](./Git-account-creation.md) in order to set one up. At some point 
@@ -16,7 +19,8 @@ one up now.
 
 <Tabs>
   <TabItem value="New-user" label="First time cloning BrainFANS" default>
-     Please use the following git commands to clone the specific development branch of the repository to a personal directory of yours:
+     Please use the following git commands to clone the specific development 
+    branch of the repository to a personal directory of yours:
 
     ```bash
     # Move to the directory you want the repository to be cloned to
@@ -26,8 +30,10 @@ one up now.
     git clone -b branch-name https://github.com/ejh243/BrainFANS.git
     ```
   </TabItem>
-  <TabItem value="Existing-user" label="You do not have the development branch locally">
-    If you have already cloned the repository in the past, there is no need to clone it again. Instead, use these commands to get the latest version of the development branch you plan to work off of.
+  <TabItem value="Existing-user" label="You already have BrainFANS">
+    If you have already cloned the repository in the past, there is no need to 
+    clone it again. Instead, use these commands to get the latest version of 
+    BrainFANS (the version seen on GitHub).
 
     ```bash
     # Move to the location of the BrainFANS repository
@@ -92,3 +98,11 @@ one up now.
     ```
   </TabItem>
 </Tabs>
+
+It is also a good idea to periodically run `git fetch` as you are working on a
+project (not every 5 minutes, but maybe once a day/week). Running `git fetch`
+will not alter your workspace, it only updates your local .git folder 
+(repository). You might have heard of `git pull`, this command implicitly runs 
+`git fetch`, but also merges any changes into your current branch. This merging
+step may not be desired and so we recommend fetching (then merging if this is
+desired).

@@ -6,16 +6,29 @@ description: Create a new sub branch off of existing development branches
 
 # Step 3: Create a new branch
 
-Create a new development branch in the terminal with a name that is relevant to the issue that you are resolving. In general, you should be making a branch off of a development branch. If the issue you are resolving is very general, small or unrelated to development branches, you may create your branch off of the master branch. 
+Create a new feature branch in the terminal with a name that is relevant 
+to the issue that you are resolving. For most changes, you'll likely
+be creating a new branch that stems from the master branch. However, if you
+plan on working on an existing development branch (perhaps some pipeline
+that has yet to be merged into master), you'll need to stem off of that
+branch instead. 
+
+The important thing to note here is that your branch will start off in the
+same state as the branch that you stem from. If you create the branch off of
+a really old branch that hasn't been touched in years, your branch will also
+be out of date.
 
 :::danger[Important]
-If you do not follow this step you will not be able to push any of your changes due to the branch protection rules on master and the development branches.
+If you do not follow this step you will not be able to push any of your 
+changes due to the branch protection rules on master branche.
 :::
 
 
 ```bash
-# Creates new branch off of the provided development branch
-# and automatically moves you onto this branch
+# Creates new branch off of the master branch
+# and automatically moves you onto your newly created branch
+git checkout -b your-branch-name origin/master 
 
-git checkout -b your-branch-name development-branch-name 
+# Does the same, but creates the new branch off of a branch of your choosing 
+git checkout -b your-branch-name origin/development-branch
 ```
