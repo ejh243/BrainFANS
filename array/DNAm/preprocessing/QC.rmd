@@ -874,17 +874,17 @@ kbl(xTab) %>%
 ## Correlations between QC metrics
 
 ```{r, echo = FALSE, fig.width = 10, fig.height = 10}
-if(sexCheck & snpCheck){
-corrplot(cor(QCmetrics[,c(c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon", "pFilter",
+
+colsToKeep <- c(c(c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon", "pFilter",
  "x.cp","y.cp",
  "genoCheck",
  "rmsd","sdd","sadd","srms",
- "nNAsPer"), colnames(QCmetrics)[grep("PC", colnames(QCmetrics))])], use = "p"))
-} else {
-    corrplot(cor(QCmetrics[,c(c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon", "pFilter",
- "rmsd","sdd","sadd","srms",
- "nNAsPer"), colnames(QCmetrics)[grep("PC", colnames(QCmetrics))])], use = "p"))
-}
+ "nNAsPer"), colnames(QCmetrics)[grep("PC", colnames(QCmetrics))]))
+
+colsToKeep <- colsToKeep[colsToKeep %in% colnames(QCmetrics)]
+
+corrplot(cor(QCmetrics[,colsToKeep], use = "p"))
+
 ```
 
 
