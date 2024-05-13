@@ -908,6 +908,8 @@ if(max(snpCor, na.rm = TRUE) > 0.8){
 	  predictedduplicates<-colnames(snpCor)
 	} 
 
+  QCmetrics$predictedduplicates<-predictedduplicates
+
 ```
 
 Post QC we identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
