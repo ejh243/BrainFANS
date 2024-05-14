@@ -162,6 +162,7 @@ uniqueIDs<-unique(QCmetrics[,keepCols])
 indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell_Type != "Total")], by = list(QCmetrics$Individual_ID[which(QCmetrics$Cell_Type != "Total")]), FUN = median, na.rm = TRUE)
 nFACs<-table(QCmetrics$Individual_ID[QCmetrics$Cell_Type != "Total"])
 
+uniqueIDs$Individual_ID <- as.character(uniqueIDs$Individual_ID)
 uniqueIDs<-cbind(uniqueIDs, indFACSEff$x[match(uniqueIDs$Individual_ID, as.character(indFACSEff$Group.1))], as.numeric(nFACs[uniqueIDs$Individual_ID]))
 colnames(uniqueIDs)<-c(keepCols, "FACsEffiency", "nFACS")
 
