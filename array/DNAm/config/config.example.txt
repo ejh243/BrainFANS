@@ -10,3 +10,4 @@ export SNPDIR=<path to SNP data >
 export REFDIR=<path to references folder>
 export RCONFIG=<path to R config file>
 export SCRIPTSDIR=<path to scripts directory e.g. BrainsFANS repo)
+export RVERS=R # module name for R version you require
