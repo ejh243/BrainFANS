@@ -22,7 +22,6 @@ echo Job started on:
 date -u
 JOBNAME="QCDNAdata"
 
-# the second input should be config file
 source $1 || exit 1
 
 echo "Processing data located in :" ${DATADIR}
