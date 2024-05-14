@@ -12,9 +12,7 @@
 
 #------------------------------------------------------
 
-# 1. the first input is your project folder.
-# 2. the second input is the full path to config file.
-# 3. the third input is a the path to the config.r file.
+# 1. the first input is the full path to config file.
 
 #-----------------------------------------------------
 
@@ -24,24 +22,15 @@ echo Job started on:
 date -u
 JOBNAME="QCDNAdata"
 
-# Forcibly moves the user to the scripts directory
-cd $(dirname $0)/../../../..
-
-## needs to be executed from the scripts folder
-
-## format paths in config file with project name
-echo "Loading config file for project: " $1
-export PROJECT=$1
-
 # the second input should be config file
-source $2 || exit 1
-RCONFIG=$3
+source $1 || exit 1
 
+echo "Processing data located in :" ${DATADIR}
 
 ## load modules
+echo "Loading R module :" $RVERS
 module load Pandoc
 module load $RVERS   # load specified R version
-echo $RVERS
 
 Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR}
 
