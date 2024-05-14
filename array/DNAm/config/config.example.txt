@@ -1,5 +1,5 @@
 ## Data filepaths
-export DATADIR=<data path>${PROJECT}
+export DATADIR=<data path>
 
 export METADIR=${DATADIR}/0_metadata
 export RAWDATADIR=${DATADIR}/1_raw
@@ -8,3 +8,5 @@ export NORMDIR=${DATADIR}/3_normalised
 export SNPDIR=<path to SNP data >
 
 export REFDIR=<path to references folder>
+export RCONFIG=<path to R config file>
+export SCRIPTSDIR=<path to scripts directory e.g. BrainsFANS repo)
