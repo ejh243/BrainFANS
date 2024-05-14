@@ -32,33 +32,35 @@ echo "Loading R module :" $RVERS
 module load Pandoc
 module load $RVERS   # load specified R version
 
-Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR}
+cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
+
+Rscript loadDataGDS.r ${DATADIR}
 
 chmod 755 ${DATADIR}/2_gds/raw.gds
 
 
 mkdir -p ${GDSDIR}/QCmetrics
 
-Rscript DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR}
+Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
 
-Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
-
-## mv markdown report to correct location
-mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
-
-Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
-
-Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
+Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
 
 ## mv markdown report to correct location
-mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
+mv QC.html ${GDSDIR}/QCmetrics/
 
-Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
+Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
+
+Rscript -e "rmarkdown::render('QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
+
+## mv markdown report to correct location
+mv QCwithinCellType.html ${GDSDIR}/QCmetrics
+
+Rscript normalisation.r ${DATADIR} ${REFDIR}
 chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
-Rscript DNAm/preprocessing/CETYGOdeconvolution.r ${DATADIR}
+Rscript CETYGOdeconvolution.r ${DATADIR}
 
 ## print finish date and time
 echo Job finished on:
