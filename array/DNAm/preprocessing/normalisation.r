@@ -58,7 +58,7 @@ if(ctCheck){
 	QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 }
-cellTypes<-unique(QCmetrics$Cell.type)
+cellTypes<-unique(QCmetrics$Cell_Type)
 
 # create new gfile with only samples that pass QC
 if(exists(normgdsFile)){
@@ -123,7 +123,7 @@ if(length(cellTypes) > 1){
 	rownames(celltypeNormbeta)<-rownames(rawbetas)
 	colnames(celltypeNormbeta)<-colnames(rawbetas)
 	for(each in cellTypes){
-		index<-which(QCmetrics$Cell.type == each)
+		index<-which(QCmetrics$Cell_Type == each)
 		if(length(index) > 2){
 			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
 		}
