@@ -1,23 +1,29 @@
 
 
 # Checks sample sheet columns are formatted correctly
-checkColnames <- function(sampleSheet, exp_cols, type){
+checkColnames <- function(sampleSheet, exp_cols, type, verbose=T){
+	metrics <- list()
+	
 	all_pres <- all(exp_cols %in% colnames(sampleSheet))
+	metrics[['allPresent']] <- all_pres
 	
 	if(all_pres){
-		print(paste(type, "column names: All present"))
+		if(verbose){print(paste(type, "column names: All present"))}
 	}else{
-		print(paste(type, "column names: Not all present"))
+	
+		if(verbose){print(paste(type, "column names: Not all present"))}
 		
 		#a) find correct cols
 		pres <- exp_cols[exp_cols %in% colnames(sampleSheet)]
 		if(length(pres)>0){
-			print(c("Identical colnames:",pres))
+			if(verbose){print(c("Identical colnames:",pres))}
 		}
+		metrics[['presentIDs']] <- pres
 		
 		#b) find absent cols
 		ab <- exp_cols[exp_cols %ni% colnames(sampleSheet)]
-		print(c("Absent colnames:",ab))
+		if(verbose){print(c("Absent colnames:",ab))}
+		metrics[['absentIDs']] <- ab
 		
 		#c) find close matches
 		near <- exp_cols[amatch(colnames(sampleSheet), exp_cols, maxDist = 2)] # maxDist = number of characters difference
@@ -32,9 +38,14 @@ checkColnames <- function(sampleSheet, exp_cols, type){
 				nrmatch <- nrmatch[-other,]
 			}
 			if(nrow(nrmatch)>0){
-				print(paste("Identified", nrow(nrmatch), "near match(es)..."))
-				print(nrmatch)
+				if(verbose){print(paste("Identified", nrow(nrmatch), "near match(es)..."))}
+				if(verbose){print(nrmatch)}
+				metrics[['nearMatchIDs']] <- nrmatch
 			}
 		}
+		
+	}
+	if(!verbose){
+		return(metrics)
 	}
 }
