@@ -25,8 +25,8 @@ source("checkColnamesFunction.r")
 
 
 #1. Check required column names ------------------------------------------------------------------------------
-print("1. Checking required column names:")
-print(c('Basename',req_cols))
+cat("1. Checking required column names: ")
+cat(c('Basename',req_cols,'\n'))
 
 # check Basename first
 b <- checkColnames(sampleSheet, bsnm_cols[1], type='Required', verbose=F)
@@ -41,12 +41,12 @@ if(b$allPresent){
 	
 	# if either Chip or Sentrix present, continue to check other required columns
 	if(any(chip$allPresent | sntrx$allPresent)){
-		cat("Basename column not found, but at least 2 of the following alternative columns are present: ", bsnm_cols[2:5])
-		cat("Checking remaining required columns")
+		cat("Basename column not found, but at least 2 of the following alternative columns are present: ", bsnm_cols[2:5],'\n')
+		cat("Checking remaining required columns",'\n')
 		checkColnames(sampleSheet, req_cols, type='Required')
 	}else{
-		cat(c("Basename column not found, and neither set of alternative column names are present: ", bsnm_cols[2:5]))
-		cat("Checking remaining required columns")
+		cat("Basename column not found, and neither set of alternative column names are present: ", bsnm_cols[2:5],'\n')
+		cat("Checking remaining required columns",'\n')
 		checkColnames(sampleSheet, req_cols, type='Required')
 	}
 }
@@ -55,25 +55,25 @@ if(b$allPresent){
 
 
 #2. Check optional column names ------------------------------------------------------------------------------
-print("2. Checking optional column names:")
-print(opt_cols)
+cat("2. Checking optional column names: ")
+cat(opt_cols,'\n')
 checkColnames(sampleSheet, opt_cols, type='Optional')
 
 
 #3. Check conditional column names ---------------------------------------------------------------------------
-print("Sourcing conditional variables from config.r")
+cat("Sourcing conditional variables from config.r",'\n')
 source(configFile)
 cond_status <- c(sexCheck,snpCheck,ctCheck) # T/Fs from config file
-print(paste0(c("sexCheck","snpCheck","ctCheck"),"=", cond_status))
+cat(paste0(c("sexCheck","snpCheck","ctCheck"),"=", cond_status),'\n')
 
 # subset conditional colnames to those TRUE in config
 cond_cols.filtered <- cond_cols[cond_status]
 
 if(all(cond_status==F)){
-	print("No conditional variables to check")
+	cat("No conditional variables to check")
 }else{
-	print("3. Checking conditional column names:")
-	print(cond_cols.filtered)
+	cat("3. Checking conditional column names: ",'\n')
+	cat(cond_cols.filtered,'\n')
 	checkColnames(sampleSheet, cond_cols.filtered, type='Conditional')
 }
 
