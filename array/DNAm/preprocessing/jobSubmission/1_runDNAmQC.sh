@@ -33,6 +33,8 @@ module load $RVERS   # load specified R version
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
+Rscript checkColnamesSampleSheet.r ${DATADIR}
+
 Rscript loadDataGDS.r ${DATADIR}
 
 chmod 755 ${DATADIR}/2_gds/raw.gds
