@@ -60,6 +60,7 @@ install.packages("devtools")
 
 install.packages("e1071")
 install.packages("stringdist")
+install.packages("data.table")
 
 
 #---------------------------------------------------------------------#
