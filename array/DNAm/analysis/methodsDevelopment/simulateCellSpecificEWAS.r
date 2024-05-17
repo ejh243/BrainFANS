@@ -92,7 +92,7 @@ library(plm)
 library(lmtest)
 library(doParallel)
 library(car)
-library(cdegUtilies)
+library(cdegUtilities)
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
