@@ -5,10 +5,6 @@
 ## Purpose of script: simulate EWAS with induced changes between cases and controls for both 
 ## cell-type specific & ubiquitous DMPs to compare analytical models
 ##
-## Author: Eilis Hannon
-##
-## Date Created: 2022-07-01
-##
 ##---------------------------------------------------------------------#
 
 
@@ -96,7 +92,7 @@ library(plm)
 library(lmtest)
 library(doParallel)
 library(car)
-source("../functionsR/R/utils_DNAm.r")
+library(cdegUtilies)
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
@@ -105,7 +101,7 @@ source("../functionsR/R/utils_DNAm.r")
 nSim<-10
 nSig.options<-c(10,100,1000)
 propCS.options<-seq(0,1,0.2)
-sigEffect<-0.05
+sigEffect<-args[3]
 
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
@@ -287,6 +283,6 @@ for(simNum in 1:nSim){
 	}
 }
 
-save(nullSim, file = file.path(resPath, paste0("nullSimulations_Chunk", nChunk, ".rdata")))
-save(sumSim, file = file.path(resPath, paste0("nSigSimulateTrueEffects_Chunk", nChunk, ".rdata")))
-save(commonDMPs, ctDMPs, file = file.path(resPath, paste0("DMPsumStats_Chunk", nChunk, ".rdata")))
+save(nullSim, file = file.path(resPath, paste0("nullSimulations_Chunk", nChunk, "_MeanDiff",sigEffect, ".rdata")))
+save(sumSim, file = file.path(resPath, paste0("nSigSimulateTrueEffects_Chunk", nChunk, "_MeanDiff",sigEffect, ".rdata")))
+save(commonDMPs, ctDMPs, file = file.path(resPath, paste0("DMPsumStats_Chunk", nChunk, "_MeanDiff",sigEffect, ".rdata")))
