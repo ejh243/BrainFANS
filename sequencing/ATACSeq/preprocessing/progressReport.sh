@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ## ===================================================================================================================##
 ##                             ATAC-seq pipeline STEP 4.2: Collate QMetrics                                           ##
 ## ===================================================================================================================##
@@ -130,7 +132,7 @@ do
     
     if [ ! -s ${PEAKDIR}/MACS/BAMPE/${sampleName}.broadPeak.filt ]
     then
-        echo -n "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
         echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
@@ -139,7 +141,7 @@ do
     then
         echo "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
     else
-        echo "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "Y" >> ${METADIR}/summariseSampleProcessingProgress.csv
     fi
   
 done

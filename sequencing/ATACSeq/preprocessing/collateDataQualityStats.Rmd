@@ -1,3 +1,4 @@
+
 ---
 title: "QC Stage 1: confirm experimental success"
 date: "`r Sys.Date()`"
@@ -7,8 +8,7 @@ output:
     toc_float: true
     code_folding: hide
 params:
-  project: !r commandArgs(trailingOnly=T)[3]
-  configFile: !r file.path(commandArgs(trailingOnly=T)[2], "/ATACSeq/config/config.r")
+  configFile: !r commandArgs(trailingOnly=TRUE)[2]
 ---
 
 ```{r setup, include=FALSE}
@@ -27,13 +27,14 @@ library(gridExtra)
 library(cowplot)
 library(kableExtra)
 library(scales)
+library(tibble)
 
 ## load config variables
-source(file.path(commandArgs(trailingOnly=T)[2],"ATACSeq/preprocessing/rmdLoadConfig.r"))
+source(params$configFile)
 
 ```
 
-This report provides a summary of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment and filtering (and peak calling steps). The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines](https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS2 for each individual sample. The pipeline is still under development.
+This report provides a summary of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment and filtering (and peak calling steps). The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines](https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS3 for each individual sample. The pipeline is still under development.
 
 ```{r loadDat, message = FALSE, results='hide'}
 ## import data
@@ -43,7 +44,7 @@ fastqc<-read.table(file.path(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.tx
 readCounts<-read.table(file.path(alignedDir, "/countMTReads.txt"), fill = TRUE, skip = 1)
 alignQC<-read.table(file.path(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 flagstat<-read.csv(file.path(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
-fripFiles <- list.files(file.path(peakDir, "/QCOutput"), pattern = "FRIP")
+flagstat<- flagstat[,c(1:ncol(flagstat)-1)]
 
 # wrangle data
 missingCol<-setdiff(c("sequencingBatch", "sampleID",  "cohort", "fraction", "experiment", "individualID"), colnames(pheno))
@@ -92,15 +93,13 @@ eIndex<-match(processSum$sampleID, gsub(".pbc.qc", "", files))
 eMetrics<-eMetrics[eIndex,]
 mergeStats<-cbind(mergeStats,eMetrics)
 
-## load and calculate fraction reads in peaks
-fripStats<-read.csv(paste0(peakDir, "/QCOutput/", fripFiles[1]))
-for(each in fripFiles[-1]){
-  fripStats<-rbind(fripStats, read.csv(paste0(peakDir, "/QCOutput/", each)))
-}
-fripStats<-fripStats[match(processSum$sampleID, fripStats$SampleName),]
+## Option to use a single csv file with all results
+fripStats <- read.csv(file.path(peakDir, "/QCOutput/FRIP_all_samples.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
 
-fripStats$FripMACS2TagAlign <- fripStats$ReadsinMACS2TagAlignPeaks/fripStats$BAMTotalReads
-fripStats$FripMACS2PE <- fripStats$ReadsinMACS2PEPeaks/fripStats$BAMTotalReads
+fripStats$FripMACS3TagAlign <- fripStats$ReadsinTAPeaks/fripStats$BAMTotalReads
+fripStats$FripMACS3PE <- fripStats$ReadsinBAMPeaks/fripStats$BAMTotalReads
+fripStats$FripMACS3HMMRATAC <- fripStats$ReadsinHMMRATACPeaks/fripStats$BAMTotalReads
+fripStats[is.na(fripStats)] <- 0
 
 #ccFiles<-list.files(alignedDir, pattern = '.subsample.cc.qc')
 #crossCor<-read.csv(paste(alignedDir, ccFiles[1], sep='/'))
@@ -120,7 +119,9 @@ for(each in filePaths){
 }
 diptestStatsAll<-as.data.frame(diptestStatsAll)
 propNucleosomesAll<-propNucleosomesAll[match(processSum$sampleID, rownames(propNucleosomesAll)),]
-diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, sub("X", "", gsub("\\.D$", "", rownames(diptestStatsAll)))),]
+#diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, sub("X", "", gsub("\\.D$", "", rownames(diptestStatsAll)))),]
+diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, gsub("\\.D$", "", rownames(diptestStatsAll))),]
+rownames(diptestStatsAll)<-processSum$sampleID
 
 ## count number of samples with X million reads
 readThres<-seq(0,max(mergeStats[,1], na.rm = TRUE)+10^6, 10^6)
@@ -157,7 +158,6 @@ kbl(nCTStart) %>%
 ```
 
 
-
 ## Overview
 
 To provide an overall summary here is a plot of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
@@ -183,7 +183,7 @@ if (nrow(pheno) > 70) {
 <div class="scrollingimage">
 ```{r overview, echo=FALSE}
 # plot barchart of 
-data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats$ReadsinMACS2TagAlignPeaks) %>%
+data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats$ReadsinBAMPeaks) %>%
   setNames(c('Samples', 'Raw reads', 'Aligned reads', 'Reads in peaks')) %>%
   melt(id='Samples') %>%
   ggplot(., aes(fill= variable, x=Samples, y=value))+
@@ -357,11 +357,22 @@ data.frame(mergeStats$PercentMTReads, pheno$cohort) %>%
   ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
       geom_violin(scale='width')+
       geom_boxplot(width=0.05, fill='black')+
+      labs(x = "Brain bank", y = "Percentage of MT reads")+
+      stat_summary(fun="median", 
+                 geom="point", color="white")+
+      theme_bw()+
+  theme(legend.position = "none")
+
+data.frame(mergeStats$PercentMTReads, pheno$sequencingBatch) %>%
+  ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
+      geom_violin(scale='width')+
+      geom_boxplot(width=0.05, fill='black')+
       labs(x = "Sequencing batch", y = "Percentage of MT reads")+
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
   theme(legend.position = "none")
+
 
 ```
 
@@ -460,9 +471,9 @@ data.frame(propNucleosomesAll)%>%
     geom_abline(intercept = 0, slope = 1)+
     ylim(c(0,1))+
     xlim(c(0,max(propNucleosomesAll[,2])))+
-    geom_hline(yintercept = c(nfrThres))+
+    geom_hline(yintercept = c(nucfThres))+
     geom_vline(xintercept = c(monoThres)) +
-    geom_polygon(data = data.frame("x" = c(monoThres, nfrThres, 1,monoThres), "y" = c(nfrThres, nfrThres, 1, 1)), aes(x = x, y = y), fill = "grey", alpha = 0.2, size = 2)
+    geom_polygon(data = data.frame("x" = c(monoThres, nucfThres, 1,monoThres), "y" = c(nucfThres, nucfThres, 1, 1)), aes(x = x, y = y), fill = "grey", alpha = 0.2, size = 2)
 
 
 ```
@@ -482,10 +493,10 @@ abline(v = dipPThres)
 
 ### 3.1 Number of peaks
 
-Peak calling was performed in two ways using MACS, 1) using shifted tag align files, 2) using the paired end reads. ENCODE recommends that number of peaks in each sample be greater than 150,000, though values greater than 100,000 are acceptable. Data from `r sum(!is.na(fripStats$MACS2TagAlignPeaks))` samples is plotted below. The mean number of peaks is `r signif(mean(fripStats$MACS2TagAlignPeaks, na.rm = TRUE ),3)` (SD = `r signif(sd(fripStats$MACS2TagAlignPeaks, na.rm = TRUE ),3)`). The plots below contain data from `r sum(!is.na(fripStats$MACS2TagAlignPeaks))` samples. 
+Peak calling was performed in three ways using MACS, 1) using shifted tag align files, 2) using the paired end reads, 3) HMMRATAC. ENCODE recommends that number of peaks in each sample be greater than 150,000, though values greater than 100,000 are acceptable. Data from `r sum(!is.na(fripStats$BAMPeaks))` samples is plotted below. The mean number of peaks for MACS3 PE Peaks is `r signif(mean(fripStats$BAMPeaks, na.rm = TRUE ),3)` (SD = `r signif(sd(fripStats$BAMPeaks, na.rm = TRUE ),3)`), for MACS3 TA Peaks is `r signif(mean(fripStats$TAPeaks, na.rm = TRUE ),3)` (SD = `r signif(sd(fripStats$TAPeaks, na.rm = TRUE ),3)`) and for MACS3 HMMRATAC Peaks is `r signif(mean(fripStats$HMMRATACPeaks, na.rm = TRUE ),3)` (SD = `r signif(sd(fripStats$HMMRATACPeaks, na.rm = TRUE ),3)`). The plots below contain data from `r sum(!is.na(fripStats$BAMPeaks))` samples. 
 
 ```{r numpeaks, results=FALSE}
-data.frame(fripStats$MACS2TagAlignPeaks, fripStats$MACS2PEPeaks)%>%
+data.frame(fripStats$TAPeaks, fripStats$BAMPeaks, fripStats$HMMRATACPeaks)%>%
   melt() %>%
   ggplot(aes(y = value, x=variable))+
       geom_violin(fill = "grey80", scale='width')+
@@ -493,22 +504,22 @@ data.frame(fripStats$MACS2TagAlignPeaks, fripStats$MACS2PEPeaks)%>%
       labs(x = "Sequencing batch", y = "Number of peaks (100000s)")+
       stat_summary(fun="median", 
                  geom="point", color="white")+
-      geom_hline(yintercept = c(150000, 100000), color = c('black', colorBlindGrey8[2]))+
-      scale_x_discrete(labels = c("MACS2: Shifted tagalign", "MACS2: PE"))+
+      geom_hline(yintercept = c(150000, 100000), color = c('black', colorBlindGrey8[3]))+
+      scale_x_discrete(labels = c("MACS3: Shifted tagalign", "MACS3: PE", "MACS3: HMMRATAC"))+
 	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))+
       theme_bw()
 
 ```
 
-```{rviolinPlotPeaks}
+```{r rviolinPlotPeaks,fig.height = 16 , fig.width = 8}
 p<-NULL
 x=1
 for (i in 1:3){
-    p[[x]]<-data.frame(fripStats$MACS2TagAlignPeak, pheno[,cols[i]]) %>%
+    p[[x]]<-data.frame(fripStats$TAPeaks, pheno[,cols[i]]) %>%
       ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
       geom_violin(scale='width')+
       geom_boxplot(width=0.05, fill='black')+
-      labs(x = cols[i+3], y = "Peaks (Shift)")+
+      labs(x = cols[i+3], y = "Number of peaks TA (100000s)")+
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
@@ -517,11 +528,24 @@ for (i in 1:3){
             axis.title = element_text(size=10), legend.position = "none")+
 	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
     
-   p[[x+1]]<-data.frame(fripStats$MACS2PEPeaks, pheno[,cols[i]]) %>%
+   p[[x+1]]<-data.frame(fripStats$BAMPeaks, pheno[,cols[i]]) %>%
       ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
       geom_violin(scale='width')+
       geom_boxplot(width=0.05, fill='black')+
-      labs(x = cols[i+3], y = "Peaks (PE)")+
+      labs(x = cols[i+3], y = "Number of peaks PE (100000s)")+
+      stat_summary(fun="median", 
+                 geom="point", color="white")+
+      theme_bw()+
+      theme(axis.text.y = element_text(angle = 90), 
+            axis.text = element_text(size = 7),
+            axis.title = element_text(size=10), legend.position = "none")+
+	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
+   
+   p[[x+2]]<-data.frame(fripStats$HMMRATACPeaks, pheno[,cols[i]]) %>%
+      ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
+      geom_violin(scale='width')+
+      geom_boxplot(width=0.05, fill='black')+
+      labs(x = cols[i+3], y = "Number of peaks HMMRATAC (100000s)")+
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
@@ -530,39 +554,41 @@ for (i in 1:3){
             axis.title = element_text(size=10), legend.position = "none")+
 	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
         
-    x<-x+2
-  }
+    x<-x+3
 }
-grid.arrange(grobs = p,ncol=2)
+grid.arrange(grobs = p,ncol=3)
 ```
 
-Peak calling will be affected by the background noise of a sample, and the success of the ATAC enrichment. Let's compare some of our periodicity statistics agains the number of peaks. 
+Peak calling will be affected by the background noise of a sample, and the success of the ATAC enrichment. Let's compare some of our periodicity statistics against the number of peaks. 
 
+#### 3.1.1 MACS3 TA peaks
+
+Below, results from calling peaks using MACS3 TA mode are shown. 
 ```{r, fig.height = 16 , fig.width = 8}
 p<-NULL
 p[[1]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=propNucleosomesAll[,1]))+
+  ggplot(aes(x=fripStats$TAPeaks, y=propNucleosomesAll[,1]))+
     geom_point()+
     theme_bw()+
     labs(x= "Number of Peaks (x10000)", y = "Proportion nucleosome free")+
 	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
 
 p[[2]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=propNucleosomesAll[,2]))+
+  ggplot(aes(x=fripStats$TAPeaks, y=propNucleosomesAll[,2]))+
     geom_point()+
     theme_bw()+
     labs(x= "Number of Peaks (x10000)", y = "Proportion mono-nucleosome") +
 	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
 
 p[[3]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=diptestStatsAll[,"D"]))+
+    ggplot(aes(x=fripStats$TAPeaks, y=diptestStatsAll[,"D"]))+
     geom_point()+
     theme_bw()+
     labs(x= "Number of Peaks (x10000)", y = "Hartigans Test Statistic") +
 	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
 
 p[[4]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$MACS2TagAlignPeak, y=diptestStatsAll[,"p.value"]))+
+    ggplot(aes(x=fripStats$TAPeaks, y=diptestStatsAll[,"p.value"]))+
     geom_point()+
     theme_bw()+
     labs(x= "Number of Peaks (x10000)", y = "Hartigans Test P") +
@@ -570,26 +596,26 @@ p[[4]]<-data.frame(diptestStatsAll)%>%
 
 
 p[[5]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$FripMACS2TagAlign, y=propNucleosomesAll[,1]))+
+  ggplot(aes(x=fripStats$FripMACS3TagAlign, y=propNucleosomesAll[,1]))+
     geom_point()+
     theme_bw()+
     labs(x= "FRIP", y = "Proportion nucleosome free")
 
 p[[6]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$FripMACS2TagAlign, y=propNucleosomesAll[,2]))+
+  ggplot(aes(x=fripStats$FripMACS3TagAlign, y=propNucleosomesAll[,2]))+
     geom_point()+
     theme_bw()+
     labs(x= "FRIP", y = "Proportion mono-nucleosome")
 
 
 p[[7]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$FripMACS2TagAlign, y=diptestStatsAll[,"D"]))+
+    ggplot(aes(x=fripStats$FripMACS3TagAlign, y=diptestStatsAll[,"D"]))+
     geom_point()+
     theme_bw()+
     labs(x= "FRIP", y = "Hartigans Test Statistic")
 
 p[[8]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$FripMACS2TagAlign, y=diptestStatsAll[,"p.value"]))+
+    ggplot(aes(x=fripStats$FripMACS3TagAlign, y=diptestStatsAll[,"p.value"]))+
     geom_point()+
     theme_bw()+
     labs(x= "FRIP", y = "Hartigans Test P")
@@ -599,15 +625,141 @@ grid.arrange(grobs = p, ncol=2, nrow = 4)
 
 ```
 
+#### 3.1.2 MACS3 PE peaks
+
+Below, results from calling peaks using MACS3 PE mode are shown. 
+```{r, fig.height = 16 , fig.width = 8}
+p<-NULL
+p[[1]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$BAMPeaks, y=propNucleosomesAll[,1]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Proportion nucleosome free")+
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[2]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$BAMPeaks, y=propNucleosomesAll[,2]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Proportion mono-nucleosome") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[3]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$BAMPeaks, y=diptestStatsAll[,"D"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test Statistic") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[4]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$BAMPeaks, y=diptestStatsAll[,"p.value"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test P") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+
+p[[5]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$FripMACS3PE, y=propNucleosomesAll[,1]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Proportion nucleosome free")
+
+p[[6]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$FripMACS3PE, y=propNucleosomesAll[,2]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Proportion mono-nucleosome")
+
+
+p[[7]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$FripMACS3PE, y=diptestStatsAll[,"D"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Hartigans Test Statistic")
+
+p[[8]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$FripMACS3PE, y=diptestStatsAll[,"p.value"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Hartigans Test P")
+
+
+grid.arrange(grobs = p, ncol=2, nrow = 4)
+
+```
+
+#### 3.1.3 MACS3 HMMRATAC peaks
+
+Below, results from calling peaks using MACS3 HMMRATAC mode are shown. 
+```{r, fig.height = 16 , fig.width = 8}
+p<-NULL
+p[[1]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$HMMRATACPeaks, y=propNucleosomesAll[,1]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Proportion nucleosome free")+
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[2]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$HMMRATACPeaks, y=propNucleosomesAll[,2]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Proportion mono-nucleosome") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[3]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$HMMRATACPeaks, y=diptestStatsAll[,"D"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test Statistic") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+p[[4]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$HMMRATACPeaks, y=diptestStatsAll[,"p.value"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test P") +
+	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
+
+
+p[[5]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$FripMACS3HMMRATAC, y=propNucleosomesAll[,1]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Proportion nucleosome free")
+
+p[[6]]<-data.frame(propNucleosomesAll)%>%
+  ggplot(aes(x=fripStats$FripMACS3HMMRATAC, y=propNucleosomesAll[,2]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Proportion mono-nucleosome")
+
+
+p[[7]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$FripMACS3HMMRATAC, y=diptestStatsAll[,"D"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Hartigans Test Statistic")
+
+p[[8]]<-data.frame(diptestStatsAll)%>% 
+    ggplot(aes(x=fripStats$FripMACS3HMMRATAC, y=diptestStatsAll[,"p.value"]))+
+    geom_point()+
+    theme_bw()+
+    labs(x= "FRIP", y = "Hartigans Test P")
+
+
+grid.arrange(grobs = p, ncol=2, nrow = 4)
+
+```
 
 ### 3.2 Specificity of reads in peaks
 
 Plot of the fraction of reads in peaks called for that sample. These plots give a good indication of how "enriched" the sample is and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads. According to the ENCODE standard processing pipeline for ATAC-seq the FRiP score should be > 0.3, though values greater than 0.2 are acceptable. We will not filter on this metric yet, but return to it once we have called peaks at the group level. 
 
-
 ```{r readsinpeaks}
 # plot 
-data.frame(fripStats$FripMACS2TagAlign, fripStats$FripMACS2PE)%>%
+data.frame(fripStats$FripMACS3TagAlign, fripStats$FripMACS3PE, fripStats$FripMACS3HMMRATAC)%>%
   melt() %>%
   ggplot(aes(y = value, x=variable))+
       geom_violin(fill = "grey80", scale='width')+
@@ -615,31 +767,60 @@ data.frame(fripStats$FripMACS2TagAlign, fripStats$FripMACS2PE)%>%
       labs(x = "Sequencing batch", y = "Fraction reads in peaks")+
       stat_summary(fun="median", 
                  geom="point", color="white")+
-      geom_hline(yintercept = c(0.3, 0.2), color = c('black', colorBlindGrey8[2]))+
-      scale_x_discrete(labels = c("MACS2: Shifted tagalign", "MACS2: PE"))+
+      geom_hline(yintercept = c(0.3, 0.2), color = c('black', colorBlindGrey8[3]))+
+      scale_x_discrete(labels = c("MACS3: Shifted tagalign", "MACS3: PE", "MACS3: HMMRATAC"))+
       theme_bw()
 
 # plot frip against number of peaks
 p=NULL
-title<-c('MACS2: Shifted Tagalign', 'MACS2: PE')
-for (x in c(2, 3)){
-  y<-x+6
+title<-c('MACS3: TA', 'MACS3: PE', 'MACS3: HMMRATAC')
+for (x in c(2,3,4)){
+  y<-x+8
   z<-x*2
   p[[x]]<-ggplot(fripStats, aes(x=fripStats[,z], y = fripStats[,y], colour = pheno$fraction))+
     geom_point()+
     theme_bw()+
-    labs(title = title[x-1], x = "Number of peaks", y = "Fraction reads in peaks")+
+    labs(title = title[x-1], x = "Number of peaks (100000s)", y = "Fraction reads in peaks")+
     scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
+    scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))+
     theme(legend.title = element_blank(), 
           legend.position = 'bottom')
-  p[[4]]<-get_legend(p[[x]]) #get the legend to add as a common legend
-  p[[x]]<-p[[x]]+theme(legend.position = 'none')
-}
-p<-compact(p) # remove the null item
 
-grid.arrange(grobs = p, ncol=2, nrow = 2, 
-             layout_matrix = rbind(c(1,2), c(3,3)),
-             widths = c(2.7, 2.7), heights = c(2.5, 0.5))
+  #p[[5]]<-get_legend(p[[x]]) #get the legend to add as a common legend
+  #p[[x]]<-p[[x]]+theme(legend.position = 'none')
+}
+p<-p[2:5] # remove the null item
+p <- c()
+p[[1]]<-ggplot(fripStats, aes(x=fripStats[,4], y = fripStats[,10], colour = pheno$fraction))+
+    geom_point()+
+    theme_bw()+
+    labs(title = title[1], x = "Number of peaks (100000s)", y = "Fraction reads in peaks")+
+    scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
+    scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))+
+    theme(legend.title = element_blank(), 
+          legend.position = 'bottom')+theme(legend.position = 'none')
+p[[2]]<-ggplot(fripStats, aes(x=fripStats[,6], y = fripStats[,11], colour = pheno$fraction))+
+    geom_point()+
+    theme_bw()+
+    labs(title = title[2], x = "Number of peaks (100000s)", y = "Fraction reads in peaks")+
+    scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
+    scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))+
+    theme(legend.title = element_blank(), 
+          legend.position = 'bottom')+theme(legend.position = 'none')
+p[[3]]<-ggplot(fripStats, aes(x=fripStats[,8], y = fripStats[,12], colour = pheno$fraction))+
+    geom_point()+
+    theme_bw()+
+    labs(title = title[3], x = "Number of peaks (100000s)", y = "Fraction reads in peaks")+
+    scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
+    scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))+
+    theme(legend.title = element_blank(), 
+          legend.position = 'bottom')
+p[[4]]<-get_legend(p[[3]])
+p[[3]]<-p[[3]]+theme(legend.position = 'none')
+grid.arrange(grobs = p, ncol=3, nrow = 2,layout_matrix = rbind(c(1,2,3), c(4,4,4)),widths = c(2.7, 2.7,2.7), heights = c(2.5, 0.5))
+#grid.arrange(grobs = p, ncol=2, nrow = 3, 
+            # layout_matrix = rbind(c(1,2), c(3,3)),
+           #  widths = c(2.7, 2.7), heights = c(2.5, 0.5))
 ```
 
 
@@ -647,21 +828,24 @@ grid.arrange(grobs = p, ncol=2, nrow = 2,
 
 ```{r samplePASS}
 # generate a txt file of passed samples
-QCPASS<-cbind(mergeStats$overall_alignment_rate > alignRate, #alignment rate 
+QCPASS<-cbind(mergeStats$overall_alignment_rate > alignThres, #alignment rate 
               fripStats$BAMTotalReads > uniqReads*10^6, #total filtered & aligned reads
               eMetrics$NRF > nrfThres, #encode
               eMetrics$PBC1 > pbc1Thres, #encode
               eMetrics$PBC2 > pbc2Thres, #encode,
-              #propNucleosomesAll[,1] > nfrThres, #fractions nucleosome free 
+              #propNucleosomesAll[,1] > nucfThres, #fractions nucleosome free 
               #propNucleosomesAll[,2] > monoThres, #fractions mononucleosome 
               #decreasingProps[,1],#periodicity
-              #fripStats$MACS2TagAlignPeak > peakThres, # number of peaks
-              #fripStats$FripMACS2TagAlign > fripThres #frip
+              fripStats$TAPeaks > peakThres, # number of peaks
+              fripStats$FripMACS3TagAlign > fripThres, #frip
+              fripStats$BAMPeaks > peakThres, # number of peaks
+              fripStats$FripMACS3PE > fripThres, #frip
+              fripStats$HMMRATACPeaks > peakThres, # number of peaks
+              fripStats$FripMACS3HMMRATAC > fripThres, #frip
               diptestStatsAll[,"p.value"] < dipPThres #multimodality
               ) 
 
-colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2", 
-                    "SignifPeriodicity")
+colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NPeaks_TA", "FRIP_TA","NPeaks_PE", "FRIP_PE","NPeaks_H", "FRIP_H","SignifPeriodicity")
 rownames(QCPASS)<-processSum$sampleID
 
 write.csv(cbind(pheno, QCPASS), file = file.path(metaDir, "/passStage1Status.txt"))
@@ -710,10 +894,13 @@ corMergeStats<-cbind(rowMeans(mergeStats[,c(1,4)]),rowMeans(mergeStats[,c(2,5)])
                      mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))],
                      propNucleosomesAll[,c(1,2)],
                      diptestStatsAll[,2],
-                     fripStats$MACS2TagAlignPeak,
-                     fripStats$FripMACS2TagAlign) 
+                     fripStats$TAPeaks,
+                     fripStats$FripMACS3TagAlign,
+                     fripStats$BAMPeaks,
+                     fripStats$FripMACS3PE,
+                     fripStats$HMMRATACPeaks,
+                     fripStats$FripMACS3HMMRATAC) 
 colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
-                            colnames(mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]),  "PropNRF", "PropMono", "DipP", "NPeaks", "FRIP")
+                            colnames(mergeStats[,c((ncol(mergeStats)-2):ncol(mergeStats))]),  "PropNRF", "PropMono", "DipP", "NPeaks_TA", "FRIP_TA","NPeaks_PE", "FRIP_PE","NPeaks_H", "FRIP_H")
 corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
 corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black')
-```

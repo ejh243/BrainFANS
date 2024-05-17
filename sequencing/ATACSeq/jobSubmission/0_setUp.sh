@@ -13,11 +13,11 @@
 ## ==========================================================================================================##
 ##                               ATAC-seq pipeline STEP 0: Set up                                            ##
 ## ==========================================================================================================##
-## EXECUTION: sbatch ./sequencing/ATACSeq/jobSubmission/0_setUp.sh <project name>                            ||
+## EXECUTION: sbatch ./sequencing/ATACSeq/jobSubmission/0_setUp.sh <project directory>                       ||
 ## - execute from scripts directory                                                                          ||
 ##                                                                                                           ||
 ## INPUTS:                                                                                                   || 
-## $1 -> <project name> name of project to set up pipeline for.                                              || 
+## $1 -> <project directory> path to project's directory                                                     || 
 ##                                                                                                           ||
 ## DESCRIPTION: This script sets up the required directories, libraries and modules to run the ATAC-seq      || 
 ## pipeline. Will check the config file for the project and the initial paths required for the first steps of|| 
@@ -36,11 +36,11 @@
 echo Job started on:
 date -u
 
-
 LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_JOB_ID}
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACSetUpS0-${SLURM_JOB_ID}* $LOG_DIR
+
 
 ## ============ ##
 ##    CHECKS    ##
@@ -50,19 +50,19 @@ mv ATACSetUpS0-${SLURM_JOB_ID}* $LOG_DIR
 
 ## Check if config file for input project exist
 
-if [[ -s "/lustre/projects/Research_Project-MRC190311/ATACSeq/$1/config.txt" ]]
+if [[ -s "$1/config.txt" ]]
 then
-  source "/lustre/projects/Research_Project-MRC190311/ATACSeq/$1/config.txt"
-  echo "Config file for $1 project found."
+  source "$1/config.txt"
+  echo "Config file for project $PROJECT  found."
 else 
   { echo "Config file for chosen project does not exist or is in the wrong directory. Please create this first." ; exit 1; }  
 fi
 
 ## Check if R config file for input project exist
 
-if [[ -s "/lustre/projects/Research_Project-MRC190311/ATACSeq/$1/config.r" ]]
+if [[ -s "$1/config.r" ]]
 then
-  echo "R config file for $1 project found."
+  echo "R config file for project $PROJECT found."
 else 
   { echo "R config file for chosen project does not exist or is in the wrong directory. Please create this first." ; exit 1; }  
 fi
@@ -110,65 +110,51 @@ done
 
 ## MODULES ##
 
+## Load required modules ##
+
+module load ${ACVERS}
+module load ${PVERS}
+module load ${RVERS}
+
+
 ## Check that the SAMstats environment exists and create it if not
 
-module load Anaconda3
-if [ -d ${ENVDIR} ]
+if [[ -d ${ENVDIR} ]]
 then 
-	echo "ENCODEQC environment exists"
-  source ${CONDAENV}
-  conda activate ${ENVDIR}
-  echo "List of packages included in conda environment is output in project directory"
-  conda list > "/lustre/projects/Research_Project-MRC190311/ATACSeq/$1/condaEnv.txt"
-  conda deactivate
+	echo "${PROJECT} conda environment exists"
 else
-	echo "ENCODEQC environment does not exist"
+	echo "${PROJECT} environment does not exist"
 	echo "Creating environment"
   source ${CONDAENV}
-	conda create --prefix ${ENVDIR}
-	conda activate ${ENVDIR}
-	echo "Installing SAMstats"
-	conda install -c bioconda samstats
-	conda deactivate
-	echo "ENCODEQC environment has been created and SAMstats installed"
+	conda env create --name ${PROJECT} --file ${CONDAFILE}
+  conda deactivate
+	echo "${PROJECT} conda environment has been created"
 fi
 
 ## Check that pip environment exist and create it if not
-module load Python/3.9.6-GCCcore-11.2.0-bare
 
 if [[ -d ${PIPENV} ]]
 then
-  echo "Pip environment exists."
-  source ${PIPENV}/bin/activate
-  echo "List of packages included in pip environment is output in project directory"
-  pip list > "/lustre/projects/Research_Project-MRC190311/ATACSeq/$1/pipEnv.txt"
-  deactivate
+  echo "${PROJECT} pip environment exists."
 else
   echo "Pip environment does not exist."
   echo "Creating environment."
   python -m venv ${PIPENV}
   source ${PIPENV}/bin/activate
   echo "Installing basic libraries needed in pipeline"
-  pip install Cython
-  pip install cykhash
-  pip install numpy
-  pip install hmmlearn
-  pip install scikit-learn
-  pip install scipy
-  pip install macs3
+  python3 -m pip install -r ${PIPFILE}
   deactivate
 fi
 
-module purge
-
 echo "R v4.2 is required and will be loaded if found"
-## Check that required R version 4.2 exist
-module load R/4.2.1-foss-2022a
 
 echo "R packages will be checked and installed if not found."
-## Check that required R libraries are installed
-Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/setUpRenv.r ${USER}
 
-echo "Set up for project $1 complete."
+echo "R libraries will be installed in ${RLIB}"
+
+## Check that required R libraries are installed
+Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/intallLibraries.r ${RLIB}
+
+echo "Set up for project ${PROJECT} complete."
   
   

@@ -13,12 +13,12 @@
 ## ===================================================================================================================##
 ##                               ATAC-seq pipeline STEP 1: Pre-analysis                                               ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/1_batchRunPreAnalysis.sh <config file> <option>      ||
+## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/1_batchRunPreAnalysis.sh <project directory> <option>||
 ## - execute from scripts directory                                                                                   ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
-## $1 -> <config file> directory of config file for project analysed                                                  ||
+## $1 -> <project directory> directory of config file for project analysed                                            ||
 ## $2 -> <option> Specify step to run: FASTQC, TRIM, ALIGN or ENCODE. Can be combined. Default is to                  ||
 ## run all                                                                                                            ||
 ##                                                                                                                    ||
@@ -39,7 +39,7 @@ echo Job started on:
 date -u
 
 ## load config file provided on command line related to the specified project
-source $1
+source "${1}/config.txt"
 echo "Loading config file for project: " ${PROJECT}
 
 ## check directories
@@ -77,15 +77,15 @@ then
     
     ## Sample(s) specified in by array number(s) from command line
     sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
-    toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}'*'))
-    
+    toProcess=$(find ${RAWDATADIR} -maxdepth 1 -name ${sampleID}'*')
     ## sort the toProcess array so that R1 and R2 are consecutive 
     IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
     toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
     unset IFS 
-    echo ${toProcess}
-    echo "R1 file found is: " $( basename ${toProcess[0]} ) 
-    echo "Sample to be used is: " ${sampleID} 
+    
+    echo "R1 file found is: " $(basename ${toProcess[0]} )
+    
+    echo "Current sample: " ${sampleID} 
     
     ## If only $1 is specified, all steps will be run
     ## option FASTQC: run sequencing QC on raw reads files        
@@ -128,13 +128,13 @@ then
   	then
       echo "Running step 1.4 of ATAC-seq pipeline: ENCODE"
   		module purge
-  		module load SAMtools
-  		module load BEDTools/2.27.1-foss-2018b ##necessary to specify earlier BEDTools version
+  		module load BEDTools/2.29.2-GCC-9.3.0
+      module load SAMtools/1.11-GCC-9.3.0
           
       ## load conda env for samstats
-      module load Anaconda3
-      source $CONDAENV
-      conda activate $ENVDIR
+      module load ${ACVERS}
+      source ${CONDAENV}
+      conda activate ${ENVDIR}
 
       cd ${SCRIPTDIR}
       sh ./ATACSeq/preprocessing/calcENCODEQCMetrics.sh ${sampleID}
