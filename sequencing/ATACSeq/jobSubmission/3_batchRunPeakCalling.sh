@@ -13,12 +13,12 @@
 ## ===================================================================================================================##
 ##                             ATAC-seq pipeline STEP 3: Sample Peak Calling                                          ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/3_batchRunPeakCalling.sh <project name> <option>     ||
+## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/3_batchRunPeakCalling.sh <project directory> <option>||
 ## - execute from scripts directory                                                                                   ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
-## $1 -> <project name> directory to config file for the corresponding project                                        ||
+## $1 -> <project directory> directory to config file for the corresponding project                                   ||
 ## $2 -> <option> Specify step to run: SHIFT, PEAKS, FRIP. Can be combined. Default is to run all                     ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script performs the core analysis of the ATAC-seq pipeline, which is calling peaks at sample     ||
@@ -35,7 +35,7 @@ echo Job started on:
 date -u
 
 ## load config file provided on command line related to the specified project
-source "/lustre/projects/Research_Project-MRC190311/ATACSeq/${1}/config.txt"
+source "${1}/config.txt"
 echo "Loading config file for project: " $1
 echo "Project directory is: " $DATADIR
 
@@ -89,13 +89,13 @@ then
   fi
 fi
 
-## option PEAKS: peak calling is performed in two ways using MACS3: single-end and paired-end 
+## option PEAKS: peak calling is performed using MACS3 in paired-end 
 if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
 
 	module purge
-	module load Python/3.9.6-GCCcore-11.2.0-bare
-  source /lustre/home/${USER}/pythonEnv/bin/activate
+	module load ${PVERS}
+  source ${PIPENV}/bin/activate
 	module load BEDTools
  
   echo "Step 3.2 PEAKS started. Aligned reads will be used for peak calling using MACS3 PE and TA"
