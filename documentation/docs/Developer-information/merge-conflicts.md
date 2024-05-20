@@ -147,7 +147,7 @@ In the same way, `new-file.txt` on the master branch is seen as the newest versi
 
 ## A non-functioning merge example
 
-What happens when git *doesn't* know which file to keep. Earlier, we said that git knows 'when' the file was changed. The reason for the inverted commas here is to bring attention to the fact that 'when' isn't derived from a timestamp (or something similar). Instead, all git knows is the contents of the commit history for the repository. Git doesn't actaully know the exact time a file was modified (and even if it did, that wouldn't help things), but instead knows the history of commits for each file. 
+What happens when git *doesn't* know which file to keep. Earlier, we said that git knows 'when' the file was changed. The reason for the inverted commas here is to bring attention to the fact that 'when' isn't derived from a timestamp (or something similar). Instead, all git knows is the contents of the commit history for the repository. Git doesn't actually know the exact time a file was modified (and even if it did, that wouldn't help things), but instead knows the history of commits for each file. 
 
 A merge conflict arrises when the commit history for two versions of the same file no longer line up with each other. Let's create one such conflict now:
 
@@ -184,7 +184,7 @@ f57f4b0 add second line
 ef44a5f initial commit
 ```
 
-Our commit histories no longer line up. On the `master` branch, our fourth commit to `file.txt` is `5495b54`, whilst on `new-branch` it is `3381285`. Git no longer knows which version of `file.txt` is 'newer'. Let's see this in action by attempting a merge.
+Our commit histories no longer line up. On the `master` branch, our fourth commit to `file.txt` is `5495b54`, whilst on `new-branch` it is `3381285`. Not only this, but both commits change the same line (line 3) in the file. Git no longer knows which version of `file.txt` is 'newer' and will ask the user for help. Note that if we changed different lines in each branch, this merge conflict would not arise. Let's see the conflict in action by attempting a merge like before.
 
 ```bash
 git checkout master

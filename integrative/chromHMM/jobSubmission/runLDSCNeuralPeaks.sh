@@ -23,10 +23,7 @@ date -u
 ## NOTE: Do not store confidential information in this file use the config file
 ######
 
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
 
-cd $SLURM_SUBMIT_DIR
 
 module purge
 module load BEDOPS

@@ -6,6 +6,5 @@ export RAWDATADIR=${DATADIR}/1_raw
 export GDSDIR=${DATADIR}/2_gds
 export NORMDIR=${DATADIR}/3_normalised
 export SNPDIR=<path to SNP data >
-export RPATH="path/to/BrainFANS/functionsR"
 
 export REFDIR=<path to references folder>

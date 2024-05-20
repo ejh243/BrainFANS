@@ -19,10 +19,7 @@ echo Job started on:
 date -u
 
 ## needs to be executed from the scripts folder
-echo "Changing Folder to: "
-echo $SLURM_SUBMIT_DIR
 
-cd $SLURM_SUBMIT_DIR
 
 ## check chrmm project and input data project
 INTPROJECT=$1
@@ -57,7 +54,6 @@ fi
 echo
 
 #-----------------------------------------------------------------------#
-
 cd $SLURM_SUBMIT_DIR
 
 echo

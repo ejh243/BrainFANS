@@ -18,20 +18,43 @@ library(pheatmap)
 library(pander)
 library(RColorBrewer)
 library(kableExtra)
+library(data.table)
 
-
-source(args[3]) ### change the content of this file to run QC with different thresholds
 
 dataDir <- args[2]
 setwd(dataDir) 
 
+refDir <-args[3]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
+configFile <- paste0(dataDir, "/config.r")
+epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 #load(qcData)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
+
+source(configFile)
+
+arrayType <- toupper(arrayType)
+
+
+# load manifests
+if(arrayType == "V2"){
+manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
+manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
+print("loaded EpicV2 manifest")
+}
+
+if(arrayType == "HM450K"){
+load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
+manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+colnames(manifest) <- c("CHR", "Infinium_Design_Type")
+manifest$CHR <- paste0("chr", manifest$CHR)
+print("loaded hm450k manifest")
+rm(probeAnnot)
+}
 
 ## filter samples
 QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
@@ -55,8 +78,12 @@ colnames(ctCounts)<-c("Profiled", "PassQCStage1")
 
 rawbetas<-gfile[,, node = "betas"]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
-auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
-rawbetas<-rawbetas[auto.probes,]
+if(arrayType == "V2" | arrayType == "HM450K"){
+    auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
+  } else {
+    auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
+  }
+  rawbetas<-rawbetas[auto.probes,]
 
 cellTypes<-sort(unique(QCmetrics$Cell_Type))
 cellCols<-brewer.pal(n = length(cellTypes), name = "Paired")

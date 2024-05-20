@@ -28,20 +28,25 @@ JOBNAME="QCDNAdata"
 cd $(dirname $0)/../../../..
 
 ## needs to be executed from the scripts folder
-echo "Changing Folder to: " $SLURM_SUBMIT_DIR
-cd $SLURM_SUBMIT_DIR
 
 ## format paths in config file with project name
 echo "Loading config file for project: " $1
 export PROJECT=$1
+
 # the second input should be config file
 source $2 || exit 1
 RCONFIG=$3
 
-module load Pandoc
-module load R/3.6.3-foss-2020a
 
-Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR} ${RPATH}
+## load modules
+module load Pandoc
+module load $RVERS   # load specified R version
+echo $RVERS
+
+Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR}
+
+chmod 755 ${DATADIR}/2_gds/raw.gds
+
 
 mkdir -p ${GDSDIR}/QCmetrics
 
@@ -52,15 +57,19 @@ Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html'
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
 
-Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${RCONFIG}
+Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
 
-
-Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${RCONFIG} $USER
+Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
 
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
+chmod 755 ${DATADIR}/2_gds/rawNorm.gds
+
+mkdir -p ${GDSDIR}/QCmetrics/CETYGO
+
+Rscript DNAm/preprocessing/CETYGOdeconvolution.r ${DATADIR}
 
 ## print finish date and time
 echo Job finished on:

@@ -4,7 +4,7 @@ This pull request will...
 
 ## Issue ticket number
 
-This pull request is to address issue: #[number].
+This pull request is to address issue: #number.
 
 ## Type of pull request
 
