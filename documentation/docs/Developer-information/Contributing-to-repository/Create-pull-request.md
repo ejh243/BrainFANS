@@ -55,7 +55,7 @@ error: Failed to merge in the changes.
 Patch failed at commit commit-name
 ```
 
-If you do get this error, enter the following instead:
+If you do get this error, enter the following:
 
 ```bash
 # Discard the rebase
