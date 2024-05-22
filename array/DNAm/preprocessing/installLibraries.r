@@ -18,6 +18,11 @@ source(args[1])
 ##
 ##---------------------------------------------------------------------#
 
+args <- commandArgs(trailingOnly = TRUE)
+dataDir <- args[1]
+
+configFile <- paste0(dataDir, "/config.r")
+source(configFile)
 
 #---------------------------------------------------------------------#
 # INSTALL BIOCONDUCTOR
