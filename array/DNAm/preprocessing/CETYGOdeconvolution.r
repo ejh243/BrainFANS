@@ -55,7 +55,7 @@ sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), st
 if(!"Basename" %in% colnames(sampleSheet)){
 	sampleSheet$Basename<-paste(sampleSheet$Chip.ID, sampleSheet$Chip.Location, sep = "_")
 }
-
+sampleSheet$Cell_Type <- as.factor(sampleSheet$Cell_Type)
 
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
@@ -219,7 +219,7 @@ adultBloodCETYGO <- function(betas){
 # for sorted Brain tissue run on each cell type individually
 if(tissueType == "BRAIN" & cellSorted == "TRUE"){
 
-  for(cell in sampleSheet$Cell_Type){
+  for(cell in levels(sampleSheet$Cell_Type)){
       cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
       cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
       adultBrainCETYGO(cellBetas, cell)
