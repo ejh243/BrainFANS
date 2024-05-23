@@ -63,8 +63,13 @@ In such cases, you will need to stash your changes before switching branches.
 To do this, enter the following commands into the terminal.
 
 ```bash
+# Stash your changes
 git stash push
+
+# Move over to your development branch without needing to commit your changes
 git checkout your-branch-name
+
+# Bring your changes back to your workspace from the stash
 git stash pop
 ```
 
