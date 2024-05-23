@@ -12,12 +12,13 @@ source(args[1])
 ##
 ## Purpose of script: installs all packages required for QC pipeline steps.
 ##
-## Author: Rhiannon Haigh
-##
-## Date Created: 08/2023
-##
 ##---------------------------------------------------------------------#
 
+args <- commandArgs(trailingOnly = TRUE)
+dataDir <- args[1]
+
+configFile <- paste0(dataDir, "/config.r")
+source(configFile)
 
 #---------------------------------------------------------------------#
 # INSTALL BIOCONDUCTOR
