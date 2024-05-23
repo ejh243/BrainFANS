@@ -45,12 +45,24 @@ git branch # You should see a '*' next to 'master'
 # Clears any commits you have made (this does not delete your hard work)
 git reset --soft origin/master
 
-# If you are on git version 2.6 or greater:
+# Next move over to the branch you made in step 3
 git checkout your-branch-name
+```
 
-# If you are on git version 2.5 or lower, the above will not work. Instead
-# you will need to stash your changes before moving over to your devlopment
-# branch
+The above command may not work if your changed files will be overwritten due to
+the checkout. In such cases git will throw the error message:
+
+```text
+error: Your local changes to the following files would be overwritten by checkout:
+    somedir/somefile.extension
+Please, commit your changes or stash them before you can switch branches.
+Aborting
+```
+
+In such cases, you will need to stash your changes before switching branches.
+To do this, enter the following commands into the terminal.
+
+```bash
 git stash push
 git checkout your-branch-name
 git stash pop
