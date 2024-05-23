@@ -45,12 +45,12 @@ git branch # You should see a '*' next to 'master'
 # Clears any commits you have made (this does not delete your hard work)
 git reset --soft origin/master
 
-# Next move over to the branch you made in step 3
+# Move over to the branch you made in step 3
 git checkout your-branch-name
 ```
 
-The above command may not work if your changed files will be overwritten due to
-the checkout. In such cases git will throw the error message:
+The above command will not work if your changed files will be overwritten due 
+to the checkout. In such cases, git will throw the following error message:
 
 ```text
 error: Your local changes to the following files would be overwritten by checkout:
