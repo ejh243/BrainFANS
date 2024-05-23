@@ -2,9 +2,7 @@
 ##INSTALL LIBRARIES SCRIPT
 ##Installs all R packages required DNAm QC pipeline
 #Add in additional lines for Alice's errors... Git and config sourcing?
-args<-commandArgs(trailingOnly = TRUE)
 
-source(args[1])
 
 ##---------------------------------------------------------------------#
 ##
