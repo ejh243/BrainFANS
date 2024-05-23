@@ -39,8 +39,21 @@ If you have skipped ahead and already made commits to the master branch
 accidently, please type the following into the terminal:
 
 ```bash
+# Check you are indeed on the master branch
+git branch # You should see a '*' next to 'master'
+
 # Clears any commits you have made (this does not delete your hard work)
-git reset --soft HEAD
+git reset --soft origin/master
+
+# If you are on git version 2.6 or greater:
+git checkout your-branch-name
+
+# If you are on git version 2.5 or lower, the above will not work. Instead
+# you will need to stash your changes before moving over to your devlopment
+# branch
+git stash push
+git checkout your-branch-name
+git stash pop
 ```
 
 ## Making commits
