@@ -70,8 +70,8 @@ install.packages(setdiff(pkgs_pred, rownames(installed.packages())),repos = "htt
 
 # load devtools to install from GitHub
 library(devtools)
-install_github("ds420/CETYGO")
-install_github("EpigeneticsExeter/cdegUtilities")
+install_github("ds420/CETYGO", quiet=TRUE)
+install_github("EpigeneticsExeter/cdegUtilities", quiet=TRUE)
 
 
 ## Check all packages installed successfully ##
