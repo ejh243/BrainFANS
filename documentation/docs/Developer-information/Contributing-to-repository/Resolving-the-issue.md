@@ -39,8 +39,38 @@ If you have skipped ahead and already made commits to the master branch
 accidently, please type the following into the terminal:
 
 ```bash
+# Check you are indeed on the master branch
+git branch # You should see a '*' next to 'master'
+
 # Clears any commits you have made (this does not delete your hard work)
-git reset --soft HEAD
+git reset --soft origin/master
+
+# Move over to the branch you made in step 3
+git checkout your-branch-name
+```
+
+The above command will not work if your changed files will be overwritten due 
+to the checkout. In such cases, git will throw the following error message:
+
+```text
+error: Your local changes to the following files would be overwritten by checkout:
+    somedir/somefile.extension
+Please, commit your changes or stash them before you can switch branches.
+Aborting
+```
+
+In such cases, you will need to stash your changes before switching branches.
+To do this, enter the following commands into the terminal.
+
+```bash
+# Stash your changes
+git stash push
+
+# Move over to your development branch without needing to commit your changes
+git checkout your-branch-name
+
+# Bring your changes back to your workspace from the stash
+git stash pop
 ```
 
 ## Making commits
