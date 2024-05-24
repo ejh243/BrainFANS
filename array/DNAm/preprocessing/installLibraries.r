@@ -37,12 +37,12 @@ remotes::install_github("tjgorrie/bigmelon")
 
 if(arrayType=='450K'){
   #library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
-  BiocManager::install(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-  BiocManager::install(IlluminaHumanMethylation450kmanifest)
+  BiocManager::install("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  BiocManager::install("IlluminaHumanMethylation450kmanifest")
 }
 if(arrayType=='V1'){
-  BiocManager::install(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-  BiocManager::install(IlluminaHumanMethylationEPICmanifest)
+  BiocManager::install("IlluminaHumanMethylationEPICanno.ilm10b2.hg19")
+  BiocManager::install("IlluminaHumanMethylationEPICmanifest")
 }
 if(arrayType=='V2'){
 	install("jokergoo/IlluminaHumanMethylationEPICv2manifest")
