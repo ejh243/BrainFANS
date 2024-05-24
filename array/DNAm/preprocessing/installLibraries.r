@@ -1,8 +1,6 @@
 
 ##INSTALL LIBRARIES SCRIPT
 ##Installs all R packages required DNAm QC pipeline
-#Add in additional lines for Alice's errors... Git and config sourcing?
-
 
 ##---------------------------------------------------------------------#
 ##
@@ -22,7 +20,6 @@ source(configFile)
 # INSTALL BIOCONDUCTOR
 #---------------------------------------------------------------------#
 
-
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
@@ -31,7 +28,6 @@ if (!require("BiocManager", quietly = TRUE))
 #---------------------------------------------------------------------#	
 	
 #Bigmelon required for all scripts
-#BiocManager::install("bigmelon")
 remotes::install_github("schalkwyk/wateRmelon")
 remotes::install_github("tjgorrie/bigmelon")
 
@@ -42,41 +38,34 @@ if(arrayType=='450K'){
   BiocManager::install(IlluminaHumanMethylation450kanno.ilmn12.hg19)
   BiocManager::install(IlluminaHumanMethylation450kmanifest)
 }
-if(arrayType=='EPICv1'){
+if(arrayType=='V1'){
   BiocManager::install(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
   BiocManager::install(IlluminaHumanMethylationEPICmanifest)
 }
-if(arrayType=='EPICv2'){
+if(arrayType=='V2'){
 	install("jokergoo/IlluminaHumanMethylationEPICv2manifest")
 	install("jokergoo/IlluminaHumanMethylationEPICv2anno.20a1.hg38")
-}
 
-install.packages("devtools")
+}
 
 #---------------------------------------------------------------------#
 # INSTALL PACKAGES FOR QC METRICS
 #---------------------------------------------------------------------#
 
-install.packages("e1071")
-install.packages("stringdist")
-install.packages("data.table")
-
+install.packages(setdiff(c("e1071","stringdist","data.table"), rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 #---------------------------------------------------------------------#
 # INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
 #---------------------------------------------------------------------#
-
 #Creating QC reports
-install.packages("pander") 
-install.packages("kableExtra")
+install.packages(setdiff(c("pander","kableExtra"), rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 #Additional packages for Brain Cell Proportion Prediction
 BiocManager::install(c("genefilter", "minfi"))
-install.packages("quadprog")
+install.packages(setdiff("quadprog", rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 # install devtools to install from GitHub
-install.packages("devtools")
+install.packages(setdiff("devtools", rownames(installed.packages())),repos = "https://cran.r-project.org")
 library(devtools)
-
 install_github("ds420/CETYGO")
 install_github("EpigeneticsExeter/cdegUtilities")
