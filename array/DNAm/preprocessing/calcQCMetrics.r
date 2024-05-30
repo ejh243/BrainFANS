@@ -341,11 +341,11 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno.all<-geno
 
-	indexIID <- grep("^Genotype.IID$", names(QCmetrics), ignore.case=TRUE)
+	indexIID <- grep("^Genotype_IID$", names(QCmetrics), ignore.case=TRUE)
 	if (length(indexIID) != 1){
-		message("Warning: Genotype.IID column is missing, unable to compare external SNP data.")
+		message("Warning: Genotype_IID column is missing, unable to compare external SNP data.")
 	}else{
-	   geno<-geno[match(QCmetrics$Genotype.IID, geno$IID),]
+	   geno<-geno[match(QCmetrics$Genotype_IID, geno$IID),]
 	   rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
 	
 		if(arrayType == "V2"){
