@@ -56,6 +56,13 @@ if(arrayType=='V2'){
 pkgs_qc <- c("e1071","stringdist","data.table")
 install.packages(setdiff(pkgs_qc, rownames(installed.packages())),repos = "https://cran.r-project.org")
 
+#pipeline relies on matrixStats version 1.1.0
+if(packageVersion("matrixStats") != "1.1.0") {
+  message("matrixStats version is > 1.1.0, downgrading to version 1.1.0")
+  remotes::install_version("matrixStats", version = "1.1.0", quiet = TRUE)
+}
+packageVersion("matrixStats")
+
 #---------------------------------------------------------------------#
 # INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
 #---------------------------------------------------------------------#
