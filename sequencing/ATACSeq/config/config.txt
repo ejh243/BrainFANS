@@ -1,14 +1,39 @@
-## Sequencing data filepaths
-export DATADIR=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}
+## ===========================================================##
+##           ATAC-seq pipeline: Example config file           ##
+## ===========================================================##
+##                                                            ||
+## This is an example config file for the ATAC-sequencing     ||
+## pipeline. This is expected to be located in the project's  ||
+## directory. The full path to this file should be specified  ||
+## when running the pipeline's scripts.                       ||
+##                                                            ||
+## The project's folder name needs to be specified in the     ||
+## first variable. Please specify the modules versions to be  ||
+## used.                                                      ||
+##                                                            ||
+## ===========================================================##
 
+## Sequencing data filepaths
+export PROJECT="project name"
+export DATADIR=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}
+export CONFIGR=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}/config.r
+
+## Specify modules versions
+export RVERS="R/4.2.1-foss-2022a"
+export PVERS="Python/3.9.6-GCCcore-11.2.0-bare"
+export ACVERS="Anaconda3/2022.05"
+export RLIB=/lustre/home/${USER}/R/x86_64-pc-linux-gnu-library/4.2
+
+## Project data directories
 export METADIR=${DATADIR}/0_metadata
-export RAWDATADIR=${DATADIR}/1_raw
-export FASTQCDIR=${RAWDATADIR}/fastqc
+export RAWDATADIR=${DATADIR}/1_raw/
+export FASTQCDIR=${DATADIR}/1_raw/fastqc
 export TRIMDIR=${DATADIR}/2_trimmed
 export ALIGNEDDIR=${DATADIR}/3_aligned
 export PEAKDIR=${DATADIR}/4_calledPeaks
-export PEAKGROUP=${PEAKDIR}/MACS/ShiftedTagAlign/subset
+export PEAKGROUP=${PEAKDIR}/MACS/BAMPE/subset
 export PEAKCOUNTS=${DATADIR}/5_countPeaks
+export ANALYSIS=${DATADIR}/6_analysis
 export GENODIR=/lustre/projects/Research_Project-MRC190311/SNPArray/mrcbrain/3_imputed/ImputationOutput/All
 export BINARISEDIR=${ALIGNEDDIR}/binarisedData
 
@@ -23,16 +48,15 @@ export XCHRBED=/lustre/projects/Research_Project-MRC190311/references/GeneLists/
 export UCSCRef=/lustre/projects/Research_Project-MRC190311/references/UCSC/
 export GENOMESIZE=/lustre/projects/Research_Project-MRC190311/references/grch38/genome.info
 export SEGREFGENOME=/lustre/projects/Research_Project-MRC190311/references/Segway/GRCh38/Sequence/WholeGenomeSegwayFasta/genome.char.fa
-
+export SNP=${GENODIR}/hg38/allchr_filt_rsq_maf.vcf.gz
 
 ## Integrative data filepaths 
 export CHROMDIR=/lustre/projects/Research_Project-MRC190311/integrative/chromHMM
 export SEGDIR=/lustre/projects/Research_Project-MRC190311/integrative/segway
 
-
 ## Software/script filepaths
 export SCRIPTDIR=${SLURM_SUBMIT_DIR}
-export PICARD=/gpfs/ts0/shared/software/picard/2.6.0-Java-1.8.0_131
+export PICARD=/lustre/projects/Research_Project-MRC190311/software/
 export UCSCUtils=/lustre/projects/Research_Project-MRC190311/software/UCSCutilities
 export BBMAP=/lustre/projects/Research_Project-MRC190311/software/bbmap
 export PHANTOMPEAK=/lustre/projects/Research_Project-MRC190311/software/phantompeakqualtools
@@ -42,8 +66,12 @@ export PLINK=/lustre/projects/Research_Project-MRC190311/software/plink1.90
 export CHROMHMM=/lustre/projects/Research_Project-MRC190311/software/ChromHMM
 export RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc
 
-## conda filepaths
-export ENVDIR=/lustre/home/${USER}/.conda/envs/encodeqc
+## Conda/Pip environments
+export CONDAFILE=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}/environment.yml
+export PIPFILE=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}/packagesPip.txt
+export ENVDIR=/lustre/home/${USER}/.conda/envs/${PROJECT}
+export CONDAENV=/gpfs/ts0/shared/software/Anaconda3/2022.05/etc/profile.d/conda.sh
+export PIPENV=/lustre/home/${USER}/${PROJECT}
 
 ## parameters
 export multimap=4
