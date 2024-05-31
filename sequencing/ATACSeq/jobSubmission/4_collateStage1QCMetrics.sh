@@ -13,17 +13,15 @@
 ## ===================================================================================================================##
 ##                          ATAC-seq pipeline STEP 4: Collate Stage 1 Results                                         ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/4_collateStage1QCMetrics.sh <project name> <option>  ||
+## EXECUTION: sbatch --array=0 ./sequencing/ATACSeq/jobSubmission/4_collateStage1QCMetrics.sh <project dir> <option>  ||
 ## - execute from scripts directory                                                                                   ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array= can be any number                                                                                         ||
-## $1 -> <project name> Directory to config file                                                                      ||
-## $2 -> <option> Specify step to run: MULTIQC, COLLATE, SUMMARY, BATCH. Can be combined. Default is to run all       ||
+## $1 -> <project dir> project directory.                                                                             ||
+## $2 -> <option> Specify step to run: MULTIQC, COLLATE, SUMMARY, COMPARE. Can be combined. Default is to run all     ||
 ##                                                                                                                    ||
-## DESCRIPTION: This script collates results from the first part of the pipeline: pre-analysis and peak calling. It   || 
-## also compares the peak calling results the different modes that have been run, as well as different batches of     ||
-## samples                                                                                                            ||
+## DESCRIPTION: This script collates results from the first part of the pipeline: pre-analysis and peak calling.      || 
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -36,7 +34,7 @@ echo Job started on:
 date -u
 
 ## load config file provided on command line related to the specified project
-source "/lustre/projects/Research_Project-MRC190311/ATACSeq/${1}/config.txt"
+source "${1}/config.txt"
 echo "Loading config file for project: " $1
 echo "Project directory is: " $DATADIR
 
@@ -47,9 +45,9 @@ mv ATACQCSummaryStage1S4-${SLURM_ARRAY_JOB_ID}* $LOG_DIR
 
 
 ## check step method matches required options and exit if not
-if [[ ! $2 =~ "MULTIQC" ]] && [[ ! $2 =~ "COLLATE" ]] && [[ ! $2 =~ "SUMMARY" ]] && [[ ! $2 =~ "BATCH" ]] &&[[ ! $2 == '' ]];
+if [[ ! $2 =~ "MULTIQC" ]] && [[ ! $2 =~ "COLLATE" ]] && [[ ! $2 =~ "SUMMARY" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use MULTIQC, COLLATE, SUMMARY, BATCH or some combination of this as a single string (i.e. COMPARE,BATCH)" ; exit 1; }            
+    { echo "Unknown step specified. Please use MULTIQC, COLLATE, SUMMARY or some combination of this as a single string (i.e. COMPARE,BATCH)" ; exit 1; }            
 fi
 
 ## ============ ##
@@ -72,7 +70,12 @@ then
 	rm -f ${TRIMDIR}/fastp_reports/*.html
 
 	mkdir -p ${ALIGNEDDIR}/multiqc
+  cd ${ALIGNEDDIR}
 	multiqc . -f -o ${ALIGNEDDIR}/multiqc
+ 
+  mkdir -p ${TRIMDIR}/multiqc
+  cd ${TRIMDIR}/qc
+	multiqc . -f -o ${TRIMDIR}/multiqc 
 fi
 
 ## option COLLATE: collate other QC metrics
@@ -92,7 +95,7 @@ if [ $# = 1 ] || [[ $2 =~ 'SUMMARY' ]]
 then
   
   module purge
-	module load R/4.2.1-foss-2022a
+	module load ${RVERS}
 	module load Pandoc
  
   echo "Step 4.3 SUMMARY started. Summary of results to this point are collated in a Rmarkdown report"
@@ -101,13 +104,26 @@ then
 fi
 
 ## option COMPARE: collate peak calling results into a single r markdown report
-if [ $# = 1 ] || [[ $2 =~ 'BATCH' ]]
+if [ $# = 1 ] || [[ $2 =~ 'COMPARE' ]]
 then
-  echo "Step 4.4 COMPARE started. Results from samples that belong to different batches of samples are collated in a Rmarkdown report"
+  echo "Step 4.4 COMPARE started. Results from peak calling are compared and collated in two Rmarkdown reports: comparePeaksStats_1 and comparePeaksStats_2"
 	cd ${SCRIPTDIR}
   
   module purge
-	module load R/4.2.1-foss-2022a
+	module load ${RVERS}
+	module load Pandoc
+	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/collateComparePeaks_1.Rmd', output_file=paste0(commandArgs(trailingOnly=TRUE)[1], '/QCOutput/comparePeaksStats_1.html'))" "$PEAKDIR" "${CONFIGR}"
+  Rscript -e "rmarkdown::render('ATACSeq/preprocessing/collateComparePeaks_2.Rmd', output_file=paste0(commandArgs(trailingOnly=TRUE)[1], '/QCOutput/comparePeaksStats_2.html'))" "$PEAKDIR" "${CONFIGR}"
+fi
+
+## option COMPARE: collate peak calling results into a single r markdown report
+if [ $# = 1 ] || [[ $2 =~ 'BATCH' ]]
+then
+  echo "Step 4.4 COMPARE started. Results from peak calling are compared and collated in a Rmarkdown report"
+	cd ${SCRIPTDIR}
+  
+  module purge
+	module load ${RVERS}
 	module load Pandoc
 	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/compareBatches.Rmd', output_file=paste0(commandArgs(trailingOnly=TRUE)[1], '/QCOutput/compareBatches.html'))" "$PEAKDIR" "${CONFIGR}"
 fi
