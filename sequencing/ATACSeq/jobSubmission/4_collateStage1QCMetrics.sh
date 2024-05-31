@@ -29,7 +29,6 @@
 ##    SET UP    ##
 ## ============ ##
 
-## print start date and time
 echo Job started on:
 date -u
 
