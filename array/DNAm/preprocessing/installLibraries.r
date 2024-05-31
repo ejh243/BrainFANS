@@ -59,7 +59,7 @@ install.packages(setdiff(pkgs_qc, rownames(installed.packages())),repos = "https
 #pipeline relies on matrixStats version 1.1.0
 if(packageVersion("matrixStats") != "1.1.0") {
   message("matrixStats version is > 1.1.0, downgrading to version 1.1.0")
-  remotes::install_version("matrixStats", version = "1.1.0", quiet = TRUE)
+  remotes::install_version("matrixStats", version = "1.1.0", quiet = TRUE, repos = "https://cran.r-project.org")
 }
 packageVersion("matrixStats")
 
