@@ -14,13 +14,13 @@ OUTPUT:
 
 Provided is a SLURM job submission script which automates the preprocessing and can be submitted as follows
 
-`sbatch 1_runDNAmQC.sh <configFile>`
-	<configFile> the path to config file which specifics the data and script paths for processing
+`sbatch 1_runDNAmQC.sh /path/to/configFile`
+	/path/to/configFile the path to config file which specifics the data and script paths for processing
 
 	* executes loadDataGDS.r ${DATADIR}
-	* executescalcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
+	* executes calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
 	* executes Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
-	* executesDNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${RCONFIG} 
+	* executes DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${RCONFIG} 
 	* Rscript -e "rmarkdown::render('QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${RCONFIG} $USER
 	
 
