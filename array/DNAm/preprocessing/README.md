@@ -2,13 +2,13 @@ This readme explains how to use the scripts for running the DNAm analysis pipeli
 
 PREQUISITES:
 	* A config file with the file paths specific to their project 
-	* Users require a folder named with their username in the DNAm/logFiles directory 
 	* A file named sampleSheet.csv in the 0_metadata folder which lists the samples to process 
 	* idats are in the 1_raw folder
 
 OUTPUT:
 	* html QC reports are located in 2_gds/QCmetrics
 	* text file summarising the QC metrics and filtering are located in 2_gds/QCmetrics
+	* log files are saved to logFiles in the data directory with the prefix `QCDNAdata`
 
 #### Data pre-processing
 
@@ -23,7 +23,7 @@ Provided is a SLURM job submission script which automates the preprocessing and 
 	* executes DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${RCONFIG} 
 	* Rscript -e "rmarkdown::render('QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${RCONFIG} $USER
 	
-
+During execution log files are temporaily located in the folder you submitted the script from with the filenames QCDNAdata_XXX.log and QCDNAdata_XXX.err, where XXX is replaced with the job number provided by your HPC scheduler. Please ensure you have the correct permissions to create files in this folder, otherwise the job will instantly fail. If the job fails before the script is run to completion, this is where you need to look for troubleshooting. Once the QC pipeline is complete these files are moved to your data directory in a folder called `logFiles`. 
 
 
 Approach is as follows:
