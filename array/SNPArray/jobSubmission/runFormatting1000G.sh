@@ -1,39 +1,35 @@
 #!/bin/bash
-#PBS -V # export all environment variables to the batch job.
-#PBS -q sq # submit to the serial queue
-#PBS -l walltime=24:00:00 # Maximum wall time for the job.
-#PBS -A Research_Project-MRC190311 # research project to submit under. 
-#PBS -l procs=1 # specify number of processors.
-#PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e format1KG.err # error file
-#PBS -o format1KG.log # output file
+#SBATCH -V # export all environment variables to the batch job.
+#SBATCH -q sq # submit to the serial queue
+#SBATCH -l walltime=24:00:00 # Maximum wall time for the job.
+#SBATCH -A Research_Project-MRC190311 # research project to submit under. 
+#SBATCH --nodes=1 # specify number of nodes.
+#SBATCH --ntasks-per-node=16 # specify number of processors per node
+#SBATCH --mail-type=END # send email at job completion 
+#SBATCH -e format1KG.err # error file
+#SBATCH -o format1KG.log # output file
 
-## Output some useful job information
-
-echo PBS: working directory is $PBS_O_WORKDIR
-echo PBS: job identifier is $PBS_JOBID
-echo PBS: job name is $PBS_JOBNAME
-echo PBS: current home directory is $PBS_O_HOME
 
 ## print start date and time
 echo Job started on:
 date -u
 
+source $1 || exit
 
-cd $PBS_O_WORKDIR
-
-####### 
-## NOTE: Do not store confidential information in this file use the config file
-######
+cd ${SCRIPTDIR}/array/SNPArray/preprocessing/utilitys
 
 module load BCFtools/1.9-foss-2018b
 
-source ./Misc/config.txt
-
-
-sh Misc/Download1000GData.sh
-sh Misc/Format1000GPlinkgr38.sh
+sh Download1000GData.sh
+sh Format1000GPlinkgr38.sh
 
 ## print finish date and time
 echo Job finished on:
 date -u
+
+mkdir -p ${DATADIR}/logFiles
+
+mv "${SLURM_SUBMIT_DIR}/format1KG_${SLURM_JOB_ID}.log" \
+"${DATADIR}/logFiles/format1KG_${SLURM_JOB_ID}.log"
+mv "${SLURM_SUBMIT_DIR}/format1KG_${SLURM_JOB_ID}.err" \
+"${DATADIR}/logFiles/format1KG_${SLURM_JOB_ID}.err"

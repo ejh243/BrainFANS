@@ -18,4 +18,5 @@ export PENNCNVPATH=
 export KINGPATH=
 export PLINK=
 export GCTA=
+export RVERS=
 

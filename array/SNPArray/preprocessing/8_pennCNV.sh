@@ -1,6 +1,6 @@
 ## Written by Eilis
-## Script to perform ${CNVDIR} calling with Penn${CNVDIR}
-## generally following user guide: https://github.com/WGLab/Penn${CNVDIR}/blob/master/docs/user-guide/input.md
+## Script to perform CNV calling with PennCNV
+## generally following user guide: https://github.com/WGLab/PennCNV/blob/master/docs/user-guide/input.md
 
 ## assumes executed from script directory
 mkdir -p ${CNVDIR}/PennCNVInput/
@@ -50,11 +50,11 @@ cd ${CNVDIR}/PennCNVInput
 ${PENNCNVPATH}/cal_gc_snp.pl ${PENNCNVPATH}/gc_file/hg38.gc5BaseSorted.txt ${PENNCNVPATH}/lib/gsa.gr38.snpposfile -output ${PENNCNVPATH}/lib/GSA.gcmodel;
 
 
-## call ${CNVDIR}s
+## call cnvs
 cd ${CNVDIR}/
 mkdir -p PennCNVOutput
 
-## only run ${CNVDIR}s on samples that pass SNP QC
+## only run calling on samples that pass SNP QC
 cd PennCNVInput/
 ${PENNCNVPATH}/detect_cnv.pl --test -hmm ${PENNCNVPATH}/lib/hh550.hmm -pfb ${PENNCNVPATH}/pfb/gsa.gr38.pfb --listfile ${CNVDIR}/Samples.txt -log ${CNVDIR}/PennCNVOutput/${FILEPREFIX}_Merged.log -out ${CNVDIR}/PennCNVOutput/${FILEPREFIX}_GCModel.rawcnv -gcmodel ${PENNCNVPATH}/lib/GSA.gcmodel;
 
