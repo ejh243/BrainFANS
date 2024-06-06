@@ -38,12 +38,11 @@ Rscript installLibraries.r ${DATADIR}
 
 Rscript checkColnamesSampleSheet.r ${DATADIR}
 
+mkdir -p ${GDSDIR}/QCmetrics
+
 Rscript loadDataGDS.r ${DATADIR}
 
 chmod 755 ${DATADIR}/2_gds/raw.gds
-
-
-mkdir -p ${GDSDIR}/QCmetrics
 
 Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
 
