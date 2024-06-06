@@ -4,10 +4,6 @@
 ##
 ## Purpose of script: From GDS file generate summary metrics for stages 1 & 2 of quality control filtering
 ##
-## Author: Eilis Hannon (adapted to include EPIC V2 data by Emma Walker)
-##
-## Date Created: 2020 (edited Feb 2024)
-##
 ##---------------------------------------------------------------------#
 
 
