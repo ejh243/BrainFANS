@@ -1,9 +1,7 @@
 ## This script determines sample ethnicity by comparing to 1000G super populations
 
 ## EXECUTION
-# sh SNPArray/preprocessing/2_CheckEthnicity.sh
-# where 
-# script needs to be executed from <git repo>/array/
+# sh 2_CheckEthnicity.sh
 
 ## REQUIRES the following variables in config file
 # RAWDATADIR, FILEPREFIX, KGG

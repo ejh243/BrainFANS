@@ -1,11 +1,11 @@
 ## format files for use with Michegan Imputation Server
 
 ## EXECUTION
-# sh SNPArray/preprocessing/4_formatForimputation.sh <population> <SNP ref file>
+# sh 4_formatForimputation.sh <population> <SNP ref file>
 # where 
 # <population > is 3 letter code for super population state ALL for no subsetting by population
 # <SNP ref file> is an input file of 
-# script needs to be executed from <git repo>/array/
+
 
 ## REQUIRES the following variables in config file
 # PROCESSDIR, IMPUTEDIR, FILEPREFIX

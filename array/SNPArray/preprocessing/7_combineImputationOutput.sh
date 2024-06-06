@@ -2,11 +2,10 @@
 ## format files for use with Michegan Imputation Server
 
 ## EXECUTION
-# sh SNPArray/preprocessing/6_combineImputationOutput.sh <imputation output directory>
+# sh 7_combineImputationOutput.sh <imputation output directory>
 # where 
 # <imputation output directory> is the folder where the output vcf and dose files from imputation are located, with one file per chr
-# script needs to be executed from <git repo>/array/
-# 
+
 
 ## REQUIRES the following variables in config file
 # PROCESSDIR, IMPUTEDIR, FILEPREFIX

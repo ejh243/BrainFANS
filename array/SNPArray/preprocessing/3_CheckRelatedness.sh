@@ -2,15 +2,14 @@
 ## 
 
 ## EXECUTION
-# sh SNPArray/preprocessing/3_CheckRelatedness.sh
+# sh 3_CheckRelatedness.sh
 # where 
-# script needs to be executed from <git repo>/array/
 
 ## REQUIRES the following variables in config file
-# RAWDATADIR, FILEPREFIX, 
+# PROCESSDIR, FILEPREFIX, SCRIPTDIR
 
 ## REQUIRES the following software
-# king, plink, 
+# king, plink, R 
 
 ## INPUT
 # ${FILEPREFIX}_QCd # binary plink files following prelim QC

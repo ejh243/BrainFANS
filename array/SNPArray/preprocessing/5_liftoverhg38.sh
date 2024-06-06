@@ -2,12 +2,10 @@
 ## format files for use with Michegan Imputation Server
 
 ## EXECUTION
-# sh SNPArray/preprocessing/7_liftoverhg38.sh <imputation output directory> <CHR>
+# sh 5_liftoverhg38.sh <imputation output directory> <CHR>
 # where 
 # <imputation output directory> is the folder where the output vcf and dose files from imputation are located, with one file per chr
 # <chr> is a numeric chromosome
-# script needs to be executed from <git repo>/array/
-# 
 
 ## REQUIRES the following variables in config file
 # REFGENOME, UCSCUTILS

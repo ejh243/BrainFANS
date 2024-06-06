@@ -2,11 +2,9 @@
 ## including: removal of duplicate samples, update sample ids, perform sex check
 
 ## EXECUTION
-# sh SNPArray/preprocessing/1_QC.sh
-# where 
-# script needs to be executed from <git repo>/array/
+# sh 1_QC.sh 
 
-## REQUIRES the following variables in config file
+## REQUIRES the following variables to be loaded config file
 # RAWDATADIR, FILEPREFIX, METADIR, CNVDIR
 
 ## REQUIRES the following software
