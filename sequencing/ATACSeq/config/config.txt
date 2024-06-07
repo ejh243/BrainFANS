@@ -13,65 +13,73 @@
 ##                                                            ||
 ## ===========================================================##
 
+
+## Example config file ##
+## This config file should be found at the project's folder. The full path to this file should be specified 
+## Please modify as required ##
+
 ## Sequencing data filepaths
 export PROJECT="project name"
-export DATADIR=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}
-export CONFIGR=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}/config.r
-
-## Specify modules versions
-export RVERS="R/4.2.1-foss-2022a"
-export PVERS="Python/3.9.6-GCCcore-11.2.0-bare"
-export ACVERS="Anaconda3/2022.05"
-export RLIB=/lustre/home/${USER}/R/x86_64-pc-linux-gnu-library/4.2
-
-## Project data directories
-export METADIR=${DATADIR}/0_metadata
-export RAWDATADIR=${DATADIR}/1_raw/
-export FASTQCDIR=${DATADIR}/1_raw/fastqc
-export TRIMDIR=${DATADIR}/2_trimmed
-export ALIGNEDDIR=${DATADIR}/3_aligned
-export PEAKDIR=${DATADIR}/4_calledPeaks
-export PEAKGROUP=${PEAKDIR}/MACS/BAMPE/subset
-export PEAKCOUNTS=${DATADIR}/5_countPeaks
-export ANALYSIS=${DATADIR}/6_analysis
-export GENODIR=/lustre/projects/Research_Project-MRC190311/SNPArray/mrcbrain/3_imputed/ImputationOutput/All
-export BINARISEDIR=${ALIGNEDDIR}/binarisedData
-
-
-## Reference data filepaths
-export REFGENOME=/lustre/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index
-export GENOMEFASTA=/lustre/projects/Research_Project-MRC190311/references/grch38/ncbi/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta/
-export KGREF=/lustre/projects/Research_Project-MRC190311/references/1000G/
-export BLACKLIST=/lustre/projects/Research_Project-MRC190311/references/ATAQSeq/hg38.blacklist.bed.gz
-export PAR=/lustre/projects/Research_Project-MRC190311/references/ATAQSeq/hg38.pseudoautosomal.regions.bed
-export XCHRBED=/lustre/projects/Research_Project-MRC190311/references/GeneLists/XChrGenes.bed
-export UCSCRef=/lustre/projects/Research_Project-MRC190311/references/UCSC/
-export GENOMESIZE=/lustre/projects/Research_Project-MRC190311/references/grch38/genome.info
-export SEGREFGENOME=/lustre/projects/Research_Project-MRC190311/references/Segway/GRCh38/Sequence/WholeGenomeSegwayFasta/genome.char.fa
-export SNP=${GENODIR}/hg38/allchr_filt_rsq_maf.vcf.gz
-
-## Integrative data filepaths 
-export CHROMDIR=/lustre/projects/Research_Project-MRC190311/integrative/chromHMM
-export SEGDIR=/lustre/projects/Research_Project-MRC190311/integrative/segway
+export MAIN_DIR="/path/to/project/folder/${PROJECT}"
+export CONFIGR="/path/to/R/config/file/${PROJECT}/config.r"
 
 ## Software/script filepaths
-export SCRIPTDIR=${SLURM_SUBMIT_DIR}
-export PICARD=/lustre/projects/Research_Project-MRC190311/software/
-export UCSCUtils=/lustre/projects/Research_Project-MRC190311/software/UCSCutilities
-export BBMAP=/lustre/projects/Research_Project-MRC190311/software/bbmap
-export PHANTOMPEAK=/lustre/projects/Research_Project-MRC190311/software/phantompeakqualtools
-export HMMRATAC=/lustre/projects/Research_Project-MRC190311/software/HMMRATAC_V1.2.10_exe.jar
-export VERIFYBAMID=/lustre/projects/Research_Project-MRC190311/software/verifyBamID_1.1.3/verifyBamID/bin/verifyBamID
-export PLINK=/lustre/projects/Research_Project-MRC190311/software/plink1.90
-export CHROMHMM=/lustre/projects/Research_Project-MRC190311/software/ChromHMM
-export RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc
+export SCRIPTS_DIR="/path/to/this/scripts/folder"
+export SUB_SCRIPTS_DIR="${SCRIPTS_DIR}/path/to/subcripts/"
+export RSCRIPTS_DIR="${SCRIPTS_DIR}/Rscripts"
+export LOG_DIR="${SCRIPTS_DIR}/logFiles"
 
-## Conda/Pip environments
-export CONDAFILE=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}/environment.yml
-export PIPFILE=/lustre/projects/Research_Project-MRC190311/ATACSeq/${PROJECT}/packagesPip.txt
-export ENVDIR=/lustre/home/${USER}/.conda/envs/${PROJECT}
-export CONDAENV=/gpfs/ts0/shared/software/Anaconda3/2022.05/etc/profile.d/conda.sh
-export PIPENV=/lustre/home/${USER}/${PROJECT}
+## Specify modules and versions
+export RVERS="R/4.2.1-foss-2022a"
+export PVERS="Python/3.9.6-GCCcore-11.2.0-bare"
+export ACVERS="Anaconda3/2020.05"
+export RLIB="/path/to/users/R/libraries"
+
+## Project's main data and results directories 
+export META_DIR="${MAIN_DIR}/0_metadata"
+export RAWDATA_DIR="${MAIN_DIR}/1_raw/"
+export FASTQC_DIR="${MAIN_DIR}/1_raw/fastqc"
+export TRIM_DIR="${MAIN_DIR}/2_trimmed"
+export ALIGNED_DIR="${MAIN_DIR}/3_aligned"
+export PEAK_DIR="${MAIN_DIR}/4_calledPeaks"
+export PEAKCOUNTS="${MAIN_DIR}/5_countPeaks"
+export ANALYSIS_DIR="${MAIN_DIR}/6_analysis"
+export GENODIR="/path/to/SNParray/ImputationData"
+
+## Conda/Pip environments filepaths
+export CONDAFILE="${MAIN_DIR}/environment.yml"
+export PIPFILE="${MAIN_DIR}/packagesPip.txt"
+export CONDA=/lustre/home/${USER}/.conda/envs/${PROJECT}
+export CONDA_ENVDIR="/path/to/conda/etc/folder"
+export PIP_ENV="/path/to/pip/environment/${PROJECT}"
+
+## Reference data filepaths
+export REFGENOME="/path/to/reference/genome"
+export BLACKLIST="/path/to/blacklisted/peak/regions/.gz"
+export XCHRBED="/path/to/X/CHR/genes/.bed"
+export PAR="/path/to/pseudoautosomal/regions/.bed"
+export GENOMEFASTA="/path/to/GRCh38/Sequence/WholeGenomeFasta/"
+export KGREF="/path/to/reference/100G/"
+export SNP="${GENODIR}/path/to/SNP/file/.vcf.gz"
+export UCSCRef="/path/to/UCSC/references"
+export GENOMESIZE="/path/to/genome.info"
+export SEGREFGENOME="/path/to/WholeGenome/genome.char.fa/"
+export GWASTRAITS="/path/to/gwas_traits/"
+export LDREFPATH="/path/to/LDScore/resources/"
+
+## Software filepaths
+export VERIFYBAMID="/path/to/verifyBamID_1.1.3/verifyBamID/bin/verifyBamID"
+export PICARD="/path/to/picard/Java/file"
+export LDPATH="/path/to/ldsc"
+export RSTUDIO_PANDOC="/usr/lib/rstudio-server/bin/pandoc"
+
+## Adapter sequences to trim
+export ADAP_R1="Read 1 adapter sequence"
+export ADAP_R2="Read 2 adapter sequence"
 
 ## parameters
 export multimap=4
+
+## Reference data filepaths
+
+

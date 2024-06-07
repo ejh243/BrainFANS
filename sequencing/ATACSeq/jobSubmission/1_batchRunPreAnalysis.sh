@@ -43,11 +43,11 @@ source "${1}/config.txt"
 echo "Loading config file for project: " ${PROJECT}
 
 ## check directories
-echo "Project directory is: " $DATADIR 
-echo "Script is running from directory: " ${SCRIPTDIR}
+echo "Project directory is: " $MAIN_DIR 
+echo "Script is running from directory: " ${SCRIPTS_DIR}
 
 ## Log files directory
-LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACpreAnalysisS1-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
@@ -69,10 +69,10 @@ fi
 ## ============ ##
 
 ## check if file containing list of sample IDs exists and if so:
-if test -f ${METADIR}/samples.txt;
+if test -f ${META_DIR}/samples.txt;
 then 
     ## create an array from the file
-    mapfile -t SAMPLEIDS < ${METADIR}/samples.txt 
+    mapfile -t SAMPLEIDS < ${META_DIR}/samples.txt 
     echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
     
     ## Sample(s) specified in by array number(s) from command line
@@ -91,10 +91,11 @@ then
     ## option FASTQC: run sequencing QC on raw reads files        
     if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
     then      
-        echo "Running step 1.1 of ATAC-seq pipeline: FASTQC"
         module load FastQC 
-        cd ${SCRIPTDIR}
-        sh ./preScripts/fastqc.sh ${sampleID} ${toProcess[0]} ${toProcess[1]}  
+        
+        echo "Running step 1.1 of ATAC-seq pipeline: FASTQC"
+        sh "${SCRIPTS_DIR}/preScripts/fastqc.sh" ${sampleID} ${toProcess[0]} ${toProcess[1]}  
+          
     fi
     
     ## option TRIM: run trimming on raw reads files and output trimmed reads.
@@ -102,42 +103,44 @@ then
     then
         module purge
         module load fastp
+        module load FastQC
         
     	  echo "Running step 1.2 of ATAC-seq pipeline: TRIM"
-        cd ${SCRIPTDIR}
-        sh ./preScripts/fastp.sh ${sampleID} ${toProcess[0]} ${toProcess[1]} 
+        sh "${SUB_SCRIPTS_DIR}/fastp.sh" ${sampleID} ${toProcess[0]} ${toProcess[1]}
+        
     fi
 
     ## option ALIGN: run alignment and post processing on sample
 	  if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
   	then
    
-  		echo "Running step 1.3 of ATAC-seq pipeline: ALIGN"
-  		module purge ## had conflict issues if this wasn't run first
+  		module purge
   		module load Bowtie2/2.3.4.2-foss-2018b
   		module load SAMtools
   		module load picard/2.6.0-Java-1.8.0_131
   		export PATH="$PATH:/lustre/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
   		
-  		cd ${SCRIPTDIR}
-  		sh ./ATACSeq/preprocessing/alignment.sh ${sampleID}
+      mkdir -p ${ALIGNED_DIR}/QCOutput/
+  		
+      echo "Running step 1.3 of ATAC-seq pipeline: ALIGN"
+  		sh "${SUB_SCRIPTS_DIR}/alignment.sh" ${sampleID}
   	fi
    
     ## option ENCODE: calculate ENCODEQC metrics on aligned samples
   	if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
   	then
-      echo "Running step 1.4 of ATAC-seq pipeline: ENCODE"
+      
   		module purge
   		module load BEDTools/2.29.2-GCC-9.3.0
       module load SAMtools/1.11-GCC-9.3.0
           
       ## load conda env for samstats
       module load ${ACVERS}
-      source ${CONDAENV}
-      conda activate ${ENVDIR}
-
-      cd ${SCRIPTDIR}
-      sh ./ATACSeq/preprocessing/calcENCODEQCMetrics.sh ${sampleID}
+      source ${CONDA_ENV}
+      conda activate ${CONDA}
+      
+      echo "Running step 1.4 of ATAC-seq pipeline: ENCODE"
+      sh "${SUB_SCRIPTS_DIR}/calcENCODEQCMetrics.sh" ${sampleID}
     fi
 
 else
