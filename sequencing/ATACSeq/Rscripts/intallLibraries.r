@@ -10,7 +10,7 @@
 ## - <project> : project on which analysis is being run                                        ||
 ##                                                                                             ||
 ## REQUIRES:                                                                                   ||
-## - R/4.2.1-foss-2022a                                                                        ||
+## - R version > 4.2.1                                                                         ||
 ## ============================================================================================##
 
 args <- commandArgs()
