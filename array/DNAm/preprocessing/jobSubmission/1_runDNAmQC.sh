@@ -52,17 +52,13 @@ mkdir -p ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR}
 
+Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
+
 Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
 
 ## mv markdown report to correct location
 mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
 
-Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
-
-Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
-
-## mv markdown report to correct location
-mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
 
 Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
 chmod 755 ${DATADIR}/2_gds/rawNorm.gds
