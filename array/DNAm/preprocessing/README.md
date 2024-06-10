@@ -8,7 +8,7 @@ PREQUISITES:
 	* idats are in the 1_raw folder
 
 OUTPUT:
-	* html QC reports are located in 2_gds/QCmetrics
+	* html QC report are located in 2_gds/QCmetrics
 	* text file summarising the QC metrics and filtering are located in 2_gds/QCmetrics
 
 #### Data pre-processing:
@@ -21,9 +21,9 @@ Parameters in [] are optional.
 
 	* executes DNAm/preprocessing/loadDataGDS.r ${DATADIR}
 	* executes DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
-	* executes Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} <mkdownConfig> $USER
 	* executesDNAm/preprocessing/clusterCellTypes.r ${DATADIR} <mkdownConfig> 
-	* Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} <mkdownConfig> $USER
+	* executes Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} <mkdownConfig> $USER
+
 	
 
 
