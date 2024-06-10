@@ -32,7 +32,9 @@ echo "Random seed: " ${SLURM_ARRAY_TASK_ID}
 
 module load R/3.6.3-foss-2020a
 
-Rscript ${SCRIPTSDIR}/array/DNAm/analysis/methodsDevelopment/simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID} 0.02
+cd ${SCRIPTSDIR}/array/DNAm/analysis/methodsDevelopment/
+
+Rscript simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID} 0.02
 
 # print end date and time
 echo Job finished on:
