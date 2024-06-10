@@ -25,6 +25,7 @@ normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
 qcOutFolder<-file.path(dataDir, "/2_gds/QCmetrics")
 normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
 configFile <- paste0(dataDir, "/config.r")
+epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
 
 source(configFile)
 
@@ -34,6 +35,7 @@ arrayType <- toupper(arrayType)
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 library(bigmelon)
+library(data.table)
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -58,7 +60,7 @@ if(ctCheck){
 	QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 }
-cellTypes<-unique(QCmetrics$Cell.type)
+cellTypes<-unique(QCmetrics$Cell_Type)
 
 # create new gfile with only samples that pass QC
 if(exists(normgdsFile)){
@@ -96,10 +98,16 @@ if(arrayType == "V1"){
 	print("loaded EpicV1 manifest")
 }
 
+#if(arrayType == "V2"){
+#manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
+#manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
+#print("loaded EpicV2 manifest")
+#}
 if(arrayType == "V2"){
-manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-print("loaded EpicV2 manifest")
+  probeAnnot<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
+  probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$IlmnID), c("CHR", "Infinium_Design_Type")]
+  colnames(probeAnnot)[colnames(probeAnnot)=="Infinium_Design_Type"] <- "designType"
+  print("loaded EpicV2 manifest")
 }
 
 
@@ -123,7 +131,7 @@ if(length(cellTypes) > 1){
 	rownames(celltypeNormbeta)<-rownames(rawbetas)
 	colnames(celltypeNormbeta)<-colnames(rawbetas)
 	for(each in cellTypes){
-		index<-which(QCmetrics$Cell.type == each)
+		index<-which(QCmetrics$Cell_Type == each)
 		if(length(index) > 2){
 			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
 		}
