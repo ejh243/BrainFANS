@@ -818,14 +818,15 @@ Samples will now be filtered based on thresholds defined in the config file. The
 
 ```{r, echo = FALSE}
 # create cross tab table
-xTab<-matrix(data = NA, ncol = ncol(QCSum), nrow = ncol(QCSum))
-for(i in 1:ncol(QCSum)){
-  for(j in 1:ncol(QCSum)){
-    xTab[i,j]<-sum(rowSums(QCSum[,c(i,j)]) == 0, na.rm = TRUE)
+QCSum.min<-as.matrix(QCSum[,!colnames(QCSum) %in% c("Basename", "Sample_ID","Individual_ID","Cell_Type")])
+xTab<-matrix(data = NA, ncol = ncol(QCSum.min), nrow = ncol(QCSum.min))
+for(i in 1:ncol(QCSum.min)){
+  for(j in 1:ncol(QCSum.min)){
+    xTab[i,j]<-sum(rowSums(QCSum.min[,c(i,j)]) == 0, na.rm = TRUE)
   }
 }
-colnames(xTab)<-colnames(QCSum)
-rownames(xTab)<-colnames(QCSum)
+colnames(xTab)<-colnames(QCSum.min)
+rownames(xTab)<-colnames(QCSum.min)
 
 kbl(xTab) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
