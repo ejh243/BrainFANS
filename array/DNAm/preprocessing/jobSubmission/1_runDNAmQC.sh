@@ -58,6 +58,8 @@ Rscript -e "rmarkdown::render('QCwithinCellType.rmd', output_file='QCwithinCellT
 ## mv markdown report to correct location
 mv QCwithinCellType.html ${GDSDIR}/QCmetrics
 
+mkdir -p ${DATADIR}/3_normalised
+
 Rscript normalisation.r ${DATADIR} ${REFDIR}
 chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 
