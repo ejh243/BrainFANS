@@ -856,7 +856,7 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 ```{r,findDuplicateSamplesPostQC, echo = FALSE}
 
-passQC<-rownames(QCSum)[QCSum[,"passQCS2"]]
+passQC<-QCSum$Basename[as.logical(QCSum[,"passQCS2"])]
 
 snpCor<-snpCor[passQC, passQC]
 
