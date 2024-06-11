@@ -7,29 +7,45 @@
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
 #SBATCH --mail-user=e.j.hannon@exeter.ac.uk # email me at job completion
-#SBATCH --error=DNAm/logFiles/%u/CTEWASSIMS-%A_%a.err # error file
-#SBATCH --output=DNAm/logFiles/%u/CTEWASSIMS-%A_%a.log # output file
+#SBATCH --error=CTEWASSIMS-%A_%a.err # error file
+#SBATCH --output=CTEWASSIMS-%A_%a.log # output file
 #SBATCH --job-name=CTEWASSIMS
 #SBATCH --array=1-10
 
-# print start date and time
+#------------------------------------------------------
+
+# 1. the first input is the full path to config file.
+
+#-----------------------------------------------------
+
+## print start date and time
 echo Job started on:
 date -u
-    
-# needs to be executed from the scripts folder
 
-# load config file provided on command line when submitting job
-echo "Loading config file for project: " $1
-export PROJECT=$1
-source ./DNAm/config/config.txt 
+echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/CTEWASSIMS_${SLURM_JOB_ID}.log and ${SLURM_SUBMIT_DIR}/CTEWASSIMS_${SLURM_JOB_ID}.err
 
-echo "Random seed: " $1
+source $1 || exit 1
+
+echo "Processing data located in :" ${DATADIR}
+
+echo "Random seed: " ${SLURM_ARRAY_TASK_ID}
 
 module load R/3.6.3-foss-2020a
 
-Rscript DNAm/analysis/methodsDevelopment/simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID}
+cd ${SCRIPTSDIR}/array/DNAm/analysis/methodsDevelopment/
+
+Rscript simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID} 0.02
 
 # print end date and time
 echo Job finished on:
 date -u
-    
+   
+
+mkdir -p ${DATADIR}/logFiles
+
+mv "${SLURM_SUBMIT_DIR}/CTEWASSIMS_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log" \
+"${DATADIR}/logFiles/CTEWASSIMS_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.log"
+mv "${SLURM_SUBMIT_DIR}/CTEWASSIMS_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.err" \
+"${DATADIR}/logFiles/CTEWASSIMS_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.err"
+
+echo Log files moved to: ${DATADIR}/logFiles/   
