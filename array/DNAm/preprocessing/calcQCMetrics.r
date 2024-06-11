@@ -332,12 +332,12 @@ if(!exists("snpCor")){
 # COMPARE TO EXTERNAL SNP DATA
 #----------------------------------------------------------------------#
 
+indexIID <- grep("^Genotype_IID$", names(QCmetrics), ignore.case=TRUE)
 if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	print("Comparing against matched genotype data")
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno.all<-geno
 
-	indexIID <- grep("^Genotype_IID$", names(QCmetrics), ignore.case=TRUE)
 	if (exists("indexIID") & length(indexIID) != 1){
 		message("Warning: Genotype_IID column is missing, unable to compare external SNP data.")
 	}else{
