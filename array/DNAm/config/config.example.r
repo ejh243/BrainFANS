@@ -3,6 +3,7 @@ projectTitle<-"MRC Schizophrenia FANS samples"
 processedBy<-"Complex Disease Epigenetic Group, University of Exeter Medical School"
 arrayVersion<-"Illumina EPIC microarray"
 tissueType<-"FANS sorted post-mortem brain tissue"
+cellSorted<-"FALSE"
 
 ## technical variables
 

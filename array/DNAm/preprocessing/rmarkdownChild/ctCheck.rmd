@@ -14,6 +14,13 @@ if(arrayType == "V2"){
   manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
   print("loaded EpicV2 manifest")
 }
+# below needs checking
+if(arrayType == "V1"){
+	manifest<-read.table(file.path(refDir, "EPICArray/EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+	manifest<-manifest[match(fData(gfile)$Probe_ID, probeAnnot$probeID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+	colnames(manifest) <- c("CHR", "Infinium_Design_Type")
+	print("loaded EpicV1 manifest")
+}
 
 if(arrayType == "HM450K"){
   load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
@@ -428,9 +435,9 @@ To visualize the success of this filtering steps, we will repeat the hierarchica
 
 ```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
 if(length(cellTypes) < 10){
-  pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,, drop = F],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
+  pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(QCmetrics$withinSDMean == TRUE)], annotation_col = sample_anno[which(QCmetrics$withinSDMean == TRUE),, drop = F],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
 } else {
-    pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,,drop = F],  show_colnames = FALSE, show_rownames = FALSE, main = "PCA Outliers")
+    pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(QCmetrics$withinSDMean == TRUE)], annotation_col = sample_anno[which(QCmetrics$withinSDMean == TRUE),,drop = F],  show_colnames = FALSE, show_rownames = FALSE, main = "PCA Outliers")
 }
 
 ```
