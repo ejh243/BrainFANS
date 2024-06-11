@@ -103,7 +103,7 @@ args<-commandArgs(trailingOnly = TRUE)
 nSim<-10
 nSig.options<-c(10,100,1000)
 propCS.options<-seq(0,1,0.2)
-sigEffect<-args[3]
+sigEffect<-as.numeric(args[3])
 
 dataDir <- args[1]
 nChunk<-args[2]
