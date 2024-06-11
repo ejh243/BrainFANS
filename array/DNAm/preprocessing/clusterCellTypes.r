@@ -4,17 +4,14 @@
 ##
 ## Purpose of script: confirm cell type labels are accurate
 ##
-## Author: Eilis Hannon
-##
-## Date Created: 2020
-##
 ##---------------------------------------------------------------------#
 
 #----------------------------------------------------------------------#
 # NOTES
 #----------------------------------------------------------------------#
-# project folder is provided on command line at execution
-# optional config file provided on the command line to override default parameters
+# 2 arguments required at execeution on command line 
+# path to data folder 
+# path to references folder
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS

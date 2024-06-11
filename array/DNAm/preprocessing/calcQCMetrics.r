@@ -4,10 +4,6 @@
 ##
 ## Purpose of script: From GDS file generate summary metrics for stages 1 & 2 of quality control filtering
 ##
-## Author: Eilis Hannon (adapted to include EPIC V2 data by Emma Walker)
-##
-## Date Created: 2020 (edited Feb 2024)
-##
 ##---------------------------------------------------------------------#
 
 
@@ -336,13 +332,13 @@ if(!exists("snpCor")){
 # COMPARE TO EXTERNAL SNP DATA
 #----------------------------------------------------------------------#
 
+indexIID <- grep("^Genotype_IID$", names(QCmetrics), ignore.case=TRUE)
 if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	print("Comparing against matched genotype data")
 	geno<-read.table(genoFile, stringsAsFactors = FALSE, header = TRUE)
 	geno.all<-geno
 
-	indexIID <- grep("^Genotype_IID$", names(QCmetrics), ignore.case=TRUE)
-	if (length(indexIID) != 1){
+	if (exists("indexIID") & length(indexIID) != 1){
 		message("Warning: Genotype_IID column is missing, unable to compare external SNP data.")
 	}else{
 	   geno<-geno[match(QCmetrics$Genotype_IID, geno$IID),]
@@ -415,7 +411,45 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 }
 
 
+
+## perform sample filtering
+
+QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres), QCmetrics$rmsd < nvThres, QCmetrics$nNAsPer < perMiss, QCmetrics$pFilter, QCmetrics$intens.ratio < 4)
+	colnames(QCSum)<-c(paste0("BSConversion>",thresBS),  paste0("intens>", intenThres), paste0("normviolence<", nvThres), paste0("%MissingSites<", perMiss), "DetectionPvalues", "MethylatedControl")
+
+QCSum<-cbind(QCSum, rowSums(QCSum, na.rm = TRUE) == rowSums(!is.na(QCSum)))
+colnames(QCSum)[ncol(QCSum)]<-"passQCS1"
 	
+if(sexCheck){
+	sexPass <- as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
+	sexPass[is.na(QCmetrics$predSex)]<-FALSE
+    ## if unable to predict sex, change to fail
+	QCSum<-cbind(QCSum, sexPass)
+}else{
+ 	QCSum<-cbind(QCSum, NA)
+}
+colnames(QCSum)[ncol(QCSum)]<-"sexCheck"
+
+if(snpCheck & "genoCheck"%in% colnames(QCmetrics)){
+	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
+}else{
+ 	QCSum<-cbind(QCSum, NA)
+}
+colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
+
+# if neither sex check or snp check performed stage two pass status is copied from stage one 
+cols<-c("passQCS1", "sexCheck", "snpCheck")
+cols<-cols[cols %in% colnames(QCSum)]
+if(length(cols) > 1){
+	QCSum<-cbind(QCSum, rowSums(QCSum[,cols], na.rm = TRUE) == rowSums(!is.na(QCSum[,cols])))
+} else {
+	QCSum<-cbind(QCSum, QCSum[,"passQCS1"])
+}
+colnames(QCSum)[ncol(QCSum)]<-"passQCS2"
+rownames(QCSum)<-QCmetrics$Basename
+
+write.csv(cbind(QCmetrics[,c("Basename", "Sample_ID", "Individual_ID", "Cell_Type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
+
 
 #----------------------------------------------------------------------#
 # SAVE AND CLOSE
