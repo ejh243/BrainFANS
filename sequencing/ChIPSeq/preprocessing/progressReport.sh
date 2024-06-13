@@ -67,7 +67,7 @@ echo "Number of MACS2 peak files (paired end) found " $(ls ${PEAKDIR}/*.narrowPe
 ## save output in txt file
 echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS2Peaks" > ${METADIR}/summariseSampleProcessingProgress.csv
 
-for sampleName in ${SAMPLEIDS[@]}
+for sampleName in "${SAMPLEIDS[@]}"
 do 
     toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${sampleName}'*'))
     
