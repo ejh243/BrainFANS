@@ -1,3 +1,4 @@
+#!/bin/bash
 ## searches for output files from each part of the QC pipeline and reports number of files found
 ## then searches specifically for each sample to identify what is missing
 

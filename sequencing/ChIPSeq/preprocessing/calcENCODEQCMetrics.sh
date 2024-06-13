@@ -1,3 +1,4 @@
+#!/bin/bash
 ## taken from ENCODE pipeline https://docs.google.com/document/d/1lG_Rd7fnYgRpSIqrIfuVlAz2dW1VaSQThzk836Db99c/edit
 
 ## EXECUTION

@@ -1,3 +1,4 @@
+#!/bin/bash
 ## calculates number of reads within peaks for sample level peaks
 
 ## EXECUTION
