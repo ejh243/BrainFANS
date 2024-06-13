@@ -36,7 +36,7 @@ mkdir -p ENCODEMetrics
 samtools sort -n --threads 10 ${sampleName}.filt.nodup.bam -O SAM  | SAMstats --sorted_sam_file -  --outf ENCODEMetrics/${sampleName}.flagstat.qc
 
 
-if [ ! -f ${sampleName}*pbc.qc ]
+if [ ! -f "${sampleName}.pbc.qc" ]
 then
 	# COMPUTE LIBRARY COMPLEXITIY
 

@@ -53,7 +53,7 @@ fi
 
 #cd $METHYLDIR
 
-#zcat ${sampleName}*bismark.cov.gz | grep "chr1	" > ENCODEMetrics/${sampleName}.chr1.cov.bg
+#zcat ${sampleName}*bismark.cov.gz | grep "chr1	" > ENCODEMetrics/${sampleName}.chr2.cov.bg
 
 if [[ $? == 0 ]]
 	then echo "Part 1 ENCODE metrics calculated"

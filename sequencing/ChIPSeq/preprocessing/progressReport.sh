@@ -83,53 +83,53 @@ do
     echo -n ${sampleName},${RAWDATADIR}, ${f1},${f2}, >> ${METADIR}/summariseSampleProcessingProgress.csv
 
     
-    if [ ! -s ${FASTQCDIR}/${f1%.f*}fastqc.zip ]
+    if [ ! -s "${FASTQCDIR}/${f1%.f*}_fastqc.zip" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${FASTQCDIR}/${f2%.f*}fastqc.zip ]
+    if [ ! -s "${FASTQCDIR}/${f2%.f*}_fastqc.zip" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
 
-    if [ ! -s ${TRIMDIR}/fastp_reports/${sampleName}*.json ]
+    if [ ! -s "${TRIMDIR}/fastp_reports/${sampleName}_fastp.json" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}.bowtie.log ]
+    if [ ! -s "${ALIGNEDDIR}/${sampleName}.bowtie.log" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}.filt.nodup.bam ]
+    if [ ! -s "${ALIGNEDDIR}/${sampleName}.filt.nodup.bam" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/ENCODEMetrics/${sampleName}*.pbc.qc ]
+    if [ ! -s "${ALIGNEDDIR}/ENCODEMetrics/${sampleName}.pbc.qc" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${PEAKDIR}/${sampleName}.narrowPeak.filt ]
+    if [ ! -s "${PEAKDIR}/${sampleName}.narrowPeak.filt" ]
     then
-        echo "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "N" >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo "Y" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "Y" >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
   
 done
