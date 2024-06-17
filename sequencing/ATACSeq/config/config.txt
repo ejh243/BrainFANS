@@ -89,12 +89,12 @@ export XCHRBED="${REFERENCES_DIR}/X_chr_genes"
 export PAR="${REFERENCES_DIR}/pseudoautosomal_regions"
 export GENOMEFASTA="${REFERENCES_DIR}/Whole_genome_fasta/"
 export KGREF="${REFERENCES_DIR}/reference_1000G/"
-export SNP="${REFERENCES_DIR}/SNP_files"
+export SNP="${REFERENCES_DIR}/SNP_file"
 export UCSCRef="${REFERENCES_DIR}/UCSC/"
 export GENOMESIZE="${REFERENCES_DIR}/genome.info"
 export SEGREFGENOME="${REFERENCES_DIR}/genome.char.fa"
 export GWASTRAITS="${REFERENCES_DIR}/gwas_traits/"
-export LDREFPATH="${REFERENCES_DIR}/LDScore/resources/"
+export LDREFPATH="${REFERENCES_DIR}/LDScore_resources/"
 
 ## Adapter sequences to trim ##
 ## Specify adapter sequences to be trimmed ##
