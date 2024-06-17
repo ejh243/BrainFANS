@@ -32,20 +32,21 @@
 ##    SET UP    ##
 ## ============ ##
 
+## print start date and time
 echo Job started on:
 date -u
 
 ## load config file provided on command line related to the specified project
 source "${1}/config.txt"
-echo "Loading config file for project: " $1
-echo "Project directory is: " $DATADIR
+echo "Loading config file for project: " $PROJECT
+echo "Project directory is: " $MAIN_DIR
+echo "Script is running from directory: " ${SCRIPTS_DIR}
 
 ## Log files directory
-LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACcalcQCS2-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
-
 
 ##check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
@@ -57,13 +58,13 @@ fi
 ##     CALCQCMetrics    ##
 ##  ==================  ##
 
-mkdir -p ${ALIGNEDDIR}/QCOutput
+mkdir -p ${ALIGNED_DIR}/QCOutput
 
-module load R/4.2.1-foss-2022a
+module load $RVERS
 
 echo "Running step 2 of ATAC-seq pipeline: Post alignment processing (QC metrics and fragment distribution)."
-echo "Calculating QC metrics and fragment distribution for samples in batch " ${SLURM_ARRAY_TASK_ID} 
-echo "Output directory is " "${ALIGNEDDIR}/QCOutput/"
-Rscript ${SCRIPTDIR}/ATACSeq/preprocessing/fragmentDistribution.r $CONFIGR ${SLURM_ARRAY_TASK_ID} 
+echo "Calculating QC metrics and fragment distribution for samples in batch: " ${SLURM_ARRAY_TASK_ID} 
+echo "Output directory is " "${ALIGNED_DIR}/QCOutput/"
+Rscript ${RSCRIPTS_DIR}/fragmentDistribution.r ${CONFIGR} ${SLURM_ARRAY_TASK_ID} 
 
 echo "QC metrics and fragment distribution calculated"

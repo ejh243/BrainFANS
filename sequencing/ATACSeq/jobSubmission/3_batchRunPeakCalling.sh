@@ -30,16 +30,17 @@
 ##    SET UP    ##
 ## ============ ##
 
+## print start date and time
 echo Job started on:
 date -u
 
 ## load config file provided on command line related to the specified project
 source "${1}/config.txt"
-echo "Loading config file for project: " $1
-echo "Project directory is: " $DATADIR
+echo "Loading config file for project: " $PROJECT
+echo "Project directory is: " $MAIN_DIR
 
 ## Log files directory
-LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACPeakCallingS3-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
@@ -57,7 +58,7 @@ then
 fi
 
 ## Collate all filtered, no duplicated, bam files
-cd ${ALIGNEDDIR}
+cd ${ALIGNED_DIR}
 BAMFILES=($(ls *.filt.nodup.bam))
 echo "Number of aligned bam files: "" ""${#BAMFILES[@]}"""
   
@@ -70,19 +71,18 @@ echo "Number of aligned bam files: "" ""${#BAMFILES[@]}"""
 if [ $# = 1 ] || [[ $2 =~ 'SHIFT' ]]
 then
   module purge
-	module load BEDTools/2.29.2-GCC-9.3.0
-  module load SAMtools/1.11-GCC-9.3.0
-	module load R/3.6.3-foss-2020a
+	module load $BEDTVERS
+  module load $SAMTVERS
+	module load $RVERS
  
 	echo "Step 3.1 SHIFT started. Aligned reads will be shifted"
-  mapfile -t SAMPLES < ${METADIR}/samples.txt
+  mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
   echo "Sample(s) specified by array number in command line is/are: " ${sample}
   
-  if [[ -s ${ALIGNEDDIR}/${sample}.filt.nodup.bam ]]
+  if [[ -s ${ALIGNED_DIR}/${sample}.filt.nodup.bam ]]
   then 
-    cd ${SCRIPTDIR}
-	  sh ./ATACSeq/preprocessing/shiftAlignedReads.sh ${sample}
+	  sh "${SUB_SCRIPTS_DIR}/shiftAlignedReads.sh" ${sample}
   else
     echo "Aligned bam file for ${sample} not found. Aligned reads can't be shifted."
   fi
@@ -94,20 +94,19 @@ then
 
 	module purge
 	module load ${PVERS}
-  source ${PIPENV}/bin/activate
-	module load BEDTools
+  source ${PIP_ENV}/bin/activate
+	module load $BEDTVERS
  
   echo "Step 3.2 PEAKS started. Aligned reads will be used for peak calling using MACS3 PE and TA"
-  mapfile -t SAMPLES < ${METADIR}/samples.txt
+  mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
   echo "Sample(s) specified by array number in command line is/are: " ${sample}
   
-  mkdir -p ${PEAKDIR}/MACS/BAMPE
+  mkdir -p ${PEAK_DIR}/MACS/BAMPE
   
-  if [[ -s ${ALIGNEDDIR}/${sample}.filt.nodup.bam ]]
+  if [[ -s ${ALIGNED_DIR}/${sample}.filt.nodup.bam ]]
   then 
-    cd ${SCRIPTDIR}
-    sh ./ATACSeq/preprocessing/samplePeaks.sh ${sample}
+    sh "${SUB_SCRIPTS_DIR}/samplePeaks.sh" ${sample}
 	else
     echo "Aligned bam file for ${sample} not found. Peaks can't be called in aligned reads."
   fi
@@ -118,18 +117,15 @@ if [ $# = 1 ] || [[ $2 =~ 'FRIP' ]]
 then
 
 	module purge
-	module load BEDTools/2.29.2-GCC-9.3.0
-  module load SAMtools/1.11-GCC-9.3.0
+	module load $BEDTVERS
+  module load $SAMTVERS
   
-  echo "Step 3.3 FRIP started. Peak calling statistics will be collated."
-  mapfile -t SAMPLES < ${METADIR}/samples.txt
+  echo "Step 3.3 FRIP started. Peak calling statistics will be collated in a single csv file."
+  mapfile -t SAMPLES < ${META_DIR}/samples.txt
   
-	mkdir -p ${PEAKDIR}/QCOutput
+	mkdir -p ${PEAK_DIR}/QCOutput
 
-	cd ${SCRIPTDIR}/
-
-  ## Outputs a single csv file with all peak calling results for all samples
-  sh ./ATACSeq/preprocessing/collateCalcFrip.sh ${SAMPLES[@]}
+  sh "${SUB_SCRIPTS_DIR}/collateCalcFrip.sh" ${SAMPLES[@]}
 	
 fi
 

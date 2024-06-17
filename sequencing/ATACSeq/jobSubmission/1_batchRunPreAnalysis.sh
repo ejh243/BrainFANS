@@ -115,9 +115,9 @@ then
   	then
    
   		module purge
-  		module load Bowtie2/2.3.4.2-foss-2018b
+  		module load $BOWTIEVERS
   		module load SAMtools
-  		module load picard/2.6.0-Java-1.8.0_131
+  		module load $PICARDVERS
   		export PATH="$PATH:/lustre/projects/Research_Project-MRC190311/software/atac_dnase_pipelines/utils/"
   		
       mkdir -p ${ALIGNED_DIR}/QCOutput/
@@ -131,8 +131,8 @@ then
   	then
       
   		module purge
-  		module load BEDTools/2.29.2-GCC-9.3.0
-      module load SAMtools/1.11-GCC-9.3.0
+  		module load $BEDTVERS
+      module load $SAMTVERS 
           
       ## load conda env for samstats
       module load ${ACVERS}

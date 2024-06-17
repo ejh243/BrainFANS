@@ -55,6 +55,11 @@ export LOG_DIR="${SCRIPTS_DIR}/logFiles"
 export RVERS="R version should be > 4.2"
 export PVERS="Python version should be > 3.9"
 export ACVERS="Anaconda3 version should be > 2020.05"
+export BOWTIEVERS=" Bowtie version should be > 2.3.4.2"
+export PICARDVERS=" Picard version should be > 2.6.0-Java-1.8.0_131"
+export BEDTVERS=" Bedtools version should be > 2.29.2"
+export SAMTVERS=" Samtools version should be > 1.11"
+
 
 ## Specify full path to the required softwares ##
 export RLIB="/path/to/users/R/libraries"
@@ -87,7 +92,7 @@ export KGREF="${REFERENCES_DIR}/reference_1000G/"
 export SNP="${REFERENCES_DIR}/SNP_files"
 export UCSCRef="${REFERENCES_DIR}/UCSC/"
 export GENOMESIZE="${REFERENCES_DIR}/genome.info"
-export SEGREFGENOME="${REFERENCES_DIR}/genome.char.fa/"
+export SEGREFGENOME="${REFERENCES_DIR}/genome.char.fa"
 export GWASTRAITS="${REFERENCES_DIR}/gwas_traits/"
 export LDREFPATH="${REFERENCES_DIR}/LDScore/resources/"
 
