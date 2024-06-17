@@ -1,7 +1,7 @@
 ## ============================================================================================##
 ##                     ATAC-seq pipeline STEP 0.2: Set up R environment                        ##
 ## ============================================================================================##
-## EXECUTION: Rscript ./sequencing/ATACSeq/preprocessing/setUpRenv.sh  <user>                  ||
+## EXECUTION: Rscript ./sequencing/ATACSeq/Rscripts/installLibraries.r  <user>                 ||
 ## - execute from scripts directory                                                            ||
 ##                                                                                             ||
 ## DESCRIPTION: This script checks if required R packages are installed and install them if not//
@@ -10,7 +10,7 @@
 ## - <project> : project on which analysis is being run                                        ||
 ##                                                                                             ||
 ## REQUIRES:                                                                                   ||
-## - R/4.2.1-foss-2022a                                                                        ||
+## - R version > 4.2.1                                                                         ||
 ## ============================================================================================##
 
 args <- commandArgs()
