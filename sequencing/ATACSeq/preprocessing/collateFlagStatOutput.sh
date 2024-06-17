@@ -1,23 +1,19 @@
-## collate flagstat output
-
-## EXECUTION
-# sh ATACSeq/collateFlagStatOutput.sh 
-# assumes config file has been loaded
-# script needs to be executed from <git repo>/sequencing/
-
-## REQUIRES the following variables in config file
-# ALIGNEDDIR, PEAKDIR
-
-## REQUIRES the following software
-# bedtools, samtools
-
-## INPUT
-# blacklist filtered peak lists
-#
-
-## OUTPUT
-# ${PEAKDIR}/QCOutput/FRIP_*.csv
-
+## =============================================================================================================##
+##                          ATAC-seq pipeline STEP 4.2: Collate flagstat output                                 ##
+## =============================================================================================================##
+## EXECUTION: sh ./sequencing/ATACSeq/preprocessing/collateFlagStatOutput.sh                                    ||
+## - execute from scripts directory                                                                             ||
+##                                                                                                              ||
+## DESCRIPTION: This script collates the results from flagstat output                                           ||
+##                                                                                                              ||
+## OUTPUTS:                                                                                                     ||
+## - collateFlagStatMetrics.txt                                                                                 ||
+##                                                                                                              ||
+## REQUIRES:                                                                                                    ||
+## - bedtools, samtools                                                                                         ||
+## - ALIGNEDDIR, PEAKDIR                                                                                        ||
+##                                                                                                              ||
+## =============================================================================================================##
 
 cd ${ALIGNEDDIR}/ENCODEMetrics/
 

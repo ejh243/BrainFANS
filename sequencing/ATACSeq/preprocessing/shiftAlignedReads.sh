@@ -1,24 +1,26 @@
-## converts filtered bam file to a tagalign file, calculates CC scores and shifts reads ready for peak calling adapted from (https://www.encodeproject.org/pipelines/ENCPL792NWO/)
+## ===================================================================================================================##
+##                             ATAC-seq pipeline STEP 3.1: Shift Reads                                                ##
+## ===================================================================================================================##
+## EXECUTION: sh ./sequencing/ATACSeq/preprocessing/shiftAlignedReads.sh <sampleName>                                 ||
+## - execute from scripts directory                                                                                   ||
+##                                                                                                                    ||
+## DESCRIPTION: This script converts bam files to tagalign files, calculates CC scores and shifts reads to perform    || 
+## peak calling using single-end mode.  Adapted from: https://www.encodeproject.org/pipelines/ENCPL792NWO/            ||
+##                                                                                                                    ||
+## INPUTS:                                                                                                            || 
+## $1 -> <sampleName> sample name to shift reads and calculate CC scores                                              ||
+##                                                                                                                    ||
+## OUTPUTS:                                                                                                           ||
+## ALIGNEDIR/*.tn5.tagAlign.gz, *.cc.qc, *.cc.plot.pdf                                                                ||
+## - output will be peaks called in autosomal chromosomes and not aligned to blacklist regions                        ||
+##                                                                                                                    ||
+## REQUIRES:                                                                                                          ||
+## - aligned filtered, no duplicated bam file for                                                                     || 
+## - R run_spp.R script, bedtools, samtools                                                                           ||
+## - ALIGNEDDIR                                                                                                       ||
+##                                                                                                                    ||
+## ===================================================================================================================##
 
-## EXECUTION
-# sh ./ATACSeq/preprocessing/4_shiftAlignedReads.sh <sample name>
-# where 
-# <sample name> is the sample specific prefix
-# script needs to be executed from <git repo>/sequencing/
-
-## REQUIRES the following variables in config file
-# ALIGNEDDIR
-
-## REQUIRES the following software
-# bedtools, samtools, R
-
-## INPUT
-# *.filt.nodup.bam filtered name sorted bam file
-
-## OUTPUT
-# *.tn5.tagAlign.gz
-# *.cc.qc
-# *.cc.plot.pdf
 
 sampleName=$1 
 NTHREADS=8 
