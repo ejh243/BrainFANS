@@ -5,15 +5,15 @@
 ## This is an example config R file for the ATAC-sequencing   ||
 ## pipeline. This is expected to be located in the project's  ||
 ## directory. The full path to this file should be specified  ||
-## in the main config file.                                   ||
+## in the main config file in the "CONFIG" variable.          ||
 ##                                                            ||
 ## The project's directory should be specified in the "dir"   ||
 ## variable.                                                  ||
 ##                                                            ||
 ## ===========================================================##
 
-##Need to specify directory to project folder.
-dir<- "/lustre/projects/Research_Project-MRC190311/ATACSeq/<project>"
+## Specify the full path to the project's directory ##
+dir<- "/path/to/project/directory"
 
 metaDir<- paste0(dir, "/0_metadata")
 dataDir<-paste0(dir, "/1_raw")
@@ -29,6 +29,7 @@ analysisDir<-paste0(dir, "/6_analysis")
 colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999", 
                        "#F0E442", "#0072B2",  "#E69F00", "#56B4E9")
 
+## Thresholds applied in the first stage of QC
 nrfThres <- 0.7
 nucfThres <- 0.3
 monoThres <- 0.2

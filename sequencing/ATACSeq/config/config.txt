@@ -1,41 +1,32 @@
-## ===========================================================##
-##           ATAC-seq pipeline: Example config file           ##
-## ===========================================================##
-##                                                            ||
-## This is an example config file for the ATAC-sequencing     ||
-## pipeline. This is expected to be located in the project's  ||
-## directory. The full path to this file should be specified  ||
-## when running the pipeline's scripts.                       ||
-##                                                            ||
-## The project's folder name needs to be specified in the     ||
-## first variable. Please specify the modules versions to be  ||
-## used.                                                      ||
-##                                                            ||
-## ===========================================================##
+## ===========================================================================##
+##                      ATAC-seq pipeline: Example config file                ##
+## ===========================================================================##
+##                                                                            ||
+## This is an example config file for the ATAC-sequencing pipeline.           ||
+## This file and the R config file are expected to be located in the project's||
+## directory.                                                                 ||
+## The full path to this file should be specified as the first command line   ||
+## argument when running the pipeline's scripts.                              ||
+##                                                                            ||
+## ===========================================================================##
 
+## ========================= ##
+|| Project set up filepaths  ||
+## ========================= ##
 
-## Example config file ##
-## This config file should be found at the project's folder. The full path to this file should be specified 
-## Please modify as required ##
-
-## Sequencing data filepaths
+## Specify the name of the project's directory ##
 export PROJECT="project name"
+## Specify the full project's directory ##
 export MAIN_DIR="/path/to/project/folder/${PROJECT}"
-export CONFIGR="/path/to/R/config/file/${PROJECT}/config.r"
 
-## Software/script filepaths
-export SCRIPTS_DIR="/path/to/this/scripts/folder"
-export SUB_SCRIPTS_DIR="${SCRIPTS_DIR}/path/to/subcripts/"
-export RSCRIPTS_DIR="${SCRIPTS_DIR}/Rscripts"
-export LOG_DIR="${SCRIPTS_DIR}/logFiles"
+export CONFIGR="${MAIN_DIR}/config.r"
+export CONDAFILE="${MAIN_DIR}/environment.yml"
+export PIPFILE="${MAIN_DIR}/packagesPip.txt"
 
-## Specify modules and versions
-export RVERS="R/4.2.1-foss-2022a"
-export PVERS="Python/3.9.6-GCCcore-11.2.0-bare"
-export ACVERS="Anaconda3/2020.05"
-export RLIB="/path/to/users/R/libraries"
+## ========================= ##
+|| Sequencing data filepaths ||
+## ========================= ##
 
-## Project's main data and results directories 
 export META_DIR="${MAIN_DIR}/0_metadata"
 export RAWDATA_DIR="${MAIN_DIR}/1_raw/"
 export FASTQC_DIR="${MAIN_DIR}/1_raw/fastqc"
@@ -44,42 +35,67 @@ export ALIGNED_DIR="${MAIN_DIR}/3_aligned"
 export PEAK_DIR="${MAIN_DIR}/4_calledPeaks"
 export PEAKCOUNTS="${MAIN_DIR}/5_countPeaks"
 export ANALYSIS_DIR="${MAIN_DIR}/6_analysis"
+
+## Specify full path to SNP imputation data ##
 export GENODIR="/path/to/SNParray/ImputationData"
 
-## Conda/Pip environments filepaths
-export CONDAFILE="${MAIN_DIR}/environment.yml"
-export PIPFILE="${MAIN_DIR}/packagesPip.txt"
-export CONDA=/lustre/home/${USER}/.conda/envs/${PROJECT}
-export CONDA_ENVDIR="/path/to/conda/etc/folder"
-export PIP_ENV="/path/to/pip/environment/${PROJECT}"
 
-## Reference data filepaths
-export REFGENOME="/path/to/reference/genome"
-export BLACKLIST="/path/to/blacklisted/peak/regions/.gz"
-export XCHRBED="/path/to/X/CHR/genes/.bed"
-export PAR="/path/to/pseudoautosomal/regions/.bed"
-export GENOMEFASTA="/path/to/GRCh38/Sequence/WholeGenomeFasta/"
-export KGREF="/path/to/reference/100G/"
-export SNP="${GENODIR}/path/to/SNP/file/.vcf.gz"
-export UCSCRef="/path/to/UCSC/references"
-export GENOMESIZE="/path/to/genome.info"
-export SEGREFGENOME="/path/to/WholeGenome/genome.char.fa/"
-export GWASTRAITS="/path/to/gwas_traits/"
-export LDREFPATH="/path/to/LDScore/resources/"
+## =========================================== ##
+|| Scripts and software filepaths and versions ||
+## =========================================== ##
 
-## Software filepaths
-export VERIFYBAMID="/path/to/verifyBamID_1.1.3/verifyBamID/bin/verifyBamID"
+## Specify full path to pipeline's scripts directory ##
+export SCRIPTS_DIR="/path/to/this/scripts/folder"
+
+export SUB_SCRIPTS_DIR="${SCRIPTS_DIR}/subscripts"
+export RSCRIPTS_DIR="${SCRIPTS_DIR}/Rscripts"
+export LOG_DIR="${SCRIPTS_DIR}/logFiles"
+
+## Specify the version of the modules used through the pipeline. Note the minimum version required. ##
+export RVERS="R version should be > 4.2"
+export PVERS="Python version should be > 3.9"
+export ACVERS="Anaconda3 version should be > 2020.05"
+
+## Specify full path to the required softwares ##
+export RLIB="/path/to/users/R/libraries"
+export VERIFYBAMID="/path/to/verifyBamID/bin/verifyBamID,  version should be > verifyBamID_1.1.3"
 export PICARD="/path/to/picard/Java/file"
 export LDPATH="/path/to/ldsc"
 export RSTUDIO_PANDOC="/usr/lib/rstudio-server/bin/pandoc"
 
-## Adapter sequences to trim
+## Specify full path to conda environment ##
+export CONDA="/path/tp/.conda/envs/folder"
+export CONDA_ENVDIR="/path/to/conda/etc/folder"
+## Specify full path to pip environment ##
+export PIP_ENV="/path/to/pip/environment/project-name"
+
+
+## ========================= ##
+|| Sequencing data filepaths ||
+## ========================= ##
+
+## Specify full path to references folder ##
+export REFERENCES_DIR="/path/to/references/folder"
+
+## Specify the path to each of the reference datasets, files or folders ##
+export REFGENOME="${REFERENCES_DIR}/reference_genome"
+export BLACKLIST="${REFERENCES_DIR}/blacklisted_peak_regions"
+export XCHRBED="${REFERENCES_DIR}/X_chr_genes"
+export PAR="${REFERENCES_DIR}/pseudoautosomal_regions"
+export GENOMEFASTA="${REFERENCES_DIR}/Whole_genome_fasta/"
+export KGREF="${REFERENCES_DIR}/reference_1000G/"
+export SNP="${REFERENCES_DIR}/SNP_files"
+export UCSCRef="${REFERENCES_DIR}/UCSC/"
+export GENOMESIZE="${REFERENCES_DIR}/genome.info"
+export SEGREFGENOME="${REFERENCES_DIR}/genome.char.fa/"
+export GWASTRAITS="${REFERENCES_DIR}/gwas_traits/"
+export LDREFPATH="${REFERENCES_DIR}/LDScore/resources/"
+
+## Adapter sequences to trim ##
+## Specify adapter sequences to be trimmed ##
 export ADAP_R1="Read 1 adapter sequence"
 export ADAP_R2="Read 2 adapter sequence"
 
 ## parameters
 export multimap=4
-
-## Reference data filepaths
-
 
