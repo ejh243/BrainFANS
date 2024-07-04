@@ -1,3 +1,4 @@
+#!/bin/bash
 ## get the number of reads aligned to MT chromosome from samtools idxstats output
 
 
