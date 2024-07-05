@@ -1,5 +1,5 @@
 
-```{r setup, include=FALSE}
+```{r setupCtCheck, include=FALSE}
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
