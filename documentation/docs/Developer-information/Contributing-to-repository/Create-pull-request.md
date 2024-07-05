@@ -33,7 +33,7 @@ Once any merge conflicts that arise from the above have been resolved, you can p
 
 ```bash
 # Push your changes to the remote repository
-git push origin your-branch-name
+git push -u origin your-branch-name
 ```
 
 :::warning[multiple people working on the same branch]
@@ -41,13 +41,36 @@ If you are working on the same branch with other people and the branch has alrea
 
 ```bash
 # Pull the latest changes from the remote repository
-git pull origin your-branch-name
+git pull --rebase origin your-branch-name
 
 # Push your changes to the remote repository
 git push origin your-branch-name
 ```
 
-This will ensure that you are not causing any merge conflicts when you go to push your changes. `git pull` will merge the version online with your local version of the branch. Warnings of merge conflicts will appear in the terminal if they are apparent at this stage. Fix these before pushing.
+Note that sometimes you will get this error:
+
+```text
+CONFLICT (content): Merge conflict in filename.extension
+error: Failed to merge in the changes.
+Patch failed at commit commit-name
+```
+
+If you do get this error, enter the following:
+
+```bash
+# Discard the rebase
+git rebase --abort
+
+# Complete a normal pull
+git pull origin your-branch-name
+
+# Work through the merge conflicts that likely caused --rebase to fail
+
+# Push your changes to the remote repository
+git push origin your-branch-name
+```
+
+This will ensure that you are not causing any merge conflicts for others when you go to push your changes. `git pull` will merge the version online with your local version of the branch. Warnings of merge conflicts will appear in the terminal if they are apparent at this stage. Fix these before pushing.
 :::
 
 ## Return to github to finalise the pull request
