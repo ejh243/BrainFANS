@@ -31,15 +31,23 @@ arrayType <- toupper(arrayType)
 #----------------------------------------------------------------------#
 
 library(bigmelon)
-library(IlluminaHumanMethylationEPICv2anno.20a1.hg38)
-library(IlluminaHumanMethylationEPICv2manifest)
 library(cdegUtilities)
 
-#library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
-library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-library(IlluminaHumanMethylationEPICmanifest)
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-library(IlluminaHumanMethylation450kmanifest)
+
+if(arrayType=='450K'){
+  #library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+  library("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  library("IlluminaHumanMethylation450kmanifest")
+}
+if(arrayType=='V1'){
+  library("IlluminaHumanMethylationEPICanno.ilm10b2.hg19")
+  library("IlluminaHumanMethylationEPICmanifest")
+}
+if(arrayType=='V2'){
+library(IlluminaHumanMethylationEPICv2anno.20a1.hg38)
+library(IlluminaHumanMethylationEPICv2manifest)
+
+}
 
 #----------------------------------------------------------------------#
 # IMPORT DATA

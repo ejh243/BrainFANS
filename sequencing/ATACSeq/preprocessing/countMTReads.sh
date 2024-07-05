@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ## ====================================================================================================##
 ##                    ATAC-seq pipeline STEP 4.2: Count MT chromosome reads                            ##
 ## ====================================================================================================##
@@ -15,7 +17,8 @@
 ## ====================================================================================================##
 
 ## Results will be output in txt file
-echo "Filename\tMTReads\tAllMappedReads\n" > ${ALIGNEDDIR}/countMTReads.txt
+echo -e "Filename\tMTReads\tAllMappedReads" > ${ALIGNEDDIR}/countMTReads.txt
+
 
 for file in ${ALIGNEDDIR}/*_statsperchr.txt
 do 
