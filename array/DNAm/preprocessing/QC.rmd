@@ -1,6 +1,6 @@
 ---
 title: "DNA methylation Illumina Arrays Quality Control Report"
-author: "`r commandArgs(trailingOnly=T)[4]`"
+author: "`r commandArgs(trailingOnly=T)[5]`"
 output: 
   html_document:
     toc: true
@@ -24,10 +24,10 @@ library(pheatmap)
 library(data.table)
 
 
-source(args[3]) ### change the content of this file to run QC with different thresholds
+source(args[4]) ### change the content of this file to run QC with different thresholds
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 
-
+refDir <- args[3]
 dataDir <- args[2]
 setwd(dataDir) 
 

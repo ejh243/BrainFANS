@@ -48,7 +48,7 @@ Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
 
 Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
 
-Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
+Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${REFDIR} ${RCONFIG} $USER
 
 ## mv markdown report to correct location
 mv QC.html ${GDSDIR}/QCmetrics/
