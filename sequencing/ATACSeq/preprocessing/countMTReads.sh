@@ -1,3 +1,4 @@
+#!/bin/bash
 ## get the number of reads aligned to MT chromosome from samtools idxstats output
 
 
@@ -17,7 +18,7 @@
 # ${ALIGNEDDIR}/countMTReads.txt
 
 
-echo "Filename\tMTReads\tAllMappedReads\n" > ${ALIGNEDDIR}/countMTReads.txt
+echo -e "Filename\tMTReads\tAllMappedReads" > ${ALIGNEDDIR}/countMTReads.txt
 
 for file in ${ALIGNEDDIR}/*_statsperchr.txt
 do 
