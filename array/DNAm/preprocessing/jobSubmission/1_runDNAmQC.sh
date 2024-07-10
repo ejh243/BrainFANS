@@ -46,17 +46,12 @@ chmod 755 ${DATADIR}/2_gds/raw.gds
 
 Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
 
-Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
+Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
+
+Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${REFDIR} ${RCONFIG} $USER
 
 ## mv markdown report to correct location
 mv QC.html ${GDSDIR}/QCmetrics/
-
-Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
-
-Rscript -e "rmarkdown::render('QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
-
-## mv markdown report to correct location
-mv QCwithinCellType.html ${GDSDIR}/QCmetrics
 
 mkdir -p ${DATADIR}/3_normalised
 

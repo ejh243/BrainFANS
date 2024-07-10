@@ -1,6 +1,6 @@
 ---
 title: "DNA methylation Illumina Arrays Quality Control Report"
-author: "`r commandArgs(trailingOnly=T)[4]`"
+author: "`r commandArgs(trailingOnly=T)[5]`"
 output: 
   html_document:
     toc: true
@@ -20,18 +20,17 @@ library(corrplot)
 library(pander)
 library(kableExtra)
 library(RColorBrewer)
+library(pheatmap)
+library(data.table)
 
 
-
-source(args[3]) ### change the content of this file to run QC with different thresholds
+source(args[4]) ### change the content of this file to run QC with different thresholds
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 
-
+refDir <- args[3]
 dataDir <- args[2]
 setwd(dataDir) 
 
-
-#gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 
 load(qcData)
@@ -51,45 +50,7 @@ par(mar = c(4,4,1,1))
 
 
 ```{r, echo = FALSE}
-
-## perform sample filtering
-
-QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres), QCmetrics$rmsd < nvThres, QCmetrics$nNAsPer < perMiss, QCmetrics$pFilter, QCmetrics$intens.ratio < 4)
-	colnames(QCSum)<-c(paste0("BSConversion>",thresBS),  paste0("intens>", intenThres), paste0("normviolence<", nvThres), paste0("%MissingSites<", perMiss), "DetectionPvalues", "MethylatedControl")
-
-QCSum<-cbind(QCSum, rowSums(QCSum, na.rm = TRUE) == rowSums(!is.na(QCSum)))
-colnames(QCSum)[ncol(QCSum)]<-"passQCS1"
-	
-if(sexCheck){
-	sexPass <- as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
-	sexPass[is.na(QCmetrics$predSex)]<-FALSE
-    ## if unable to predict sex, change to fail
-	QCSum<-cbind(QCSum, sexPass)
-}else{
- 	QCSum<-cbind(QCSum, NA)
-}
-colnames(QCSum)[ncol(QCSum)]<-"sexCheck"
-
-if(snpCheck & "genoCheck"%in% colnames(QCmetrics)){
-	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
-}else{
- 	QCSum<-cbind(QCSum, NA)
-}
-colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
-
-# if neither sex check or snp check performed stage two pass status is copied from stage one 
-cols<-c("passQCS1", "sexCheck", "snpCheck")
-cols<-cols[cols %in% colnames(QCSum)]
-if(length(cols) > 1){
-	QCSum<-cbind(QCSum, rowSums(QCSum[,cols], na.rm = TRUE) == rowSums(!is.na(QCSum[,cols])))
-} else {
-	QCSum<-cbind(QCSum, QCSum[,"passQCS1"])
-}
-colnames(QCSum)[ncol(QCSum)]<-"passQCS2"
-rownames(QCSum)<-QCmetrics$Basename
-
-write.csv(cbind(QCmetrics[,c("Basename", "Sample_ID", "Individual_ID", "Cell_Type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
-
+QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
 
 
@@ -857,14 +818,15 @@ Samples will now be filtered based on thresholds defined in the config file. The
 
 ```{r, echo = FALSE}
 # create cross tab table
-xTab<-matrix(data = NA, ncol = ncol(QCSum), nrow = ncol(QCSum))
-for(i in 1:ncol(QCSum)){
-  for(j in 1:ncol(QCSum)){
-    xTab[i,j]<-sum(rowSums(QCSum[,c(i,j)]) == 0, na.rm = TRUE)
+QCSum.min<-as.matrix(QCSum[,!colnames(QCSum) %in% c("Basename", "Sample_ID","Individual_ID","Cell_Type")])
+xTab<-matrix(data = NA, ncol = ncol(QCSum.min), nrow = ncol(QCSum.min))
+for(i in 1:ncol(QCSum.min)){
+  for(j in 1:ncol(QCSum.min)){
+    xTab[i,j]<-sum(rowSums(QCSum.min[,c(i,j)]) == 0, na.rm = TRUE)
   }
 }
-colnames(xTab)<-colnames(QCSum)
-rownames(xTab)<-colnames(QCSum)
+colnames(xTab)<-colnames(QCSum.min)
+rownames(xTab)<-colnames(QCSum.min)
 
 kbl(xTab) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
@@ -894,7 +856,7 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 ```{r,findDuplicateSamplesPostQC, echo = FALSE}
 
-passQC<-rownames(QCSum)[QCSum[,"passQCS2"]]
+passQC<-QCSum$Basename[as.logical(QCSum[,"passQCS2"])]
 
 snpCor<-snpCor[passQC, passQC]
 
@@ -1022,6 +984,15 @@ if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age)) > 1){
 }
 ```
 
+
+
+## Confirm Cell type Labels
+
+Perform cell type label check: `r ctCheck`. 
+
+
+```{r, child=if (ctCheck) 'rmarkdownChild/ctCheck.rmd'}
+```
 
 #### Session Information
 
