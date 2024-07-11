@@ -4,25 +4,26 @@
 ##
 ## Purpose of script: compare effects of normalisation across all samples and within cell type.
 ##
-## Author: Eilis Hannon
-##
-## Date Created: 2020
-##
 ##---------------------------------------------------------------------#
 
 #----------------------------------------------------------------------#
 # NOTES
 #----------------------------------------------------------------------#
-# uses wateRmelon metrics to compre normalised datasets
+# uses wateRmelon metrics to compare normalisation strategies
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
 args<-commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
+refPath <- args[2]
+
 gdsFile <-file.path(dataDir, "2_gds/raw.gds")
 normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
+qcOutFolder<-file.path(dataDir, "/2_gds/QCmetrics")
 resPath<-file.path(dataDir, "4_analysis/methodsDevelopment/")
+
+cellTypes <- c("Double-", "NeuN+", "Sox10+")
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -36,23 +37,42 @@ library(bigmelon)
 
 setwd(dataDir)
 
+
 gfile<-openfn.gds(normgdsFile, readonly = FALSE)
-
-normbetas<-index.gdsn(gfile, "normbeta")[,]
-celltypeNormbeta<-index.gdsn(gfile, "celltypenormbeta")[,]
 rawbetas<-betas(gfile)[,]
-
+# need to extract below to run normalisation
+meth<-methylated(gfile)[,]
+unmeth<-unmethylated(gfile)[,]
+celltypeNormbeta<-index.gdsn(gfile, "celltypenormbeta")[,]
+#dasen(gfile, node="normbeta")
+#normbeta<-index.gdsn(gfile, "normbeta")[,]
 closefn.gds(gfile)
+
+
+probeAnnot<-read.table(file.path(refPath, "EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$probeID),]
+normbeta<-dasen(meth, unmeth, probeAnnot$designType)
+
+QCSum<-read.csv(file.path(dataDir, "/2_gds/QCmetrics/passQCStatusStage3AllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
+passQC<-QCSum$Basename[which(QCSum$passQCS3)]
+
+QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
+QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
+
+## filter to NeuN+, Double- and Sox10 only
+QCmetrics <-QCmetrics[QCmetrics$Cell.type %in% cellTypes,]
+rawbetas<-rawbetas[,QCmetrics$Basename]
+normbeta<-normbeta[,QCmetrics$Basename]
+celltypeNormbeta<-celltypeNormbeta[,QCmetrics$Basename]
+
 
 ## remove NAs 
 rawbetas<-na.omit(rawbetas)
-normbetas<-na.omit(normbetas)
+normbeta<-na.omit(normbeta)
 celltypeNormbeta<-na.omit(celltypeNormbeta)
 
-QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
-QCmetrics<-QCmetrics[match(colnames(rawbetas), QCmetrics$Basename),]
+## filter to common probe set
 
-cellTypes<-sort(unique(QCmetrics$Cell.type))
 cellCols<-brewer.pal(n = length(cellTypes), name = "Paired")
 
 #----------------------------------------------------------------------#
