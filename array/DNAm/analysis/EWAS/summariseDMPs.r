@@ -4,10 +4,6 @@
 ##
 ## Purpose of script: Characterise EWAS results and produce summary plots
 ##
-## Author: Eilis Hannon
-##
-## Date Created: 2023-10-01
-##
 ##---------------------------------------------------------------------#
 
 
