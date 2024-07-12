@@ -72,6 +72,12 @@ normbeta<-na.omit(normbeta)
 celltypeNormbeta<-na.omit(celltypeNormbeta)
 
 ## filter to common probe set
+probesKeep<-intersect(rownames(rawbetas), rownames(normbeta))
+probesKeep<-intersect(probesKeep, rownames(celltypeNormbeta))
+
+rawbetas<-rawbetas[probesKeep,]
+normbeta<-normbeta[probesKeep,]
+celltypeNormbeta<-celltypeNormbeta[probesKeep,]
 
 cellCols<-brewer.pal(n = length(cellTypes), name = "Paired")
 
@@ -87,36 +93,31 @@ colnames(matOut)<-c("iDMR", "genki", "seabi")
 if(length( grep("rs", rownames(rawbetas))) > 0){
 	matOut[1,2]<-mean(genki(rawbetas))
 }
-if(length( grep("rs", rownames(normbetas))) > 0){
-	matOut[2,2]<-mean(genki(normbetas))
+if(length( grep("rs", rownames(normbeta))) > 0){
+	matOut[2,2]<-mean(genki(normbeta))
 }
 if(length( grep("rs", rownames(celltypeNormbeta))) > 0){
 	matOut[3,2]<-mean(genki(celltypeNormbeta))
 }
 
 
-## filter to common probes
-probes<-intersect(intersect(rownames(rawbetas), rownames(normbetas)), rownames(celltypeNormbeta))
-rawbetas<-rawbetas[probes,]
-normbetas<-normbetas[probes,]
-celltypeNormbeta<-celltypeNormbeta[probes,]
 
-probeAnno<-fData(gfile)
-probeAnno<-probeAnno[probes,]
-x.probes<-probeAnno$chr == "chrX"
 
 
 idmr<-intersect(iDMR(), rownames(rawbetas))
 
 matOut[1,1]<-dmrse_row(rawbetas, idmr)
-matOut[2,1]<-dmrse_row(normbetas, idmr)
+matOut[2,1]<-dmrse_row(normbeta, idmr)
 matOut[3,1]<-dmrse_row(celltypeNormbeta, idmr)
 
+probeAnnot<-probeAnnot[match(probesKeep, probeAnnot$probeID),]
+x.probes<-probeAnnot$chrm == "chrX"
+
 matOut[1,3]<-seabi(rawbetas, sex = QCmetrics$Sex, X = x.probes)
-matOut[2,3]<-seabi(normbetas, sex = QCmetrics$Sex, X = x.probes)
+matOut[2,3]<-seabi(normbeta, sex = QCmetrics$Sex, X = x.probes)
 matOut[3,3]<-seabi(celltypeNormbeta, sex = QCmetrics$Sex, X = x.probes)
 
-write.csv(matOut, paste0(qcOutFolder, "CompareNormalisationStrategies.csv"))
+write.csv(matOut, file.path(resPath, "CompareNormalisationStrategies.csv"))
 
 pheno<-QCmetrics
 
@@ -124,18 +125,18 @@ pheno<-QCmetrics
 # CALCULATE SAMPLE LEVEL NORMALISATION METRIC
 #----------------------------------------------------------------------#
 
-qualDat.tog<-qual(rawbetas, normbetas)
+qualDat.tog<-qual(rawbetas, normbeta)
 qualDat.sep<-qual(rawbetas, celltypeNormbeta)
 
 
 ## look at normalisation effects
-pdf(paste0(qcOutFolder, "CompareNormalisationStrategies.pdf"), height = 6, width = 10)
+pdf(file.path(resPath, "CompareNormalisationStrategies.pdf"), height = 6, width = 10)
 par(mfrow = c(1,2))
 boxplot(qualDat.tog$rmsd ~ QCmetrics$Cell.type, ylab = "root mean square error", main = "Normalised together", xlab = "Cell type", col = cellCols)
 boxplot(qualDat.sep$rmsd ~ QCmetrics$Cell.type, ylab = "root mean square error", main = "Normalised separately", xlab = "Cell type", col = cellCols)
 
 ## look at distribution of beta values
-densityPlot(normbetas, sampGroups = QCmetrics$Cell.type,pal = cellCols)
+densityPlot(normbeta, sampGroups = QCmetrics$Cell.type,pal = cellCols)
 densityPlot(celltypeNormbeta, sampGroups = QCmetrics$Cell.type,pal = cellCols)
 dev.off()
 
