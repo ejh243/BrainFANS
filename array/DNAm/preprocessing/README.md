@@ -1,31 +1,29 @@
 This readme explains how to use the scripts for running the DNAm analysis pipeline
 
 PREQUISITES:
-	* Scripts submitted from the scripts/array folder
-	* Unix config file located scripts/array/DNAm/config/config.txt that generates the file paths specific to the project 
-	* Users require a folder named with their username in the DNAm/logFiles directory 
+	* A config file with the file paths specific to their project 
 	* A file named sampleSheet.csv in the 0_metadata folder which lists the samples to process 
 	* idats are in the 1_raw folder
 
 OUTPUT:
 	* html QC reports are located in 2_gds/QCmetrics
 	* text file summarising the QC metrics and filtering are located in 2_gds/QCmetrics
+	* log files are saved to logFiles in the data directory with the prefix `QCDNAdata`
 
-#### Data pre-processing:
+#### Data pre-processing
 
-Parameters in [] are optional.
+Provided is a SLURM job submission script which automates the preprocessing and can be submitted as follows
 
-1. sbatch DNAm/jobSubmission/1_runDNAmQC.sh <project-name> <mkdownConfig>
-	<project-name> the name of the project folder in the DNAm data folder
-	<mkdownConfig> path to txt file with parameters for normalisation and which qc checks to perform. Note needs to be absolute path.
+`sbatch 1_runDNAmQC.sh /path/to/configFile`
+	/path/to/configFile the path to config file which specifics the data and script paths for processing
 
-	* executes DNAm/preprocessing/loadDataGDS.r ${DATADIR}
-	* executes DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
-	* executes Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} <mkdownConfig> $USER
-	* executesDNAm/preprocessing/clusterCellTypes.r ${DATADIR} <mkdownConfig> 
-	* Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} <mkdownConfig> $USER
+	* executes loadDataGDS.r ${DATADIR}
+	* executes calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
+	* executes Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
+	* executes DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${RCONFIG} 
+	* Rscript -e "rmarkdown::render('QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${RCONFIG} $USER
 	
-
+During execution log files are temporaily located in the folder you submitted the script from with the filenames QCDNAdata_XXX.log and QCDNAdata_XXX.err, where XXX is replaced with the job number provided by your HPC scheduler. Please ensure you have the correct permissions to create files in this folder, otherwise the job will instantly fail. If the job fails before the script is run to completion, this is where you need to look for troubleshooting. Once the QC pipeline is complete these files are moved to your data directory in a folder called `logFiles`. 
 
 
 Approach is as follows:
