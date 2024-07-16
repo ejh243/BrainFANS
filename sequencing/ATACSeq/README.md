@@ -6,7 +6,7 @@ The Assay for Transposase-Accessible Chromatin followed by sequencing (ATAC-seq)
 
 This scripts necessary for running this pipeline should be found in 3 different subfolders:
 - jobSubmission: includes main scripts of pipeline, one for each step. These are the scripts meant to be directly run by the user.
-- subscripts/preprocessing: includes subscripts used from the main scripts of the pipeline. These performs some of the substeps that can be specified from the main scripts.
+- subScripts: includes subscripts used from the main scripts of the pipeline. These performs some of the substeps that can be specified from the main scripts.
 - Rscripts: includes the R and Rmarkdown scripts used from the main scripts of the pipeline.
 
 ## Configuration files
@@ -164,7 +164,7 @@ This script creates bam files for each sample containing only reads aligned to s
 
 ### 6. Genotype check
 
-  `sbatch --array=<number of batch jobs> ./jobSubmission/6_batchRunGenotypeConcordance.sh (project directory) [STEPS]`
+  `sbatch --array=<number of batch jobs> ./jobSubmission/6_batchRunGenotypeCheck.sh (project directory) [STEPS]`
 
 This script will detect possible DNA contamination in order to ensure high quality sequence reads. If any contamination is detected, possible swaps will be suggested. 
 
