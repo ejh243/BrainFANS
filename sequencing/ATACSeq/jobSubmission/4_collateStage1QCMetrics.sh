@@ -31,7 +31,7 @@
 ## - Softwares: Pandoc                                                                                                ||
 ## - For modules or references required, please refer to each subscript run in this script.                           ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                            ||
-## - Subscripts: progressReport.sh,  countMTcollateFS.sh                                                         ||
+## - Subscripts: progressReport.sh,  countMTcollateFS.sh                                                              ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
 ## - R scripts: collateDataQualityStats.Rmd                                                                           ||
 ##                                                                                                                    ||
