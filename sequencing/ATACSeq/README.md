@@ -164,7 +164,7 @@ This script creates bam files for each sample containing only reads aligned to s
 
 ### 6. Genotype check
 
-  `sbatch --array=<number of batch jobs> ./jobSubmission/6_batchRunGenotypeConcordance.sh (project directory) [STEPS]`
+  `sbatch --array=<number of batch jobs> ./jobSubmission/6_batchRunGenotypeCheck.sh (project directory) [STEPS]`
 
 This script will detect possible DNA contamination in order to ensure high quality sequence reads. If any contamination is detected, possible swaps will be suggested. 
 
