@@ -13,17 +13,28 @@
 ## ===================================================================================================================##
 ##                             ATAC-seq pipeline STEP 3: Sample Peak Calling                                          ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/jobSubmission/3_batchRunPeakCalling.sh <project directory> <option>||
-## - execute from scripts directory                                                                                   ||
+## EXECUTION: sbatch --array=<sample-index> ./jobSubmission/3_batchRunPeakCalling.sh <project directory> <STEP>       ||
+## - execute from pipeline's main directory                                                                           ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
 ## $1 -> <project directory> directory to config file for the corresponding project                                   ||
-## $2 -> <option> Specify step to run: SHIFT, PEAKS, FRIP. Can be combined. Default is to run all                     ||
+## $2 -> <STEP> Specify step to run: SHIFT, PEAKS, FRIP. Can be combined. Default is to run all                       ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script performs the core analysis of the ATAC-seq pipeline, which is calling peaks at sample     ||
 ## level using the paired-end mode in MACS3.                                                                          ||
 ##                                                                                                                    ||
+## REQUIRES:                                                                                                          ||
+## - File in ${META_DIR}/samples.txt that lists sample names.                                                         ||
+## - Config.txt file in <project directory>.                                                                          ||
+## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, ALIGNED_DIR, PEAK_DIR, PROJECT    ||
+##   SCRIPTS_DIR, PEAK_DIR, RSCRIPTS_DIR                                                                              ||
+## - Version/directory of the following modules should be specified in config file: RVERS, SAMTVERS, PIP_ENV, PVERS   ||
+##   BEDTVERS, PIP_ENV                                                                                                ||
+## - For modules or references required, please refer to each subscript run in this script.                           ||
+## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                            ||
+## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
+## - Subscripts: shiftAlignedReads.sh, samplePeaks.sh, collateCalcFrip.sh                                             ||
 ## ===================================================================================================================##
 
 ## ============ ##
@@ -45,10 +56,19 @@ echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACPeakCallingS3-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
 
-## check array specified and exit if not
+## ================ ##
+##    VARIABLES     ##
+## ================ ##
+
+##check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
 then 
-    { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
+    { echo "Invalid -array number specified. Each number corresponds to a sample from the sample list provided." ; exit 1; }
+fi
+
+if [[ $2 == '' ]] 
+then
+  echo "No step specified. All steps in the script will be run. "
 fi
 
 ## check step method matches required options and exit if not
@@ -66,7 +86,6 @@ echo "Number of aligned bam files: "" ""${#BAMFILES[@]}"""
 ##    STEPS     ##
 ## ============ ##
 
-## If only $1 is specified, all steps will be run
 ## option SHIFT: shift aligned reads for single-end peak calling   
 if [ $# = 1 ] || [[ $2 =~ 'SHIFT' ]]
 then
@@ -75,17 +94,17 @@ then
   module load $SAMTVERS
 	module load $RVERS
  
-	echo "Step 3.1 SHIFT started. Aligned reads will be shifted"
+	echo " "
+  echo "|| Running STEP 3.1 of ATAC-seq pipeline: SHIFT. Reads will be shifted for later peak calling on sex chromosomes ||"
+  echo " "
+  echo "Output directory is ${ALIGNED_DIR}"
+  
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
   echo "Sample(s) specified by array number in command line is/are: " ${sample}
   
-  if [[ -s ${ALIGNED_DIR}/${sample}.filt.nodup.bam ]]
-  then 
-	  sh "${SUB_SCRIPTS_DIR}/shiftAlignedReads.sh" ${sample}
-  else
-    echo "Aligned bam file for ${sample} not found. Aligned reads can't be shifted."
-  fi
+  sh "${SUB_SCRIPTS_DIR}/shiftAlignedReads.sh" ${sample}
+  
 fi
 
 ## option PEAKS: peak calling is performed using MACS3 in paired-end 
@@ -97,19 +116,19 @@ then
   source ${PIP_ENV}/bin/activate
 	module load $BEDTVERS
  
-  echo "Step 3.2 PEAKS started. Aligned reads will be used for peak calling using MACS3 PE and TA"
+  echo " "
+  echo "|| Running STEP 3.2 of ATAC-seq pipeline: PEAKS. Peaks will be called on sample using MACS3 on Paired-end mode. ||"
+  echo " "
+  echo "Output directory is ${PEAK_DIR}"
+  
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
   echo "Sample(s) specified by array number in command line is/are: " ${sample}
   
-  mkdir -p ${PEAK_DIR}/MACS/BAMPE
+  mkdir -p ${PEAK_DIR}/BAMPE
   
-  if [[ -s ${ALIGNED_DIR}/${sample}.filt.nodup.bam ]]
-  then 
-    sh "${SUB_SCRIPTS_DIR}/samplePeaks.sh" ${sample}
-	else
-    echo "Aligned bam file for ${sample} not found. Peaks can't be called in aligned reads."
-  fi
+  sh "${SUB_SCRIPTS_DIR}/samplePeaks.sh" ${sample}
+	
 fi
 
 ## option FRIP: collate peak calling results statistics in a single csv file
@@ -120,12 +139,20 @@ then
 	module load $BEDTVERS
   module load $SAMTVERS
   
-  echo "Step 3.3 FRIP started. Peak calling statistics will be collated in a single csv file."
-  mapfile -t SAMPLES < ${META_DIR}/samples.txt
+  echo " "
+  echo "|| Running STEP 3.3 of ATAC-seq pipeline: FRIP. Results from peak calling will be collated on a single file ||"
+  echo " "
+  echo "Output directory is ${PEAK_DIR}/QCOutput"
+  
+  mapfile -t SAMPLES < ${META_DIR}/samplesBatch2.txt
+  echo "There are ${#SAMPLES[@]} samples found."
   
 	mkdir -p ${PEAK_DIR}/QCOutput
 
-  sh "${SUB_SCRIPTS_DIR}/collateCalcFrip.sh" ${SAMPLES[@]}
+  #sh "${SUB_SCRIPTS_DIR}/collateCalcFrip.sh" ${SAMPLES[@]}
+  sh "/lustre/home/mf662/scripts_ISCA/subscripts/collateCalcFrip.sh" ${SAMPLES[@]}
 	
 fi
 
+echo Job finished on:
+date -u

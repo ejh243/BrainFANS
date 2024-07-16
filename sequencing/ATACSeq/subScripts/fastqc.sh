@@ -1,15 +1,17 @@
 #!/bin/bash
 ## ===================================================================================================================##
-##                               ATAC-seq pipeline STEP 1.2: Pre-analysis -- trimming                                 ##
+##                    ATAC-seq pipeline STEP 1.1: Pre-analysis -- quality-control raw data                            ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/preprocessing/fastp.sh <sampleName> <R1> <R2>                      ||
-## - execute from scripts directory                                                                                   ||
+## EXECUTION: sbatch  ./subScripts/fastqc.sh <sampleName> <R1> <R2>                                                   ||
+## - execute from pipeline's main directory                                                                           ||
 ##                                                                                                                    ||
-## DESCRIPTION: This script performs trimming of raw reads and following quality control of the new trimmed reads.    ||
+## DESCRIPTION: This script calculates sequencing quality control qc metrics with fastqc for paired files for a       ||
+## single sample.                                                                                                     ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
-## - Variables in config file: RAWDATADIR, TRIMDIR                                                                    ||
-## - Software: fastp, fastqc                                                                                          ||
+## - Variables in config file: RAWDATADIR, FASTQCDIR                                                                  ||
+## - Software: fastqc                                                                                                 ||
+## - Paired-end files for sample: Read 1 and Read 2 in the same directory (RAWDATADIR)                                ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <sampleName> Name of sample specified in command line.                                                       ||
@@ -17,7 +19,7 @@
 ## $3 -> <R2> Read 2 name                                                                                             ||
 ##                                                                                                                    ||
 ## OUTPUTS:                                                                                                           || 
-##  *_fastp.html, *_trimmed.f, *_fastp.json                                                                           ||
+##  sample_R1.fastq.gz, sample_R2.fastq.gz, sample_R1_fastqc.html, sample_R2_fastqc.html                              ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -25,37 +27,29 @@
 ##    SET UP    ##
 ## ============ ##
 
-
 sampleName=$1
 
-echo
-echo "Starting trimming on" ${sampleName} "at: "
-date -u
-
-## Get read 1 and read 2 for specified sample name
 f1=$(basename $2)
 f2=$(basename $3)
 
-cd ${RAWDATADIR}
+echo $sampleName
 
-## create output filenames
-outf1=${f1/.f/_trimmed.f}
-outf2=${f2/.f/_trimmed.f}
+## ========== ##
+##    QC      ##
+## ========== ##
 
-mkdir -p ${TRIMDIR}/qc/
+fastqc  ${RAWDATADIR}/${f1}  ${RAWDATADIR}/${f2} -t 8 -o ${FASTQCDIR}
 
-##Specific adapters for R1 and R2 need to be specified for correct trimming
-adapterR1=CTGTCTCTTATACACATCTCCGAGCCCACGAGAC
-adapterR2=CTGTCTCTTATACACATCTGACGCTGCCGACGA 
+ending=".fq.gz"
+out1=${f1/$ending/}
+out2=${f2/$ending/}
 
-## ============ ##
-##    TRIM      ##
-## ============ ##
+echo ${out1}
 
-fastp --detect_adapter_for_pe --adapter_sequence=$adapterR1 --adapter_sequence_r2=$adapterR2 --length_required=27 --thread=8 --in1=${f1} --in2=${f2} --out1=${TRIMDIR}/${outf1} --out2=${TRIMDIR}/${outf2} --html=${TRIMDIR}/qc/${sampleName}_fastp.html --json=${TRIMDIR}/qc/${sampleName}_fastp.json
+if [[ ! -f "${FASTQCDIR}/${out1}_fastqc.html" ]] && [[ ! -f "${FASTQCDIR}/${out2}_fastqc.html" ]]
+then 
+  { echo "FASTQC on ${sampleID} was not completed. Please check variables and inputs." ; exit 1; }
+fi  
 
-## ============ ##
-##    QC        ##
-## ============ ##
-
-fastqc ${TRIMDIR}/${outf1} ${TRIMDIR}/${outf2} -t 8 -o ${TRIMDIR}/qc/
+echo Job finished on:
+date -u 

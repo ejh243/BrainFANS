@@ -67,6 +67,7 @@ export VERIFYBAMID="/path/to/verifyBamID/bin/verifyBamID,  version should be > v
 export PICARD="/path/to/picard/Java/file"
 export LDPATH="/path/to/ldsc"
 export RSTUDIO_PANDOC="/usr/lib/rstudio-server/bin/pandoc"
+export PHANTOMPEAK="/paht/to/phantompeakqualtools"
 
 ## Specify full path to conda environment ##
 export CONDA="/path/tp/.conda/envs/folder"

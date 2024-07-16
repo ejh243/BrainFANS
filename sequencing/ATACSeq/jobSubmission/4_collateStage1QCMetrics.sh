@@ -13,15 +13,27 @@
 ## ===================================================================================================================##
 ##                          ATAC-seq pipeline STEP 4: Collate Stage 1 Results                                         ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array=0 ./sequencing/ATACSeq/jobSubmission/4_collateStage1QCMetrics.sh <project dir> <option>  ||
-## - execute from scripts directory                                                                                   ||
-##                                                                                                                    ||
-## INPUTS:                                                                                                            || 
-## --array= can be any number                                                                                         ||
-## $1 -> <project dir> project directory.                                                                             ||
-## $2 -> <option> Specify step to run: MULTIQC, COLLATE, SUMMARY, COMPARE. Can be combined. Default is to run all     ||
+## EXECUTION: sbatch ./jobSubmission/4_collateStage1QCMetrics.sh <project-directory> <STEP>                           ||
+## - execute from pipeline's main directory                                                                           ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script collates results from the first part of the pipeline: pre-analysis and peak calling.      || 
+##                                                                                                                    ||
+## INPUTS:                                                                                                            || 
+## $1 -> <project dir> directory of project, location of config.txt file                                              ||
+## $2 -> <STEP> Specify step to run: MULTIQC, COLLATE, SUMMARY. Can be combined. Default is to run all                ||
+##                                                                                                                    ||
+##                                                                                                                    ||
+## REQUIRES:                                                                                                          ||
+## - Config.txt file in <project directory>.                                                                          ||
+## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, RAWDATADIR, ALIGNED_DIR, TRIM_DIR ||
+##   SCRIPTS_DIR, PROJECT,FASTQCDIR                                                                                   ||
+## - Version/directory of the following modules should be specified in config file: ACVERS, CONDA_ENV, CONDA, RVERS   ||
+## - Softwares: Pandoc                                                                                                ||
+## - For modules or references required, please refer to each subscript run in this script.                           ||
+## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                            ||
+## - Subscripts: progressReport.sh,  countMTcollateFS.sh                                                         ||
+## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
+## - R scripts: collateDataQualityStats.Rmd                                                                           ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -29,24 +41,37 @@
 ##    SET UP    ##
 ## ============ ##
 
+## print start date and time when script runs
 echo Job started on:
 date -u
 
 ## load config file provided on command line related to the specified project
 source "${1}/config.txt"
-echo "Loading config file for project: " $1
-echo "Project directory is: " $DATADIR
+echo "Loading config file for project: " ${PROJECT}
 
-LOG_DIR=ATACSeq/logFiles/${USER}/${SLURM_ARRAY_JOB_ID}
+## check directories
+echo "Project directory is: " $MAIN_DIR 
+echo "Script is running from directory: " ${SCRIPTS_DIR}
+
+## Log files directory
+LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
 echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACQCSummaryStage1S4-${SLURM_ARRAY_JOB_ID}* $LOG_DIR
 
+## ================ ##
+##    VARIABLES     ##
+## ================ ##
+
+if [[ $2 == '' ]] 
+then
+  echo "No step specified. All steps in the script will be run. "
+fi
 
 ## check step method matches required options and exit if not
 if [[ ! $2 =~ "MULTIQC" ]] && [[ ! $2 =~ "COLLATE" ]] && [[ ! $2 =~ "SUMMARY" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use MULTIQC, COLLATE, SUMMARY or some combination of this as a single string (i.e. COMPARE,BATCH)" ; exit 1; }            
+    { echo "Unknown step specified. Please use MULTIQC, COLLATE, SUMMARY or some combination of this as a single string (i.e. MULTIQC,COLLATE)" ; exit 1; }            
 fi
 
 ## ============ ##
@@ -57,36 +82,48 @@ fi
 if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
 then 
   
-  echo "Step 4.1 MULTIQC started. QC metrics will be collated"
-	module load MultiQC
+  echo " "
+  echo "|| Running STEP 4.1 of ATAC-seq pipeline: MULTIQC ||"
+  echo "Results of fastqc on raw reads, trimming and alignment will be collated in a single report for each process."
+  echo " "
+  
+  ##Conda environment is activated to run multiqc
+  #module load $ACVERS
+  #source $CONDA_ENV
+  #conda activate $CONDA
+  module load MultiQC
 
+  echo "Output dir for FASTQC multiqc is ${FASTQCDIR}/multiqc"
 	mkdir -p ${FASTQCDIR}/multiqc
 	cd ${FASTQCDIR}/
 	multiqc . -f -o ${FASTQCDIR}/multiqc
- 
-	## remove redundant html files
 	rm -f *.html
-	rm -f ${TRIMDIR}/fastp_reports/*.html
-
-	mkdir -p ${ALIGNEDDIR}/multiqc
-  cd ${ALIGNEDDIR}
-	multiqc . -f -o ${ALIGNEDDIR}/multiqc
+	
+  echo "Output dir for Alignment multiqc is ${ALIGNED_DIR}/multiqc"
+	mkdir -p ${ALIGNED_DIR}/multiqc
+  cd ${ALIGNED_DIR}
+	multiqc . -f -o ${ALIGNED_DIR}/multiqc
  
-  mkdir -p ${TRIMDIR}/multiqc
-  cd ${TRIMDIR}/qc
-	multiqc . -f -o ${TRIMDIR}/multiqc 
+  echo "Output dir for Trimming multiqc is ${TRIM_DIR}/fastqc/multiqc"
+  mkdir -p ${TRIM_DIR}/multiqc
+  cd ${TRIM_DIR}/qc
+	multiqc . -f -o ${TRIM_DIR}/multiqc 
+  rm -f ${TRIM_DIR}/qc/*.html
+  
 fi
 
 ## option COLLATE: collate other QC metrics
 if [ $# = 1 ] || [[ $2 =~ 'COLLATE' ]]
 then
 
-  echo "Step 4.2 COLLATE started. QC metrics will be collated"
-	
-  cd ${SCRIPTDIR}
-	sh ./ATACSeq/preprocessing/progressReport.sh 
-	sh ./ATACSeq/preprocessing/countMTReads.sh 
-	sh ./ATACSeq/preprocessing/collateFlagStatOutput.sh 
+  echo " "
+  echo "|| Running step 4.2 of ATAC-seq pipeline: COLLATE ||"
+  echo "It will be checked that all samples had gone through all processes and had produced the right outputs."
+  echo "Output directory is ${META_DIR} and ${ALIGNED_DIR}/ENCODEMetrics/"
+	echo " "
+ 
+	sh ${SUB_SCRIPTS_DIR}/progressReport.sh 
+	sh ${SUB_SCRIPTS_DIR}/countMTcollateFS.sh
 fi
 
 ## option SUMMARY: collate output from previous steps into a single r markdown report
@@ -97,32 +134,14 @@ then
 	module load ${RVERS}
 	module load Pandoc
  
-  echo "Step 4.3 SUMMARY started. Summary of results to this point are collated in a Rmarkdown report"
-  cd ${SCRIPTDIR}
-	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/collateDataQualityStats.Rmd', output_file=paste0(commandArgs(trailingOnly=TRUE)[1], '/QCOutput/stage1SummaryStats.html'))" "$PEAKDIR" "${CONFIGR}"
+  echo " "
+  echo "|| Running step 4.3 of ATAC-seq pipeline: SUMMARY ||"
+  echo " Summary of results to this point are collated in a Rmarkdown report"
+  echo "Output directory is $PEAK_DIR/QCOutput"
+  echo " "
+  
+	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1],'/collateDataQualityStats.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/QCOutput/stage1SummaryStats.html'))" "${RSCRIPTS_DIR}" "$PEAK_DIR" "${CONFIGR}"
 fi
 
-## option COMPARE: collate peak calling results into a single r markdown report
-if [ $# = 1 ] || [[ $2 =~ 'COMPARE' ]]
-then
-  echo "Step 4.4 COMPARE started. Results from peak calling are compared and collated in two Rmarkdown reports: comparePeaksStats_1 and comparePeaksStats_2"
-	cd ${SCRIPTDIR}
-  
-  module purge
-	module load ${RVERS}
-	module load Pandoc
-	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/collateComparePeaks_1.Rmd', output_file=paste0(commandArgs(trailingOnly=TRUE)[1], '/QCOutput/comparePeaksStats_1.html'))" "$PEAKDIR" "${CONFIGR}"
-  Rscript -e "rmarkdown::render('ATACSeq/preprocessing/collateComparePeaks_2.Rmd', output_file=paste0(commandArgs(trailingOnly=TRUE)[1], '/QCOutput/comparePeaksStats_2.html'))" "$PEAKDIR" "${CONFIGR}"
-fi
-
-## option COMPARE: collate peak calling results into a single r markdown report
-if [ $# = 1 ] || [[ $2 =~ 'BATCH' ]]
-then
-  echo "Step 4.4 COMPARE started. Results from peak calling are compared and collated in a Rmarkdown report"
-	cd ${SCRIPTDIR}
-  
-  module purge
-	module load ${RVERS}
-	module load Pandoc
-	Rscript -e "rmarkdown::render('ATACSeq/preprocessing/compareBatches.Rmd', output_file=paste0(commandArgs(trailingOnly=TRUE)[1], '/QCOutput/compareBatches.html'))" "$PEAKDIR" "${CONFIGR}"
-fi
+echo Job finished on:
+date -u 

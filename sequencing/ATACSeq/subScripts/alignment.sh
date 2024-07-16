@@ -2,24 +2,23 @@
 ## ===================================================================================================================##
 ##                               ATAC-seq pipeline STEP 1.3: Pre-analysis -- alignment                                ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/preprocessing/alignment.sh <sampleName>                            ||
-## - execute from scripts directory                                                                                   ||
+## EXECUTION: sbatch ./subScripts/alignment.sh <sampleName>                                                           ||
+## - execute from pipeline's main directory                                                                           ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This scripts performs alignment of reads against the reference genome and subsequent processing of    ||  
 ## aligned reads, such as reads with quality < 30, unmapped, mate unmapped, secondary alignment, reads failing        || 
 ## platform, remove duplicates and reads mapped to a different chromosome                                             ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
-## - File in ${METADIR}/samples.txt that lists sample names.                                                          ||
-## - Variables in config file: RAWDATADIR, TRIM_DIR, ALIGNED_DIR, REFGENOME, multimap                                   ||
+## - Variables in config file: RAWDATADIR, TRIM_DIR, ALIGNED_DIR, REFGENOME, multimap                                 ||
 ## - Software: bowtie2, samtools, picard                                                                              ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <sampleName> Name of sample specified in command line. Reads should be previously trimmed                    ||
 ##                                                                                                                    ||
 ## OUTPUTS:                                                                                                           || 
-##  *_filt.nodup.stats, *_statsperchr.txt, *_noMT.stats, *_sorted.bam, *_sorted.bam.bai, *_noMT.bam, *_.filt.nodup.bam||	
-##  *_.filt.nodup.bam.bai                                                                                             || 
+##  <sampleName>_filt.nodup.stats, <sampleName>_statsperchr.txt, <sampleName>_noMT.stats, <sampleName>_sorted.bam,    ||  
+##  <sampleName>_sorted.bam.bai, <sampleName>_noMT.bam, <sampleName>_.filt.nodup.bam, <sampleName>_.filt.nodup.bam.bai|| 
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -31,25 +30,27 @@
 sampleName=$1
 echo "Processing" ${sampleName}
 
-CHR=(chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY)
-
-cd ${ALIGNED_DIR}
-
 ## Check if trimmed files for alignment exist
 cd ${TRIM_DIR}
 f=($(ls ${sampleName}*trimmed*.f*))
 
-echo "Found trimmed files:" ${f[0]} ${f[1]}
+if [[ ! -f ${TRIM_DIR}/${f[0]} ]] && [[ ! -f ${TRIM_DIR}/${f[1]} ]]
+then 
+  { echo "Trimmed reads for ${sampleName} not found. Please run STEP 1.2 TRIM first." ; exit 1; }
+else
+  echo "Found trimmed files:" ${f[0]} ${f[1]}
+fi
 
 ## =============== ##
 ##    ALIGNMENT    ##
 ## =============== ##
 
-## checks if aligned file for input sample already exists
+CHR=(chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY)
 
-echo "Running alignment for"" ${sampleName}"
+echo "Running alignment for: ${sampleName}"
+echo Job started on:
 date -u	
-## alignment
+
 bowtie2  -p 10 -X 2000 -k ${multimap} -x ${REFGENOME}/genome -1 ${f[0]} -2 ${f[1]} -S ${ALIGNED_DIR}/${sampleName}.sam &> ${ALIGNED_DIR}/${sampleName}.bowtie.log
 
 ## convert to sam files, sort and index
@@ -97,3 +98,11 @@ samtools index ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam
 ## get sum stats post to filtering
 samtools stats ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam	> ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.stats
 
+if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]] && [[ ! -f ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.stats ]]
+then 
+  { echo "Alignment for ${sampleName} could not be completed." ; exit 1; }
+else
+  echo "Alignment for ${sampleName} is done."
+  echo Job finished on:
+  date -u 
+fi 

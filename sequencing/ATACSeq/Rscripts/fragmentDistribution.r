@@ -74,8 +74,10 @@ library(ggplot2)
 library(ggpubr)
 
 ## get filepaths of aligned indexed QC'd bam file
+samples<-read.table(file.path(metaDir, "/samples.txt"))[,1]
 aQCFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam.bai$", recursive = TRUE, full.names = TRUE)
 aQCFiles<-gsub(".bai", "", aQCFiles)
+aQCFiles <- aQCFiles[match(samples,gsub(paste0(alignedDir,"/"),"",gsub(".filt.nodup.bam", "", aQCFiles)))]
 aQCSampleNames<-gsub(".filt.nodup.bam", "", basename(aQCFiles))
 
 ## filter to subset of samples specified by array number
@@ -110,7 +112,7 @@ if(nSamples > 0){
 	colnames(periodTestStats)<-c("obsStat", "p.value", "freq")
 	
   ## Results are saved in a rdata file 
-	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(alignedDir, "/QCOutput/FragmentDistribution_Batch", batchNum, ".rdata"))
+	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(alignedDir, "/QCOutput/FragmentDistribution_Batch_", batchNum, ".rdata"))
  
   ## output Fragment size distribution plots for the corresponding batch of samples
   
@@ -141,7 +143,7 @@ if(nSamples > 0){
   plots<-ggarrange(p.01, p.02,  
           ncol = 1, nrow = 2)
 
-  pdf(file.path(paste0(alignedDir, "/QCOutput/FSD_batch", batchNum, ".pdf")), width = 9, height = 7)
+  pdf(file.path(paste0(alignedDir, "/QCOutput/FSD_batch_", batchNum, ".pdf")), width = 9, height = 8)
   print(plots)
   dev.off()
   

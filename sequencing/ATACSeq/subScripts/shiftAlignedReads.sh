@@ -1,33 +1,42 @@
+#!/bin/bash
 ## ===================================================================================================================##
-##                             ATAC-seq pipeline STEP 3.1: Shift Reads                                                ##
+##                             ATAC-seq pipeline STEP 3.1: Shift and calculate CC scores                              ##
 ## ===================================================================================================================##
-## EXECUTION: sh ./sequencing/ATACSeq/preprocessing/shiftAlignedReads.sh <sampleName>                                 ||
-## - execute from scripts directory                                                                                   ||
+## EXECUTION: sbash ./subScripts/shiftAlignedReads.sh <sampleName>                                                    ||
+## - execute from pipeline's main directory                                                                           ||
 ##                                                                                                                    ||
-## DESCRIPTION: This script converts bam files to tagalign files, calculates CC scores and shifts reads to perform    || 
-## peak calling using single-end mode.  Adapted from: https://www.encodeproject.org/pipelines/ENCPL792NWO/            ||
+## DESCRIPTION:converts filtered bam file to a tagalign file, calculates CC scores and shifts reads ready for peak    || 
+## calling adapted from (https://www.encodeproject.org/pipelines/ENCPL792NWO/)                                        ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
-## $1 -> <sampleName> sample name to shift reads and calculate CC scores                                              ||
+## $1 -> <sampleName> Sample name sorted bam file in 3_aligned directory                                              ||
 ##                                                                                                                    ||
 ## OUTPUTS:                                                                                                           ||
-## ALIGNEDIR/*.tn5.tagAlign.gz, *.cc.qc, *.cc.plot.pdf                                                                ||
-## - output will be peaks called in autosomal chromosomes and not aligned to blacklist regions                        ||
+## -  <sampleName>.tn5.tagAlign.gz, <sampleName>.cc.qc,<sampleName>.cc.plot.pdf                                       ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
-## - aligned filtered, no duplicated bam file for                                                                     || 
-## - R run_spp.R script, bedtools, samtools                                                                           ||
-## - ALIGNEDDIR                                                                                                       ||
+## - aligned filtered, no duplicated bam file: <sampleName>.filt.nodup.bam                                            ||
+## - BEDTools, SAMtools, R/3.6.3-foss-2020a                                                                           ||
+## - Variables to be specified in config file: ALIGNED_DIR, PHANTOMPEAK                                               ||
+## - Script run_spp.R from PhantomPeak                                                                                ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
-
 
 sampleName=$1 
 NTHREADS=8 
 NREADS=15000000
 
-cd ${ALIGNEDDIR}
+if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]]
+then 
+  { echo "Aligned bam file for ${sampleName} not found. Aligned reads can't be shifted." ; exit 1;}
+else
+  echo "Aligned bam file for ${sampleName} will be shifted."
+fi
 
+echo Job started on:
+date -u
+
+cd ${ALIGNED_DIR}
 
 # ===================
 # Create tagAlign file
@@ -73,5 +82,14 @@ rm ${sampleName}.filt.nodup.nmsrt.bedpe.gz
 zcat ${sampleName}.PE2SE.tn5.tagAlign.gz | awk -F $'\t' 'BEGIN {OFS = FS}{ if ($6 == "+") {$2 = $2 + 4} else if ($6 == "-") {$3 = $3 - 5} print $0}' | gzip -c > ${sampleName}.tn5.tagAlign.gz
 
 rm ${sampleName}.PE2SE.tn5.tagAlign.gz
+
+if [[ ! -f ${ALIGNED_DIR}/${sampleName}.tn5.tagAlign.gz ]] 
+then 
+  { echo "Aligned reads could not be shifted. Please check error file."  ; exit 1;}
+else
+  echo "Aligned reads have been successfully shifted."
+  echo Job ended:
+  date -u
+fi
 
 

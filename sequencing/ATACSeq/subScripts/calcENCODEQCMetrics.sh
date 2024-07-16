@@ -2,22 +2,22 @@
 ## ===================================================================================================================##
 ##                    ATAC-seq pipeline STEP 1.4: Pre-analysis -- ENCODEQC metrics calculation                        ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch --array= ./sequencing/ATACSeq/preprocessing/calcENCODEQCMetrics.sh <sampleName>                  ||
-## - execute from scripts directory                                                                                   ||
+## EXECUTION: sbatch ./subScripts/calcENCODEQCMetrics.sh <sampleName>                                        ||
+## - execute from pipeline's subScripts directory                                                                     ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script calculates ENCODE library complexity metrics according to                                 ||
 ## https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit#                              ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
-## - File in ${METADIR}/samples.txt that lists sample names.                                                          ||
-## - Variables in config file: ALIGNEDDIR                                                                             ||
+## - Variables in config file: ALIGNED_DIR                                                                            ||
 ## - Software: samtools, samstats, bedtools                                                                           ||
+## - Aligned <sampleName>.filt.nodup.bam file in ALIGNED_DIR directory                                                ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <sampleName> Name of sample specified in command line. Reads should be previously aligned                    ||
 ##                                                                                                                    ||
 ## OUTPUTS:                                                                                                           || 
-## *.flagstat.qc, *.pbc.qc                                                                                            ||
+## ${ALIGNED_DIR}/ENCODEMetrics/<sampleName>.flagstat.qc, ${ALIGNED_DIR}/ENCODEMetrics/<sampleName>.pbc.qc            ||
 ## ===================================================================================================================##
 
 ## ============ ##
@@ -26,7 +26,6 @@
 
 sampleName=$1
 echo "Calculating ENCODE QC metrics for" $sampleName
-
 
 ## If not found, create directory for ENCODEMetrics results
 mkdir -p ${ALIGNED_DIR}/ENCODEMetrics
@@ -52,3 +51,11 @@ bedtools bamtobed -bedpe -i ${ALIGNED_DIR}/${sampleName}.srt.tmp.bam | awk 'BEGI
 
 rm ${ALIGNED_DIR}/${sampleName}.srt.tmp.bam
 
+if [[ ! -f ${ALIGNED_DIR}/ENCODEMetrics/${sampleName}.flagstat.qc ]] && [[ ! -f ${ALIGNED_DIR}/ENCODEMetrics/${sampleName}.pbc.qc ]]
+then 
+  { echo "ENCODE metrics of ${sampleName} could not be calculated. Please make sure STEP 1.3 was successfully run."  ; exit 1;}
+else
+  echo "Calculation of ENCODE metrics for sample ${sampleName} is done."
+  echo Job finished on:
+  date -u 
+fi
