@@ -16,13 +16,13 @@
 ## EXECUTION: sbatch --array=<sample-index> ./jobSubmission/3_batchRunPeakCalling.sh <project directory> <STEP>       ||
 ## - execute from pipeline's main directory                                                                           ||
 ##                                                                                                                    ||
+## DESCRIPTION: This script performs the core analysis of the ATAC-seq pipeline, which is calling peaks at sample     ||
+## level using the paired-end mode in MACS3.                                                                          ||
+##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
 ## $1 -> <project directory> directory to config file for the corresponding project                                   ||
 ## $2 -> <STEP> Specify step to run: SHIFT, PEAKS, FRIP. Can be combined. Default is to run all                       ||
-##                                                                                                                    ||
-## DESCRIPTION: This script performs the core analysis of the ATAC-seq pipeline, which is calling peaks at sample     ||
-## level using the paired-end mode in MACS3.                                                                          ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - File in ${META_DIR}/samples.txt that lists sample names.                                                         ||
@@ -35,6 +35,7 @@
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                            ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
 ## - Subscripts: shiftAlignedReads.sh, samplePeaks.sh, collateCalcFrip.sh                                             ||
+##                                                                                                                    ||
 ## ===================================================================================================================##
 
 ## ============ ##
@@ -45,10 +46,17 @@
 echo Job started on:
 date -u
 
+if [[ $1 == '' ]] || [[ ! -d $1 ]]
+then
+  { echo "No project directory specified or could not be found." ; exit 1; }
+else
+  source "${1}/config.txt" 
+fi
+
 ## load config file provided on command line related to the specified project
-source "${1}/config.txt"
 echo "Loading config file for project: " $PROJECT
 echo "Project directory is: " $MAIN_DIR
+echo "Script is running from directory: " ${SCRIPTS_DIR}
 
 ## Log files directory
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}

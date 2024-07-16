@@ -22,7 +22,6 @@
 ## $1 -> <project dir> directory of project, location of config.txt file                                              ||
 ## $2 -> <STEP> Specify step to run: MULTIQC, COLLATE, SUMMARY. Can be combined. Default is to run all                ||
 ##                                                                                                                    ||
-##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - Config.txt file in <project directory>.                                                                          ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, RAWDATADIR, ALIGNED_DIR, TRIM_DIR ||
@@ -45,11 +44,15 @@
 echo Job started on:
 date -u
 
-## load config file provided on command line related to the specified project
-source "${1}/config.txt"
-echo "Loading config file for project: " ${PROJECT}
+if [[ $1 == '' ]] || [[ ! -d $1 ]]
+then
+  { echo "No project directory specified or could not be found." ; exit 1; }
+else
+  source "${1}/config.txt" 
+fi
 
-## check directories
+## load config file provided on command line related to the specified project
+echo "Loading config file for project: " ${PROJECT}
 echo "Project directory is: " $MAIN_DIR 
 echo "Script is running from directory: " ${SCRIPTS_DIR}
 

@@ -31,7 +31,7 @@
 ## - File with samples IDs and their matching VCF IDs: ${META_DIR}/matchedVCFIDs.txt                                           ||
 ## - Config.txt file in <project directory>.                                                                                   ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, ALIGNED_DIR, SCRIPTS_DIR, PROJECT,PEAK_DIR ||
-## - Version/directory of the following modules should be specified in config file: PICARDVERS, RVERS, SAMTVERS                ||
+## - Version/directory of the following modules should be specified in config file: PICARDVERS, RVERS, SAMTVERS,GATKVERS       ||
 ## - Softwares: Picard, GATK, SAMtools, R, Pandoc,                                                                             ||
 ## - For modules or references required, please refer to each subscript run in this script.                                    ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                                     ||
@@ -49,8 +49,14 @@
 echo Job started on:
 date -u
 
+if [[ $1 == '' ]] || [[ ! -d $1 ]]
+then
+  { echo "No project directory specified or could not be found." ; exit 1; }
+else
+  source "${1}/config.txt" 
+fi
+
 ## load config file provided on command line related to the specified project
-source "${1}/config.txt"
 echo "Loading config file for project: " ${PROJECT}
 echo "Project directory is: " $MAIN_DIR
 echo 'Script is running from directory: ' ${SCRIPTS_DIR}
@@ -90,7 +96,7 @@ if [ $# = 1 ] || [[ $2 =~ 'COMPARE' ]]
 then
   module purge
   module load $PICARDVERS
-  module load GATK
+  module load $GATKVERS
   module load $SAMTVERS
   
   echo " "
@@ -131,7 +137,7 @@ if [ $# = 1 ] || [[ $2 =~ 'SWITCH' ]]
 then
   module purge
   module load $PICARDVERS
-  module load GATK
+  module load $GATKVERS
   module load $SAMTVERS
   
   echo " "

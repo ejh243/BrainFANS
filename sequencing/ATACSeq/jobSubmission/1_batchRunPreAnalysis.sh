@@ -45,11 +45,15 @@
 echo Job started on:
 date -u
 
-## load config file provided on command line related to the specified project
-source "${1}/config.txt"
-echo "Loading config file for project: " ${PROJECT}
+if [[ $1 == '' ]] || [[ ! -d $1 ]]
+then
+  { echo "No project directory specified or could not be found." ; exit 1; }
+else
+  source "${1}/config.txt" 
+fi
 
-## check directories
+## load config file provided on command line related to the specified project
+echo "Loading config file for project: " ${PROJECT}
 echo "Project directory is: " $MAIN_DIR 
 echo "Script is running from directory: " ${SCRIPTS_DIR}
 
