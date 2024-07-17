@@ -46,12 +46,8 @@
 echo Job started on:
 date -u
 
-if [[ $1 == '' ]] || [[ ! -d $1 ]]
-then
-  { echo "No project directory specified or could not be found." ; exit 1; }
-else
-  source "${1}/config.txt" 
-fi
+source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
+
 
 ## load config file provided on command line related to the specified project
 echo "Loading config file for project: " ${PROJECT}

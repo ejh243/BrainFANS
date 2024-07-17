@@ -55,7 +55,7 @@ do
     done
 done
 
-if [[ ! -f ${PEAK_DIR}/ShiftedTagAlign/sexChr/chrX.broadPeak.filt	]] && [[ ! -f ${PEAK_DIR}/ShiftedTagAlign/sexChr/chrY.broadPeak.filt ]] && [[ ! -f ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/chrX.peakcounts.txt ]] && [[ ! -f ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/chrX.peakcounts.txt ]]
+if [[ ! -f ${PEAK_DIR}/ShiftedTagAlign/sexChr/chrX.broadPeak.filt	]] || [[ ! -f ${PEAK_DIR}/ShiftedTagAlign/sexChr/chrY.broadPeak.filt ]] || [[ ! -f ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/chrX.peakcounts.txt ]] || [[ ! -f ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/chrX.peakcounts.txt ]]
 then
   { echo "Peaks in sex chromosomes were not successfully called. Please check STEP 5.2 SPLIT to make sure sex chromosomes reads exist." ; exit 1 ;}
 else
