@@ -23,7 +23,11 @@ calcBrainComposition <- function(betas){
         }
         } 
     }
-    predPropBest<-cbind(predPropAll[["ANOVA"]][[1]][,c("NeuNNeg_SOX10Neg", "NeuNPos")], predPropAll[["IDOL"]][[5]][,c("NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg")], predPropAll[["ANOVA"]][[3]][,c("SATB2Neg", "SATB2Pos")], predPropAll[["ANOVA"]][[6]][,c("NeuNNeg", "NeuNPos_SOX6Pos", "NeuNPos_SOX6Neg")], predPropAll[["IDOL"]][[4]][,"NeuNNeg_SOX10Pos"])
+    predPropBest<-cbind(predPropAll[["ANOVA"]][[1]][,c("NeuNNeg_SOX10Neg", "NeuNPos")], 
+        predPropAll[["IDOL"]][[5]][,c("NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg")], 
+        predPropAll[["ANOVA"]][[3]][,c("SATB2Neg", "SATB2Pos")], 
+        predPropAll[["ANOVA"]][[6]][,c("NeuNNeg", "NeuNPos_SOX6Pos", "NeuNPos_SOX6Neg")], 
+        predPropAll[["IDOL"]][[4]][,"NeuNNeg_SOX10Pos"])
     colnames(predPropBest)[10]<-"NeuNNeg_SOX10Pos"
 
     # add in cetygo scores
@@ -38,7 +42,6 @@ calcBrainComposition <- function(betas){
 #----------------------------------------------------------------------#
 
 library(CETYGO)
-library(gridExtra)
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -81,14 +84,20 @@ save(predPropBest, file = file.path(resPath, "EstimatedNeuralCellComposition.rda
 
 predPropBest<-cbind(QCmetrics, predPropBest)
 
-datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNNeg_SOX10Neg","NeuNPos","NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg","SATB2Neg","SATB2Pos","NeuNNeg","NeuNPos_SOX6Pos","NeuNPos_SOX6Neg","NeuNNeg_SOX10Pos", "CETYGO")], Fraction, Proportion, NeuNNeg_SOX10Neg:CETYGO)
+datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", 
+    "NeuNNeg_SOX10Neg","NeuNPos","NeuNNeg_Sox10Neg_IRF8Pos",
+    "NeuNNeg_Sox10Neg_IRF8Neg","SATB2Neg","SATB2Pos","NeuNNeg",
+    "NeuNPos_SOX6Pos","NeuNPos_SOX6Neg","NeuNNeg_SOX10Pos", "CETYGO")], 
+    Fraction, Proportion, NeuNNeg_SOX10Neg:CETYGO)
 
 sumStats<-cbind(aggregate(Proportion ~ ., data = datLong, FUN = mean),
 aggregate(Proportion ~ ., data = datLong, FUN = sd)[,4])
 write.csv(sumStats, file.path(resPath, "EWAS", "Tables", "CellCompositionSummaryStatisticsByCellTypePhenotype.csv"))
 
 testPhenotype<-NULL
-for(fraction in c("NeuNNeg_SOX10Neg","NeuNPos","NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg","SATB2Neg","SATB2Pos","NeuNNeg","NeuNPos_SOX6Pos","NeuNPos_SOX6Neg","NeuNNeg_SOX10Pos", "CETYGO")){
+for(fraction in c("NeuNNeg_SOX10Neg","NeuNPos","NeuNNeg_Sox10Neg_IRF8Pos",
+  "NeuNNeg_Sox10Neg_IRF8Neg","SATB2Neg","SATB2Pos","NeuNNeg","NeuNPos_SOX6Pos",
+  "NeuNPos_SOX6Neg","NeuNNeg_SOX10Pos", "CETYGO")){
 	for(sampletype in unique(predPropBest$Cell.type)){
 		subData<-subset(datLong, Cell.type == sampletype & Fraction == fraction)
 		testDat<-t.test(Proportion ~ Phenotype, data = subData)
@@ -100,7 +109,8 @@ colnames(testPhenotype)<-c("Cell.type", "Fraction", "MeanControls", "MeanSchizop
 write.csv(testPhenotype, file.path(resPath,  "EWAS", "Tables", "CellCompositionTtestStatisticsByCellTypePhenotype.csv"))
 
 # confirm purity of each cell type
-datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNPos", "NeuNNeg_SOX10Pos", "NeuNNeg_SOX10Neg")], Fraction, Proportion, NeuNPos:NeuNNeg_SOX10Neg)
+datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNPos", "NeuNNeg_SOX10Pos", "NeuNNeg_SOX10Neg")], 
+  Fraction, Proportion, NeuNPos:NeuNNeg_SOX10Neg)
 mean_data <- datLong %>%
   group_by(Cell.type, Fraction, Phenotype) %>%
   summarize(mean_Proportion = mean(Proportion))
@@ -133,7 +143,8 @@ ggsave(file.path(resPath, "EWAS", "Plots", "ViolinPlotCETYGOByCellTypePhenotype.
 
 
 ## Within Double negative look at IRF8 Pos vs Neg
-datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg")], Fraction, Proportion, NeuNNeg_Sox10Neg_IRF8Pos:NeuNNeg_Sox10Neg_IRF8Neg) %>% subset(Cell.type == "Double-")
+datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg")], 
+  Fraction, Proportion, NeuNNeg_Sox10Neg_IRF8Pos:NeuNNeg_Sox10Neg_IRF8Neg) %>% subset(Cell.type == "Double-")
 mean_data <- datLong %>%
   group_by(Fraction, Phenotype) %>%
   summarize(mean_Proportion = mean(Proportion))
@@ -149,7 +160,8 @@ ggsave(file.path(resPath,  "EWAS", "Plots", "ViolinPlotCellCompositionByCellType
        width = 5, height = 5, dpi = 150, units = "in")
 
 ## Within Neurons look at SOX6 Pos vs Neg
-datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNPos_SOX6Pos","NeuNPos_SOX6Neg")], Fraction, Proportion, NeuNPos_SOX6Pos:NeuNPos_SOX6Neg) %>% subset(Cell.type == "NeuN+")
+datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNPos_SOX6Pos","NeuNPos_SOX6Neg")], 
+  Fraction, Proportion, NeuNPos_SOX6Pos:NeuNPos_SOX6Neg) %>% subset(Cell.type == "NeuN+")
 mean_data <- datLong %>%
   group_by(Fraction, Phenotype) %>%
   summarize(mean_Proportion = mean(Proportion))
