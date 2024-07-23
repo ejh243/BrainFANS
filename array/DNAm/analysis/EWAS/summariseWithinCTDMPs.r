@@ -72,7 +72,7 @@ if (length(remove) > 0) {
 # add gene annotation
 probeAnnot <- read.table(file.path(refPath, "EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 probeAnnot <- probeAnnot[match(rownames(res[[1]]), probeAnnot$probeID), ]
-probeAnnot$chrm <- gsub("chr", "", probeAnnot$chrm)
+probeAnnot[["chrm"]] <- gsub("chr", "", probeAnnot[["chrm"]], fixed = TRUE)
 probeAnnot$start <- probeAnnot$start+1
 
 for(i in 1:3){
@@ -187,8 +187,8 @@ colnames(dmpRes)<-c("ProbeID", "DiscoveryCellType", outer(c("P", "Coeff", "SE"),
 
 
 
-diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ".")))
-diffLong$name<-gsub("Coeff\\.", "", diffLong$name)
+diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ":")))
+diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]], fixed = TRUE)
 diffLong$value<-abs(diffLong$value)
 pdf(file.path(resPath, "Plots","ViolinPlotCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 8, height = 4)
 ggplot(diffLong, aes(x = name, y = value, fill = name)) + geom_violin() +
@@ -198,47 +198,23 @@ dev.off()
 
 plotLim<-range(dmpRes[,c(4,7,10)])
 
-p1<- subset(dmpRes, DiscoveryCellType == "NeuN+") %>%
-ggplot(aes(x = `Coeff:Double-`, y = `Coeff:NeuN+`)) + geom_point() +
-xlab("Double -ve") + ylab("NeuN +ve") + ggtitle("NeuN+ve DMPs") +
-xlim(plotLim) + ylim(plotLim) +
-geom_hline(yintercept = 0) + 
-geom_vline(xintercept = 0)
+plotByStatus <- function(dmpCellType, constrastCellType, dmpRes, plotLim){
+    subset(dmpRes, DiscoveryCellType == dmpCellType) %>%
+    ggplot(aes(x = `Coeff:Double-`, y = `Coeff:NeuN+`)) + geom_point() +
+    xlab(paste0(dmpCellType, "ve")) + ylab(paste0(dmpCellType, "ve")) + ggtitle(paste0(dmpCellType, "ve DMPs")) +
+    xlim(plotLim) + ylim(plotLim) +
+    geom_hline(yintercept = 0) + 
+    geom_vline(xintercept = 0)
 
-p2<- subset(dmpRes, DiscoveryCellType == "NeuN+") %>%
-ggplot(aes(x = `Coeff:Sox10+`, y = `Coeff:NeuN+`)) + geom_point() +
-xlab("Sox10 +ve") + ylab("NeuN +ve") + ggtitle("NeuN+ve DMPs") +
-xlim(plotLim) + ylim(plotLim) +
-geom_hline(yintercept = 0) + 
-geom_vline(xintercept = 0)
+}
 
-p3<- subset(dmpRes, DiscoveryCellType == "Sox10+") %>%
-ggplot(aes(x = `Coeff:Double-`, y = `Coeff:Sox10+`)) + geom_point() +
-xlab("Double -ve") + ylab("Sox10 +ve") + ggtitle("Sox10+ve DMPs") +
-xlim(plotLim) + ylim(plotLim) +
-geom_hline(yintercept = 0) + 
-geom_vline(xintercept = 0)
+p1<- plotByStatus("NeuN+", "Double-", dmpRes, plotLim)
+p2<- plotByStatus("NeuN+", "Sox10+", dmpRes, plotLim)
+p3<- plotByStatus("Sox10+", "Double-", dmpRes, plotLim)
+p4<- plotByStatus("Sox10+", "NeuN+", dmpRes, plotLim)
+p5<- plotByStatus("Double-", "NeuN+", dmpRes, plotLim)
+p6<- plotByStatus("Double-", "Sox10+", dmpRes, plotLim)
 
-p4<- subset(dmpRes, DiscoveryCellType == "Sox10+") %>%
-ggplot(aes(x = `Coeff:NeuN+`, y = `Coeff:Sox10+`)) + geom_point() +
-xlab("NeuN +ve") + ylab("Sox10 +ve") + ggtitle("Sox10+ve DMPs") +
-xlim(plotLim) + ylim(plotLim) +
-geom_hline(yintercept = 0) + 
-geom_vline(xintercept = 0)
-
-p5<- subset(dmpRes, DiscoveryCellType == "Double-") %>%
-ggplot(aes(x = `Coeff:NeuN+`, y = `Coeff:Double-`)) + geom_point() +
-xlab("NeuN +ve") + ylab("Double -ve") + ggtitle("Double-ve DMPs") +
-xlim(plotLim) + ylim(plotLim) +
-geom_hline(yintercept = 0) + 
-geom_vline(xintercept = 0)
-
-p6<- subset(dmpRes, DiscoveryCellType == "Double-") %>%
-ggplot(aes(x = `Coeff:Sox10+`, y = `Coeff:Double-`)) + geom_point() +
-xlab("Sox10 +ve") + ylab("Double -ve") + ggtitle("Double-ve DMPs") +
-xlim(plotLim) + ylim(plotLim) +
-geom_hline(yintercept = 0) + 
-geom_vline(xintercept = 0)
 
 pdf(file.path(resPath, "Plots","ScatterplotsCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 12, height = 8)
 ggarrange(p1, p3,p5, p2,p4,   p6, nrow = 2, ncol = 3)
