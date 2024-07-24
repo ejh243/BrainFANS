@@ -105,6 +105,20 @@ design <- model.matrix(~ Phenotype + Cell.Proportion + CETYGO + CCDNAmAge + Sex 
 siteAnnotation <- cpg.annotate("array", celltypeNormbeta, what = "B", arraytype = "EPIC", 
 analysis.type = "differential", design = design, coef = 2)
 
+# compare to our LM results
+load(file.path(resPath, paste0(cellType, "LM.rdata")))
+outtab<-outtab[names(siteAnnotation@ranges),]
+
+pdf(file.path(resPath, "Plots", paste0("ScatterplotLMDMRCate", cellType, ".pdf")), width = 10, height = 5)
+par(mfrow = c(1,2))
+plot(-log10(siteAnnotation@ranges$ind.fdr), -log10(outtab[,"FullModel_SCZ_P"]), 
+  xlab = "DMRcate -log10P", ylab = "LM -log10P", pch = 16, col = siteAnnotation@ranges$is.sig)
+plot(siteAnnotation@ranges$diff, outtab[,"FullModel_SCZ_coeff"], 
+  xlab = "DMRcate mean diff", ylab = "LM Mean diff", pch = 16, col = siteAnnotation@ranges$is.sig)
+abline(v = 0)
+abline(h = 0)
+dev.off()
+
 dmrcoutput <- dmrcate(siteAnnotation, lambda=1000, C=2)
 results.ranges <- extractRanges(dmrcoutput, genome = "hg19")
 
