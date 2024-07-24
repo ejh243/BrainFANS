@@ -165,6 +165,10 @@ for(thres in c(9e-8, 1e-7, 1e-6, 1e-5)){
 
 write.csv(nDMPs, file.path(resPath, "Tables", "DMPCountsPerCelltypeAcrossWithinCTModels.csv"))
 
+for(each in cellTypes){
+	write.csv(res[[each]][which(res[[each]][,"FullModel_SCZ_P"] < thres),], file.path(resPath, "Tables", paste0("DiscoveryDMPsWithin", each, "LM.csv")))
+}
+
 ## COMPARE DMPS ACROSS CELL TYPES
 thres<-1e-5
 
@@ -212,8 +216,8 @@ p5<- plotByStatus("Double-", "NeuN+", dmpRes, plotLim)
 p6<- plotByStatus("Double-", "Sox10+", dmpRes, plotLim)
 
 
-pdf(file.path(resPath, "Plots","ScatterplotsCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 8, height = 4)
-ggarrange(p1, p2, p3, p4, p5, p6, nrow = 3, ncol = 2)
+pdf(file.path(resPath, "Plots","ScatterplotsCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 12, height = 8)
+ggarrange(p1, p3,p5, p2,p4,   p6, nrow = 2, ncol = 3)
 dev.off()
 
 load(file.path(resPath, "MLM.rdata"))
@@ -246,3 +250,40 @@ topSites[,3] <- abs(topSites[,3])
 
 ggplot(topSites, aes(x = FullModel_SCZ_P, y = FullModel_SCZ_coeff, color = cellType)) + geom_point() +
 xlab("-log10(P)") + ylab("Mean difference")
+
+
+## Plot DMPs
+pos <- position_dodge(0.9)
+
+setwd(dataDir)
+load(normData)
+
+## remove total samples and cell types with less than 20 samples
+QCmetrics<-QCmetrics[which(QCmetrics$Cell.type != "Total"),]
+nSample<-table(QCmetrics$Cell.type)
+QCmetrics<-QCmetrics[QCmetrics$Cell.type %in% names(nSample[which(nSample > 19)]),]
+
+# filter to schizophrenia and control only
+QCmetrics<-QCmetrics[QCmetrics$Phenotype %in% c("Schizophrenia", "Control"),]
+
+celltypeNormbeta<-celltypeNormbeta[,QCmetrics$Basename]
+cellTypes<-unique(QCmetrics$Cell.type)
+
+dmpRes <- cbind(dmpRes, probeAnnot[match(rownames(dmpRes), probeAnnot$probeID), c("chrm", "start", "GeneNames", "GeneClasses", "CGI", "CGIPosition")])
+
+
+for(each in cellTypes){
+	subRes <- dmpRes[which(dmpRes[,"DiscoveryCellType"] == each),]
+	pdf(file.path(resPath, "Plots", paste0("ViolinPlotDiscoveryDMPsWithin", each, "Models.pdf")), width = 6, height = 5)
+
+	for(i in 1:nrow(subRes)){
+		tmpDat<-data.frame("CellType" = QCmetrics$Cell.type, "Phenotype" = QCmetrics$Phenotype, "DNAm" = celltypeNormbeta[rownames(subRes)[i],])
+		p<-ggplot(tmpDat, aes(x=CellType, y=DNAm, fill = Phenotype)) + 
+	  geom_violin(position = pos, scale = 'width') + ggtitle(paste(rownames(subRes)[i], subRes$GeneNames[i])) +
+	  stat_summary(fun = "mean", 
+				   geom = "point", 
+				   position = pos)
+		print(p)
+	}
+	dev.off()
+}
