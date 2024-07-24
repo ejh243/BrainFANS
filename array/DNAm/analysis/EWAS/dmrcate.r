@@ -58,10 +58,8 @@ if (cellType == "Double-"){
 } else if (cellType == "NeuN+"){
   QCmetrics$Cell.Proportion <- predPropBest[QCmetrics$Basename, "NeuNPos_SOX6Pos"]
 } else if (cellType == "Sox10+"){
-  QCmetrics$Cell.Proportion <- NA
-} else {
-    stop("Cell Type not recognised....")
-  }
+  QCmetrics$Cell.Proportion <- predPropBest[QCmetrics$Basename, "NeuNPos_SOX6Pos"]
+}
 
 QCmetrics$CETYGO <- predPropBest[QCmetrics$Basename, "CETYGO"]
 

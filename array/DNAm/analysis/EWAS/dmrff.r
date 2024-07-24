@@ -7,7 +7,15 @@
 ##
 ## ---------------------------------------------------------------------#
 
+#----------------------------------------------------------------------#
+# LOAD PACKAGES
+#----------------------------------------------------------------------#
+
 library(dmrff)
+
+#----------------------------------------------------------------------#
+# DEFINE PARAMETERS
+#----------------------------------------------------------------------#
 
 args <- commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
@@ -16,6 +24,11 @@ refPath <- args[3]
 
 normData<-file.path(dataDir, "3_normalised/normalised.rdata")
 resPath <- file.path(dataDir, "4_analysis/EWAS")
+
+
+#----------------------------------------------------------------------#
+# LOAD AND PREPARE DATA
+#----------------------------------------------------------------------#
 
 load(normData)
 
@@ -70,6 +83,12 @@ outtab<- outtab[which(outtab[,"chrm"] != "Y"),]
 
 celltypeNormbeta<-celltypeNormbeta[rownames(outtab),]
 
+
+#----------------------------------------------------------------------#
+# RUN DMR ANALYSIS
+#----------------------------------------------------------------------#
+
+
 dmrs <- dmrff(estimate = outtab$FullModel_SCZ_coeff, 
     se=outtab$FullModel_SCZ_SE, 
     p.value = outtab$FullModel_SCZ_P,
@@ -81,3 +100,5 @@ dmrs <- dmrff(estimate = outtab$FullModel_SCZ_coeff,
     p.cutoff = 5e-5)
 
 dmrs.filt <- dmrs[which(dmrs$p.adjust < 0.05 & dmrs$n > 1),]
+
+write.csv(dmrs.filt, file = file.path(resPath, paste0(cellType,"dmrff.rdata")))
