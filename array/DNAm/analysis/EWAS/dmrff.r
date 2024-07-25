@@ -22,6 +22,9 @@ dataDir <- args[1]
 cellType <- args[2]
 refPath <- args[3]
 
+maxgap <- 1000
+p.cutoff <- 0.05
+
 normData<-file.path(dataDir, "3_normalised/normalised.rdata")
 resPath <- file.path(dataDir, "4_analysis/EWAS")
 
@@ -90,6 +93,29 @@ celltypeNormbeta<-celltypeNormbeta[rownames(outtab),]
 # RUN DMR ANALYSIS
 #----------------------------------------------------------------------#
 
+## find candidate regions
+candidates <- dmrff.candidates(
+        estimate=outtab$FullModel_SCZ_coeff,
+        p.value=outtab$FullModel_SCZ_P,
+        chr=outtab$chrm, 
+        pos=outtab$start,
+        maxgap=maxgap,
+        p.cutoff=p.cutoff,
+        verbose=T)
+
+write.csv(candidates, file = file.path(resPath, "Tables", paste0(cellType,"CollapsedRegions_0.05.csv")))
+
+candidates <- dmrff.candidates(
+        estimate=outtab$FullModel_SCZ_coeff,
+        p.value=outtab$FullModel_SCZ_P,
+        chr=outtab$chrm, 
+        pos=outtab$start,
+        maxgap=maxgap,
+        p.cutoff=1e-6,
+        verbose=T)
+
+write.csv(candidates, file = file.path(resPath, "Tables", paste0(cellType,"CollapsedRegions_1e-6.csv")))
+
 
 dmrs <- dmrff(estimate = outtab$FullModel_SCZ_coeff, 
     se=outtab$FullModel_SCZ_SE, 
@@ -97,8 +123,8 @@ dmrs <- dmrff(estimate = outtab$FullModel_SCZ_coeff,
     methylation = celltypeNormbeta,
     chr = outtab$chrm,
     pos = outtab$start,
-    maxgap = 1000,
+    maxgap = maxgap,
     verbose = T, 
-    p.cutoff = 0.05)
+    p.cutoff = p.cutoff)
 
-write.csv(dmrs, file = file.path(resPath, paste0(cellType,"dmrff_0.05.csv")))
+write.csv(dmrs, file = file.path(resPath, "Tables", paste0(cellType,"dmrff_0.05.csv")))
