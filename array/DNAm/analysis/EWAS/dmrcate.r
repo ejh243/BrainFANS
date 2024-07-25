@@ -123,7 +123,7 @@ abline(v = 0)
 abline(h = 0)
 dev.off()
 
-dmrcoutput <- dmrcate(siteAnnota tion, lambda=1000, C=2)
+dmrcoutput <- dmrcate(siteAnnotation, lambda=1000, C=2)
 results.ranges <- extractRanges(dmrcoutput, genome = "hg19")
 
 cols<-gg_color_hue(2)[as.factor(QCmetrics$Phenotype)]
