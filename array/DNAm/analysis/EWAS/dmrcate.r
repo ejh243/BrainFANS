@@ -57,8 +57,8 @@ if (cellType == "Double-"){
    QCmetrics$Cell.Proportion <- predPropBest[QCmetrics$Basename, "NeuNNeg_Sox10Neg_IRF8Pos"]
 } else if (cellType == "NeuN+"){
   QCmetrics$Cell.Proportion <- predPropBest[QCmetrics$Basename, "NeuNPos_SOX6Pos"]
-} else if (cellType == "Sox10+"){
-  QCmetrics$Cell.Proportion <- predPropBest[QCmetrics$Basename, "NeuNPos_SOX6Pos"]
+} else {
+  QCmetrics$Cell.Proportion <- NA
 }
 
 QCmetrics$CETYGO <- predPropBest[QCmetrics$Basename, "CETYGO"]
@@ -112,14 +112,16 @@ outtab<-outtab[names(siteAnnotation@ranges),]
 pdf(file.path(resPath, "Plots", paste0("ScatterplotLMDMRCate", cellType, ".pdf")), width = 10, height = 5)
 par(mfrow = c(1,2))
 plot(-log10(siteAnnotation@ranges$ind.fdr), -log10(outtab[,"FullModel_SCZ_P"]), 
-  xlab = "DMRcate -log10P", ylab = "LM -log10P", pch = 16, col = siteAnnotation@ranges$is.sig)
+  xlab = "DMRcate -log10P", ylab = "LM -log10P", pch = 16, 
+  col = gg_color_hue(2)[as.factor(siteAnnotation@ranges$is.sig)])
 plot(siteAnnotation@ranges$diff, outtab[,"FullModel_SCZ_coeff"], 
-  xlab = "DMRcate mean diff", ylab = "LM Mean diff", pch = 16, col = siteAnnotation@ranges$is.sig)
+  xlab = "DMRcate mean diff", ylab = "LM Mean diff", pch = 16, 
+  col = gg_color_hue(2)[as.factor(siteAnnotation@ranges$is.sig)])
 abline(v = 0)
 abline(h = 0)
 dev.off()
 
-dmrcoutput <- dmrcate(siteAnnotation, lambda=1000, C=2)
+dmrcoutput <- dmrcate(siteAnnota tion, lambda=1000, C=2)
 results.ranges <- extractRanges(dmrcoutput, genome = "hg19")
 
 cols<-gg_color_hue(2)[as.factor(QCmetrics$Phenotype)]
