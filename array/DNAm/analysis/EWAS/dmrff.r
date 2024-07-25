@@ -80,6 +80,8 @@ probeAnnot$start <- probeAnnot$start+1
 
 outtab<- cbind(outtab, probeAnnot[, c("chrm", "start", "GeneNames", "GeneClasses")])
 outtab<- outtab[which(outtab[,"chrm"] != "Y"),]
+outtab<- outtab[which(outtab[,"chrm"] != "*"),]
+
 
 celltypeNormbeta<-celltypeNormbeta[rownames(outtab),]
 
@@ -95,10 +97,8 @@ dmrs <- dmrff(estimate = outtab$FullModel_SCZ_coeff,
     methylation = celltypeNormbeta,
     chr = outtab$chrm,
     pos = outtab$start,
-    maxgap = 500,
+    maxgap = 1000,
     verbose = T, 
-    p.cutoff = 5e-5)
+    p.cutoff = 0.05)
 
-dmrs.filt <- dmrs[which(dmrs$p.adjust < 0.05 & dmrs$n > 1),]
-
-write.csv(dmrs.filt, file = file.path(resPath, paste0(cellType,"dmrff.rdata")))
+write.csv(dmrs, file = file.path(resPath, paste0(cellType,"dmrff_0.05.csv")))
