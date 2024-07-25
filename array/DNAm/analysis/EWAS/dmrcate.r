@@ -57,14 +57,13 @@ if (cellType == "Double-"){
    QCmetrics$Cell.Proportion <- predPropBest[QCmetrics$Basename, "NeuNNeg_Sox10Neg_IRF8Pos"]
 } else if (cellType == "NeuN+"){
   QCmetrics$Cell.Proportion <- predPropBest[QCmetrics$Basename, "NeuNPos_SOX6Pos"]
-} else {
-  QCmetrics$Cell.Proportion <- NA
-}
+} 
 
 QCmetrics$CETYGO <- predPropBest[QCmetrics$Basename, "CETYGO"]
 
-QCmetrics<-na.omit(QCmetrics[,
-    c("Basename", "Phenotype", "Cell.Proportion", "CETYGO", "CCDNAmAge", "Sex", "Tissue.Centre")])
+cols<-c("Basename", "Phenotype", "Cell.Proportion", "CETYGO", "CCDNAmAge", "Sex", "Tissue.Centre")
+cols <- cols[cols %in% colnames(QCmetrics)]
+QCmetrics<-na.omit(QCmetrics[, cols])
 
 # subset beta matrix to analysis samples
 celltypeNormbeta<-celltypeNormbeta[,QCmetrics$Basename]
@@ -100,8 +99,11 @@ celltypeNormbeta <- celltypeNormbeta[-match(remove, rownames(celltypeNormbeta)),
 # DEFINE ANALYSIS
 #----------------------------------------------------------------------#
 
-design <- model.matrix(~ Phenotype + Cell.Proportion + CETYGO + CCDNAmAge + Sex + Tissue.Centre, QCmetrics)
-
+if("Cell.Proportion" %in% cols){
+  design <- model.matrix(~ Phenotype + Cell.Proportion + CETYGO + CCDNAmAge + Sex + Tissue.Centre, QCmetrics)
+} else {
+ design <- model.matrix(~ Phenotype + CETYGO + CCDNAmAge + Sex + Tissue.Centre, QCmetrics)
+}
 siteAnnotation <- cpg.annotate("array", celltypeNormbeta, what = "B", arraytype = "EPIC", 
 analysis.type = "differential", design = design, coef = 2)
 
