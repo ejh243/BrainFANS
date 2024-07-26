@@ -41,6 +41,7 @@
 ##                                                                                                                             ||
 ## ============================================================================================================================##
 
+
 ## ============ ##
 ##    SET UP    ##
 ## ============ ##
@@ -49,22 +50,21 @@
 echo Job started on:
 date -u
 
-if [[ $1 == '' ]] || [[ ! -d $1 ]]
-then
-  { echo "No project directory specified or could not be found." ; exit 1; }
-else
-  source "${1}/config.txt" 
-fi
-
-## load config file provided on command line related to the specified project
-echo "Loading config file for project: " ${PROJECT}
-echo "Project directory is: " $MAIN_DIR
-echo 'Script is running from directory: ' ${SCRIPTS_DIR}
+source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
 
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACGenoConcorS6-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
+
+cat <<EOF
+
+Loading config file for project:  ${PROJECT}
+Project directory is:  $MAIN_DIR
+Script is running from directory:  ${SCRIPTS_DIR}
+Log files will be moved to dir:  $LOG_DIR
+
+EOF
+
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -99,12 +99,14 @@ then
   module load $GATKVERS
   module load $SAMTVERS
   
-  echo " "
-  echo "|| Running STEP 6.1 of ATAC-seq pipeline: COMPARE. Samples will be compared to their matching genotype data.||"
-  echo " "
-  echo "Output directory will be: ${ALIGNED_DIR}/genotypeConcordance"
-  echo "Output directory will be: ${ALIGNED_DIR}/baseRecalibrate"
-  echo " "
+cat <<EOF
+
+|| Running STEP 6.1 of ATAC-seq pipeline: COMPARE. Samples will be compared to their matching genotype data.||
+
+Output directory will be: ${ALIGNED_DIR}/genotypeConcordance
+Output directory will be: ${ALIGNED_DIR}/baseRecalibrate
+
+EOF
   
   # process a line from IDMap file
   IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${META_DIR}/matchedVCFIDs.txt | tail -1))
@@ -122,11 +124,13 @@ then
 	module load ${RVERS}
 	module load Pandoc
  
-  echo " "
-  echo "|| Running STEP 6.2 of ATAC-seq pipeline: GENCHECK. Results from genotype and sex check will be collated in a Rmarkdown report.||"
-  echo " "
-  echo "Output directory will be: ${PEAK_DIR}/QCOutput"
-  echo " "
+cat <<EOF
+
+|| Running STEP 6.2 of ATAC-seq pipeline: GENCHECK. Results from genotype and sex check will be collated in a Rmarkdown report.||
+
+Output directory will be: ${PEAK_DIR}/QCOutput
+
+EOF
  
 	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1], '/collateSampleChecks.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/QCOutput/stage2SummaryStats.html'))" "${RSCRIPTS_DIR}" "$PEAK_DIR" "${CONFIGR}"
   
@@ -140,12 +144,15 @@ then
   module load $GATKVERS
   module load $SAMTVERS
   
-  echo " "
-  echo "|| Running STEP 6.3 of ATAC-seq pipeline: SWITCH. Samples with potential genotype contamination will be selected for potential switches.||"
-  echo " "
-  echo "Output directory will be: ${ALIGNED_DIR}/genotypeConcordance"
-  echo "Output directory will be: ${ALIGNED_DIR}/baseRecalibrate"
-  echo " "
+cat <<EOF
+
+
+|| Running STEP 6.3 of ATAC-seq pipeline: SWITCH. Samples with potential genotype contamination will be selected for potential switches.||
+
+Output directory will be: ${ALIGNED_DIR}/genotypeConcordance
+Output directory will be: ${ALIGNED_DIR}/baseRecalibrate
+
+EOF
   
   cd ${ALIGNED_DIR}/genotypeConcordance/
   

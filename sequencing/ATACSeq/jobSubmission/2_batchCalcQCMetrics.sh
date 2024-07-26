@@ -42,23 +42,21 @@
 echo Job started on:
 date -u
 
-if [[ $1 == '' ]] || [[ ! -d $1 ]]
-then
-  { echo "No project directory specified or could not be found." ; exit 1; }
-else
-  source "${1}/config.txt" 
-fi
-
-## load config file provided on command line related to the specified project
-echo "Loading config file for project: " $PROJECT
-echo "Project directory is: " $MAIN_DIR
-echo "Script is running from directory: " ${SCRIPTS_DIR}
-
+source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
 ## Log files directory
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACcalcQCS2-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
+
+
+cat <<EOF
+
+Loading config file for project:  ${PROJECT}
+Project directory is:  $MAIN_DIR
+Script is running from directory:  ${SCRIPTS_DIR}
+Log files will be moved to dir:  $LOG_DIR
+
+EOF
 
 ##check array specified and exit if not
 if [[ ${SLURM_ARRAY_TASK_ID} == '' ]]
@@ -71,13 +69,17 @@ fi
 ##  ==================  ##
 
 module load $RVERS
-
-echo "|| Running STEP 2 of ATAC-seq pipeline: Post alignment processing (QC metrics and fragment distribution). ||"
-echo "Calculating QC metrics and fragment distribution for samples in batch ${SLURM_ARRAY_TASK_ID} "
-echo " "
-date -u
 mkdir -p ${ALIGNED_DIR}/QCOutput
-echo "Output directory is ${ALIGNED_DIR}/QCOutput/"
+
+cat <<EOF
+
+|| Running STEP 2 of ATAC-seq pipeline: Post alignment processing (QC metrics and fragment distribution). ||
+
+Calculating QC metrics and fragment distribution for samples in batch ${SLURM_ARRAY_TASK_ID} 
+
+Output directory is ${ALIGNED_DIR}/QCOutput/
+
+EOF
 
 Rscript ${RSCRIPTS_DIR}/fragmentDistribution.r ${CONFIGR} ${SLURM_ARRAY_TASK_ID} 
 

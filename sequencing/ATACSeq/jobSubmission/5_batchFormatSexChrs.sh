@@ -10,6 +10,7 @@
 #SBATCH --error=ATACSexChrS5-%A_%a.err
 #SBATCH --job-name=ATACSexChrS5
 
+
 ## ===================================================================================================================##
 ##                                 ATAC-seq pipeline STEP 5: Sex chromosomes                                          ##
 ## ===================================================================================================================##
@@ -48,16 +49,20 @@ date -u
 
 source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
 
-
-## load config file provided on command line related to the specified project
-echo "Loading config file for project: " ${PROJECT}
-echo "Project directory is: " $MAIN_DIR 
-echo 'Script is running from directory: ' ${SCRIPTS_DIR}
-
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACSexChrS5-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
+
+## load config file provided on command line related to the specified project
+cat <<EOF
+
+Loading config file for project:  ${PROJECT}
+Project directory is:  $MAIN_DIR 
+Script is running from directory:  ${SCRIPTS_DIR}
+Log files will be moved to dir: $LOG_DIR
+
+EOF
+
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -91,20 +96,20 @@ then
   module purge
   module load $SAMTVERS
   
-  echo " "
-  echo "|| Running STEP 5.1 of ATAC-seq pipeline: SPLIT. Reads in sex chromosomes will be isolated.||"
-  echo " "
-  echo "Output directory will be: ${ALIGNED_DIR}/sexChr"
-  echo " "
-  
   ## load sample to process from samples that passed QC stage 1
   mapfile -t SAMPLEIDS < ${META_DIR}/samples.txt
-  echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
-  
   ## Sample(s) specified in by array number(s) from command line
   sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
-  
-  echo "Sample(s) specified by array number in command line is/are: " ${sampleID[@]}
+
+cat <<EOF
+
+|| Running STEP 5.1 of ATAC-seq pipeline: SPLIT. Reads in sex chromosomes will be isolated.||
+
+Output directory will be: ${ALIGNED_DIR}/sexChr
+Number of sample IDs found: ${#SAMPLEIDS[@]}
+Sample specified by array number in command line is:  ${sampleID[@]}
+
+EOF
   
   mkdir -p ${ALIGNED_DIR}/sexChr
   
@@ -121,12 +126,14 @@ then
   source ${PIP_ENV}/bin/activate
   module load $BEDTVERS
   
-  echo " "
-  echo "|| Running STEP 5.2 of ATAC-seq pipeline: PEAKS. Peaks will be called in sex chromosomes using MACS3 Single-end mode.||"
-  echo " "
-  echo "Output directory will be: ${PEAK_DIR}/ShiftedTagAlign/sexChr for peaks"
-  echo "Output directory will be: ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/ for counts in peaks"
-  echo " "
+cat <<EOF
+
+|| Running STEP 5.2 of ATAC-seq pipeline: PEAKS. Peaks will be called in sex chromosomes using MACS3 Single-end mode.||
+
+Output directory will be: ${PEAK_DIR}/ShiftedTagAlign/sexChr for peaks
+Output directory will be: ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/ for counts in peaks
+
+EOF
    
   mkdir -p ${PEAK_DIR}/ShiftedTagAlign/sexChr
   mkdir -p ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/
@@ -143,11 +150,13 @@ then
   module purge
   module load $RVERS
   
-  echo " "
-  echo "|| Running STEP 5.3 of ATAC-seq pipeline: CHECK. Sex of samples will be compared to be predicted sex.||"
-  echo " "
-  echo "Output directory will be: ${ALIGNED_DIR}/sexChr"
-  echo " "
+cat <<EOF
+
+|| Running STEP 5.3 of ATAC-seq pipeline: CHECK. Sex of samples will be compared to be predicted sex.||
+
+Output directory will be: ${ALIGNED_DIR}/sexChr
+
+EOF
   
   Rscript ${RSCRIPTS_DIR}/collateSexChecks.r ${CONFIGR}
   

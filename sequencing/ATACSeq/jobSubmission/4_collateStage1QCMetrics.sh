@@ -33,8 +33,10 @@
 ## - Subscripts: progressReport.sh,  countMTcollateFS.sh                                                              ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
 ## - R scripts: collateDataQualityStats.Rmd                                                                           ||
+## - No array job number is required.                                                                                 ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
+
 
 ## ============ ##
 ##    SET UP    ##
@@ -44,23 +46,22 @@
 echo Job started on:
 date -u
 
-if [[ $1 == '' ]] || [[ ! -d $1 ]]
-then
-  { echo "No project directory specified or could not be found." ; exit 1; }
-else
-  source "${1}/config.txt" 
-fi
-
-## load config file provided on command line related to the specified project
-echo "Loading config file for project: " ${PROJECT}
-echo "Project directory is: " $MAIN_DIR 
-echo "Script is running from directory: " ${SCRIPTS_DIR}
+source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
 
 ## Log files directory
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACQCSummaryStage1S4-${SLURM_ARRAY_JOB_ID}* $LOG_DIR
+
+cat <<EOF
+
+Loading config file for project:  ${PROJECT}
+Project directory is:  $MAIN_DIR 
+Script is running from directory:  ${SCRIPTS_DIR}
+Log files will be moved to dir: $LOG_DIR
+
+EOF
+
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -85,30 +86,34 @@ fi
 if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
 then 
   
-  echo " "
-  echo "|| Running STEP 4.1 of ATAC-seq pipeline: MULTIQC ||"
-  echo "Results of fastqc on raw reads, trimming and alignment will be collated in a single report for each process."
-  echo " "
-  
   ##Conda environment is activated to run multiqc
-  #module load $ACVERS
-  #source $CONDA_ENV
-  #conda activate $CONDA
-  module load MultiQC
+  module load $ACVERS
+  source $CONDA_ENV
+  conda activate $CONDA
 
-  echo "Output dir for FASTQC multiqc is ${FASTQCDIR}/multiqc"
-	mkdir -p ${FASTQCDIR}/multiqc
+  mkdir -p ${FASTQCDIR}/multiqc
+  mkdir -p ${ALIGNED_DIR}/multiqc
+  mkdir -p ${TRIM_DIR}/multiqc
+  
+cat <<EOF
+
+|| Running STEP 4.1 of ATAC-seq pipeline: MULTIQC ||
+
+Results of fastqc on raw reads, trimming and alignment will be collated in a single report for each process.
+
+Output dir for FASTQC multiqc is ${FASTQCDIR}/multiqc
+Output dir for Alignment multiqc is ${ALIGNED_DIR}/multiqc
+Output dir for Trimming multiqc is ${TRIM_DIR}/fastqc/multiqc
+
+EOF
+  
 	cd ${FASTQCDIR}/
 	multiqc . -f -o ${FASTQCDIR}/multiqc
 	rm -f *.html
 	
-  echo "Output dir for Alignment multiqc is ${ALIGNED_DIR}/multiqc"
-	mkdir -p ${ALIGNED_DIR}/multiqc
   cd ${ALIGNED_DIR}
 	multiqc . -f -o ${ALIGNED_DIR}/multiqc
  
-  echo "Output dir for Trimming multiqc is ${TRIM_DIR}/fastqc/multiqc"
-  mkdir -p ${TRIM_DIR}/multiqc
   cd ${TRIM_DIR}/qc
 	multiqc . -f -o ${TRIM_DIR}/multiqc 
   rm -f ${TRIM_DIR}/qc/*.html
@@ -119,11 +124,14 @@ fi
 if [ $# = 1 ] || [[ $2 =~ 'COLLATE' ]]
 then
 
-  echo " "
-  echo "|| Running step 4.2 of ATAC-seq pipeline: COLLATE ||"
-  echo "It will be checked that all samples had gone through all processes and had produced the right outputs."
-  echo "Output directory is ${META_DIR} and ${ALIGNED_DIR}/ENCODEMetrics/"
-	echo " "
+cat <<EOF
+
+|| Running step 4.2 of ATAC-seq pipeline: COLLATE ||
+
+It will be checked that all samples had gone through all processes and had produced the right outputs.
+Output directory is ${META_DIR} and ${ALIGNED_DIR}/ENCODEMetrics/
+
+EOF
  
 	sh ${SUB_SCRIPTS_DIR}/progressReport.sh 
 	sh ${SUB_SCRIPTS_DIR}/countMTcollateFS.sh
@@ -137,11 +145,14 @@ then
 	module load ${RVERS}
 	module load Pandoc
  
-  echo " "
-  echo "|| Running step 4.3 of ATAC-seq pipeline: SUMMARY ||"
-  echo " Summary of results to this point are collated in a Rmarkdown report"
-  echo "Output directory is $PEAK_DIR/QCOutput"
-  echo " "
+cat <<EOF
+
+|| Running step 4.3 of ATAC-seq pipeline: SUMMARY ||
+
+Summary of results to this point are collated in a Rmarkdown report
+Output directory is $PEAK_DIR/QCOutput
+
+EOF
   
 	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1],'/collateDataQualityStats.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/QCOutput/stage1SummaryStats.html'))" "${RSCRIPTS_DIR}" "$PEAK_DIR" "${CONFIGR}"
 fi

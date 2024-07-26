@@ -38,7 +38,6 @@ mkdir -p ${ALIGNED_DIR}/baseRecalibrate
 
 sampleName=$1
 vcfid=$2
-vcfid="${vcfid%"${vcfid##*[![:space:]]}"}" 
 
 ## ============ ##
 ##    VERIFY    ##
@@ -95,14 +94,13 @@ then
     
     ${VERIFYBAMID} --vcf ${SNP} --bam ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam --out ${ALIGNED_DIR}/genotypeConcordance/${sampleName} --ignoreRG --smID ${vcfid} --self
 else
-
     echo "No genotype data available"
-    echo $sampleName, >> $META_DIR/noVCFfound.txt
+    echo $sampleName >> ${META_DIR}/noVCFfound.txt
 fi
 
 if [[ ! -f ${ALIGNED_DIR}/genotypeConcordance/${sampleName}.selfSM ]]
 then
-  { echo "Genotype could not verified for ${sampleName}. Check whether a matching VCF IDs exists for this sample." ; exit 1 ;}
+  { echo "Genotype could not verified for ${sampleName}. Check whether a matching VCF IDs exists for this sample." ; exit 1 ; }
 else
   echo "Genotype verification done for ${sampleName}."
   echo Job finished at: 

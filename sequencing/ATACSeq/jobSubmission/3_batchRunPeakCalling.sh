@@ -35,8 +35,10 @@
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                            ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
 ## - Subscripts: shiftAlignedReads.sh, samplePeaks.sh, collateCalcFrip.sh                                             ||
+## - For STEP 3.3 FRIP, a single job array number should be used, e.g. -array=0                                       ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
+
 
 ## ============ ##
 ##    SET UP    ##
@@ -46,23 +48,22 @@
 echo Job started on:
 date -u
 
-if [[ $1 == '' ]] || [[ ! -d $1 ]]
-then
-  { echo "No project directory specified or could not be found." ; exit 1; }
-else
-  source "${1}/config.txt" 
-fi
-
-## load config file provided on command line related to the specified project
-echo "Loading config file for project: " $PROJECT
-echo "Project directory is: " $MAIN_DIR
-echo "Script is running from directory: " ${SCRIPTS_DIR}
+source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
 
 ## Log files directory
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACPeakCallingS3-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
+
+cat <<EOF
+
+Loading config file for project:  ${PROJECT}
+Project directory is:  $MAIN_DIR
+Script is running from directory:  ${SCRIPTS_DIR}
+Log files will be moved to dir:  $LOG_DIR
+
+EOF
+
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -102,14 +103,17 @@ then
   module load $SAMTVERS
 	module load $RVERS
  
-	echo " "
-  echo "|| Running STEP 3.1 of ATAC-seq pipeline: SHIFT. Reads will be shifted for later peak calling on sex chromosomes ||"
-  echo " "
-  echo "Output directory is ${ALIGNED_DIR}"
-  
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
-  echo "Sample(s) specified by array number in command line is/are: " ${sample}
+  
+cat <<EOF
+
+|| Running STEP 3.1 of ATAC-seq pipeline: SHIFT. Reads will be shifted for later peak calling on sex chromosomes ||
+
+Output directory is ${ALIGNED_DIR}
+Sample specified by array number in command line is: ${sample}
+
+EOF
   
   sh "${SUB_SCRIPTS_DIR}/shiftAlignedReads.sh" ${sample}
   
@@ -124,16 +128,18 @@ then
   source ${PIP_ENV}/bin/activate
 	module load $BEDTVERS
  
-  echo " "
-  echo "|| Running STEP 3.2 of ATAC-seq pipeline: PEAKS. Peaks will be called on sample using MACS3 on Paired-end mode. ||"
-  echo " "
-  echo "Output directory is ${PEAK_DIR}"
-  
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
-  echo "Sample(s) specified by array number in command line is/are: " ${sample}
-  
   mkdir -p ${PEAK_DIR}/BAMPE
+  
+cat <<EOF
+
+|| Running STEP 3.2 of ATAC-seq pipeline: PEAKS. Peaks will be called on sample using MACS3 on Paired-end mode. ||
+
+Output directory is ${PEAK_DIR}/BAMPE
+Sample specified by array number in command line is: ${sample}
+
+EOF
   
   sh "${SUB_SCRIPTS_DIR}/samplePeaks.sh" ${sample}
 	
@@ -147,18 +153,20 @@ then
 	module load $BEDTVERS
   module load $SAMTVERS
   
-  echo " "
-  echo "|| Running STEP 3.3 of ATAC-seq pipeline: FRIP. Results from peak calling will be collated on a single file ||"
-  echo " "
-  echo "Output directory is ${PEAK_DIR}/QCOutput"
+  mapfile -t SAMPLES < ${META_DIR}/samples.txt
+  mkdir -p ${PEAK_DIR}/QCOutput
   
-  mapfile -t SAMPLES < ${META_DIR}/samplesBatch2.txt
-  echo "There are ${#SAMPLES[@]} samples found."
-  
-	mkdir -p ${PEAK_DIR}/QCOutput
+cat <<EOF
 
-  #sh "${SUB_SCRIPTS_DIR}/collateCalcFrip.sh" ${SAMPLES[@]}
-  sh "/lustre/home/mf662/scripts_ISCA/subscripts/collateCalcFrip.sh" ${SAMPLES[@]}
+|| Running STEP 3.3 of ATAC-seq pipeline: FRIP. Results from peak calling will be collated on a single file ||
+
+Output directory is ${PEAK_DIR}/QCOutput
+Samples found: ${SAMPLES[@]}
+Number samples found: ${#SAMPLES[@]}
+
+EOF
+
+  sh "${SUB_SCRIPTS_DIR}/collateCalcFrip.sh" ${SAMPLES[@]}
 	
 fi
 

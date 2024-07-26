@@ -47,17 +47,20 @@ date -u
 
 source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
 
-## load config file provided on command line related to the specified project
-echo "Loading config file for project: " ${PROJECT}
-echo "Project directory is: " $MAIN_DIR 
-echo "Script is running from directory: " ${SCRIPTS_DIR}
-
 ## Log files directory
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
 mkdir -p $LOG_DIR
 mv ATACpreAnalysisS1-${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}* $LOG_DIR
 
+
+cat <<EOF
+
+Loading config file for project:  ${PROJECT}
+Project directory is:  $MAIN_DIR
+Script is running from directory:  ${SCRIPTS_DIR}
+Log files will be moved to dir:  $LOG_DIR
+
+EOF
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -93,10 +96,12 @@ then
     
     ## Sample(s) specified in by array number(s) from command line
     sampleID=${SAMPLEIDS[${SLURM_ARRAY_TASK_ID}]}
+    echo $sampleID
     toProcess=$(find ${RAWDATADIR} -maxdepth 1 -name ${sampleID}'*')
     ## sort the toProcess array so that R1 and R2 are consecutive 
     IFS=$'\n' # need to set this as \n rather than default - a space, \t and then \n - so that elements are expanded using \n as delimiter
     toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
+    echo ${toProcess[@]}
     unset IFS 
     
     echo "R1 file found is: " $(basename ${toProcess[0]} )
@@ -109,11 +114,14 @@ then
       module purge      
       module load FastQC 
       
-      echo "|| Running STEP 1.1 of ATAC-seq pipeline: FASTQC ||"
-      echo "Starting fastqc on ${sampleID} at: "
-      date -u
-      echo " "
-      echo "Output written to " ${FASTQCDIR}
+cat <<EOF
+
+|| Running STEP 1.1 of ATAC-seq pipeline: FASTQC ||
+Starting fastqc on ${sampleID}
+
+Output written to ${FASTQCDIR}
+
+EOF
       
       sh "${SUB_SCRIPTS_DIR}/fastqc.sh" ${sampleID} ${toProcess[0]} ${toProcess[1]}  
           
@@ -126,11 +134,15 @@ then
       module load fastp
       module load FastQC
       
-  	  echo "|| Running STEP 1.2 of ATAC-seq pipeline: TRIM ||"
-      echo "Starting trimming on ${sampleID} at: "
-      date -u
-      echo " "
-      echo "Output written to " ${TRIM_DIR}
+cat <<EOF
+
+|| Running STEP 1.2 of ATAC-seq pipeline: TRIM ||"
+
+Starting trimming on ${sampleID} at: 
+
+Output written to  ${TRIM_DIR}
+
+EOF
       
       sh "${SUB_SCRIPTS_DIR}/fastp.sh" ${sampleID} ${toProcess[0]} ${toProcess[1]}
         
@@ -146,10 +158,13 @@ then
   		module load $PICARDVERS
   		export PATH="$PATH:${UTILS}"
      
-      echo " "
-      echo "|| Running STEP 1.3 of ATAC-seq pipeline: ALIGN ||"
-      echo " "
-      echo "Output written to ${ALIGNED_DIR} and ${ALIGNED_DIR}/QCOutput"
+cat <<EOF
+
+|| Running STEP 1.3 of ATAC-seq pipeline: ALIGN ||
+
+Output written to ${ALIGNED_DIR} and ${ALIGNED_DIR}/QCOutput
+
+EOF
       
   		sh "${SUB_SCRIPTS_DIR}/alignment.sh" ${sampleID}
   	fi
@@ -167,10 +182,13 @@ then
       source ${CONDA_ENV}
       conda activate ${CONDA}
       
-      echo " "
-      echo "|| Running STEP 1.4 of ATAC-seq pipeline: ENCODE ||"
-      echo " "
-      echo "Output written to ${ALIGNED_DIR}/ENCODEMetrics"
+cat <<EOF
+
+|| Running STEP 1.4 of ATAC-seq pipeline: ENCODE ||
+
+Output written to ${ALIGNED_DIR}/ENCODEMetrics
+
+EOF
       
       sh "${SUB_SCRIPTS_DIR}/calcENCODEQCMetrics.sh" ${sampleID}
     fi
