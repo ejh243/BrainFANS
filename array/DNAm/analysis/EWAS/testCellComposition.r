@@ -143,21 +143,23 @@ ggsave(file.path(resPath, "EWAS", "Plots", "ViolinPlotCETYGOByCellTypePhenotype.
 
 
 ## Within Double negative look at IRF8 Pos vs Neg
-datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg")], 
-  Fraction, Proportion, NeuNNeg_Sox10Neg_IRF8Pos:NeuNNeg_Sox10Neg_IRF8Neg) %>% subset(Cell.type == "Double-")
-mean_data <- datLong %>%
-  group_by(Fraction, Phenotype) %>%
-  summarize(mean_Proportion = mean(Proportion))
-ggplot(datLong, aes(Fraction, Proportion, fill = Phenotype))+
-          geom_violin(scale = "width", position= position_dodge(width = 0.9))+ 
-		   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
-  geom_point(data = mean_data, aes(y = mean_Proportion, group = Phenotype),
-             color = "black", shape = 18, size = 2,
-             position = position_dodge(width = 0.9)) +
-  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
-  scale_y_continuous(breaks = seq(0, max(datLong$Proportion), by = 0.2))
-ggsave(file.path(resPath,  "EWAS", "Plots", "ViolinPlotCellCompositionByCellTypePhenotypeGlialSubtypes.pdf"),
-       width = 5, height = 5, dpi = 150, units = "in")
+if("Double-" %in% cellTypes){
+  datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNNeg_Sox10Neg_IRF8Pos","NeuNNeg_Sox10Neg_IRF8Neg")], 
+    Fraction, Proportion, NeuNNeg_Sox10Neg_IRF8Pos:NeuNNeg_Sox10Neg_IRF8Neg) %>% subset(Cell.type == "Double-")
+  mean_data <- datLong %>%
+    group_by(Fraction, Phenotype) %>%
+    summarize(mean_Proportion = mean(Proportion))
+  ggplot(datLong, aes(Fraction, Proportion, fill = Phenotype))+
+            geom_violin(scale = "width", position= position_dodge(width = 0.9))+ 
+        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+    geom_point(data = mean_data, aes(y = mean_Proportion, group = Phenotype),
+              color = "black", shape = 18, size = 2,
+              position = position_dodge(width = 0.9)) +
+    geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+    scale_y_continuous(breaks = seq(0, max(datLong$Proportion), by = 0.2))
+  ggsave(file.path(resPath,  "EWAS", "Plots", "ViolinPlotCellCompositionByCellTypePhenotypeGlialSubtypes.pdf"),
+        width = 5, height = 5, dpi = 150, units = "in")
+}
 
 ## Within Neurons look at SOX6 Pos vs Neg
 datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "NeuNPos_SOX6Pos","NeuNPos_SOX6Neg")], 
