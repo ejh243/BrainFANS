@@ -7,6 +7,24 @@
 ## ---------------------------------------------------------------------#
 
 #----------------------------------------------------------------------#
+# DEFINE PLOTTING FUNCTION
+#----------------------------------------------------------------------#
+
+
+plotByStatus <- function(dmpCellType, contrastCellType, dmpRes, plotLim){
+    x_col <- paste0("`Coeff:", dmpCellType, "`")
+    y_col <- paste0("`Coeff:", contrastCellType, "`")
+
+    subset(dmpRes, DiscoveryCellType == dmpCellType) %>%
+    ggplot(aes_string(x = x_col, y = y_col)) + geom_point() +
+    xlab(paste0(dmpCellType, "ve")) + ylab(paste0(contrastCellType, "ve")) + ggtitle(paste0(dmpCellType, "ve DMPs")) +
+    xlim(plotLim) + ylim(plotLim) +
+    geom_hline(yintercept = 0) + 
+    geom_vline(xintercept = 0)
+
+}
+
+#----------------------------------------------------------------------#
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
 args <- commandArgs(trailingOnly = TRUE)
@@ -41,7 +59,6 @@ rm(outtab)
 # REMOVE CROSS HYB & SNP PROBES
 #----------------------------------------------------------------------#
 
-## filter out cross hyb & SNP probes
 crosshyb <- read.table(file.path(refPath, "CrossHydridisingProbes_McCartney.txt"), stringsAsFactors = FALSE)
 tofilter <- read.csv(file.path(refPath, "EPICArrayProbesToFilter.csv"), stringsAsFactors = FALSE)
 snpProbes <- read.table(file.path(refPath, "SNPProbes_McCartney.txt"), stringsAsFactors = FALSE, header = TRUE)
@@ -197,16 +214,6 @@ stat_summary(fun=mean, geom="point", size=2, color="black") + facet_wrap (~Disco
 dev.off()
 
 plotLim<-range(dmpRes[,c(4,7,10)])
-
-plotByStatus <- function(dmpCellType, constrastCellType, dmpRes, plotLim){
-    subset(dmpRes, DiscoveryCellType == dmpCellType) %>%
-    ggplot(aes(x = `Coeff:Double-`, y = `Coeff:NeuN+`)) + geom_point() +
-    xlab(paste0(dmpCellType, "ve")) + ylab(paste0(dmpCellType, "ve")) + ggtitle(paste0(dmpCellType, "ve DMPs")) +
-    xlim(plotLim) + ylim(plotLim) +
-    geom_hline(yintercept = 0) + 
-    geom_vline(xintercept = 0)
-
-}
 
 p1<- plotByStatus("NeuN+", "Double-", dmpRes, plotLim)
 p2<- plotByStatus("NeuN+", "Sox10+", dmpRes, plotLim)
