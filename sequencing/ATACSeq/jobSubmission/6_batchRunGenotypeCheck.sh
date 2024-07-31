@@ -38,6 +38,8 @@
 ## - Subscripts: compareBamWithGenotypes.sh, searchBestGenoMatch.sh                                                            ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                                        ||
 ## - R scripts: collateSampleChecks.Rmd                                                                                        ||
+## - --array number should start from 1 for the first sample.                                                                  ||
+## - For STEP 6.2 GENCHECK, array number should be a single number, as need to be run once.                                    ||
 ##                                                                                                                             ||
 ## ============================================================================================================================##
 
@@ -159,8 +161,11 @@ EOF
   awk '{if($7 != "FREEMIX") print FILENAME,$0}' *.selfSM > collatedGenoCheckStats.txt
   awk '{if($7 != "FREEMIX" && ($12 > 0.9)) print FILENAME,$1}' *.selfSM > ${META_DIR}/potentialSwitches.txt
 
+  mapfile -t SAMPLEIDS < ${META_DIR}/potentialSwitches.txt
+  echo "Number of samples likely to have been swapped: ${#SAMPLEIDS[@]}"
+  
   IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${META_DIR}/potentialSwitches.txt | tail -1))
-  echo "Samples that are likely to be contaminated are: ${ID[@]}" 
+  echo "Samples that is likely to have been swapped with another sample: ${IDS[@]}" 
   
   sh "${SUB_SCRIPTS_DIR}/searchBestGenoMatch.sh" ${IDS[@]}
  

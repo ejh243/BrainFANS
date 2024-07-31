@@ -113,14 +113,14 @@ fripStats <- fripStats[match(pheno$sampleID, fripStats$SampleName),]
 ## load periodicity metrics 
 propNucleosomesAll<-NULL
 diptestStatsAll<-NULL
-filePaths <- list.files(file.path(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch_")
+filePaths <- list.files(file.path(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch|FragmentDistribution_Batch_")
 for(each in filePaths){
   load(paste0(alignedDir,"/QCOutput/", each))
   propNucleosomesAll<-rbind(propNucleosomesAll, propNucleosomes)
   diptestStatsAll<-rbind(diptestStatsAll, diptestStats)
 }
 
-diptestStatsAll<-as.data.frame(diptestStatsAll)
+#diptestStatsAll<-as.data.frame(diptestStatsAll)
 propNucleosomesAll<-propNucleosomesAll[match(processSum$sampleID, rownames(propNucleosomesAll)),]
 #diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, sub("X", "", gsub("\\.D$", "", rownames(diptestStatsAll)))),]
 diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, gsub("\\.D$", "", rownames(diptestStatsAll))),]
@@ -147,6 +147,7 @@ decreasingProps<-cbind(propNucleosomesAll[,1]+tol > propNucleosomesAll[,2],
                        propNucleosomesAll[,3]+tol > propNucleosomesAll[,4]
 )
 colnames(decreasingProps)<-c("NFR>Mono", "Mono>Di", "Di>Tri")
+decreasingProps <- as.data.frame(decreasingProps)
 ```
 
 
@@ -516,7 +517,7 @@ data.frame(fripStats$BAMPeaks)%>%
 
 ```
 
-```{r rviolinPlotPeaks,fig.height = 16 , fig.width = 8}
+```{r rviolinPlotPeaks,fig.height = 8, fig.width = 8}
 p <- NULL
 p[[1]]<-data.frame(fripStats$BAMPeaks, pheno$cohort) %>%
       ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
@@ -642,11 +643,8 @@ data.frame(fripStats$FripMACS3PE)%>%
       scale_x_discrete(labels = "MACS3 Paired-end")+
       theme_bw()
 
-# plot frip against number of peaks
-p=NULL
-#title<-c('MACS3: TA', 'MACS3: PE', 'MACS3: HMMRATAC')
 
-p<- ggplot(fripStats, aes(x=fripStats[,3], y = fripStats[,5], colour = pheno$fraction))+
+p<- ggplot(fripStats, aes(x=BAMPeaks, y = FripMACS3PE, colour = pheno$fraction))+
     geom_point()+
     theme_bw()+
     labs(title = 'MACS3: PE', x = "Number of peaks (100000s)", y = "Fraction reads in peaks")+
@@ -655,9 +653,6 @@ p<- ggplot(fripStats, aes(x=fripStats[,3], y = fripStats[,5], colour = pheno$fra
     theme(legend.title = element_blank(), 
           legend.position = 'bottom')
 p
-#grid.arrange(grobs = p, ncol=2, nrow = 3, 
-            # layout_matrix = rbind(c(1,2), c(3,3)),
-           #  widths = c(2.7, 2.7), heights = c(2.5, 0.5))
 ```
 
 # QC Summary: Sample Filtering
@@ -671,18 +666,18 @@ QCPASS<-cbind(mergeStats$overall_alignment_rate > alignThres, #alignment rate
               eMetrics$PBC2 > pbc2Thres, #encode,
               propNucleosomesAll[,1] > nucfThres, #fractions nucleosome free 
               propNucleosomesAll[,2] > monoThres, #fractions mononucleosome 
-              #decreasingProps[,1],#periodicity
+              decreasingProps[,1],#periodicity
               fripStats$BAMPeaks > peakThres, # number of peaks
               fripStats$FripMACS3PE > fripThres, #frip
               diptestStatsAll[,"p.value"] < dipPThres #multimodality
               ) 
 QCPASS[is.na(QCPASS)] <- FALSE
-colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Peaks", "FRIP", "Multimodality")
+colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality")
 rownames(QCPASS)<-processSum$sampleID
 keep<-rowSums(QCPASS, na.rm=TRUE) == rowSums(!is.na(QCPASS))
 QCPASS<-cbind(QCPASS, "QCPASS" = keep)
 QCPASS.df<- cbind(pheno, QCPASS)
-write.csv(QCPASS, file = file.path(metaDir, "/passStage1Status.csv"))
+write.csv(QCPASS.df, file = file.path(metaDir, "/passStage1Status.csv"))
 
 write.table(names(keep[keep==TRUE]), file = file.path(metaDir, "/passStage1SampleList.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
@@ -727,10 +722,11 @@ corMergeStats<-cbind(mergeStats$Total.Sequences,mergeStats$total_deduplicated_pe
                      mergeStats$PBC1,
                      propNucleosomesAll[,c(1,2)],
                      diptestStatsAll[,2],
+                     decreasingProps[,1],
                      fripStats$BAMPeaks,
                      fripStats$FripMACS3PE)
 colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
-                            'NFR','PBC1',  "PropNFR", "PropMono", "DipP","NPeaks_PE", "FRIP_PE")
+                            'NFR','PBC1',  "PropNFR", "PropMono", "DipP","Periodicity","NPeaks_PE", "FRIP_PE")
 corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
 corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black')
 ```
