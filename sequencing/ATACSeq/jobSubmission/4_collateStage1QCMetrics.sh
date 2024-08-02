@@ -87,9 +87,7 @@ if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
 then 
   
   ##Conda environment is activated to run multiqc
-  module load $ACVERS
-  source $CONDA_ENV
-  conda activate $CONDA
+  module load MultiQC
 
   mkdir -p ${FASTQCDIR}/multiqc
   mkdir -p ${ALIGNED_DIR}/multiqc

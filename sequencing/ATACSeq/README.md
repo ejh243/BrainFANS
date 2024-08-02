@@ -36,7 +36,7 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
 
 ## STEPS
 
-Parameters in [] are optional. If no step is specified, all steps in the script will be run.
+Parameters in [] are optional. If no step is specified, all steps in the script will be run. For more information about the inputs needed for each step and the outputs generated, please refer to each script.
 
 ### 0. Set-up
 
@@ -108,9 +108,10 @@ This script performs the core part of the ATACseq pipeline: calling peaks. In th
 - ./subScripts/shiftAlignedReads.sh : takes a filtered bam file converts to a tagalign file, calculate CC scores and shifts reads ready for peak calling
     * This step is not needed if peak calling is performed using PE mode or with HMMRATAC
 - ./subScripts/samplePeaks.sh : runs MAC version 3 peak calling with BAM files paired end reads
-		* it then filters the peaks to exclude those that overlap with blacklisted regions, sex chromosomes 
+    * it then filters the peaks to exclude those that overlap with blacklisted regions, sex chromosomes 
     * peaks are sorted by chromosome
 - ./subScripts/collateCalcFrip.sh : calculates fraction of reads in peaks, number of reads and peaks for peak calling at sample level
+    * a single --array job number should be specified.
 
 ##### -parameters-
 - `--array`: number of batch jobs, each number matches a sample.
@@ -123,17 +124,18 @@ This script performs the core part of the ATACseq pipeline: calling peaks. In th
   
 ### 4. Stage 1 QC metrics summary
 
-   `sbatch --array=0 ./jobSubmission/4_collateStage1QCMetrics.sh  (project directory) [STEPS]`
+   `sbatch ./jobSubmission/4_collateStage1QCMetrics.sh  (project directory) [STEPS]`
 
 This scripts uses MultiQC to collate the output of fastqc and bowtie2 alginment, as well as peak calling results. 
 
 ##### -scripts executed-
 - ./subScripts/progressReport.sh : identifies how many samples have been successful at each stage of the processing pipeline and for each fastq file, how far through the process it has progressed.
-- ./subScripts/countMTReads.sh : collates counts of the number of reads aligned to MT chromosome and collates flagstat summary of- aligned sorted reads.
+- ./subScripts/countMTcollateFS.sh : collates counts of the number of reads aligned to MT chromosome and collates flagstat summary of- aligned sorted reads.
 - ./Rscripts/collateDataQualityStats.Rmd : generates Rmarkdown report summarising stage 1 qc metrics: raw reads metrics, trimming, alignment and peak calling
+    * outputs a list of samples that pass Stage 1 of QC: passStage1SampleList.txt
 
 ##### -parameters-
-- `--array` : should be 0 for this script as general analysis is run rather than individual samples.
+- `--array` : a single job number should be specified.
 - `(project-name)` project's directory.
 -optional-
 - `[STEPS]` They may be combined, with desired steps included as single string, i.e. MULIQC,COLLATE. Default if left blank is to run all of them.
@@ -149,7 +151,6 @@ This script creates bam files for each sample containing only reads aligned to s
 
 ##### -scripts executed-
 - ./subScripts/subsetSexChrs.sh : subsets reads of only X and Y chromosomes for input sample in bam file. 
-	* requires a file in META_DATA folder called passStage1SampleList.txt which lists the samples to be included for sex check
 - ./subScripts/sexChrPeaks.sh : performs peak calling on the sex chromomes, filter and read counts using MACS3 in Single-end mode.
 - ./Rscripts/collateSexChecks.r : collates peak calling results on sex chromosomes and uses it to check the assigned sex of the sample.
 
