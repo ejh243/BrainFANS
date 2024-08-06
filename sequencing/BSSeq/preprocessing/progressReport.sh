@@ -1,3 +1,4 @@
+#!/bin/bash
 ## searches for output files from each part of the QC pipeline and reports number of files found
 ## then searches specifically for each sample to identify what is missing
 
@@ -67,7 +68,7 @@ echo "Number of bismark methylation files found " $(ls ${METHYLDIR}/*bismark.cov
 ## save output in txt file
 echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,TRIMGALORE,BISMARK,BISMnodup,ENCODEMetrics,METHYLATION" > ${METADIR}/summariseSampleProcessingProgress.csv
 
-for sampleName in ${SAMPLEIDS[@]}
+for sampleName in "${SAMPLEIDS[@]}"
 do 
     toProcess=($(find ${RAWDATADIR} -maxdepth 1 -name ${sampleName}'*'))
     
@@ -76,60 +77,60 @@ do
     toProcess=($(sort <<<"${toProcess[*]}")) ## sort so that the first element is R1
     unset IFS 
 
-    echo "Processing" ${sampleName}
-    f1=$(basename ${toProcess[0]}) 
-    f2=$(basename ${toProcess[1]})
+    echo "Processing" "${sampleName}"
+    f1=$(basename "${toProcess[0]}") 
+    f2=$(basename "${toProcess[1]}")
 
-    echo -n ${sampleName},${RAWDATADIR},${f1},${f2}, >> ${METADIR}/summariseSampleProcessingProgress.csv
+    echo -n ${sampleName},${RAWDATADIR},${f1},${f2}, >> "${METADIR}/summariseSampleProcessingProgress.csv"
 
     
-    if [ ! -s ${FASTQCDIR}/${f1%%.*}*fastqc.zip ]
+    if [ ! -s "${FASTQCDIR}/${f1%%.*}_fastqc.zip" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${FASTQCDIR}/${f2%%.*}*fastqc.zip ]
+    if [ ! -s "${FASTQCDIR}/${f2%%.*}_fastqc.zip" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
 
-    if [ ! -s ${TRIMDIR}/trimGaloreReports/${sampleName}*.txt ]
+    if [ ! -s "${TRIMDIR}/trimGaloreReports/${sampleName}.fastqc.gz_trimming_report.txt" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}*pe.bam ]
+    if [ ! -s "${ALIGNEDDIR}/${sampleName}_1_val_1_bismark_bt2_pe.bam" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/${sampleName}*nodup.bam ]
+    if [ ! -s "${ALIGNEDDIR}/${sampleName}.nodup.bam" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${ALIGNEDDIR}/ENCODEMetrics/${sampleName}*.qc ]
+    if [ ! -s "${ALIGNEDDIR}/ENCODEMetrics/${sampleName}.qc" ]
     then
-        echo -n "N," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "N," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo -n "Y," >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo -n "Y," >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
     
-    if [ ! -s ${METHYLDIR}/${sampleName}*bismark.cov.gz ]
+    if [ ! -s "${METHYLDIR}/${sampleName}.nodup.bismark.cov.gz" ]
     then
-        echo "N" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "N" >> "${METADIR}/summariseSampleProcessingProgress.csv"
     else
-        echo "Y" >> ${METADIR}/summariseSampleProcessingProgress.csv
+        echo "Y" >> "${METADIR}/summariseSampleProcessingProgress.csv"
     fi
   
 done

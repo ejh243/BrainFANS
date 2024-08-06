@@ -1,3 +1,4 @@
+#!/bin/bash
 ## taken from ENCODE pipeline https://docs.google.com/document/d/1lG_Rd7fnYgRpSIqrIfuVlAz2dW1VaSQThzk836Db99c/edit
 
 ## EXECUTION
@@ -36,7 +37,7 @@ mkdir -p ENCODEMetrics
 samtools sort -n --threads 10 ${sampleName}.filt.nodup.bam -O SAM  | SAMstats --sorted_sam_file -  --outf ENCODEMetrics/${sampleName}.flagstat.qc
 
 
-if [ ! -f ${sampleName}*pbc.qc ]
+if [ ! -f "${sampleName}.pbc.qc" ]
 then
 	# COMPUTE LIBRARY COMPLEXITIY
 
