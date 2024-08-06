@@ -4,6 +4,7 @@ linters: linters_with_tags(
     T_and_F_symbol_linter = NULL,
     implicit_integer_linter = NULL,
     undesirable_function_linter = NULL,
-    namespace_linter = NULL
+    namespace_linter = NULL,
+    missing_package_linter = NULL
   )
 
