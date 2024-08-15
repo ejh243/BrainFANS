@@ -5,6 +5,8 @@
 ## Purpose of script: identify regions of differential  DNA methylation for
 ## schizophrenia vs controls for each cell type separately using DMRcate
 ##
+## Note this script uses a custome version of DMRplot that can't be added to 
+## this repository due to license restrictions
 ##---------------------------------------------------------------------#
 
 #----------------------------------------------------------------------#
@@ -126,14 +128,25 @@ dev.off()
 dmrcoutput <- dmrcate(siteAnnotation, lambda=1000, C=2)
 results.ranges <- extractRanges(dmrcoutput, genome = "hg19")
 
-cols<-gg_color_hue(2)[as.factor(QCmetrics$Phenotype)]
+cols<-as.factor(QCmetrics$Phenotype)
+names(cols)<-QCmetrics$Basename
 
 pdf(file.path(resPath, "Plots", paste0("DMRcate_DMRs_", cellType, ".pdf")))
 for(i in 1:length(results.ranges)){
-    DMR.plot(ranges = results.ranges, dmr = i, CpGs = celltypeNormbeta, what = "Beta", 
-        arrayType = "EPIC", phen.col = cols,genome= "hg19")
+DMR.plot (ranges = results.ranges, 
+                     dmr = i, 
+                     CpGs = celltypeNormbeta, 
+                     phen.col = cols,
+                     genome = "hg19",
+                     labels = names(ranges),
+                     flank = 50,
+                     boxplot.flank = min(c(5, round(width(results.ranges)[i]*0.05))),
+                     extra.ranges = NULL) 
 }
 dev.off()
 
 save(dmrcoutput, file = file.path(resPath, paste0(cellType,"DMRCate.rdata")))
 write.csv(results.ranges, file.path(resPath, "Tables", paste0("DMRcate_DMRs_", cellType, ".csv")))
+
+
+
