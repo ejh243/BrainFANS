@@ -448,7 +448,10 @@ if(length(cols) > 1){
 colnames(QCSum)[ncol(QCSum)]<-"passQCS2"
 rownames(QCSum)<-QCmetrics$Basename
 
-write.csv(cbind(QCmetrics[,c("Basename", "Sample_ID", "Individual_ID", "Cell_Type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
+
+sampleColsToKeep<-c("Basename", "Sample_ID", "Individual_ID", "Cell_Type")
+sampleColsToKeep<-sampleColsToKeep[sampleColsToKeep %in% colnames(QCmetrics)]
+write.csv(cbind(QCmetrics[,sampleColsToKeep], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
 
 
 #----------------------------------------------------------------------#
