@@ -113,36 +113,42 @@ fig0b<-ggarrange(plotlist=fig0b[c(seq(1,5,2), seq(2,6,2), 7:9)], nrow = 3, ncol 
 ggsave(file.path(dataDir, "Plots", "HistogramNullEWASPvalue.pdf"), plot = fig0a, height = 8, width = 12) 
 ggsave(file.path(dataDir, "Plots", "HistogramNullEWASMinP.pdf"), plot = fig0b, height = 8, width = 12) 
 
-
-## count number of significant associations per simulation
-nDMPs<-countNSigMatrix(allSimComb, pThres)
-dmpSumStats<-data.frame(matrix(unlist(strsplit(names(nDMPs), "_")), ncol = 2, byrow = TRUE), nDMPs)
-colnames(dmpSumStats)[c(1:2)]<-c("Method", "DMPtype")
-
-dmpSumStats$Method[dmpSumStats$DMPtype %in% c("Double-", "NeuN+", "Sox10+")]<-"ctLR"
-dmpSumStats$Method<- gsub("MLM", "MER", dmpSumStats$Method)
-dmpSumStats$Method<- gsub("LM", "allLR", dmpSumStats$Method)
-dmpSumStats$Method<-factor(dmpSumStats$Method, levels = c("ctLR", "allLR", "MER", "CRR"))
-dmpSumStats$DMPtype<-factor(dmpSumStats$DMPtype, levels = c("Double-", "NeuN+", "Sox10+", "ME", "Int"))
-#boxplot(nDMPs ~ as.factor(names(nDMPs)), ylab = "Number of DMPs", xlab = "Analytical model")
 pos <- position_dodge(0.9)
+## count number of significant associations per simulation
+for(pThres in pThres.opts){
+	nDMPs<-countNSigMatrix(allSimComb, pThres)
+	dmpSumStats<-data.frame(matrix(unlist(strsplit(names(nDMPs), "_")), ncol = 2, byrow = TRUE), nDMPs)
+	colnames(dmpSumStats)[c(1:2)]<-c("Method", "DMPtype")
 
-y_lim<-range(nDMPs)
-fig1a <- ggplot(dmpSumStats, aes(x=Method, y=nDMPs, fill = Method))  +
-  geom_violin(position = pos, scale = 'width')+
-  stat_summary(fun = "mean", 
-               geom = "point", 
-               position = pos) + 
-  scale_fill_manual(values = methodCols, labels = methodLabels, name = "Method") +
-  ylim(y_lim)  +   
-  theme(text = element_text(size = 20))  + 
-  ylab("Number of false positives")    + 
-  xlab("Method")  +
-  facet_wrap(vars(DMPtype), nrow = 1, 
-  labeller = labeller(DMPtype = c("ME" = "Main effect", "Int" = "Interaction", "Double-" = "DoubleNeg", "NeuN+" = "NeuNPos", "Sox10+" = "Sox10Pos")), scales = "free_x") +
-  scale_y_continuous(trans='log10')
+	dmpSumStats$Method[dmpSumStats$DMPtype %in% c("Double-", "NeuN+", "Sox10+")]<-"ctLR"
+	dmpSumStats$Method<- gsub("MLM", "MER", dmpSumStats$Method)
+	dmpSumStats$Method<- gsub("LM", "allLR", dmpSumStats$Method)
+	dmpSumStats$Method<-factor(dmpSumStats$Method, levels = c("ctLR", "allLR", "MER", "CRR"))
+	dmpSumStats$DMPtype<-factor(dmpSumStats$DMPtype, levels = c("Double-", "NeuN+", "Sox10+", "ME", "Int"))
+	#boxplot(nDMPs ~ as.factor(names(nDMPs)), ylab = "Number of DMPs", xlab = "Analytical model")
 
-ggsave(file.path(dataDir, "Plots", "ViolinPlotnDMPsNullEWAS.pdf"), plot = fig1a, height = 4, width = 12) 
+	y_lim<-range(nDMPs)
+	fig1a <- ggplot(dmpSumStats, aes(x=Method, y=nDMPs, fill = Method))  +
+	geom_violin(position = pos, scale = 'width')+
+	stat_summary(fun = "mean", 
+				geom = "point", 
+				position = pos) + 
+	scale_fill_manual(values = methodCols, labels = methodLabels, name = "Method") +
+	ylim(y_lim)  +   
+	theme(text = element_text(size = 20))  + 
+	ylab("Number of false positives")    + 
+	xlab("Method")  +
+	facet_wrap(vars(DMPtype), nrow = 1, 
+	labeller = labeller(DMPtype = c("ME" = "Main effect", "Int" = "Interaction", "Double-" = "DoubleNeg", "NeuN+" = "NeuNPos", "Sox10+" = "Sox10Pos")), scales = "free_x") +
+	scale_y_continuous(trans='log10')
+
+	ggsave(file.path(dataDir, "Plots", paste0("ViolinPlotnDMPsNullEWASPThres", pThres, ".pdf")), plot = fig1a, height = 4, width = 12) 
+
+	write.csv(aggregate(nDMPs ~ Method, dmpSumStats, FUN = function(x) c(mean = mean(x), sd = sd(x))),
+	    file.path(dataDir, "Tables", paste0("SummaryStatsnDMPsByMethodNullEWASPThres", pThres, ".csv")))
+	write.csv(aggregate(nDMPs ~ Method*DMPtype, dmpSumStats, FUN = function(x) c(mean = mean(x), sd = sd(x))),
+	    file.path(dataDir, "Tables", paste0("SummaryStatsnDMPsByMethodxTermNullEWASPThres", pThres, ".csv")))
+}
 
 #----------------------------------------------------------------------#
 # LOAD AND PREPARE DATA
