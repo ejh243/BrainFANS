@@ -478,40 +478,46 @@ tpRate$propCS<-unlist(lapply(sumSimComb, "[", "propCS"))
 
 
 for(meanDiff in c(0.02,0.05)){
-	fig2a<-list()
-	fig2a[[1]] <- as.data.frame(tpRate) %>% 
+	fig3a<-list()
+	fig3a[[1]] <- as.data.frame(tpRate) %>% 
 	filter(MeanDiff == meanDiff & pThres == pThres) %>% 
 	select(allLR_allLR:nProbes) %>% 
 	replace_na(list("ctLR_Double-" = 0, "ctLR_NeuN+" = 0, "ctLR_Sox10+" = 0)) %>% 
 	group_by(nProbes) %>% 
 	summarise(ctLR_DoubleNeg = mean(`ctLR_Double-`), ctLR_NeuNPos = mean(`ctLR_NeuN+`), ctLR_Sox10Pos = mean(`ctLR_Sox10+`),
-	    allLR = mean(allLR_allLR), MER = mean(MER_MER), CRR = mean(CRR_CRR)) %>%
-	melt(id = "nProbes") %>% separate(variable, c("Regression", "Term")) %>% 
-	mutate(Term = factor(Term, levels = c("Double", "NeuN", "Sox10", "allLR","MER", "CRR"))) %>% 
-	mutate(Regression = factor(Regression, levels = c("ctLR", "allLR", "MER", "CRR"))) %>%
-	ggplot( aes(x=Term, y=value, fill = Regression))  +
+	    allLR_allLR = mean(allLR_allLR), MER_MER = mean(MER_MER), CRR_CRR = mean(CRR_CRR)) %>%
+  pivot_longer(
+    cols = -nProbes,
+    names_to = "Measurement",
+    values_to = "Value") %>% 
+	ggplot( aes(x=nProbes, y=Value, colour = Measurement))  +
 	  geom_line(size = 2) + 
-	  scale_fill_manual(values = methodCols, labels = methodLabels, name = "Method")+
 				   ylab("True positive rate")    + 
-				   xlab("Method") + 
+				   xlab("Number of true DMPs") + 
 				   labs(title = "All DMPs")
-
-## summarise true positive rate as function of total associations per model
-fig3a[[1]]<-as.data.frame(group_by(tpRate, nProbes) %>% summarise(LM = mean(LM_LM), MLM = mean(MLM_MLM), CRR = mean(CRR_CRR))) %>% 
-melt(id = "nProbes") %>%
-ggplot(aes(x = nProbes, y = value, colour = variable)) + 
-geom_line(size = 2) +
-xlab("Number of DMPs") + 
-ylab("True positive rate")
 
 
 ## as function of proportion of cell-specific effects
-fig3a[[2]]<-as.data.frame(group_by(tpRate, propCS) %>% summarise(LM = mean(LM), MLM = mean(MLM), CRR = mean(CRR))) %>% 
-melt(id = "propCS") %>%
-ggplot(aes(x = propCS, y = value, colour = variable)) + 
-geom_line(size = 2) +
-xlab("Proportion CT specific") + 
-ylab("True positive rate")
-fig3a<-ggarrange(plotlist=fig3a, nrow = 1, ncol = 2, common.legend = TRUE)
-ggsave(file.path(dataDir, "Plots", "LineGraphCTEWASTPFPRates.pdf"), plot = fig3a, height = 6, width = 12) 
+fig3a[[2]]<-as.data.frame(tpRate) %>% 
+	filter(MeanDiff == meanDiff & pThres == pThres) %>% 
+	select(allLR_allLR:"ctLR_Sox10+", propCS) %>% 
+	replace_na(list("ctLR_Double-" = 0, "ctLR_NeuN+" = 0, "ctLR_Sox10+" = 0)) %>% 
+	group_by(propCS) %>% 
+	summarise(ctLR_DoubleNeg = mean(`ctLR_Double-`), ctLR_NeuNPos = mean(`ctLR_NeuN+`), ctLR_Sox10Pos = mean(`ctLR_Sox10+`),
+	    allLR_allLR = mean(allLR_allLR), MER_MER = mean(MER_MER), CRR_CRR = mean(CRR_CRR)) %>%
+  pivot_longer(
+    cols = -propCS,
+    names_to = "Measurement",
+    values_to = "Value") %>% 
+	ggplot( aes(x=propCS, y=Value, colour = Measurement))  +
+	  geom_line(size = 2) + 
+				   ylab("True positive rate")    + 
+				   xlab("Proportion DMPs cell-type specific") + 
+				   labs(title = "All DMPs")
+
+
+
+	fig3a<-ggarrange(plotlist=fig3a, nrow = 1, ncol = 2, common.legend = TRUE)
+	ggsave(file.path(dataDir, "Plots", paste0("LineGraphCTEWASTPFPRatesMeanDiff", meanDiff, ".pdf")), plot = fig3a, height = 6, width = 12) 
+}
 
