@@ -216,8 +216,11 @@ adultBloodCETYGO <- function(betas){
 # RUN CETYGO FUNCTION 
 #----------------------------------------------------------------------#
 
+cellSorted <- as.logical(cellSorted)
+if (is.na(cellSorted)) cellSorted <- FALSE
+
 # for sorted Brain tissue run on each cell type individually
-if(tissueType == "BRAIN" & cellSorted == "TRUE"){
+if(tissueType == "BRAIN" && cellSorted){
 
   for(cell in levels(sampleSheet$Cell_Type)){
       cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
@@ -228,7 +231,7 @@ if(tissueType == "BRAIN" & cellSorted == "TRUE"){
   if(tissueType == "BLOOD"){
     adultBloodCETYGO(rawbetas)
   } else {
-    if(tissueType == "BRAIN" & cellSorted == "FALSE"){
+    if(tissueType == "BRAIN" && !cellSorted){
       adultBrainCETYGO(rawbetas, "bulk")
     }
   }
