@@ -15,3 +15,30 @@ Please consult the README files in each of these folders for further details on 
 
 ## General Principles
 
+To faciliate reproducibility we are using (renv)[https://rstudio.github.io/renv/articles/renv.html] to recreate the R environment that the scripts were developed on. This requires a small amount of set up prior to running any of the scripts. 
+
+TO minimise the number of packages that need to be loaded at any point in time, we have created environments for each set of analyses. This means that there is a separate renv configuration file in each folder. This will all need to be installed/set up separately. The process is as follows:
+
+1. Install the renv R package. You can install the latest version from CRAN with this command: 
+
+```
+install.packages("renv")
+```
+
+As with all package installs, this only needs to be done once for each system/R version. 
+
+2. Open the relevant R project. NOte this needs to be in the same version of R as the environment was created. 
+
+For linux systems:  To do this you need to open an R session in the folder that contains the scripts you want to run. For example for the DNAm QC pipeline you need to be in the `array/DNAm/preprocessing` folder before launching R. 
+
+In Rstudio: You can use the `File` drop down menu to select `Open Project`. From here navigate to the relevant scripts folder. 
+
+3. Install the required packages from the renv files.
+
+Once in the correct R project you can now use the renv configuration files to install the R packages. This can be done with the following command:
+
+```
+renv::restore()
+```
+
+You will get a prompt `Do you want to proceed? [Y/n]:` where you need to respond `Y` and R will set to recreating the enviroment. 
