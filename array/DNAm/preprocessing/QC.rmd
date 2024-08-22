@@ -91,10 +91,19 @@ if(length(techVar) > 0){
 			}
 		}
       } else {
-        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
-        #quit(save = "no")
+      column_not_found <- paste("Column", item, "not found.")
+      mismatched_column_error_message <- paste(
+	"Mismatched columns between sampleSheet and techVar.",
+	column_not_found,
+	"Please check that your config file and sampleSheet align.",
+	"techVar in config is set to:",
+	techVar,
+	"Column names of sampleSheet were read as:",
+	colnames(QCmetrics),
+	sep = "\n"
+      )
+      stop(mismatched_column_error_message)
       }
-    
   }
 }
 
@@ -125,10 +134,18 @@ if(length(bioVar) > 0){
 			}
 		}
       } else {
-        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
-        #quit(save = "no")
-      }
-    
+      column_not_found <- paste("Column", item, "not found.")
+      mismatched_column_error_message <- paste(
+	"Mismatched columns between sampleSheet and techVar.",
+	column_not_found,
+	"Please check that your config file and sampleSheet align.",
+	"techVar in config is set to:",
+	techVar,
+	"Column names of sampleSheet were read as:",
+	colnames(QCmetrics),
+	sep = "\n"
+      )
+      stop(mismatched_column_error_message)
   }
 }
 
