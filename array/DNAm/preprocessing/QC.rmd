@@ -146,6 +146,7 @@ if(length(bioVar) > 0){
 	sep = "\n"
       )
       stop(mismatched_column_error_message)
+    }
   }
 }
 
