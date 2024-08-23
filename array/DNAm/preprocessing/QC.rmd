@@ -123,9 +123,10 @@ update_legendParams <- function(column_name, QCmetrics, legendParams) {
 
 define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
   potential_plot_columns <- c(techVar, bioVar)
-  columns_to_keep <- sapply(
+  columns_to_keep <- vapply(
     potential_plot_columns,
     is_wanted_column,
+    logical(1),
     QCmetrics
   )
   plot_columns <- potential_plot_columns[columns_to_keep]
