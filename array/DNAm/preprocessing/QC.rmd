@@ -58,104 +58,94 @@ QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
 
 
 ```{r definPlotParams, include = FALSE}
-### define plotting parameters to automate which factors output is to be coloured by
-### These variables are provided in config file
+### define plotting parameters to automate which factors output is to be
+### coloured by. These variables are provided in config file
 
-plotCols<-data.frame("Basename" = QCmetrics$Basename)
-legendParams<-list()
+parse_column <- function(column_name, data) {
+  # plotCols and rainbow() require factors
+  column <- as.factor(QCmetrics[[column_name]])
+  column[column == ""] <- NA
+  return(column)
+}
 
-uniqueVar<-c()
-missingVar<-c()
-
-if(length(techVar) > 0){
-  for(item in techVar){
-    ### check if exists in QC metircs
-      if(item %in% colnames(QCmetrics)){
-        QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
-        if(class(QCmetrics[,item]) != "factor"){
-          print(paste("Converting technical variable", item, "to factor."))
-          tmpVar<-as.factor(QCmetrics[,item])
-        } else {
-          tmpVar<-QCmetrics[,item]
-        }
-        numVar<-length(levels(tmpVar))
-        if(numVar == nrow(QCmetrics)){
-          uniqueVar<-c(uniqueVar, item)
-        } else {
-			if(sum(is.na(tmpVar)) == length(tmpVar)){
-				missingVar<-c(missingVar,item)
-			} else {
-				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
-				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
-				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
-			}
-		}
-      } else {
-      column_not_found <- paste("Column", item, "not found.")
+is_wanted_column <- function(column_name, QCmetrics) {
+  if (! column_name %in% colnames(QCmetrics)) {
+      column_not_found <- paste("Column", column_name, "not found.")
       mismatched_column_error_message <- paste(
-	"Mismatched columns between sampleSheet and techVar.",
+	"Mismatched columns between sampleSheet and config:",
 	column_not_found,
 	"Please check that your config file and sampleSheet align.",
-	"techVar in config is set to:",
-	techVar,
 	"Column names of sampleSheet were read as:",
 	colnames(QCmetrics),
 	sep = "\n"
       )
       stop(mismatched_column_error_message)
-      }
   }
+
+  # Later, the contrasts function is used, which requires the column to have 2
+  # or more levels. We remove these columns from the plot to avoid errors.
+  column <- parse_column(column_name, QCmetrics)
+
+  if (all(is.na(column))) return(FALSE)
+  if (length(unique(column)) == 1L) return(FALSE)
+  if (anyDuplicated(column) == 0L) return(FALSE)
+
+  return(TRUE)
 }
 
-### remove from techVar 
-techVar<-techVar[!techVar %in% c(uniqueVar, missingVar)]
+update_plotCols <- function(column_name, QCmetrics, plotCols) {
+  # Rainbow requires a factor vector
+  column <- parse_column(column_name, QCmetrics)
+  unique_variables <- length(unique(column))
+  colVar<-rainbow(unique_variables)[column]
 
-if(length(bioVar) > 0){
-  for(item in bioVar){
-    ### check if exists in QC metircs
-      if(item %in% colnames(QCmetrics)){
-       QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
-        if(class(QCmetrics[,item]) != "factor"){
-          print(paste("Converting biological variable", item, "to factor."))
-          tmpVar<-as.factor(QCmetrics[,item])
-        } else {
-          tmpVar<-QCmetrics[,item]
-        }
-        numVar<-length(levels(tmpVar))
-        if(numVar == nrow(QCmetrics)){
-          uniqueVar<-c(uniqueVar, item)
-        } else {
-			if(sum(is.na(tmpVar)) == length(tmpVar)){
-				missingVar<-c(missingVar,item)
-			} else {
-				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
-				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
-				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
-			}
-		}
-      } else {
-      column_not_found <- paste("Column", item, "not found.")
-      mismatched_column_error_message <- paste(
-	"Mismatched columns between sampleSheet and techVar.",
-	column_not_found,
-	"Please check that your config file and sampleSheet align.",
-	"techVar in config is set to:",
-	techVar,
-	"Column names of sampleSheet were read as:",
-	colnames(QCmetrics),
-	sep = "\n"
-      )
-      stop(mismatched_column_error_message)
-    }
+  plotCols[[column_name]] <- data.frame(
+    plotCols,
+    colVar,
+    stringsAsFactors = FALSE
+  )
+
+  return(plotCols)
+}
+
+update_legendParams <- function(column_name, QCmetrics, legendParams) {
+  column <- parse_column(column_name, QCmetrics)
+  unique_variables <- length(unique(column))
+  colVar <- rainbow(unique_variables)[column]
+
+  legendParams[[column_name]] <- cbind(
+    levels(column),
+    rainbow(unique_variables)
+  )
+
+  return(legendParams)
+}
+
+
+define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
+  potential_plot_columns <- c(techVar, bioVar)
+  columns_to_keep <- sapply(
+    potential_plot_columns,
+    is_wanted_column,
+    QCmetrics
+  )
+  plot_columns <- potential_plot_columns[columns_to_keep]
+
+  plotCols<-data.frame("Basename" = QCmetrics[["Basename"]])
+  legendParams<-list()
+  for (column_name in plot_columns) {
+    plotCols <- update_plotCols(column_name, QCmetrics, plotCols)
+    legendParams <- update_legendParams(column_name, QCmetrics, legendParams)
   }
+  return(list(plotCols, legendParams))
 }
 
-### remove from bioVar 
-bioVar<-bioVar[!bioVar %in% c(uniqueVar, missingVar)]
-if(ncol(plotCols) > 1){
-	colnames(plotCols)<-c("Basename", techVar, bioVar)
-}
 
+if (!exists("techVar")) techVar <- NULL
+if (!exists("bioVar")) bioVar <- NULL
+plot_paramaters <- define_plot_parameters(QCmetrics, techVar, bioVar)
+plotCols <- plot_parameters[[1]]
+legendParams <- plot_parameters[[2]]
 ```
 
 # Study Information
