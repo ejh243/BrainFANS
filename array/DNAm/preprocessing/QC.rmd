@@ -94,7 +94,6 @@ is_wanted_column <- function(column_name, QCmetrics) {
 }
 
 update_plotCols <- function(column_name, QCmetrics, plotCols) {
-  # Rainbow requires a factor vector
   column <- parse_column(column_name, QCmetrics)
   unique_variables <- length(unique(column))
   colVar<-rainbow(unique_variables)[column]
