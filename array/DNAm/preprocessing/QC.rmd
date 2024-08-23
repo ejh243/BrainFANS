@@ -61,7 +61,7 @@ QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
 ### define plotting parameters to automate which factors output is to be
 ### coloured by. These variables are provided in config file
 
-parse_column <- function(column_name, data) {
+parse_column <- function(column_name, QCmetrics) {
   # plotCols and rainbow() require factors
   column <- as.factor(QCmetrics[[column_name]])
   column[column == ""] <- NA
