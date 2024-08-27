@@ -93,34 +93,6 @@ is_wanted_column <- function(column_name, QCmetrics) {
   return(TRUE)
 }
 
-update_plotCols <- function(column_name, QCmetrics, plotCols) {
-  column <- parse_column(column_name, QCmetrics)
-  unique_variables <- length(unique(column))
-  colVar<-rainbow(unique_variables)[column]
-
-  plotCols[[column_name]] <- data.frame(
-    plotCols,
-    colVar,
-    stringsAsFactors = FALSE
-  )
-
-  return(plotCols)
-}
-
-update_legendParams <- function(column_name, QCmetrics, legendParams) {
-  column <- parse_column(column_name, QCmetrics)
-  unique_variables <- length(unique(column))
-  colVar <- rainbow(unique_variables)[column]
-
-  legendParams[[column_name]] <- cbind(
-    levels(column),
-    rainbow(unique_variables)
-  )
-
-  return(legendParams)
-}
-
-
 define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
   potential_plot_columns <- c(techVar, bioVar)
   columns_to_keep <- vapply(
@@ -133,9 +105,21 @@ define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
 
   plotCols<-data.frame("Basename" = QCmetrics[["Basename"]])
   legendParams<-list()
+
   for (column_name in plot_columns) {
-    plotCols <- update_plotCols(column_name, QCmetrics, plotCols)
-    legendParams <- update_legendParams(column_name, QCmetrics, legendParams)
+    column <- parse_column(column_name, QCmetrics)
+    unique_variables <- length(unique(column))
+    colVar <- rainbow(unique_variables)[column]
+
+    legendParams[[column_name]] <- cbind(
+      levels(column),
+      rainbow(unique_variables)
+    )
+    plotCols[[column_name]] <- data.frame(
+      plotCols,
+      colVar,
+      stringsAsFactors = FALSE
+    )
   }
   return(list(plotCols, legendParams))
 }
