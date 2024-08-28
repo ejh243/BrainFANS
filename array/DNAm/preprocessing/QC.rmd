@@ -858,9 +858,18 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 passQC<-QCSum$Basename[as.logical(QCSum[,"passQCS2"])]
 
-snpCor<-snpCor[passQC, passQC]
+# samples that do not pass QC should be ignored, but not removed as snpCor 
+# needs to remain the same size as QCmetrics (for data manipulation)
+snpCor[!passQC, ] <- NA
+snpCor[, !passQC] <- NA
 
-if(max(snpCor, na.rm = TRUE) > 0.8){
+# The Diagonal of correlation matrix is always ones. We remove these for a 
+# potential speed up (in the event that no snps are highly correlated)
+snpCor.tmp <- snpCor
+diag(snpCor.temp) <- NA
+max_correlation <- max(snpCor.tmp, na.rm = TRUE)
+
+if(max_correlation > 0.8){
   	# pull out samples that are genetically identical
   	predictedduplicates<-vector(length = ncol(snpCor))
   	for(i in 1:ncol(snpCor)){
@@ -870,7 +879,8 @@ if(max(snpCor, na.rm = TRUE) > 0.8){
 	  predictedduplicates<-colnames(snpCor)
 	} 
 
-  QCmetrics$predictedduplicates<-predictedduplicates
+QCmetrics$predictedduplicates<-predictedduplicates
+QCmetrics[["predictedduplicates"]][QCmetrics[["Basename"]] != passQC] <- NA
 
 ```
 
