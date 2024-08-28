@@ -876,8 +876,7 @@ passQC <- QCSum[["Basename"]][as.logical(QCSum[, "passQCS2"])]
 
 # samples that do not pass QC should be ignored, but not removed as snpCor 
 # needs to remain the same size as QCmetrics (for data manipulation)
-snpCor[!passQC, ] <- NA
-snpCor[, !passQC] <- NA
+snpCor[!passQC] <- NA
 
 predictedduplicates <- findDuplicateSamples(snpCor)
 QCmetrics[["predictedduplicates"]] <- predictedduplicates
