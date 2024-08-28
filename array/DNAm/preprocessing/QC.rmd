@@ -880,6 +880,9 @@ if(max_correlation > 0.8){
 } 
 
 QCmetrics[["predictedduplicates"]]<-predictedduplicates
+# predicteddupliactes will be "" for samples that have been removed (or just
+# SAMPLE_NAME if max_correlation <= 0.8). We want the predictedduplicates 
+# column to be NA for samples that did not pass QC.
 QCmetrics[["predictedduplicates"]][QCmetrics[["Basename"]] != passQC] <- NA
 
 ```
