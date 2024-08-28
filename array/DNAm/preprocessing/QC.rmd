@@ -856,7 +856,7 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 ```{r,findDuplicateSamplesPostQC, echo = FALSE}
 
-passQC<-QCSum[["Basename"]][as.logical(QCSum[,"passQCS2"])]
+passQC <- QCSum[["Basename"]][as.logical(QCSum[, "passQCS2"])]
 
 # samples that do not pass QC should be ignored, but not removed as snpCor 
 # needs to remain the same size as QCmetrics (for data manipulation)
@@ -869,17 +869,22 @@ snpCor.tmp <- snpCor
 diag(snpCor.temp) <- NA
 max_correlation <- max(snpCor.tmp, na.rm = TRUE)
 
-if(max_correlation > 0.8){
+if(max_correlation > 0.8) {
   # pull out samples that are genetically identical
-  predictedduplicates<-vector(length = ncol(snpCor))
+  predictedduplicates <- vector(length = ncol(snpCor))
   for(i in seq_len(ncol(snpCor))) {
-    predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
+    predictedduplicates[i] <- paste(
+      sort(names(which(snpCor[, i] > 0.8))),
+      sep = "|",
+      collapse = "|"
+    )
   }
 } else {
-  predictedduplicates<-colnames(snpCor)
+  predictedduplicates <- colnames(snpCor)
 } 
 
-QCmetrics[["predictedduplicates"]]<-predictedduplicates
+QCmetrics[["predictedduplicates"]] <- predictedduplicates
+
 # predicteddupliactes will be "" for samples that have been removed (or just
 # SAMPLE_NAME if max_correlation <= 0.8). We want the predictedduplicates 
 # column to be NA for samples that did not pass QC.
