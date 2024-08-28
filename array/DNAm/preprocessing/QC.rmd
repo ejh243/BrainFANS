@@ -856,7 +856,7 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 ```{r,findDuplicateSamplesPostQC, echo = FALSE}
 
-passQC<-QCSum$Basename[as.logical(QCSum[,"passQCS2"])]
+passQC<-QCSum[["Basename"]][as.logical(QCSum[,"passQCS2"])]
 
 # samples that do not pass QC should be ignored, but not removed as snpCor 
 # needs to remain the same size as QCmetrics (for data manipulation)
@@ -879,7 +879,7 @@ if(max_correlation > 0.8){
   predictedduplicates<-colnames(snpCor)
 } 
 
-QCmetrics$predictedduplicates<-predictedduplicates
+QCmetrics[["predictedduplicates"]]<-predictedduplicates
 QCmetrics[["predictedduplicates"]][QCmetrics[["Basename"]] != passQC] <- NA
 
 ```
