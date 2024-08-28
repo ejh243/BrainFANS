@@ -870,14 +870,14 @@ diag(snpCor.temp) <- NA
 max_correlation <- max(snpCor.tmp, na.rm = TRUE)
 
 if(max_correlation > 0.8){
-  	# pull out samples that are genetically identical
-  	predictedduplicates<-vector(length = ncol(snpCor))
-  	for(i in 1:ncol(snpCor)){
-  	  predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
-  	}
-  } else {
-	  predictedduplicates<-colnames(snpCor)
-	} 
+  # pull out samples that are genetically identical
+  predictedduplicates<-vector(length = ncol(snpCor))
+  for(i in 1:ncol(snpCor)){
+    predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
+  }
+} else {
+  predictedduplicates<-colnames(snpCor)
+} 
 
 QCmetrics$predictedduplicates<-predictedduplicates
 QCmetrics[["predictedduplicates"]][QCmetrics[["Basename"]] != passQC] <- NA
