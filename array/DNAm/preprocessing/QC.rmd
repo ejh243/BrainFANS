@@ -86,9 +86,33 @@ is_wanted_column <- function(column_name, QCmetrics) {
   # or more levels. We remove these columns from the plot to avoid errors.
   column <- parse_column(column_name, QCmetrics)
 
-  if (all(is.na(column))) return(FALSE)
-  if (length(unique(column)) == 1L) return(FALSE)
-  if (anyDuplicated(column) == 0L) return(FALSE)
+  if (all(is.na(column))) {
+    message(
+      "Column ",
+      column_name,
+      " has been removed from plots as all values are labelled as missing."
+    )
+    return(FALSE)
+  }
+  if (length(unique(column)) == 1L) {
+    message(
+      "Column ",
+      column_name,
+      " has been removed from plots as all values are equivalent. ",
+      "As such, the plot for this column would give no useful information."
+    )
+    return(FALSE)
+  }
+  if (anyDuplicated(column) == 0L) {
+    message(
+      "Column ",
+      column_name,
+      " has been removed from plots as all values are distinct. ",
+      "As such, the plot for this column would give no useful information ",
+      "(there would likely be too many colours to reasonably interpret)"
+    )
+   return(FALSE)
+  }
 
   return(TRUE)
 }
