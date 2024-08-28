@@ -512,16 +512,32 @@ abline(v = 0.8, col = "red")
 
 
 ```{r,findDuplicateSamples, echo = FALSE}
-  if(max(snpCor, na.rm = TRUE) > 0.8){
-  	# pull out samples that are genetically identical
-  	predictedduplicates<-vector(length = ncol(snpCor))
-  	for(i in 1:ncol(snpCor)){
-  	  predictedduplicates[i]<-paste(sort(c(colnames(snpCor)[i],names(which(snpCor[,i] > 0.8)))), sep = "|", collapse = "|")
-  	}
+findDuplicateSamples <- function(snpCor) {
+  # The diagonal of a correlation matrix is always ones. We remove these for a 
+  # potential speed up (in the event that no snps are highly correlated)
+  snpCor.tmp <- snpCor
+  diag(snpCor.temp) <- NA
+  max_correlation <- max(snpCor.tmp, na.rm = TRUE)
+
+  if(max_correlation > 0.8) {
+    # pull out samples that are genetically identical
+    predictedduplicates <- vector(length = ncol(snpCor))
+    for(i in seq_len(ncol(snpCor))) {
+      predictedduplicates[i] <- paste(
+	sort(names(which(snpCor[, i] > 0.8))),
+	sep = "|",
+	collapse = "|"
+      )
+    }
   } else {
-	  predictedduplicates<-colnames(snpCor)
-	} 
-	predictedduplicates[!QCmetrics$intensPASS]<-NA ## exclude things not with minimum intensity threshold
+    predictedduplicates <- colnames(snpCor)
+  } 
+  return(predictedduplicates)
+}
+
+predictedduplicates <- findDuplicateSamples(snpCor)
+# Exclude things not with minimum intensity threshold
+predictedduplicates[!QCmetrics$intensPASS]<-NA 
 ```
 
 We identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
@@ -863,26 +879,7 @@ passQC <- QCSum[["Basename"]][as.logical(QCSum[, "passQCS2"])]
 snpCor[!passQC, ] <- NA
 snpCor[, !passQC] <- NA
 
-# The Diagonal of correlation matrix is always ones. We remove these for a 
-# potential speed up (in the event that no snps are highly correlated)
-snpCor.tmp <- snpCor
-diag(snpCor.temp) <- NA
-max_correlation <- max(snpCor.tmp, na.rm = TRUE)
-
-if(max_correlation > 0.8) {
-  # pull out samples that are genetically identical
-  predictedduplicates <- vector(length = ncol(snpCor))
-  for(i in seq_len(ncol(snpCor))) {
-    predictedduplicates[i] <- paste(
-      sort(names(which(snpCor[, i] > 0.8))),
-      sep = "|",
-      collapse = "|"
-    )
-  }
-} else {
-  predictedduplicates <- colnames(snpCor)
-} 
-
+predictedduplicates <- findDuplicateSamples(snpCor)
 QCmetrics[["predictedduplicates"]] <- predictedduplicates
 
 # predicteddupliactes will be "" for samples that have been removed (or just
