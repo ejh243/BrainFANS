@@ -513,7 +513,7 @@ abline(v = 0.8, col = "red")
 
 ```{r,findDuplicateSamples, echo = FALSE}
 findDuplicateSamples <- function(snpCor) {
-  # The diagonal of a correlation matrix is always ones. We remove these for a 
+  # The diagonal of a correlation matrix is always ones. We ignore these for a 
   # potential speed up (in the event that no snps are highly correlated)
   snpCor.tmp <- snpCor
   diag(snpCor.temp) <- NA
