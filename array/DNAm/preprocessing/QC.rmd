@@ -872,7 +872,7 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 ```{r,findDuplicateSamplesPostQC, echo = FALSE}
 
-passQC <- QCSum[["Basename"]][as.logical(QCSum[, "passQCS2"])]
+passQC <- as.logical(QCSum[, "passQCS2"])
 
 # samples that do not pass QC should be ignored, but not removed as snpCor 
 # needs to remain the same size as QCmetrics (for data manipulation)
@@ -884,7 +884,7 @@ QCmetrics[["predictedduplicates"]] <- predictedduplicates
 # predicteddupliactes will be "" for samples that have been removed (or just
 # SAMPLE_NAME if max_correlation <= 0.8). We want the predictedduplicates 
 # column to be NA for samples that did not pass QC.
-QCmetrics[["predictedduplicates"]][QCmetrics[["Basename"]] != passQC] <- NA
+QCmetrics[["predictedduplicates"]][!passQC] <- NA
 
 ```
 
@@ -942,7 +942,7 @@ Checking if genetically identical samples have the sample Individual ID:
 Checking if samples with same Individual ID are genetically identical:
 
 ```{r checkGenoSampleswithSameIDPostQC, echo = FALSE}
-
+passQC <- QCSum[["Basename"]][as.logical(QCSum[, "passQCS2"])]
 QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 ### check if samples with same Individual ID are genetically identical.
