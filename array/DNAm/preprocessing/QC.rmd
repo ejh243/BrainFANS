@@ -516,7 +516,7 @@ findDuplicateSamples <- function(snpCor) {
   # The diagonal of a correlation matrix is always ones. We ignore these for a 
   # potential speed up (in the event that no snps are highly correlated)
   snpCor.tmp <- snpCor
-  diag(snpCor.temp) <- NA
+  diag(snpCor.tmp) <- NA
   max_correlation <- max(snpCor.tmp, na.rm = TRUE)
 
   if(max_correlation > 0.8) {
