@@ -105,7 +105,7 @@ remove_unwanted_columns <- function(columns, QCmetrics) {
 
 define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
   potential_plot_columns <- c(techVar, bioVar)
-  plot_columns <- remove_unwanted_columns(potential_plot_columns)
+  plot_columns <- remove_unwanted_columns(potential_plot_columns, QCmetrics)
 
   plotCols<-data.frame("Basename" = QCmetrics[["Basename"]])
   legendParams<-list()
