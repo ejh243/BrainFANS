@@ -163,19 +163,19 @@ These are only included if they are categorical. For this study the following te
 send_removal_message <- function(column_name, QCmetrics) {
   column <- parse_column(column_name, QCmetrics)
 
-  removal_message <- function(reason, column_name) {
+  removal_message <- function(column_name, reason) {
     message("Column ", column_name, " was excluded because ", reason,
       ". Associated plots would give no useful information.")
   }
 
   if (all(is.na(column))) {
-    removal_message("all values were labelled as missing", column_name)
+    removal_message(column_name, "all values were labelled as missing")
   }
   if (length(unique(column)) == 1L) {
-    removal_message("all values were equivalent", column_name)
+    removal_message(column_name, "all values were equivalent")
   }
   if (anyDuplicated(column) == 0L) {
-    removal_message("all values were distinct", column_name)
+    removal_message(column_name, "all values were distinct")
   }
 }
 
