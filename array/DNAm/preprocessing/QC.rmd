@@ -119,11 +119,7 @@ define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
       levels(column),
       rainbow(unique_variables)
     )
-    plotCols[[column_name]] <- data.frame(
-      plotCols,
-      colVar,
-      stringsAsFactors = FALSE
-    )
+    plotCols[[column_name]] <- colVar
   }
   return(list(plotCols, legendParams))
 }
