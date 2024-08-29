@@ -512,16 +512,32 @@ abline(v = 0.8, col = "red")
 
 
 ```{r,findDuplicateSamples, echo = FALSE}
-  if(max(snpCor, na.rm = TRUE) > 0.8){
-  	# pull out samples that are genetically identical
-  	predictedduplicates<-vector(length = ncol(snpCor))
-  	for(i in 1:ncol(snpCor)){
-  	  predictedduplicates[i]<-paste(sort(c(colnames(snpCor)[i],names(which(snpCor[,i] > 0.8)))), sep = "|", collapse = "|")
-  	}
+findDuplicateSamples <- function(snpCor) {
+  # The diagonal of a correlation matrix is always ones. We ignore these for a 
+  # potential speed up (in the event that no snps are highly correlated)
+  snpCor.tmp <- snpCor
+  diag(snpCor.tmp) <- NA
+  max_correlation <- max(snpCor.tmp, na.rm = TRUE)
+
+  if(max_correlation > 0.8) {
+    # pull out samples that are genetically identical
+    predictedduplicates <- vector(length = ncol(snpCor))
+    for(i in seq_len(ncol(snpCor))) {
+      predictedduplicates[i] <- paste(
+	sort(names(which(snpCor[, i] > 0.8))),
+	sep = "|",
+	collapse = "|"
+      )
+    }
   } else {
-	  predictedduplicates<-colnames(snpCor)
-	} 
-	predictedduplicates[!QCmetrics$intensPASS]<-NA ## exclude things not with minimum intensity threshold
+    predictedduplicates <- colnames(snpCor)
+  } 
+  return(predictedduplicates)
+}
+
+predictedduplicates <- findDuplicateSamples(snpCor)
+# Exclude things not with minimum intensity threshold
+predictedduplicates[!QCmetrics$intensPASS]<-NA 
 ```
 
 We identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
@@ -856,21 +872,19 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 ```{r,findDuplicateSamplesPostQC, echo = FALSE}
 
-passQC<-QCSum$Basename[as.logical(QCSum[,"passQCS2"])]
+passQC <- as.logical(QCSum[, "passQCS2"])
 
-snpCor<-snpCor[passQC, passQC]
+# samples that do not pass QC should be ignored, but not removed as snpCor 
+# needs to remain the same size as QCmetrics (for data manipulation)
+snpCor[!passQC] <- NA
 
-if(max(snpCor, na.rm = TRUE) > 0.8){
-  	# pull out samples that are genetically identical
-  	predictedduplicates<-vector(length = ncol(snpCor))
-  	for(i in 1:ncol(snpCor)){
-  	  predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
-  	}
-  } else {
-	  predictedduplicates<-colnames(snpCor)
-	} 
+predictedduplicates <- findDuplicateSamples(snpCor)
+QCmetrics[["predictedduplicates"]] <- predictedduplicates
 
-  QCmetrics$predictedduplicates<-predictedduplicates
+# predicteddupliactes will be "" for samples that have been removed (or just
+# SAMPLE_NAME if max_correlation <= 0.8). We want the predictedduplicates 
+# column to be NA for samples that did not pass QC.
+QCmetrics[["predictedduplicates"]][!passQC] <- NA
 
 ```
 
@@ -928,7 +942,7 @@ Checking if genetically identical samples have the sample Individual ID:
 Checking if samples with same Individual ID are genetically identical:
 
 ```{r checkGenoSampleswithSameIDPostQC, echo = FALSE}
-
+passQC <- QCSum[["Basename"]][as.logical(QCSum[, "passQCS2"])]
 QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 ### check if samples with same Individual ID are genetically identical.
