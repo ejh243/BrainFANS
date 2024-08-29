@@ -107,8 +107,8 @@ define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
   potential_plot_columns <- c(techVar, bioVar)
   plot_columns <- remove_unwanted_columns(potential_plot_columns, QCmetrics)
 
-  plotCols<-data.frame("Basename" = QCmetrics[["Basename"]])
-  legendParams<-list()
+  plotCols <- data.frame("Basename" = QCmetrics[["Basename"]])
+  legendParams <- list()
 
   for (column_name in plot_columns) {
     column <- parse_column(column_name, QCmetrics)
