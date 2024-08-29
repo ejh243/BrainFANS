@@ -93,15 +93,19 @@ is_wanted_column <- function(column_name, QCmetrics) {
   ))
 }
 
-define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
-  potential_plot_columns <- c(techVar, bioVar)
+remove_unwanted_columns <- function(columns, QCmetrics) {
   columns_to_keep <- vapply(
-    potential_plot_columns,
+    columns,
     is_wanted_column,
     logical(1),
     QCmetrics
   )
-  plot_columns <- potential_plot_columns[columns_to_keep]
+  return(columns[columns_to_keep])
+}
+
+define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
+  potential_plot_columns <- c(techVar, bioVar)
+  plot_columns <- remove_unwanted_columns(potential_plot_columns)
 
   plotCols<-data.frame("Basename" = QCmetrics[["Basename"]])
   legendParams<-list()
@@ -175,6 +179,7 @@ send_removal_message <- function(column_name, QCmetrics) {
   }
 }
 
+techVar <- remove_unwanted_columns(techVar, QCmetrics)
 for(item in techVar){
   tabTemp<-as.data.frame(table(QCmetrics[,item]))
   if(nrow(tabTemp) < 2){
@@ -191,6 +196,7 @@ These are only included if they are categorical. For this study the following bi
 
 ```{r bioVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
+bioVar <- remove_unwanted_columns(bioVar, QCmetrics)
 for(item in bioVar){
 	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
 }
