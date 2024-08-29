@@ -131,7 +131,7 @@ define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
 
 if (!exists("techVar")) techVar <- NULL
 if (!exists("bioVar")) bioVar <- NULL
-plot_paramaters <- define_plot_parameters(QCmetrics, techVar, bioVar)
+plot_parameters <- define_plot_parameters(QCmetrics, techVar, bioVar)
 plotCols <- plot_parameters[[1]]
 legendParams <- plot_parameters[[2]]
 ```
