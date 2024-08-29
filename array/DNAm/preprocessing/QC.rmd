@@ -113,13 +113,13 @@ define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
   for (column_name in plot_columns) {
     column <- parse_column(column_name, QCmetrics)
     unique_variables <- length(unique(column))
-    colVar <- rainbow(unique_variables)[column]
+    colours <- rainbow(unique_variables)[column]
 
     legendParams[[column_name]] <- cbind(
       levels(column),
       rainbow(unique_variables)
     )
-    plotCols[[column_name]] <- colVar
+    plotCols[[column_name]] <- colours
   }
   return(list(plotCols, legendParams))
 }
