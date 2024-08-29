@@ -73,7 +73,8 @@ samtools stats ${ALIGNED_DIR}/${sampleName}_noMT.bam	> ${ALIGNED_DIR}/QCOutput/$
 # only keep properly paired reads
 echo "filtering aligned reads"
 samtools view -F 524 -f 2  -q 30 -u ${ALIGNED_DIR}/${sampleName}_noMT.bam | samtools sort -n /dev/stdin -o ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.bam
-samtools view -h ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.bam | $(which assign_multimappers.py) -k $multimap --paired-end | samtools fixmate -r /dev/stdin ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
+echo $MULTIMAP/assign_multimappers.py
+samtools view -h ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.bam | $MULTIMAP/assign_multimappers.py -k $multimap --paired-end | samtools fixmate -r /dev/stdin ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
 
 # Remove orphan reads (pair was removed)
 # and read pairs mapping to different chromosomes
