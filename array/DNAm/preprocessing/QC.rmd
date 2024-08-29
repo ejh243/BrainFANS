@@ -180,22 +180,33 @@ Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$
 These are only included if they are categorical. For this study the following technical variables were included:
 
 ```{r techVarSpecification, results = "asis", echo = FALSE}
+send_removal_message <- function(column_name, QCmetrics) {
+  column <- parse_column(column_name, QCmetrics)
+
+  removal_message <- function(reason, column_name) {
+    message("Column ", column_name, " was excluded because ", reason,
+      ". Associated plots would give no useful information.")
+  }
+
+  if (all(is.na(column))) {
+    removal_message("all values were labelled as missing", column_name)
+  }
+  if (length(unique(column)) == 1L) {
+    removal_message("all values were equivalent", column_name)
+  }
+  if (anyDuplicated(column) == 0L) {
+    removal_message("all values were distinct", column_name)
+  }
+}
+
 for(item in techVar){
   tabTemp<-as.data.frame(table(QCmetrics[,item]))
   if(nrow(tabTemp) < 2){
   	pander(t(tabTemp), caption = paste("Summary of samples categorised by", item), row.names = c("Variable", "Number of Samples"))
   }
 }
-if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
-	for(item in uniqueVar[uniqueVar %in% techVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
-if(length(missingVar[missingVar %in% techVar]) > 0){
-	for(item in missingVar[missingVar %in% techVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
+
+for (column_name in techVar) send_removal_message(column_name, QCmetrics)
 ```
 
 ## Summary of Biological Variables
@@ -207,16 +218,8 @@ These are only included if they are categorical. For this study the following bi
 for(item in bioVar){
 	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
 }
-if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
-	for(item in uniqueVar[uniqueVar %in% bioVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
-if(length(missingVar[missingVar %in% bioVar]) > 0){
-	for(item in missingVar[missingVar %in% bioVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
+
+for (column_name in bioVar) send_removal_message(column_name, QCmetrics)
 ```
 
 # Quality Control: Data Quality
