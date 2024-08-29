@@ -183,7 +183,11 @@ techVar <- remove_unwanted_columns(techVar, QCmetrics)
 for(item in techVar){
   tabTemp<-as.data.frame(table(QCmetrics[,item]))
   if(nrow(tabTemp) < 2){
-  	pander(t(tabTemp), caption = paste("Summary of samples categorised by", item), row.names = c("Variable", "Number of Samples"))
+    pander(
+      t(tabTemp),
+      caption = paste("Summary of samples categorised by", item),
+      row.names = c("Variable", "Number of Samples")
+    )
   }
 }
 
@@ -198,7 +202,11 @@ These are only included if they are categorical. For this study the following bi
 
 bioVar <- remove_unwanted_columns(bioVar, QCmetrics)
 for(item in bioVar){
-	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
+  pander(
+    as.data.frame(table(QCmetrics[, item])),
+    caption = paste("Summary of samples categorised by", item),
+    col.names = c("Variable", "Number of Samples")
+  )
 }
 
 for (column_name in bioVar) send_removal_message(column_name, QCmetrics)
