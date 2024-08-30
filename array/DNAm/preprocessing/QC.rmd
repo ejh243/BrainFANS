@@ -45,6 +45,11 @@ nSamIP<-sum(QCmetrics$intensPASS)
 
 par(mar = c(4,4,1,1))
 
+# When in a loop, pander() calls do not render. This option always allows these
+# calls to be rendered in the resultant html file. No, wrapping pander() calls
+# in a print() function does not work (well, not how we want them to at least).
+panderOptions('knitr.auto.asis', FALSE)
+
 ```
 
 
