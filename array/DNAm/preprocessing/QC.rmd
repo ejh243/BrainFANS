@@ -166,12 +166,15 @@ send_removal_message <- function(column_name, QCmetrics) {
 
   if (all(is.na(column))) {
     removal_message(column_name, "all values were labelled as missing")
+    return()
   }
   if (length(unique(column)) == 1L) {
     removal_message(column_name, "all values were equivalent")
+    return()
   }
   if (anyDuplicated(column) == 0L) {
     removal_message(column_name, "all values were distinct")
+    return()
   }
 }
 
