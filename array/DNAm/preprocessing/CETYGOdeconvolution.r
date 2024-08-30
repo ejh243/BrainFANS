@@ -220,15 +220,15 @@ cellSorted <- as.logical(cellSorted)
 if (is.na(cellSorted)) cellSorted <- FALSE
 
 # for sorted Brain tissue run on each cell type individually
-if(tissueType == "BRAIN" && cellSorted){
+if(tissueType == "BRAIN" && cellSorted) {
 
-  for(cell in levels(sampleSheet$Cell_Type)){
-    cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
+  for(cell in levels(sampleSheet$Cell_Type)) {
+    cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell), ]
     cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
     adultBrainCETYGO(cellBetas, cell)
   }
 } else {
-  if(tissueType == "BLOOD"){
+  if(tissueType == "BLOOD") {
     adultBloodCETYGO(rawbetas)
   }
   if(tissueType == "BRAIN") {
