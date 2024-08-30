@@ -223,16 +223,15 @@ if (is.na(cellSorted)) cellSorted <- FALSE
 if(tissueType == "BRAIN" && cellSorted){
 
   for(cell in levels(sampleSheet$Cell_Type)){
-      cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
-      cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
-      adultBrainCETYGO(cellBetas, cell)
+    cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
+    cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
+    adultBrainCETYGO(cellBetas, cell)
   }
 } else {
   if(tissueType == "BLOOD"){
     adultBloodCETYGO(rawbetas)
-  } else {
-    if(tissueType == "BRAIN" && !cellSorted){
-      adultBrainCETYGO(rawbetas, "bulk")
-    }
+  }
+  if(tissueType == "BRAIN") {
+    adultBrainCETYGO(rawbetas, "bulk")
   }
 }
