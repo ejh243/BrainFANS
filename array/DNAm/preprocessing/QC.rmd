@@ -45,6 +45,11 @@ nSamIP<-sum(QCmetrics$intensPASS)
 
 par(mar = c(4,4,1,1))
 
+# When in a loop, pander() calls do not render. This option always allows these
+# calls to be rendered in the resultant html file. No, wrapping pander() calls
+# in a print() function does not work (well, not how we want them to at least).
+panderOptions('knitr.auto.asis', FALSE)
+
 ```
 
 
@@ -58,86 +63,78 @@ QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
 
 
 ```{r definPlotParams, include = FALSE}
-### define plotting parameters to automate which factors output is to be coloured by
-### These variables are provided in config file
+### define plotting parameters to automate which factors output is to be
+### coloured by. These variables are provided in config file
 
-plotCols<-data.frame("Basename" = QCmetrics$Basename)
-legendParams<-list()
+parse_column <- function(column_name, QCmetrics) {
+  # plotCols and rainbow() require factors
+  column <- as.factor(QCmetrics[[column_name]])
+  column[column == ""] <- NA
+  return(column)
+}
 
-uniqueVar<-c()
-missingVar<-c()
-
-if(length(techVar) > 0){
-  for(item in techVar){
-    ### check if exists in QC metircs
-      if(item %in% colnames(QCmetrics)){
-        QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
-        if(class(QCmetrics[,item]) != "factor"){
-          print(paste("Converting technical variable", item, "to factor."))
-          tmpVar<-as.factor(QCmetrics[,item])
-        } else {
-          tmpVar<-QCmetrics[,item]
-        }
-        numVar<-length(levels(tmpVar))
-        if(numVar == nrow(QCmetrics)){
-          uniqueVar<-c(uniqueVar, item)
-        } else {
-			if(sum(is.na(tmpVar)) == length(tmpVar)){
-				missingVar<-c(missingVar,item)
-			} else {
-				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
-				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
-				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
-			}
-		}
-      } else {
-        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
-        #quit(save = "no")
-      }
-    
+is_wanted_column <- function(column_name, QCmetrics) {
+  if (! column_name %in% colnames(QCmetrics)) {
+      column_not_found <- paste("Column", column_name, "not found.")
+      mismatched_column_error_message <- paste(
+	"Mismatched columns between sampleSheet and config:",
+	column_not_found,
+	"Please check that your config file and sampleSheet align.",
+	"Column names of sampleSheet were read as:",
+	colnames(QCmetrics),
+	sep = "\n"
+      )
+      stop(mismatched_column_error_message)
   }
+
+  # Later, the contrasts function is used, which requires the column to have 2
+  # or more levels. We remove these columns from the plot to avoid errors.
+  column <- parse_column(column_name, QCmetrics)
+
+  return(!(
+    all(is.na(column)) ||
+    length(unique(column)) == 1L ||
+    anyDuplicated(column) == 0L
+  ))
 }
 
-### remove from techVar 
-techVar<-techVar[!techVar %in% c(uniqueVar, missingVar)]
+remove_unwanted_columns <- function(columns, QCmetrics) {
+  columns_to_keep <- vapply(
+    columns,
+    is_wanted_column,
+    logical(1),
+    QCmetrics
+  )
+  return(columns[columns_to_keep])
+}
 
-if(length(bioVar) > 0){
-  for(item in bioVar){
-    ### check if exists in QC metircs
-      if(item %in% colnames(QCmetrics)){
-       QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
-        if(class(QCmetrics[,item]) != "factor"){
-          print(paste("Converting biological variable", item, "to factor."))
-          tmpVar<-as.factor(QCmetrics[,item])
-        } else {
-          tmpVar<-QCmetrics[,item]
-        }
-        numVar<-length(levels(tmpVar))
-        if(numVar == nrow(QCmetrics)){
-          uniqueVar<-c(uniqueVar, item)
-        } else {
-			if(sum(is.na(tmpVar)) == length(tmpVar)){
-				missingVar<-c(missingVar,item)
-			} else {
-				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
-				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
-				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
-			}
-		}
-      } else {
-        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
-        #quit(save = "no")
-      }
-    
+define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
+  potential_plot_columns <- c(techVar, bioVar)
+  plot_columns <- remove_unwanted_columns(potential_plot_columns, QCmetrics)
+
+  plotCols <- data.frame("Basename" = QCmetrics[["Basename"]])
+  legendParams <- list()
+
+  for (column_name in plot_columns) {
+    column <- parse_column(column_name, QCmetrics)
+    unique_variables <- length(unique(column))
+    colours <- rainbow(unique_variables)[column]
+
+    legendParams[[column_name]] <- cbind(
+      levels(column),
+      rainbow(unique_variables)
+    )
+    plotCols[[column_name]] <- colours
   }
+  return(list(plotCols, legendParams))
 }
 
-### remove from bioVar 
-bioVar<-bioVar[!bioVar %in% c(uniqueVar, missingVar)]
-if(ncol(plotCols) > 1){
-	colnames(plotCols)<-c("Basename", techVar, bioVar)
-}
 
+if (!exists("techVar")) techVar <- NULL
+if (!exists("bioVar")) bioVar <- NULL
+plot_parameters <- define_plot_parameters(QCmetrics, techVar, bioVar)
+plotCols <- plot_parameters[[1]]
+legendParams <- plot_parameters[[2]]
 ```
 
 # Study Information
@@ -164,21 +161,40 @@ Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$
 These are only included if they are categorical. For this study the following technical variables were included:
 
 ```{r techVarSpecification, results = "asis", echo = FALSE}
+send_removal_message <- function(column_name, QCmetrics) {
+  column <- parse_column(column_name, QCmetrics)
+
+  removal_message <- function(column_name, reason) {
+    message("Column ", column_name, " was excluded because ", reason,
+      ". Associated plots would give no useful information.")
+  }
+
+  if (all(is.na(column))) {
+    removal_message(column_name, "all values were labelled as missing")
+    return()
+  }
+  if (length(unique(column)) == 1L) {
+    removal_message(column_name, "all values were equivalent")
+    return()
+  }
+  if (anyDuplicated(column) == 0L) {
+    removal_message(column_name, "all values were distinct")
+    return()
+  }
+}
+
+for (column_name in techVar) send_removal_message(column_name, QCmetrics)
+
+techVar <- remove_unwanted_columns(techVar, QCmetrics)
 for(item in techVar){
   tabTemp<-as.data.frame(table(QCmetrics[,item]))
   if(nrow(tabTemp) < 2){
-  	pander(t(tabTemp), caption = paste("Summary of samples categorised by", item), row.names = c("Variable", "Number of Samples"))
+    pander(
+      t(tabTemp),
+      caption = paste("Summary of samples categorised by", item),
+      row.names = c("Variable", "Number of Samples")
+    )
   }
-}
-if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
-	for(item in uniqueVar[uniqueVar %in% techVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
-if(length(missingVar[missingVar %in% techVar]) > 0){
-	for(item in missingVar[missingVar %in% techVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
 }
 ```
 
@@ -188,18 +204,15 @@ These are only included if they are categorical. For this study the following bi
 
 ```{r bioVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
+for (column_name in bioVar) send_removal_message(column_name, QCmetrics)
+
+bioVar <- remove_unwanted_columns(bioVar, QCmetrics)
 for(item in bioVar){
-	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
-}
-if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
-	for(item in uniqueVar[uniqueVar %in% bioVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
-if(length(missingVar[missingVar %in% bioVar]) > 0){
-	for(item in missingVar[missingVar %in% bioVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
+  pander(
+    as.data.frame(table(QCmetrics[, item])),
+    caption = paste("Summary of samples categorised by", item),
+    col.names = c("Variable", "Number of Samples")
+  )
 }
 ```
 
