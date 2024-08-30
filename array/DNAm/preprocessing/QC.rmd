@@ -175,6 +175,8 @@ send_removal_message <- function(column_name, QCmetrics) {
   }
 }
 
+for (column_name in techVar) send_removal_message(column_name, QCmetrics)
+
 techVar <- remove_unwanted_columns(techVar, QCmetrics)
 for(item in techVar){
   tabTemp<-as.data.frame(table(QCmetrics[,item]))
@@ -186,8 +188,6 @@ for(item in techVar){
     )
   }
 }
-
-for (column_name in techVar) send_removal_message(column_name, QCmetrics)
 ```
 
 ## Summary of Biological Variables
@@ -195,6 +195,8 @@ for (column_name in techVar) send_removal_message(column_name, QCmetrics)
 These are only included if they are categorical. For this study the following biological variables were included:
 
 ```{r bioVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
+
+for (column_name in bioVar) send_removal_message(column_name, QCmetrics)
 
 bioVar <- remove_unwanted_columns(bioVar, QCmetrics)
 for(item in bioVar){
@@ -204,8 +206,6 @@ for(item in bioVar){
     col.names = c("Variable", "Number of Samples")
   )
 }
-
-for (column_name in bioVar) send_removal_message(column_name, QCmetrics)
 ```
 
 # Quality Control: Data Quality
