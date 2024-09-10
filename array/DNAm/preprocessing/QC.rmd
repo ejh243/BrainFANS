@@ -772,6 +772,23 @@ for(each in unique(sampleGroups$predictedduplicates)){
 		}
 	}
 }
+
+## Plot instances where Individual ID says should be the same person
+for(each in unique(sampleGroups$Individual_ID)){
+		par(mfrow = c(3,4))
+    bsindexes <- sampleGroups$Basename[which(sampleGroups$Individual_ID == each)]
+    if(length(bsindexes) > 1){
+      for(i in 1:(length(bsindexes)-1)){
+        for(j in (i+1):length(bsindexes)){
+          plot(rsbetas[,bsindexes[i]], rsbetas[,bsindexes[j]], xlab = "",ylab = "", pch = 16, xlim = c(0,1), ylim = c(0,1), main = each)
+          title(xlab = bsindexes[i], col.lab = xlabcol)
+          title(ylab = bsindexes[j], col.lab = ylabcol)
+        }
+      }
+    }
+
+}
+
 dev.off()
 
 
