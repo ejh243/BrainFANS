@@ -514,11 +514,10 @@ This step uses the 59 SNP probes on the array to identify genetically identical 
 
 ```{r, duplicateSamples, echo = FALSE, fig.width = 8}
 
-for(i in 1:ncol(snpCor)){
-  snpCor[i,i]<-NA
-}
- hist(snpCor, breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = "All samples", col = "gray")
+diag(snpCor)<-NA
+hist(snpCor, breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = "All samples", col = "gray")
 abline(v = 0.8, col = "red")
+diag(snpCor)<-1
 
 
 ```
