@@ -731,27 +731,29 @@ for(each in unique(sampleGroups$predictedduplicates)){
 		bsnames<-unlist(strsplit(as.character(each), "\\|"))
 		
 		par(mfrow = c(3,4))
+    ## where multiple samples classed as incorrectly genetically identical
 		## plot 59 snp probes against each other
-		for(i in 1:(length(bsnames)-1)){
-				if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
-			    xlabcol<-"black"
-			  }else{
-			    xlabcol<-"red"
-			  }
-		  for(j in (i+1):length(bsnames)){
-        if(QCmetrics[match(bsnames[j], QCmetrics$Basename), "passQCS1"]){
-			    ylabcol<-"black"
-			  }else{
-			    ylabcol<-"red"
-			  }
-			 plot(rsbetas[,bsnames[i]], rsbetas[,bsnames[j]], xlab = "",ylab = "", pch = 16, xlim = c(0,1), ylim = c(0,1))
-			 title(xlab = bsnames[i], col.lab = xlabcol)
-			 title(ylab = bsnames[j], col.lab = ylabcol)
-			}
+    if(length(bsnames) > 1){
+      for(i in 1:(length(bsnames)-1)){
+          if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
+            xlabcol<-"black"
+          }else{
+            xlabcol<-"red"
+          }
+        for(j in (i+1):length(bsnames)){
+          if(QCmetrics[match(bsnames[j], QCmetrics$Basename), "passQCS1"]){
+            ylabcol<-"black"
+          }else{
+            ylabcol<-"red"
+          }
+        plot(rsbetas[,bsnames[i]], rsbetas[,bsnames[j]], xlab = "",ylab = "", pch = 16, xlim = c(0,1), ylim = c(0,1))
+        title(xlab = bsnames[i], col.lab = xlabcol)
+        title(ylab = bsnames[j], col.lab = ylabcol)
+        }
+      }
 		}
-		
-
-		## plot against matched genetic data
+    
+		## plot against matched genetic data (if it exists)
 		allGenoIDs<-unique(sampleGroups$Genotype.IID[which(sampleGroups$predictedduplicates == each)])
 		allGenoIDs<-c(na.omit(allGenoIDs))
 		if(length(allGenoIDs) > 0){
