@@ -746,7 +746,15 @@ for(each in unique(sampleGroups$predictedduplicates)){
 	  }else{
 	    ylabcol<-"red"
 	  }
-	  plot(rsbetas[,bsnames[i]], rsbetas[,bsnames[j]], xlab = "",ylab = "", pch = 16, xlim = c(0,1), ylim = c(0,1))
+	  plot(
+	    rsbetas[,bsnames[i]],
+	    rsbetas[,bsnames[j]],
+	    xlab = "",
+	    ylab = "",
+	    pch = 16,
+	    xlim = c(0,1),
+	    ylim = c(0,1)
+	  )
 	  title(xlab = bsnames[i], col.lab = xlabcol)
 	  title(ylab = bsnames[j], col.lab = ylabcol)
 	}
@@ -764,8 +772,17 @@ for(each in unique(sampleGroups$predictedduplicates)){
 	  xlabcol<-"red"
 	}
 	methID<-sampleGroups$Individual_ID[match(bsnames[i], sampleGroups$barcode)]
-      for(j in 1:length(allGenoIDs)){
-	  plot(betas.rs[,bsnames[i]], geno.mat[match(allGenoIDs[j],rownames(geno.mat))[1],], pch = 16, xlab = "", ylab = allGenoIDs[j], main = methID, xlim = c(0,1), ylim = c(0,2))
+	for(j in 1:length(allGenoIDs)){
+	  plot(
+	    betas.rs[,bsnames[i]],
+	    geno.mat[match(allGenoIDs[j],rownames(geno.mat))[1],],
+	    pch = 16,
+	    xlab = "",
+	    ylab = allGenoIDs[j],
+	    main = methID,
+	    xlim = c(0,1),
+	    ylim = c(0,2)
+	  )
 	  title(xlab = bsnames[i], col.lab = xlabcol)
 	}
       }
@@ -775,17 +792,26 @@ for(each in unique(sampleGroups$predictedduplicates)){
 
 ## Plot instances where Individual ID says should be the same person
 for(each in unique(sampleGroups$Individual_ID)){
-		par(mfrow = c(3,4))
-    bsindexes <- sampleGroups$Basename[which(sampleGroups$Individual_ID == each)]
-    if(length(bsindexes) > 1){
-      for(i in 1:(length(bsindexes)-1)){
-        for(j in (i+1):length(bsindexes)){
-          plot(rsbetas[,bsindexes[i]], rsbetas[,bsindexes[j]], xlab = "",ylab = "", pch = 16, xlim = c(0,1), ylim = c(0,1), main = each)
-          title(xlab = bsindexes[i], col.lab = xlabcol)
-          title(ylab = bsindexes[j], col.lab = ylabcol)
-        }
+  par(mfrow = c(3,4))
+  bsindexes <- sampleGroups$Basename[which(sampleGroups$Individual_ID == each)]
+  if(length(bsindexes) > 1){
+    for(i in 1:(length(bsindexes)-1)){
+      for(j in (i+1):length(bsindexes)){
+	plot(
+	  rsbetas[,bsindexes[i]],
+	  rsbetas[,bsindexes[j]],
+	  xlab = "",
+	  ylab = "",
+	  pch = 16,
+	  xlim = c(0,1),
+	  ylim = c(0,1),
+	  main = each
+	)
+	title(xlab = bsindexes[i], col.lab = xlabcol)
+	title(ylab = bsindexes[j], col.lab = ylabcol)
       }
     }
+  }
 
 }
 
