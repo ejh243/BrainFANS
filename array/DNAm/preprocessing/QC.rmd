@@ -910,11 +910,11 @@ kbl(xTab) %>%
 
 ```{r, echo = FALSE, fig.width = 10, fig.height = 10}
 
-colsToKeep <- c(c(c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon", "pFilter",
- "x.cp","y.cp",
- "genoCheck",
- "rmsd","sdd","sadd","srms",
- "nNAsPer"), colnames(QCmetrics)[grep("PC", colnames(QCmetrics))]))
+colsToKeep <- c(
+ "M.median","U.median", "intens.ratio", "bisulfCon", "pFilter", "x.cp", "y.cp",
+ "genoCheck", "rmsd", "sdd", "sadd","srms", "nNAsPer",
+  grep("PC", colnames(QCmetrics), value = TRUE, fixed = TRUE)
+)
 
 colsToKeep <- colsToKeep[colsToKeep %in% colnames(QCmetrics)]
 
