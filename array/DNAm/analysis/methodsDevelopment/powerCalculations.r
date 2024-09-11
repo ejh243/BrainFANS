@@ -68,7 +68,7 @@ colnames(plotdf)[2:3] <- c("CellType", "SD")
 
 
 # density plot
-pdf(file.path(resPath, "densityPlotSDs.pdf"))
+pdf(file.path(resPath, "densityPlotSDs.pdf"), width = 5, height = 5)
 ggplot(plotdf, aes(x=SD, colour=CellType))+
   scale_color_manual(values = cellCols) +
   geom_density(size = 2)+
@@ -77,7 +77,7 @@ ggplot(plotdf, aes(x=SD, colour=CellType))+
 dev.off()
 
 # violin plot
-pdf(file.path(resPath, "violinPlotSDs.pdf")
+pdf(file.path(resPath, "violinPlotSDs.pdf"), width = 5, height = 5)
 ggplot(plotdf, aes(x=CellType, y=SD, fill = CellType))+
   geom_violin() +
   stat_summary(fun = mean, geom = "point", shape = 23, size = 3, color = "black", fill = "white") +
@@ -94,7 +94,8 @@ for(meanDiff in c(2,5)){
     allSamples <- calcSamples(allSDs, meanDiff = meanDiff, dataType = "SDs")
     allProps <-calcProps(allSamples)
 
-    pdf(file.path(resPath, paste0("PowerCurveMeanDiff", meanDiff, ".pdf"))
+    pdf(file.path(resPath, paste0("PowerCurveMeanDiff", meanDiff, ".pdf")), 
+        height = 5, width = 5)
     myPlot <- plotPower(allProps, "samples")
     dev.off()
 }
@@ -105,7 +106,7 @@ for(sampleSize in c(100, 200)){
     allSamples <- calcDiff(allSDs, nSamples = sampleSize, dataType = "SDs")
     allProps <-calcProps(allSamples)
 
-    pdf(file.path(resPath, paste0()"PowerCurveSampleSize", sampleSize, ".pdf"), width = 4, height = 4)
+    pdf(file.path(resPath, paste0()"PowerCurveSampleSize", sampleSize, ".pdf"), width = 5, height = 5)
     myPlot <- plotPower(allProps, "difference")
     dev.off()
 }
