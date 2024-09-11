@@ -16,6 +16,7 @@ dataDir <- args[1]
 refPath <- args[2]
 
 resPath<-file.path(dataDir, "4_analysis/methodsDevelopment/")
+normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
@@ -31,13 +32,27 @@ library(CellPower)
 # IMPORT DATA
 #----------------------------------------------------------------------#
 
-load("allSDs.rda") ## replace with code to generate these?
+load(normData)
+celltypeNormbeta<-celltypeNormbeta[,QCmetrics$Basename]
 
 # subset data to autosomes
 man <- fread(file.path(refPath, "MethylationEPIC_v-1-0_B5.csv"), skip=7, fill=TRUE, data.table=F)
 
 auto.probes<-man$IlmnID[man$CHR != "X" & man$CHR != "Y" & man$CHR != ""]
-allSDs<-allSDs[row.names(allSDs) %in% auto.probes,]
+celltypeNormbeta<-celltypeNormbeta[row.names(celltypeNormbeta) %in% auto.probes,]
+
+cellTypes<-unique(QCmetrics$Cell.type)
+
+allSDs <- matrix(data = NA, nrow = nrow(celltypeNormbeta), ncol = length(cellTypes))
+rownames(allSDs)<-rownames(celltypeNormbeta)
+colnames(allSDs)<-cellTypes
+for(each in cellTypes){
+  # subset to cell type
+  betasCell <- as.matrix(celltypeNormbeta[,QCmetrics$Cell.type == each])
+  # calculate SD
+  betasSD <- apply(as.matrix(betasCell),1,sd)
+  allSDs[,each] <- betasSD
+}
 
 cellCols<-brewer.pal(n = ncol(allSDs), name = "Paired")
 names(cellCols)<-colnames(allSDs)
