@@ -106,7 +106,7 @@ for(sampleSize in c(100, 200)){
     allSamples <- calcDiff(allSDs, nSamples = sampleSize, dataType = "SDs")
     allProps <-calcProps(allSamples)
 
-    pdf(file.path(resPath, paste0()"PowerCurveSampleSize", sampleSize, ".pdf"), width = 5, height = 5)
+    pdf(file.path(resPath, paste0("PowerCurveSampleSize", sampleSize, ".pdf"), width = 5, height = 5))
     myPlot <- plotPower(allProps, "difference")
     dev.off()
 }
