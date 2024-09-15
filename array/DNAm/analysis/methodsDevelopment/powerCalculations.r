@@ -26,7 +26,9 @@ library(data.table)
 library(ggplot2)
 library(reshape2)
 library(RColorBrewer)
-library(CellPower)
+library(BrainPower)
+library(pwr)
+library(doParallel)
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -89,24 +91,27 @@ dev.off()
 # POWER CALCULATIONS
 #----------------------------------------------------------------------#
 
-# change mean diff 
-for(meanDiff in c(2,5)){
+plotList <- c( lapply(c(2,5), function(meanDiff){
     allSamples <- calcSamples(allSDs, meanDiff = meanDiff, dataType = "SDs")
     allProps <-calcProps(allSamples)
+    x <- plotPower(allProps, "samples")
+    return(x)
 
-    pdf(file.path(resPath, paste0("PowerCurveMeanDiff", meanDiff, ".pdf")), 
-        height = 5, width = 5)
-    myPlot <- plotPower(allProps, "samples")
-    dev.off()
-}
+}),
 
-
-# change sample size
-for(sampleSize in c(100, 200)){
-    allSamples <- calcDiff(allSDs, nSamples = sampleSize, dataType = "SDs")
+lapply(c(100, 200), function(sampleSize){
+  allSamples <- calcDiff(allSDs, nSamples = sampleSize, dataType = "SDs")
     allProps <-calcProps(allSamples)
+    x <- plotPower(allProps, "difference")
+    return(x)
 
-    pdf(file.path(resPath, paste0("PowerCurveSampleSize", sampleSize, ".pdf")), width = 5, height = 5)
-    myPlot <- plotPower(allProps, "difference")
-    dev.off()
-}
+}))
+
+
+combinedPlot <- ggarrange(plotList[[1]], plotList[[2]],plotList[[3]],plotList[[4]], 
+                           ncol = 2, nrow = 2, 
+                           common.legend = TRUE, legend = "bottom")
+
+pdf(file.path(resPath, paste0("PanelledPowerCurves.pdf"), width = 10, height = 10))
+combinedPlot
+dev.off()
