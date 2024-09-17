@@ -36,8 +36,7 @@ arrayType <- toupper(arrayType)
 # STOP IF NOT REQUESTED TO RUN THIS SCRIPT
 #----------------------------------------------------------------------#
 
-cellSorted <- as.logical(cellSorted)
-if(!cellSorted || is.na(cellSorted)){
+if(!ctCheck){
 	quit(save = "no", status = 0)
 }
 
