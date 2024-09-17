@@ -34,6 +34,8 @@ module load $RVERS   # load specified R version
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
+Rscript checkRconfigFile.r ${DATADIR}
+
 Rscript installLibraries.r ${DATADIR}
 
 Rscript checkColnamesSampleSheet.r ${DATADIR}
