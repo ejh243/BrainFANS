@@ -1,59 +1,34 @@
----
-title: "Brain FANS Project Quality Control within Cell Type"
-author: "`r commandArgs(trailingOnly=T)[4]`"
-output: 
-  html_document:
-    toc: true
-    toc_float: true
-    number_sections: true
----
-```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, echo = FALSE, cache = FALSE)
-```
 
-```{r setup, include=FALSE}
-args<-commandArgs(trailingOnly = TRUE)
-library(bigmelon)
-library(pheatmap)
-library(pander)
-library(RColorBrewer)
-library(kableExtra)
-library(data.table)
-
-
-dataDir <- args[2]
-setwd(dataDir) 
-
-refDir <-args[3]
+```{r setupCtCheck, include=FALSE}
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
-configFile <- paste0(dataDir, "/config.r")
-epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
-qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
-#load(qcData)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
-
-source(configFile)
-
-arrayType <- toupper(arrayType)
 
 
 # load manifests
 if(arrayType == "V2"){
-manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-print("loaded EpicV2 manifest")
+  epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
+  manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
+  manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
+  print("loaded EpicV2 manifest")
+}
+# below needs checking
+if(arrayType == "V1"){
+	manifest<-read.table(file.path(refDir, "EPICArray/EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+	manifest<-manifest[match(fData(gfile)$Probe_ID, probeAnnot$probeID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+	colnames(manifest) <- c("CHR", "Infinium_Design_Type")
+	print("loaded EpicV1 manifest")
 }
 
 if(arrayType == "HM450K"){
-load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
-manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
-colnames(manifest) <- c("CHR", "Infinium_Design_Type")
-manifest$CHR <- paste0("chr", manifest$CHR)
-print("loaded hm450k manifest")
-rm(probeAnnot)
+  load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
+  manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+  colnames(manifest) <- c("CHR", "Infinium_Design_Type")
+  manifest$CHR <- paste0("chr", manifest$CHR)
+  print("loaded hm450k manifest")
+  rm(probeAnnot)
 }
 
 ## filter samples
@@ -111,7 +86,9 @@ sigma<-apply(rawbetas, 1, sd)
 
 ```
 
-# Summary of Quality Control 
+# Quality Control: Clustering of Cell Types
+
+## Summary of samples filtered in stages 1 and 2
 
 After performing quality control (QC) across all samples (n = `r nStart`), `r nExclude`  samples were excluded after stages 1 and 2 of the QC. 
 The third stage of the QC pipeline will look to establish the success of the FACs sorting and check whether samples cluster by their labelled cell type. 
@@ -123,9 +100,6 @@ kbl(ctCounts) %>%
 
 ```
 
-
-
-# Quality Control: Clustering of Cell Types
 
 ## Initial Visualisation 
 
@@ -461,9 +435,9 @@ To visualize the success of this filtering steps, we will repeat the hierarchica
 
 ```{r pcaPlots, fig.width = 15, fig.height = 8, echo = FALSE}
 if(length(cellTypes) < 10){
-  pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,, drop = F],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
+  pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(QCmetrics$withinSDMean == TRUE)], annotation_col = sample_anno[which(QCmetrics$withinSDMean == TRUE),, drop = F],  show_colnames = FALSE, show_rownames = FALSE, cutree_cols = length(cellTypes), main = "PCA Outliers")
 } else {
-    pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],QCmetrics$withinSDMean], annotation_col = sample_anno[QCmetrics$withinSDMean,,drop = F],  show_colnames = FALSE, show_rownames = FALSE, main = "PCA Outliers")
+    pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],which(QCmetrics$withinSDMean == TRUE)], annotation_col = sample_anno[which(QCmetrics$withinSDMean == TRUE),,drop = F],  show_colnames = FALSE, show_rownames = FALSE, main = "PCA Outliers")
 }
 
 ```

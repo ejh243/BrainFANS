@@ -6,15 +6,13 @@
 #SBATCH --nodes=1 #specify number of nodes
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion
-#SBATCH --error=DNAm/logFiles/%u/QCDNAdata.err # error file
-#SBATCH --output=DNAm/logFiles/%u/QCDNAdata.log # output file
+#SBATCH --error=QCDNAdata_%j.err # error file
+#SBATCH --output=QCDNAdata_%j.log # output file
 #SBATCH --job-name=QCDNAdata
 
 #------------------------------------------------------
 
-# 1. the first input is your project folder.
-# 2. the second input is the full path to config file.
-# 3. the third input is a the path to the config.r file.
+# 1. the first input is the full path to config file.
 
 #-----------------------------------------------------
 
@@ -22,55 +20,57 @@
 ## print start date and time
 echo Job started on:
 date -u
-JOBNAME="QCDNAdata"
 
-# Forcibly moves the user to the scripts directory
-cd $(dirname $0)/../../../..
+echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.log and ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.err
 
-## needs to be executed from the scripts folder
+source $1 || exit 1
 
-## format paths in config file with project name
-echo "Loading config file for project: " $1
-export PROJECT=$1
-
-# the second input should be config file
-source $2 || exit 1
-RCONFIG=$3
-
+echo "Processing data located in :" ${DATADIR}
 
 ## load modules
+echo "Loading R module :" $RVERS
 module load Pandoc
 module load $RVERS   # load specified R version
-echo $RVERS
 
-Rscript DNAm/preprocessing/loadDataGDS.r ${DATADIR}
+cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
-chmod 755 ${DATADIR}/2_gds/raw.gds
+Rscript installLibraries.r ${DATADIR}
 
+Rscript checkColnamesSampleSheet.r ${DATADIR}
 
 mkdir -p ${GDSDIR}/QCmetrics
 
-Rscript DNAm/preprocessing/calcQCMetrics.r ${DATADIR} ${REFDIR}
+Rscript loadDataGDS.r ${DATADIR}
 
-Rscript -e "rmarkdown::render('DNAm/preprocessing/QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
+chmod 755 ${DATADIR}/2_gds/raw.gds
+
+Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
+
+Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
+
+Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${REFDIR} ${RCONFIG} $USER
 
 ## mv markdown report to correct location
-mv DNAm/preprocessing/QC.html ${GDSDIR}/QCmetrics
+mv QC.html ${GDSDIR}/QCmetrics/
 
-Rscript DNAm/preprocessing/clusterCellTypes.r ${DATADIR} ${REFDIR}
+mkdir -p ${DATADIR}/3_normalised
 
-Rscript -e "rmarkdown::render('DNAm/preprocessing/QCwithinCellType.rmd', output_file='QCwithinCellType.html')" --args ${DATADIR} ${REFDIR} $USER
-
-## mv markdown report to correct location
-mv DNAm/preprocessing/QCwithinCellType.html ${GDSDIR}/QCmetrics
-
-Rscript DNAm/preprocessing/normalisation.r ${DATADIR} ${REFDIR}
+Rscript normalisation.r ${DATADIR} ${REFDIR}
 chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
-Rscript DNAm/preprocessing/CETYGOdeconvolution.r ${DATADIR}
+Rscript CETYGOdeconvolution.r ${DATADIR}
 
 ## print finish date and time
 echo Job finished on:
 date -u
+
+mkdir -p ${DATADIR}/logFiles
+
+mv "${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.log" \
+"${DATADIR}/logFiles/QCDNAdata_${SLURM_JOB_ID}.log"
+mv "${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.err" \
+"${DATADIR}/logFiles/QCDNAdata_${SLURM_JOB_ID}.err"
+
+echo Log files moved to: ${DATADIR}/logFiles/

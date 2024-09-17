@@ -55,7 +55,7 @@ sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), st
 if(!"Basename" %in% colnames(sampleSheet)){
 	sampleSheet$Basename<-paste(sampleSheet$Chip.ID, sampleSheet$Chip.Location, sep = "_")
 }
-
+sampleSheet$Cell_Type <- as.factor(sampleSheet$Cell_Type)
 
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
@@ -216,20 +216,22 @@ adultBloodCETYGO <- function(betas){
 # RUN CETYGO FUNCTION 
 #----------------------------------------------------------------------#
 
-# for sorted Brain tissue run on each cell type individually
-if(tissueType == "BRAIN" & cellSorted == "TRUE"){
+cellSorted <- as.logical(cellSorted)
+if (is.na(cellSorted)) cellSorted <- FALSE
 
-  for(cell in sampleSheet$Cell_Type){
-      cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell),]
-      cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
-      adultBrainCETYGO(cellBetas, cell)
+# for sorted Brain tissue run on each cell type individually
+if(tissueType == "BRAIN" && cellSorted) {
+
+  for(cell in levels(sampleSheet$Cell_Type)) {
+    cellSampleSheet <- sampleSheet[which(sampleSheet$Cell_Type == cell), ]
+    cellBetas <- rawbetas[, colnames(rawbetas) %in% cellSampleSheet$Basename]
+    adultBrainCETYGO(cellBetas, cell)
   }
 } else {
-  if(tissueType == "BLOOD"){
+  if(tissueType == "BLOOD") {
     adultBloodCETYGO(rawbetas)
-  } else {
-    if(tissueType == "BRAIN" & cellSorted == "FALSE"){
-      adultBrainCETYGO(rawbetas, "bulk")
-    }
+  }
+  if(tissueType == "BRAIN") {
+    adultBrainCETYGO(rawbetas, "bulk")
   }
 }

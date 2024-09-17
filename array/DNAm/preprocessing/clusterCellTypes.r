@@ -4,17 +4,14 @@
 ##
 ## Purpose of script: confirm cell type labels are accurate
 ##
-## Author: Eilis Hannon
-##
-## Date Created: 2020
-##
 ##---------------------------------------------------------------------#
 
 #----------------------------------------------------------------------#
 # NOTES
 #----------------------------------------------------------------------#
-# project folder is provided on command line at execution
-# optional config file provided on the command line to override default parameters
+# 2 arguments required at execeution on command line 
+# path to data folder 
+# path to references folder
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
@@ -34,6 +31,15 @@ epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
 source(configFile)
 
 arrayType <- toupper(arrayType)
+
+#----------------------------------------------------------------------#
+# STOP IF NOT REQUESTED TO RUN THIS SCRIPT
+#----------------------------------------------------------------------#
+
+cellSorted <- as.logical(cellSorted)
+if(!cellSorted || is.na(cellSorted)){
+	quit(save = "no", status = 0)
+}
 
 #----------------------------------------------------------------------#
 # LOAD PACKAGES

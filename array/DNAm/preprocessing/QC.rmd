@@ -1,6 +1,6 @@
 ---
 title: "DNA methylation Illumina Arrays Quality Control Report"
-author: "`r commandArgs(trailingOnly=T)[4]`"
+author: "`r commandArgs(trailingOnly=T)[5]`"
 output: 
   html_document:
     toc: true
@@ -20,18 +20,17 @@ library(corrplot)
 library(pander)
 library(kableExtra)
 library(RColorBrewer)
+library(pheatmap)
+library(data.table)
 
 
-
-source(args[3]) ### change the content of this file to run QC with different thresholds
+source(args[4]) ### change the content of this file to run QC with different thresholds
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 
-
+refDir <- args[3]
 dataDir <- args[2]
 setwd(dataDir) 
 
-
-#gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 
 load(qcData)
@@ -46,50 +45,17 @@ nSamIP<-sum(QCmetrics$intensPASS)
 
 par(mar = c(4,4,1,1))
 
+# When in a loop, pander() calls do not render. This option always allows these
+# calls to be rendered in the resultant html file. No, wrapping pander() calls
+# in a print() function does not work (well, not how we want them to at least).
+panderOptions('knitr.auto.asis', FALSE)
+
 ```
 
 
 
 ```{r, echo = FALSE}
-
-## perform sample filtering
-
-QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres), QCmetrics$rmsd < nvThres, QCmetrics$nNAsPer < perMiss, QCmetrics$pFilter, QCmetrics$intens.ratio < 4)
-	colnames(QCSum)<-c(paste0("BSConversion>",thresBS),  paste0("intens>", intenThres), paste0("normviolence<", nvThres), paste0("%MissingSites<", perMiss), "DetectionPvalues", "MethylatedControl")
-
-QCSum<-cbind(QCSum, rowSums(QCSum, na.rm = TRUE) == rowSums(!is.na(QCSum)))
-colnames(QCSum)[ncol(QCSum)]<-"passQCS1"
-	
-if(sexCheck){
-	sexPass <- as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
-	sexPass[is.na(QCmetrics$predSex)]<-FALSE
-    ## if unable to predict sex, change to fail
-	QCSum<-cbind(QCSum, sexPass)
-}else{
- 	QCSum<-cbind(QCSum, NA)
-}
-colnames(QCSum)[ncol(QCSum)]<-"sexCheck"
-
-if(snpCheck & "genoCheck"%in% colnames(QCmetrics)){
-	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
-}else{
- 	QCSum<-cbind(QCSum, NA)
-}
-colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
-
-# if neither sex check or snp check performed stage two pass status is copied from stage one 
-cols<-c("passQCS1", "sexCheck", "snpCheck")
-cols<-cols[cols %in% colnames(QCSum)]
-if(length(cols) > 1){
-	QCSum<-cbind(QCSum, rowSums(QCSum[,cols], na.rm = TRUE) == rowSums(!is.na(QCSum[,cols])))
-} else {
-	QCSum<-cbind(QCSum, QCSum[,"passQCS1"])
-}
-colnames(QCSum)[ncol(QCSum)]<-"passQCS2"
-rownames(QCSum)<-QCmetrics$Basename
-
-write.csv(cbind(QCmetrics[,c("Basename", "Sample_ID", "Individual_ID", "Cell_Type")], QCSum),  paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"))
-
+QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
 
 
@@ -97,86 +63,78 @@ QCmetrics<-cbind(QCmetrics,QCSum[,c("passQCS1", "passQCS2")])
 
 
 ```{r definPlotParams, include = FALSE}
-### define plotting parameters to automate which factors output is to be coloured by
-### These variables are provided in config file
+### define plotting parameters to automate which factors output is to be
+### coloured by. These variables are provided in config file
 
-plotCols<-data.frame("Basename" = QCmetrics$Basename)
-legendParams<-list()
+parse_column <- function(column_name, QCmetrics) {
+  # plotCols and rainbow() require factors
+  column <- as.factor(QCmetrics[[column_name]])
+  column[column == ""] <- NA
+  return(column)
+}
 
-uniqueVar<-c()
-missingVar<-c()
-
-if(length(techVar) > 0){
-  for(item in techVar){
-    ### check if exists in QC metircs
-      if(item %in% colnames(QCmetrics)){
-        QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
-        if(class(QCmetrics[,item]) != "factor"){
-          print(paste("Converting technical variable", item, "to factor."))
-          tmpVar<-as.factor(QCmetrics[,item])
-        } else {
-          tmpVar<-QCmetrics[,item]
-        }
-        numVar<-length(levels(tmpVar))
-        if(numVar == nrow(QCmetrics)){
-          uniqueVar<-c(uniqueVar, item)
-        } else {
-			if(sum(is.na(tmpVar)) == length(tmpVar)){
-				missingVar<-c(missingVar,item)
-			} else {
-				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
-				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
-				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
-			}
-		}
-      } else {
-        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
-        #quit(save = "no")
-      }
-    
+is_wanted_column <- function(column_name, QCmetrics) {
+  if (! column_name %in% colnames(QCmetrics)) {
+      column_not_found <- paste("Column", column_name, "not found.")
+      mismatched_column_error_message <- paste(
+	"Mismatched columns between sampleSheet and config:",
+	column_not_found,
+	"Please check that your config file and sampleSheet align.",
+	"Column names of sampleSheet were read as:",
+	colnames(QCmetrics),
+	sep = "\n"
+      )
+      stop(mismatched_column_error_message)
   }
+
+  # Later, the contrasts function is used, which requires the column to have 2
+  # or more levels. We remove these columns from the plot to avoid errors.
+  column <- parse_column(column_name, QCmetrics)
+
+  return(!(
+    all(is.na(column)) ||
+    length(unique(column)) == 1L ||
+    anyDuplicated(column) == 0L
+  ))
 }
 
-### remove from techVar 
-techVar<-techVar[!techVar %in% c(uniqueVar, missingVar)]
+remove_unwanted_columns <- function(columns, QCmetrics) {
+  columns_to_keep <- vapply(
+    columns,
+    is_wanted_column,
+    logical(1),
+    QCmetrics
+  )
+  return(columns[columns_to_keep])
+}
 
-if(length(bioVar) > 0){
-  for(item in bioVar){
-    ### check if exists in QC metircs
-      if(item %in% colnames(QCmetrics)){
-       QCmetrics[which(QCmetrics[,item] == ""),item]<-NA
-        if(class(QCmetrics[,item]) != "factor"){
-          print(paste("Converting biological variable", item, "to factor."))
-          tmpVar<-as.factor(QCmetrics[,item])
-        } else {
-          tmpVar<-QCmetrics[,item]
-        }
-        numVar<-length(levels(tmpVar))
-        if(numVar == nrow(QCmetrics)){
-          uniqueVar<-c(uniqueVar, item)
-        } else {
-			if(sum(is.na(tmpVar)) == length(tmpVar)){
-				missingVar<-c(missingVar,item)
-			} else {
-				colVar<-rainbow(numVar)[tmpVar] ### convert to colours for plotting purposes
-				plotCols<-data.frame(plotCols, colVar, stringsAsFactors = FALSE)
-				legendParams[[item]]<-cbind(levels(tmpVar),rainbow(numVar))
-			}
-		}
-      } else {
-        print(paste("Column", item, "not found. Please check config file.")) ### change to hard stop
-        #quit(save = "no")
-      }
-    
+define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
+  potential_plot_columns <- c(techVar, bioVar)
+  plot_columns <- remove_unwanted_columns(potential_plot_columns, QCmetrics)
+
+  plotCols <- data.frame("Basename" = QCmetrics[["Basename"]])
+  legendParams <- list()
+
+  for (column_name in plot_columns) {
+    column <- parse_column(column_name, QCmetrics)
+    unique_variables <- length(unique(column))
+    colours <- rainbow(unique_variables)[column]
+
+    legendParams[[column_name]] <- cbind(
+      levels(column),
+      rainbow(unique_variables)
+    )
+    plotCols[[column_name]] <- colours
   }
+  return(list(plotCols, legendParams))
 }
 
-### remove from bioVar 
-bioVar<-bioVar[!bioVar %in% c(uniqueVar, missingVar)]
-if(ncol(plotCols) > 1){
-	colnames(plotCols)<-c("Basename", techVar, bioVar)
-}
 
+if (!exists("techVar")) techVar <- NULL
+if (!exists("bioVar")) bioVar <- NULL
+plot_parameters <- define_plot_parameters(QCmetrics, techVar, bioVar)
+plotCols <- plot_parameters[[1]]
+legendParams <- plot_parameters[[2]]
 ```
 
 # Study Information
@@ -203,21 +161,40 @@ Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$
 These are only included if they are categorical. For this study the following technical variables were included:
 
 ```{r techVarSpecification, results = "asis", echo = FALSE}
+send_removal_message <- function(column_name, QCmetrics) {
+  column <- parse_column(column_name, QCmetrics)
+
+  removal_message <- function(column_name, reason) {
+    message("Column ", column_name, " was excluded because ", reason,
+      ". Associated plots would give no useful information.")
+  }
+
+  if (all(is.na(column))) {
+    removal_message(column_name, "all values were labelled as missing")
+    return()
+  }
+  if (length(unique(column)) == 1L) {
+    removal_message(column_name, "all values were equivalent")
+    return()
+  }
+  if (anyDuplicated(column) == 0L) {
+    removal_message(column_name, "all values were distinct")
+    return()
+  }
+}
+
+for (column_name in techVar) send_removal_message(column_name, QCmetrics)
+
+techVar <- remove_unwanted_columns(techVar, QCmetrics)
 for(item in techVar){
   tabTemp<-as.data.frame(table(QCmetrics[,item]))
   if(nrow(tabTemp) < 2){
-  	pander(t(tabTemp), caption = paste("Summary of samples categorised by", item), row.names = c("Variable", "Number of Samples"))
+    pander(
+      t(tabTemp),
+      caption = paste("Summary of samples categorised by", item),
+      row.names = c("Variable", "Number of Samples")
+    )
   }
-}
-if(length(uniqueVar[uniqueVar %in% techVar]) > 0){
-	for(item in uniqueVar[uniqueVar %in% techVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
-if(length(missingVar[missingVar %in% techVar]) > 0){
-	for(item in missingVar[missingVar %in% techVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
 }
 ```
 
@@ -227,18 +204,15 @@ These are only included if they are categorical. For this study the following bi
 
 ```{r bioVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
+for (column_name in bioVar) send_removal_message(column_name, QCmetrics)
+
+bioVar <- remove_unwanted_columns(bioVar, QCmetrics)
 for(item in bioVar){
-	pander(as.data.frame(table(QCmetrics[,item])), caption = paste("Summary of samples categorised by", item), col.names = c("Variable", "Number of Samples"))
-}
-if(length(uniqueVar[uniqueVar %in% bioVar]) > 0){
-	for(item in uniqueVar[uniqueVar %in% bioVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
-}
-if(length(missingVar[missingVar %in% bioVar]) > 0){
-	for(item in missingVar[missingVar %in% bioVar]){
-		print(paste("The variable", item, "was excluded as all entries were unique."))
-	}
+  pander(
+    as.data.frame(table(QCmetrics[, item])),
+    caption = paste("Summary of samples categorised by", item),
+    col.names = c("Variable", "Number of Samples")
+  )
 }
 ```
 
@@ -540,27 +514,42 @@ This step uses the 59 SNP probes on the array to identify genetically identical 
 
 ```{r, duplicateSamples, echo = FALSE, fig.width = 8}
 
-for(i in 1:ncol(snpCor)){
-  snpCor[i,i]<-NA
-}
- hist(snpCor, breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = "All samples", col = "gray")
+diag(snpCor)<-NA
+hist(snpCor, breaks = seq(-1,1,0.05), xlab = "SNP correlation", main = "All samples", col = "gray")
 abline(v = 0.8, col = "red")
+diag(snpCor)<-1
 
 
 ```
 
 
 ```{r,findDuplicateSamples, echo = FALSE}
-  if(max(snpCor, na.rm = TRUE) > 0.8){
-  	# pull out samples that are genetically identical
-  	predictedduplicates<-vector(length = ncol(snpCor))
-  	for(i in 1:ncol(snpCor)){
-  	  predictedduplicates[i]<-paste(sort(c(colnames(snpCor)[i],names(which(snpCor[,i] > 0.8)))), sep = "|", collapse = "|")
-  	}
+findDuplicateSamples <- function(snpCor) {
+  # The diagonal of a correlation matrix is always ones. We ignore these for a 
+  # potential speed up (in the event that no snps are highly correlated)
+  snpCor.tmp <- snpCor
+  diag(snpCor.tmp) <- NA
+  max_correlation <- max(snpCor.tmp, na.rm = TRUE)
+
+  if(max_correlation > 0.8) {
+    # pull out samples that are genetically identical
+    predictedduplicates <- vector(length = ncol(snpCor))
+    for(i in seq_len(ncol(snpCor))) {
+      predictedduplicates[i] <- paste(
+	sort(names(which(snpCor[, i] > 0.8))),
+	sep = "|",
+	collapse = "|"
+      )
+    }
   } else {
-	  predictedduplicates<-colnames(snpCor)
-	} 
-	predictedduplicates[!QCmetrics$intensPASS]<-NA ## exclude things not with minimum intensity threshold
+    predictedduplicates <- colnames(snpCor)
+  } 
+  return(predictedduplicates)
+}
+
+predictedduplicates <- findDuplicateSamples(snpCor)
+# Exclude things not with minimum intensity threshold
+predictedduplicates[!QCmetrics$intensPASS]<-NA 
 ```
 
 We identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
@@ -737,50 +726,95 @@ if(length(errorIndexes) > 0){
 
 pdf(paste0(dataDir, "/2_gds/QCmetrics/PlotsWithinDNAmMismatches.pdf"), width = 10, height = 8)
 for(each in unique(sampleGroups$predictedduplicates)){
-	if(!is.na(each)){
+  if(!is.na(each)){
 
-		bsnames<-unlist(strsplit(as.character(each), "\\|"))
-		
-		par(mfrow = c(3,4))
-		## plot 59 snp probes against each other
-		for(i in 1:(length(bsnames)-1)){
-				if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
-			    xlabcol<-"black"
-			  }else{
-			    xlabcol<-"red"
-			  }
-		  for(j in (i+1):length(bsnames)){
-        if(QCmetrics[match(bsnames[j], QCmetrics$Basename), "passQCS1"]){
-			    ylabcol<-"black"
-			  }else{
-			    ylabcol<-"red"
-			  }
-			 plot(rsbetas[,bsnames[i]], rsbetas[,bsnames[j]], xlab = "",ylab = "", pch = 16, xlim = c(0,1), ylim = c(0,1))
-			 title(xlab = bsnames[i], col.lab = xlabcol)
-			 title(ylab = bsnames[j], col.lab = ylabcol)
-			}
-		}
-		
+    bsnames<-unlist(strsplit(as.character(each), "\\|"))
 
-		## plot against matched genetic data
-		allGenoIDs<-unique(sampleGroups$Genotype.IID[which(sampleGroups$predictedduplicates == each)])
-		allGenoIDs<-c(na.omit(allGenoIDs))
-		if(length(allGenoIDs) > 0){
-			for(i in 1:length(bsnames)){
-			  if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
-			    xlabcol<-"black"
-			  }else{
-			    xlabcol<-"red"
-			  }
-				methID<-sampleGroups$Individual_ID[match(bsnames[i], sampleGroups$barcode)]
-				for(j in 1:length(allGenoIDs)){
-					plot(betas.rs[,bsnames[i]], geno.mat[match(allGenoIDs[j],rownames(geno.mat))[1],], pch = 16, xlab = "", ylab = allGenoIDs[j], main = methID, xlim = c(0,1), ylim = c(0,2))
-				  title(xlab = bsnames[i], col.lab = xlabcol)
-				}
-			}
-		}
+    par(mfrow = c(3,4))
+    ## where multiple samples classed as incorrectly genetically identical
+    ## plot 59 snp probes against each other
+    if(length(bsnames) > 1){
+      for(i in 1:(length(bsnames)-1)){
+	if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
+	  xlabcol<-"black"
+	}else{
+	  xlabcol<-"red"
 	}
+	for(j in (i+1):length(bsnames)){
+	  if(QCmetrics[match(bsnames[j], QCmetrics$Basename), "passQCS1"]){
+	    ylabcol<-"black"
+	  }else{
+	    ylabcol<-"red"
+	  }
+	  plot(
+	    rsbetas[,bsnames[i]],
+	    rsbetas[,bsnames[j]],
+	    xlab = "",
+	    ylab = "",
+	    pch = 16,
+	    xlim = c(0,1),
+	    ylim = c(0,1)
+	  )
+	  title(xlab = bsnames[i], col.lab = xlabcol)
+	  title(ylab = bsnames[j], col.lab = ylabcol)
+	}
+      }
+    }
+
+    ## plot against matched genetic data (if it exists)
+    allGenoIDs<-unique(sampleGroups$Genotype.IID[which(sampleGroups$predictedduplicates == each)])
+    allGenoIDs<-c(na.omit(allGenoIDs))
+    if(length(allGenoIDs) > 0){
+      for(i in 1:length(bsnames)){
+	if(QCmetrics[match(bsnames[i], QCmetrics$Basename), "passQCS1"]){
+	  xlabcol<-"black"
+	}else{
+	  xlabcol<-"red"
+	}
+	methID<-sampleGroups$Individual_ID[match(bsnames[i], sampleGroups$barcode)]
+	for(j in 1:length(allGenoIDs)){
+	  plot(
+	    betas.rs[,bsnames[i]],
+	    geno.mat[match(allGenoIDs[j],rownames(geno.mat))[1],],
+	    pch = 16,
+	    xlab = "",
+	    ylab = allGenoIDs[j],
+	    main = methID,
+	    xlim = c(0,1),
+	    ylim = c(0,2)
+	  )
+	  title(xlab = bsnames[i], col.lab = xlabcol)
+	}
+      }
+    }
+  }
 }
+
+## Plot instances where Individual ID says should be the same person
+for(each in unique(sampleGroups$Individual_ID)){
+  par(mfrow = c(3,4))
+  bsindexes <- sampleGroups$Basename[which(sampleGroups$Individual_ID == each)]
+  if(length(bsindexes) > 1){
+    for(i in 1:(length(bsindexes)-1)){
+      for(j in (i+1):length(bsindexes)){
+	plot(
+	  rsbetas[,bsindexes[i]],
+	  rsbetas[,bsindexes[j]],
+	  xlab = "",
+	  ylab = "",
+	  pch = 16,
+	  xlim = c(0,1),
+	  ylim = c(0,1),
+	  main = each
+	)
+	title(xlab = bsindexes[i], col.lab = xlabcol)
+	title(ylab = bsindexes[j], col.lab = ylabcol)
+      }
+    }
+  }
+
+}
+
 dev.off()
 
 
@@ -857,14 +891,15 @@ Samples will now be filtered based on thresholds defined in the config file. The
 
 ```{r, echo = FALSE}
 # create cross tab table
-xTab<-matrix(data = NA, ncol = ncol(QCSum), nrow = ncol(QCSum))
-for(i in 1:ncol(QCSum)){
-  for(j in 1:ncol(QCSum)){
-    xTab[i,j]<-sum(rowSums(QCSum[,c(i,j)]) == 0, na.rm = TRUE)
+QCSum.min<-as.matrix(QCSum[,!colnames(QCSum) %in% c("Basename", "Sample_ID","Individual_ID","Cell_Type")])
+xTab<-matrix(data = NA, ncol = ncol(QCSum.min), nrow = ncol(QCSum.min))
+for(i in 1:ncol(QCSum.min)){
+  for(j in 1:ncol(QCSum.min)){
+    xTab[i,j]<-sum(rowSums(QCSum.min[,c(i,j)]) == 0, na.rm = TRUE)
   }
 }
-colnames(xTab)<-colnames(QCSum)
-rownames(xTab)<-colnames(QCSum)
+colnames(xTab)<-colnames(QCSum.min)
+rownames(xTab)<-colnames(QCSum.min)
 
 kbl(xTab) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
@@ -875,11 +910,11 @@ kbl(xTab) %>%
 
 ```{r, echo = FALSE, fig.width = 10, fig.height = 10}
 
-colsToKeep <- c(c(c("M.median","U.median","intens.ratio",                                                                                            "bisulfCon", "pFilter",
- "x.cp","y.cp",
- "genoCheck",
- "rmsd","sdd","sadd","srms",
- "nNAsPer"), colnames(QCmetrics)[grep("PC", colnames(QCmetrics))]))
+colsToKeep <- c(
+ "M.median","U.median", "intens.ratio", "bisulfCon", "pFilter", "x.cp", "y.cp",
+ "genoCheck", "rmsd", "sdd", "sadd","srms", "nNAsPer",
+  grep("PC", colnames(QCmetrics), value = TRUE, fixed = TRUE)
+)
 
 colsToKeep <- colsToKeep[colsToKeep %in% colnames(QCmetrics)]
 
@@ -894,21 +929,19 @@ Having excluding poor quality data and sample swaps we will repeat the genetic c
 
 ```{r,findDuplicateSamplesPostQC, echo = FALSE}
 
-passQC<-rownames(QCSum)[QCSum[,"passQCS2"]]
+passQC <- as.logical(QCSum[, "passQCS2"])
 
-snpCor<-snpCor[passQC, passQC]
+# samples that do not pass QC should be ignored, but not removed as snpCor 
+# needs to remain the same size as QCmetrics (for data manipulation)
+snpCor[!passQC] <- NA
 
-if(max(snpCor, na.rm = TRUE) > 0.8){
-  	# pull out samples that are genetically identical
-  	predictedduplicates<-vector(length = ncol(snpCor))
-  	for(i in 1:ncol(snpCor)){
-  	  predictedduplicates[i]<-paste(sort(names(which(snpCor[,i] > 0.8))), sep = "|", collapse = "|")
-  	}
-  } else {
-	  predictedduplicates<-colnames(snpCor)
-	} 
+predictedduplicates <- findDuplicateSamples(snpCor)
+QCmetrics[["predictedduplicates"]] <- predictedduplicates
 
-  QCmetrics$predictedduplicates<-predictedduplicates
+# predicteddupliactes will be "" for samples that have been removed (or just
+# SAMPLE_NAME if max_correlation <= 0.8). We want the predictedduplicates 
+# column to be NA for samples that did not pass QC.
+QCmetrics[["predictedduplicates"]][!passQC] <- NA
 
 ```
 
@@ -966,7 +999,7 @@ Checking if genetically identical samples have the sample Individual ID:
 Checking if samples with same Individual ID are genetically identical:
 
 ```{r checkGenoSampleswithSameIDPostQC, echo = FALSE}
-
+passQC <- QCSum[["Basename"]][as.logical(QCSum[, "passQCS2"])]
 QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 ### check if samples with same Individual ID are genetically identical.
@@ -1022,6 +1055,15 @@ if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age)) > 1){
 }
 ```
 
+
+
+## Confirm Cell type Labels
+
+Perform cell type label check: `r ctCheck`. 
+
+
+```{r, child=if (ctCheck) 'rmarkdownChild/ctCheck.rmd'}
+```
 
 #### Session Information
 

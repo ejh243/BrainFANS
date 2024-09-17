@@ -142,11 +142,10 @@ DMR.plot (ranges = results.ranges,
                      flank = 50,
                      boxplot.flank = min(c(5, round(width(results.ranges)[i]*0.05))),
                      extra.ranges = NULL) 
+
 }
 dev.off()
 
 save(dmrcoutput, file = file.path(resPath, paste0(cellType,"DMRCate.rdata")))
 write.csv(results.ranges, file.path(resPath, "Tables", paste0("DMRcate_DMRs_", cellType, ".csv")))
-
-
 

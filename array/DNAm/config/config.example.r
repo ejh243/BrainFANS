@@ -2,7 +2,9 @@
 projectTitle<-"MRC Schizophrenia FANS samples"
 processedBy<-"Complex Disease Epigenetic Group, University of Exeter Medical School"
 arrayVersion<-"Illumina EPIC microarray"
-tissueType<-"FANS sorted post-mortem brain tissue"
+tissueType<-"brain" # needs to be brain or blood to generate relevant cell composition estimates
+cellSorted<-FALSE # turns off cell type clustering check
+arrayType<-"V2" # must be one of "450K" / "V1" / "V2"
 
 ## technical variables
 

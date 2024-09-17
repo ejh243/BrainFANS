@@ -1,10 +1,13 @@
 ## Data filepaths
-export DATADIR=<data path>${PROJECT}
+export DATADIR=/path/to/data
 
 export METADIR=${DATADIR}/0_metadata
 export RAWDATADIR=${DATADIR}/1_raw
 export GDSDIR=${DATADIR}/2_gds
 export NORMDIR=${DATADIR}/3_normalised
-export SNPDIR=<path to SNP data >
+export SNPDIR=/path/to/SNPdata
 
-export REFDIR=<path to references folder>
+export REFDIR=/path/to/references/folder
+export RCONFIG=/path/to/Rconfig
+export SCRIPTSDIR=/path/to/BrainsFANS/repo
+export RVERS=R # module name for R version you require
