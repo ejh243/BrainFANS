@@ -206,7 +206,7 @@ for(simNum in 1:nSim){
 			diffs<-matrix(data = diffs, nrow = nSig, byrow = TRUE)
 			diffs[,which(status == 0)]<-0 # only add to cases
 			
-			# make some of these effects cell type specific
+			# make soof these effects cell type specific
 			if(propCS > 0){
 				ctSpecific<-sample(1:nSig, floor(nSig*propCS))
 				## record which ct specifc to
@@ -239,7 +239,7 @@ for(simNum in 1:nSim){
 				sumSim[[as.character(pThres)]][rowNum,3+seq(1,6*9,6)]<-colSums(outtab.sim[sigProbes,] < pThres)
 				sumSim[[as.character(pThres)]][rowNum,4+seq(1,6*9,6)]<-colSums(outtab.sim[-sigProbes,] < pThres)
 				
-				# substract those significant in both ME and Int from ME count
+				# substract those significant with both main effect (ME) and interation term from ME count
 				methodMaxP<-data.frame("LM" = apply(outtab.sim[,1:2], 1, max), "MLM" = apply(outtab.sim[,3:4], 1, max), "CRR" = apply(outtab.sim[,5:6], 1, max))
 				sumSim[[as.character(pThres)]][rowNum,2+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,2+seq(1,6*6, 12)] - colSums(methodMaxP < pThres)
 				sumSim[[as.character(pThres)]][rowNum,3+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,3+seq(1,6*6, 12)] - colSums(methodMaxP[sigProbes,] < pThres)
