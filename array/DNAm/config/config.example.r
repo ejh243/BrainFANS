@@ -2,6 +2,7 @@
 projectTitle<-"MRC Schizophrenia FANS samples"
 processedBy<-"Complex Disease Epigenetic Group, University of Exeter Medical School"
 tissueType<-"brain" # needs to be brain or blood to generate relevant cell composition estimates
+arrayType<-"V2" # must be one of "450K" / "V1" / "V2"
 
 
 ## technical variables

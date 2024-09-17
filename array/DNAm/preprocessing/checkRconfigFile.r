@@ -50,7 +50,7 @@ logicalParams <- c("sexCheck",
 
 
 # ungrouped params
-ungrouped <- c("tissueType", "techVar", "bioVar")
+ungrouped <- c("tissueType", "arrayType", "techVar", "bioVar")
 
 
 
@@ -136,7 +136,12 @@ if(ctCheck == TRUE){
 # check 'ungrouped' params are correctly formatted
 
 if(!toupper(tissueType) %in% c("BRAIN", "BLOOD")){
-  stop("Unrecognised tissue type. Must be either 'blood' or 'brain'")
+  stop("Unrecognised tissueType. Must be either 'blood' or 'brain'")
+}
+
+
+if(!toupper(arrayType) %in% c("HM450K", "V1", "V2")){
+  stop("Unrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'")
 }
 
 
@@ -156,6 +161,4 @@ for(i in c("Sentrix_ID", "Sentrix_Position")){
 
 
 print("All config file parameters are present and corerctly formatted")
-
-
 
