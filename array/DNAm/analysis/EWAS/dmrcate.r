@@ -5,7 +5,7 @@
 ## Purpose of script: identify regions of differential  DNA methylation for
 ## schizophrenia vs controls for each cell type separately using DMRcate
 ##
-## Note this script uses a custome version of DMRplot that can't be added to 
+## Note this script uses a custom version of DMRplot that can't be added to 
 ## this repository due to license restrictions
 ##---------------------------------------------------------------------#
 
