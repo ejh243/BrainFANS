@@ -34,7 +34,8 @@ module load R/3.6.3-foss-2020a
 
 cd ${SCRIPTSDIR}/array/DNAm/analysis/methodsDevelopment/
 
-Rscript simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID} 0.02
+meanDiff=0.05
+Rscript simulateCellSpecificEWAS.r ${DATADIR} ${SLURM_ARRAY_TASK_ID} ${meanDiff}
 
 # print end date and time
 echo Job finished on:

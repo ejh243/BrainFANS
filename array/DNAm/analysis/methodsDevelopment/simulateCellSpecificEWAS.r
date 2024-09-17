@@ -56,7 +56,7 @@ runCTEWAS<-function(row,QCmetrics){
 	nullLM<-lm(row ~ QCmetrics$CCDNAmAge + QCmetrics$Sex + QCmetrics$Tissue.Centre)
 
 	data<-cbind(row,QCmetrics)
-	modelMLM<-lmer(row ~ Cell.type + CCDNAmAge + Sex +  + (1 | Tissue.Centre)  + (1 | Indidivual.ID), REML = FALSE, data = QCmetrics)
+	modelMLM<-lmer(row ~ Cell.type + CCDNAmAge + Sex + (1 | Tissue.Centre)  + (1 | Indidivual.ID), REML = FALSE, data = QCmetrics)
 	nullMLM<-lmer(row ~ CCDNAmAge + Sex +  + (1 | Tissue.Centre)  + (1 | Indidivual.ID), REML = FALSE, data = QCmetrics)
 
 	p.df <- pdata.frame(data.frame("meth" = row, "age" = QCmetrics$CCDNAmAge, "sex" = QCmetrics$Sex, "cell.type" = QCmetrics$Cell.type, "brain.bank" = QCmetrics$Tissue.Centre, "id" = QCmetrics$Indidivual.ID), index = c("id"), drop.index = F)
@@ -103,10 +103,11 @@ args<-commandArgs(trailingOnly = TRUE)
 nSim<-10
 nSig.options<-c(10,100,1000)
 propCS.options<-seq(0,1,0.2)
-sigEffect<-as.numeric(args[3])
+pThres.opts<-c(9e-8, 1e-7, 1e-6, 1e-5)
 
 dataDir <- args[1]
 nChunk<-args[2]
+sigEffect<-as.numeric(args[3])
 
 set.seed(nChunk)
 
@@ -136,7 +137,7 @@ cellTypes<-unique(QCmetrics$Cell.type)
 nCores<-detectCores()
 cl <- makeCluster(nCores/2)
 registerDoParallel(cl)
-clusterExport(cl, list("runSimEWAS", "runCTEWAS", "lmer", "pdata.frame", "plm", "vcovHC", "coeftest", "waldtest", "leveneTest"))
+clusterExport(cl, list("runSimEWAS", "runCTEWAS", "lmer", "pdata.frame", "plm", "vcovHC", "coeftest", "waldtest", "leveneTest", "pThres.opts"))
 
 #----------------------------------------------------------------------#
 # RUN CELL TYPE EWAS
@@ -161,6 +162,9 @@ paste("LM", cellTypes[1], c("TotSig", "nSigTrueDMPs", "nSigOther","nSigTrueCS", 
 paste("LM", cellTypes[2], c("TotSig", "nSigTrueDMPs", "nSigOther", "nSigTrueCS", "nSigTrueCommon", "lambda"), sep = "_"),
 paste("LM", cellTypes[3], c("TotSig", "nSigTrueDMPs", "nSigOther", "nSigTrueCS", "nSigTrueCommon", "lambda"), sep = "_"), 
 outer(cellTypes, c("nCSTrueDMPs", "nSigTrueCS"), FUN = "paste", sep = "_"))
+
+sumSim<-lapply(pThres.opts, function(x) sumSim)
+names(sumSim)<-pThres.opts
 
 rowNum<-1
 nullSim<-NULL
@@ -190,8 +194,10 @@ for(simNum in 1:nSim){
 	# Retest sites effects are induced at as non significiant probes are unaltered		
 	for(nSig in nSig.options){
 		for(propCS in propCS.options){
-			sumSim[rowNum,1]<-nSig
-			sumSim[rowNum,2]<-floor(nSig*propCS)
+			for(pThres in pThres.opts){
+				sumSim[[as.character(pThres)]][rowNum,1]<-nSig
+				sumSim[[as.character(pThres)]][rowNum,2]<-floor(nSig*propCS)
+			}
 			# randomly select significant probes
 			sigProbes<-sample(1:nrow(celltypeNormbeta), nSig)
 
@@ -200,7 +206,7 @@ for(simNum in 1:nSim){
 			diffs<-matrix(data = diffs, nrow = nSig, byrow = TRUE)
 			diffs[,which(status == 0)]<-0 # only add to cases
 			
-			# make some of these effects cell type specific
+			# make soof these effects cell type specific
 			if(propCS > 0){
 				ctSpecific<-sample(1:nSig, floor(nSig*propCS))
 				## record which ct specifc to
@@ -228,49 +234,51 @@ for(simNum in 1:nSim){
 			outtab.sim<-outtab.null
 			outtab.sim[sigProbes,]<-outtab.sig
 			
-			sumSim[rowNum,2+seq(1,6*9,6)]<-colSums(outtab.sim < 9e-8)
-			sumSim[rowNum,3+seq(1,6*9,6)]<-colSums(outtab.sim[sigProbes,] < 9e-8)
-			sumSim[rowNum,4+seq(1,6*9,6)]<-colSums(outtab.sim[-sigProbes,] < 9e-8)
-			
-			# substract those significant in both ME and Int from ME count
-			methodMaxP<-data.frame("LM" = apply(outtab.sim[,1:2], 1, max), "MLM" = apply(outtab.sim[,3:4], 1, max), "CRR" = apply(outtab.sim[,5:6], 1, max))
-			sumSim[rowNum,2+seq(1,6*6, 12)]<-sumSim[rowNum,2+seq(1,6*6, 12)] - colSums(methodMaxP < 9e-8)
-			sumSim[rowNum,3+seq(1,6*6, 12)]<-sumSim[rowNum,3+seq(1,6*6, 12)] - colSums(methodMaxP[sigProbes,] < 9e-8)
-			sumSim[rowNum,4+seq(1,6*6, 12)]<-sumSim[rowNum,4+seq(1,6*6, 12)] - colSums(methodMaxP[-sigProbes,] < 9e-8)
-			
-			# handle quirk of R converting 1 row matrix to vector!!
-			if(length(ctSpecific) > 1){
-				sumSim[rowNum,5+seq(1,6*9,6)]<-colSums(outtab.sim[ctSpecific,] < 9e-8)	
-				sumSim[rowNum,5+seq(1,6*6, 12)]<-sumSim[rowNum,5+seq(1,6*6, 12)] - colSums(methodMaxP[ctSpecific,] < 9e-8)
+			for(pThres in pThres.opts){
+				sumSim[[as.character(pThres)]][rowNum,2+seq(1,6*9,6)]<-colSums(outtab.sim < pThres)
+				sumSim[[as.character(pThres)]][rowNum,3+seq(1,6*9,6)]<-colSums(outtab.sim[sigProbes,] < pThres)
+				sumSim[[as.character(pThres)]][rowNum,4+seq(1,6*9,6)]<-colSums(outtab.sim[-sigProbes,] < pThres)
 				
-				# check ct specific DMPs detected in OLS within that cell type
-				for(type in cellTypes){
-					if(length(affectedCT[[type]]) > 0){
-						sumSim[rowNum,paste(type, c("nCSTrueDMPs", "nSigTrueCS"), sep = "_")]<-c(length(affectedCT[[type]]),sum(outtab.sim[affectedCT[[type]],which(colnames(outtab.sim) == paste("LM", type, sep = "_"))] < 9e-8))					 
-					} else {
-						sumSim[rowNum,paste(type, c("nCSTrueDMPs", "nSigTrueCS"), sep = "_")]<-c(0,0)
+				# substract those significant with both main effect (ME) and interation term from ME count
+				methodMaxP<-data.frame("LM" = apply(outtab.sim[,1:2], 1, max), "MLM" = apply(outtab.sim[,3:4], 1, max), "CRR" = apply(outtab.sim[,5:6], 1, max))
+				sumSim[[as.character(pThres)]][rowNum,2+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,2+seq(1,6*6, 12)] - colSums(methodMaxP < pThres)
+				sumSim[[as.character(pThres)]][rowNum,3+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,3+seq(1,6*6, 12)] - colSums(methodMaxP[sigProbes,] < pThres)
+				sumSim[[as.character(pThres)]][rowNum,4+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,4+seq(1,6*6, 12)] - colSums(methodMaxP[-sigProbes,] < pThres)
+				
+				# handle quirk of R converting 1 row matrix to vector!!
+				if(length(ctSpecific) > 1){
+					sumSim[[as.character(pThres)]][rowNum,5+seq(1,6*9,6)]<-colSums(outtab.sim[ctSpecific,] < pThres)	
+					sumSim[[as.character(pThres)]][rowNum,5+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,5+seq(1,6*6, 12)] - colSums(methodMaxP[ctSpecific,] < pThres)
+					
+					# check ct specific DMPs detected in OLS within that cell type
+					for(type in cellTypes){
+						if(length(affectedCT[[type]]) > 0){
+							sumSim[[as.character(pThres)]][rowNum,paste(type, c("nCSTrueDMPs", "nSigTrueCS"), sep = "_")]<-c(length(affectedCT[[type]]),sum(outtab.sim[affectedCT[[type]],which(colnames(outtab.sim) == paste("LM", type, sep = "_"))] < pThres))					 
+						} else {
+							sumSim[[as.character(pThres)]][rowNum,paste(type, c("nCSTrueDMPs", "nSigTrueCS"), sep = "_")]<-c(0,0)
+						}
+					}
+					
+				} else {
+					if(length(ctSpecific) == 1){
+						sumSim[[as.character(pThres)]][rowNum,5+seq(1,6*9,6)]<-as.numeric(outtab.sim[ctSpecific,] < pThres)
+						sumSim[[as.character(pThres)]][rowNum,5+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,5+seq(1,6*6, 12)] - as.numeric(methodMaxP[ctSpecific,] < pThres)
+					} else{
+						sumSim[[as.character(pThres)]][rowNum,5+seq(1,6*9,6)]<-0
 					}
 				}
 				
-			} else {
-				if(length(ctSpecific) == 1){
-					sumSim[rowNum,5+seq(1,6*9,6)]<-as.numeric(outtab.sim[ctSpecific,] < 9e-8)
-					sumSim[rowNum,5+seq(1,6*6, 12)]<-sumSim[rowNum,5+seq(1,6*6, 12)] - as.numeric(methodMaxP[ctSpecific,] < 9e-8)
-				} else{
-					sumSim[rowNum,5+seq(1,6*9,6)]<-0
+				if(length(commonProbes) > 0){
+					sumSim[[as.character(pThres)]][rowNum,6+seq(1,6*9,6)]<-colSums(outtab.sim[commonProbes,] < pThres)
+					sumSim[[as.character(pThres)]][rowNum,6+seq(1,6*6, 12)]<-sumSim[[as.character(pThres)]][rowNum,6+seq(1,6*6, 12)] - colSums(methodMaxP[commonProbes,] < pThres)
+				}else{
+					sumSim[[as.character(pThres)]][rowNum,6+seq(1,6*9,6)]<-0
 				}
+							
+				sumSim[[as.character(pThres)]][rowNum,7+seq(1,6*9,6)]<-apply(outtab.sim, 2, estlambda)
+				
 			}
-			
-			if(length(commonProbes) > 0){
-				sumSim[rowNum,6+seq(1,6*9,6)]<-colSums(outtab.sim[commonProbes,] < 9e-8)
-				sumSim[rowNum,6+seq(1,6*6, 12)]<-sumSim[rowNum,6+seq(1,6*6, 12)] - colSums(methodMaxP[commonProbes,] < 9e-8)
-			}else{
-				sumSim[rowNum,6+seq(1,6*9,6)]<-0
-			}
-						
-			sumSim[rowNum,7+seq(1,6*9,6)]<-apply(outtab.sim, 2, estlambda)
 			rowNum<-rowNum+1
-			
 			## collate sum stats of commonDMPs
 			commonDMPs<-rbind(commonDMPs, cbind(outtab.sim[commonProbes,], ctEWAS[commonProbes,]))
 			
@@ -278,12 +286,12 @@ for(simNum in 1:nSim){
 			ctDMPs<-rbind(ctDMPs, cbind(outtab.sim[ctSpecific,], ctEWAS[ctSpecific,]))
 
 			## collate sum stats of false positives
-			fpIndex<-which(apply(outtab.sim, 1, min) < 9e-8)
+			fpIndex<-which(apply(outtab.sim, 1, min) < pThres)
 			fpDMPs<-rbind(fpDMPs, cbind(outtab.sim[fpIndex,], ctEWAS[fpIndex,]))
 		}
 	}
 }
 
 save(nullSim, file = file.path(resPath, paste0("nullSimulations_Chunk", nChunk, "_MeanDiff",sigEffect, ".rdata")))
-save(sumSim, file = file.path(resPath, paste0("nSigSimulateTrueEffects_Chunk", nChunk, "_MeanDiff",sigEffect, ".rdata")))
-save(commonDMPs, ctDMPs, file = file.path(resPath, paste0("DMPsumStats_Chunk", nChunk, "_MeanDiff",sigEffect, ".rdata")))
+save(sumSim, file = file.path(resPath, paste0("nSigSimulateTrueEffects_Chunk", nChunk, "_MeanDiff",sigEffect, "_pThres_", pThres,  ".rdata")))
+save(commonDMPs, ctDMPs, file = file.path(resPath, paste0("DMPsumStats_Chunk", nChunk, "_MeanDiff",sigEffect, "_pThres_", pThres,  ".rdata")))
