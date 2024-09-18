@@ -41,16 +41,16 @@ ctCellParams <- c("predDistinctCT", "neunCT")
 #----------------------------------------------------------------------#
 # Check config file parameters
 #----------------------------------------------------------------------#
-bad_parameter <- FALSE
+bad_parameter_exists <- FALSE
 
 check_parameters <- function(parameters, type_check, stop_message) {
   for (parameter in parameters) {
     if (!exists(parameter)) {
-      bad_parameter <- TRUE
+      bad_parameter_exists <- TRUE
       warning("\n'", parameter, "' must be defined in the config file\n")
     }
     if (!type_check(get(parameter))) {
-      bad_parameter <- TRUE
+      bad_parameter_exists <- TRUE
       warning("\n'", parameter, "' ", stop_message, "\n")
     }
     message("'", parameter, "' is correctly defined.")
@@ -71,30 +71,30 @@ if (ctCheck) {
 
 
 if (!toupper(tissueType) %in% c("BRAIN", "BLOOD")) {
-  bad_parameter <- TRUE
+  bad_parameter_exists <- TRUE
   warning("\nUnrecognised tissueType. Must be either 'blood' or 'brain'\n")
 }
 if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
-  bad_parameter <- TRUE
+  bad_parameter_exists <- TRUE
   warning("\nUnrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'\n")
 }
 
 
 for (i in c("Individual_ID", "Cell_Type", "Sex")) {
   if (!i %in% bioVar) {
-    bad_parameter <- TRUE
+    bad_parameter_exists <- TRUE
     warning("\n'", i, "' must be included in bioVar\n")
   }
 }
 
 for (i in c("Sentrix_ID", "Sentrix_Position")) {
   if (!i %in% techVar) {
-    bad_parameter <- TRUE
+    bad_parameter_exists <- TRUE
     warning("\n'", i, "' must be included in techVar\n")
   }
 }
 
-if (bad_parameter) {
+if (bad_parameter_exists) {
   stop(
     "\nMalformed config file detected.\n",
     "Please fix variables before running the rest of the pipeline\n"
