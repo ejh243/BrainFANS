@@ -47,11 +47,11 @@ check_parameters <- function(parameters, type_check, stop_message) {
   for (parameter in parameters) {
     if (!exists(parameter)) {
       bad_parameter <- TRUE
-      warning("'", parameter, "' must be defined in the config file")
+      warning("\n'", parameter, "' must be defined in the config file\n")
     }
     if (!type_check(get(parameter))) {
       bad_parameter <- TRUE
-      warning("'", parameter, "' ", stop_message)
+      warning("\n'", parameter, "' ", stop_message, "\n")
     }
     message("'", parameter, "' is correctly defined.")
   }
@@ -61,7 +61,10 @@ check_parameters(qcthres, is.numeric, "must be numeric")
 check_parameters(logicalParams, is.logical, "must be TRUE or FALSE")
 
 if (ctCheck) {
-  message("ctCheck is set to TRUE, additional parameters need to be checked..")
+  message(
+    "\n`ctCheck` is set to TRUE.",
+    "Additional parameters need to be checked...\n"
+  )
   check_parameters(ctCellParams, is.character, "must be a string")
   check_parameters(ctThres, is.numeric, "must be numeric")
 }
@@ -69,33 +72,33 @@ if (ctCheck) {
 
 if (!toupper(tissueType) %in% c("BRAIN", "BLOOD")) {
   bad_parameter <- TRUE
-  warning("Unrecognised tissueType. Must be either 'blood' or 'brain'")
+  warning("\nUnrecognised tissueType. Must be either 'blood' or 'brain'\n")
 }
 if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
   bad_parameter <- TRUE
-  warning("Unrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'")
+  warning("\nUnrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'\n")
 }
 
 
 for (i in c("Individual_ID", "Cell_Type", "Sex")) {
   if (!i %in% bioVar) {
     bad_parameter <- TRUE
-    warning("'", i, "' must be included in bioVar")
+    warning("\n'", i, "' must be included in bioVar\n")
   }
 }
 
 for (i in c("Sentrix_ID", "Sentrix_Position")) {
   if (!i %in% techVar) {
     bad_parameter <- TRUE
-    warning("'", i, "' must be included in techVar")
+    warning("\n'", i, "' must be included in techVar\n")
   }
 }
 
 if (bad_parameter) {
   stop(
-    "Malformed config file detected. ",
-    "Please fix variables before running the rest of the pipeline"
+    "\nMalformed config file detected.\n",
+    "Please fix variables before running the rest of the pipeline\n"
   )
 }
 
-print("All config file parameters are present and correctly formatted")
+print("\nAll config file parameters are present and correctly formatted\n")
