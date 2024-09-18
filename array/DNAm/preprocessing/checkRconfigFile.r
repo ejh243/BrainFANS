@@ -152,9 +152,9 @@ for(i in c("Sentrix_ID", "Sentrix_Position")){
 }
 
 
-for(i in c("Sentrix_ID", "Sentrix_Position")){
-  if(!i %in% techVar){
-    stop(paste0("'", i, "' must be included in techVar"))
+for(i in c("Individual_ID","Cell_Type","Sex")){
+  if(!i %in% bioVar){
+    stop(paste0("'", i, "' must be included in bioVar"))
   }
 }
 
