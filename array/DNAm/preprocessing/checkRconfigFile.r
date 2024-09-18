@@ -21,8 +21,6 @@
 
 print("checking config.r file parameters are present and correctly formatted...")
 
-"%ni%" <- Negate("%in%") # define '%ni%' (not in)
-
 args <- commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 configFile <- paste0(dataDir, "/config.r")
