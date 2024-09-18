@@ -35,6 +35,10 @@ module load $RVERS   # load specified R version
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
 Rscript checkRconfigFile.r ${DATADIR}
+if [[ $? -ne 0 ]]; then
+    echo "Malformed config file has been identified. Exiting..."
+    exit 1
+fi
 
 Rscript installLibraries.r ${DATADIR}
 
