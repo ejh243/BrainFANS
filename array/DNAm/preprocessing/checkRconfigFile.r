@@ -90,6 +90,4 @@ for (i in c("Sentrix_ID", "Sentrix_Position")) {
   }
 }
 
-
-
-print("All config file parameters are present and corerctly formatted")
+print("All config file parameters are present and correctly formatted")
