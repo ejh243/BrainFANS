@@ -27,20 +27,13 @@ configFile <- file.path(dataDir, "config.r")
 
 source(configFile)
 
-
-# group config variables by type
-
 qcRmdParams <- c("projectTitle", "processedBy")
-
 qcthres <- c("thresBS", "intenThres", "nvThres", "perMiss")
-
 logicalParams <- c("sexCheck", "snpCheck", "ctCheck")
 
 ungrouped <- c("tissueType", "arrayType", "techVar", "bioVar")
 
-# only used if ctCheck = TRUE
 ctThres <- c("studentThres", "nSDThres")
-
 ctCellParams <- c("predDistinctCT", "neunCT")
 
 
@@ -70,13 +63,10 @@ if (ctCheck) {
   check_parameters(ctThres, is.numeric, "must be numeric")
 }
 
-# check 'ungrouped' params are correctly formatted
 
 if (!toupper(tissueType) %in% c("BRAIN", "BLOOD")) {
   stop("Unrecognised tissueType. Must be either 'blood' or 'brain'")
 }
-
-
 if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
   stop("Unrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'")
 }
