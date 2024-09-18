@@ -72,12 +72,6 @@ if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
 }
 
 
-for (i in c("Sentrix_ID", "Sentrix_Position")) {
-  if (!i %in% techVar) {
-    stop("'", i, "' must be included in techVar")
-  }
-}
-
 for (i in c("Individual_ID", "Cell_Type", "Sex")) {
   if (!i %in% bioVar) {
     stop("'", i, "' must be included in bioVar")
