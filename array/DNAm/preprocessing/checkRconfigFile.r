@@ -32,34 +32,18 @@ source(configFile)
 
 # group config variables by type
 
-qcRmdParams <- c("projectTitle",
-                 "processedBy")           # strings
+qcRmdParams <- c("projectTitle", "processedBy")
 
+qcthres <- c("thresBS", "intenThres", "nvThres", "perMiss")
 
+logicalParams <- c("sexCheck", "snpCheck", "ctCheck")
 
-qcthres <- c("thresBS",
-              "intenThres",
-              "nvThres",
-              "perMiss") # numeric
-
-
-logicalParams <- c("sexCheck",
-                   "snpCheck",
-                   "ctCheck")             # logical
-
-
-
-# ungrouped params
 ungrouped <- c("tissueType", "arrayType", "techVar", "bioVar")
 
-
-
 # only used if ctCheck = TRUE
-ctThres <- c("studentThres",         
-             "nSDThres")                  # numeric
+ctThres <- c("studentThres", "nSDThres")
 
-ctCellParams <- c("predDistinctCT",               
-                  "neunCT")               # strings 
+ctCellParams <- c("predDistinctCT", "neunCT")
 
 
 
