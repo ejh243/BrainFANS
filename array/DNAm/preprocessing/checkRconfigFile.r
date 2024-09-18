@@ -1,11 +1,11 @@
-##---------------------------------------------------------------------#
+## ---------------------------------------------------------------------#
 ##
-## Title: Check config.r 
+## Title: Check config.r
 ##
 ## Purpose of script: Check config file parameters are present and in correct format
 ##                    and if not exit the script with error message
 ##
-##---------------------------------------------------------------------#
+## ---------------------------------------------------------------------#
 
 
 #----------------------------------------------------------------------#
@@ -21,9 +21,9 @@
 
 print("checking config.r file parameters are present and correctly formatted...")
 
-'%ni%' <- Negate('%in%') # define '%ni%' (not in)
+"%ni%" <- Negate("%in%") # define '%ni%' (not in)
 
-args<-commandArgs(trailingOnly = TRUE)
+args <- commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 configFile <- paste0(dataDir, "/config.r")
 
@@ -51,98 +51,51 @@ ctCellParams <- c("predDistinctCT", "neunCT")
 # Check config file parameters
 #----------------------------------------------------------------------#
 
-
-# check necessary parameters exist
-
-for(i in c(qcRmdParams, qcthres, logicalParams, ungrouped)){
-  if(!exists(i)){
-    stop(paste0("'", i, "' must be defined in the config file" ))
+check_parameters <- function(parameters, type_check, stop_message) {
+  for (parameter in parameters) {
+    if (!exists(parameter)) {
+      stop("'", parameter, "' must be defined in the config file")
+    }
+    if (!type_check(get(parameter))) {
+      stop("'", parameter, "' ", stop_message)
+    }
+    message("'", parameter, "' is correctly defined.")
   }
 }
 
+check_parameters(qcthres, is.numeric, "must be numeric")
+check_parameters(logicalParams, is.logical, "must be TRUE or FALSE")
 
-# if ctCheck is TRUE, check extra params and thresholds needed to run clusterCellTypes.r script
-
-if(ctCheck == TRUE){
-  for(i in c(ctCellParams, ctThres)){
-    if(!exists(i)){
-      stop(paste0("To run ctCheck'", i, "' must be defined in the config file" ))
-    }
-  }
+if (ctCheck) {
+  message("ctCheck is set to TRUE, additional parameters need to be checked..")
+  check_parameters(ctCellParams, is.character, "must be a string")
+  check_parameters(ctThres, is.numeric, "must be numeric")
 }
-
-
-# check calcQCmetrics.r script thresholds
-
-for(i in qcthres){
-    if(!is.numeric(get(i))){
-      stop(paste0("'", i, "' must be numeric"))
-  } 
-} 
-
-
-
-# check logical parameters
-
-for(i in logicalParams){
-    if(!is.logical(get(i))){
-      stop(paste0("'", i, "' must be True/False"))
-  } 
-} 
-
-                    
-
-# if ctCheck is TRUE, check extra params and thresholds needed to run clusterCellTypes.r script
-
-
-if(ctCheck == TRUE){
-  for(i in ctCellParams){
-    if(exists(i)){
-      if(!is.character(get(i))){
-        stop(paste0("'", i, "' must be string"))
-      }
-    } else {
-      stop(paste0("To run ctCheck '", i, "' must be defined in the config file" ))
-    }
-  }
-  for(i in ctThres){
-    if(exists(i)){
-      if(!is.numeric(get(i))){
-        stop(paste0("'", i, "' must be numeric"))
-      } 
-    } else {
-      stop(paste0("To run ctCheck '", i, "' must be defined in the config file" ))
-    }
-  } 
-}
-
 
 # check 'ungrouped' params are correctly formatted
 
-if(!toupper(tissueType) %in% c("BRAIN", "BLOOD")){
+if (!toupper(tissueType) %in% c("BRAIN", "BLOOD")) {
   stop("Unrecognised tissueType. Must be either 'blood' or 'brain'")
 }
 
 
-if(!toupper(arrayType) %in% c("HM450K", "V1", "V2")){
+if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
   stop("Unrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'")
 }
 
 
-for(i in c("Sentrix_ID", "Sentrix_Position")){
-  if(!i %in% techVar){
+for (i in c("Sentrix_ID", "Sentrix_Position")) {
+  if (!i %in% techVar) {
     stop(paste0("'", i, "' must be included in techVar"))
   }
 }
 
-
-for(i in c("Individual_ID","Cell_Type","Sex")){
-  if(!i %in% bioVar){
-    stop(paste0("'", i, "' must be included in bioVar"))
+for (i in c("Individual_ID", "Cell_Type", "Sex")) {
+  if (!i %in% bioVar) {
+    stop("'", i, "' must be included in bioVar")
   }
 }
 
 
 
 print("All config file parameters are present and corerctly formatted")
-
