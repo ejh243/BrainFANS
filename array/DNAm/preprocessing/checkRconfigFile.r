@@ -43,7 +43,7 @@ ctCellParams <- c("predDistinctCT", "neunCT")
 #----------------------------------------------------------------------#
 bad_parameter_exists <- FALSE
 
-check_parameters <- function(parameters, type_check, stop_message) {
+check_parameters <- function(parameters, type_check, warning_message) {
   for (parameter in parameters) {
     if (!exists(parameter)) {
       bad_parameter_exists <- TRUE
@@ -51,7 +51,7 @@ check_parameters <- function(parameters, type_check, stop_message) {
     }
     if (!type_check(get(parameter))) {
       bad_parameter_exists <- TRUE
-      warning("\n'", parameter, "' ", stop_message, "\n")
+      warning("\n'", parameter, "' ", warning_message, "\n")
     }
     message("'", parameter, "' is correctly defined.")
   }
