@@ -943,6 +943,12 @@ QCmetrics[["predictedduplicates"]] <- predictedduplicates
 # column to be NA for samples that did not pass QC.
 QCmetrics[["predictedduplicates"]][!passQC] <- NA
 
+# predictedduplicates will contain empty strings for samples that have been
+# removed. If these aren't removed from predictedduplicates, the below table 
+# will confusingly state that each of these removed samples belong to the same
+# individual.
+predictedduplicates <- predictedduplicates[nzchar(predictedduplicates)]
+
 ```
 
 Post QC we identified `r length(unique(predictedduplicates))` genetically unique individuals with the following distribution of number of samples per individual.
