@@ -71,6 +71,12 @@ if [[ "${library_did_not_install}" -ne 0 ]]; then
 fi
 
 Rscript checkColnamesSampleSheet.r ${DATADIR}
+sample_sheet_malformed=$?
+if [[ "${sample_sheet_malformed}" -ne 0 ]]; then
+    print_error_message \
+        "Malformed sample sheet has been identified." \
+        "Please check the error logs, exiting..."
+fi
 
 mkdir -p ${GDSDIR}/QCmetrics
 
