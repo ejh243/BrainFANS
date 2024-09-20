@@ -80,11 +80,16 @@ if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
 }
 
 
-for (i in c("Individual_ID", "Cell_Type", "Sex")) {
+for (i in c("Individual_ID", "Sex")) {
   if (!i %in% bioVar) {
     bad_parameter_exists <- TRUE
     warning("\n'", i, "' must be included in bioVar\n")
   }
+}
+
+if (!"Cell_Type" %in% bioVar && ctCheck) {
+  bad_parameter_exists <- TRUE
+  warning("\n'Cell_Type' must be included in bioVar if 'ctCheck' is true\n")
 }
 
 for (i in c("Sentrix_ID", "Sentrix_Position")) {
