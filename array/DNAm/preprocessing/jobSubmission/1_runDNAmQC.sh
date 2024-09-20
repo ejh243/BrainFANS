@@ -28,6 +28,7 @@ ERROR:
 ${error_message}
 ${NO_COLOUR}
 MESSAGE
+
     exit 1
 }
 
