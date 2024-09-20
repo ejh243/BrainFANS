@@ -33,8 +33,7 @@ date -u
 echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.log and ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.err
 
 config_file=$1
-source "${config_file}" || print_error_message \
-    "The provided config file was not sourced correctly." \
+source "${config_file}" || print_error_message \ "The provided config file was not sourced correctly." \
     "Please check the path you gave exists, exiting..." 
 
 echo "Processing data located in :" ${DATADIR}
@@ -47,9 +46,11 @@ module load $RVERS   # load specified R version
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
 Rscript checkRconfigFile.r ${DATADIR}
-if [[ $? -ne 0 ]]; then
-    echo "Malformed config file has been identified. Exiting..."
-    exit 1
+config_malformed=$?
+if [[ "${config_malformed}" -ne 0 ]]; then
+    print_error_message \
+        "Malformed config file has been identified." \
+        "Please check the error logs, exiting..."
 fi
 
 Rscript installLibraries.r ${DATADIR}
