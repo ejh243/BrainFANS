@@ -30,6 +30,8 @@ source(args[4]) ### change the content of this file to run QC with different thr
 
 refDir <- args[3]
 dataDir <- args[2]
+most_recent_git_tag <- args[6]
+current_commit_hash <- args[7]
 setwd(dataDir) 
 
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
@@ -151,6 +153,8 @@ This report documents the internal quality control (QC) process of DNA methylati
 **Array used:** `r arrayType`
 
 **Date of QC:** `r format(Sys.Date(), format="%d %B %Y")`
+
+**Most recent BrainFANS version:** `r most_recent_git_tag` (specific commit hash used: `r current_commit_hash`)
 
 **Sample tissue:** `r tissueType` 
 
