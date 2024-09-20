@@ -16,6 +16,15 @@
 
 #-----------------------------------------------------
 
+print_error_message() {
+    IFS=$'\n'
+    error_message=$*
+cat 1>&2 << MESSAGE
+ERROR:
+$error_message
+MESSAGE
+    exit 1
+}
 
 ## print start date and time
 echo Job started on:
