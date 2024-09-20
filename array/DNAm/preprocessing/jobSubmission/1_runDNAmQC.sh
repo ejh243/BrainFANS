@@ -81,6 +81,12 @@ fi
 mkdir -p ${GDSDIR}/QCmetrics
 
 Rscript loadDataGDS.r ${DATADIR}
+gds_problem_identified=$?
+if [[ "${gds_problem_identified}" -ne 0 ]]; then
+    print_error_message \
+        "A problem with the GDS data has been identified." \
+        "Please check the error logs for more information, exiting..."
+fi
 
 chmod 755 ${DATADIR}/2_gds/raw.gds
 
