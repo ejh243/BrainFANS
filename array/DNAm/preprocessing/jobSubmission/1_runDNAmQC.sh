@@ -38,7 +38,8 @@ date -u
 echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.log and ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.err
 
 config_file=$1
-source "${config_file}" || print_error_message \ "The provided config file was not sourced correctly." \
+source "${config_file}" || print_error_message \
+    "The provided config file was not sourced correctly." \
     "Please check the path you gave exists, exiting..." 
 
 echo "Processing data located in :" ${DATADIR}
@@ -59,6 +60,15 @@ if [[ "${config_malformed}" -ne 0 ]]; then
 fi
 
 Rscript installLibraries.r ${DATADIR}
+library_did_not_install=$?
+if [[ "${library_did_not_install}" -ne 0 ]]; then
+    print_error_message \
+        "A required library did not install properly." \
+        "Please check the error logs as to why this happened." \
+        "If the problem is not easily fixed, consider opening an issue." \
+        "https://github.com/ejh243/BrainFANS/issues/new/choose" \
+        "Exiting..."
+fi
 
 Rscript checkColnamesSampleSheet.r ${DATADIR}
 
