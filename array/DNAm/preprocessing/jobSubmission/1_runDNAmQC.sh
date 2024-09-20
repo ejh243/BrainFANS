@@ -40,7 +40,7 @@ echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}
 config_file=$1
 source "${config_file}" || print_error_message \
     "The provided config file was not sourced correctly." \
-    "Please check the path you gave exists, exiting..." 
+    "Please check the path you gave ('$config_file') exists, exiting..." 
 
 echo "Processing data located in :" ${DATADIR}
 
