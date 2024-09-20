@@ -56,7 +56,7 @@ config_malformed=$?
 if [[ "${config_malformed}" -ne 0 ]]; then
     print_error_message \
         "Malformed config file has been identified." \
-        "Please check the error logs, exiting..."
+        "Please check the error logs for more information, exiting..."
 fi
 
 Rscript installLibraries.r ${DATADIR}
@@ -75,7 +75,7 @@ sample_sheet_malformed=$?
 if [[ "${sample_sheet_malformed}" -ne 0 ]]; then
     print_error_message \
         "Malformed sample sheet has been identified." \
-        "Please check the error logs, exiting..."
+        "Please check the error logs for more information, exiting..."
 fi
 
 mkdir -p ${GDSDIR}/QCmetrics
