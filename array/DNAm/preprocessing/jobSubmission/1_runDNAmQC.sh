@@ -19,9 +19,14 @@
 print_error_message() {
     IFS=$'\n'
     error_message=$*
+    RED='[0;31m'
+    NO_COLOUR='[0m'
+
 cat 1>&2 << MESSAGE
+${RED}
 ERROR:
-$error_message
+${error_message}
+${NO_COLOUR}
 MESSAGE
     exit 1
 }
