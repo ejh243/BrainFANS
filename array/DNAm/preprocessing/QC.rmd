@@ -441,7 +441,7 @@ plot(1:20, betas.pca[1:20]*100, type = "b", ylab = "% variance explained", xlab 
 abline(h=1, col = "red")
 ```
 
-We will use histograms and scatterplots below to visualally inspect for potential outliers or patterns in the data. In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
+We will use histograms and scatterplots below to visually inspect for potential outliers or patterns in the data. In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
 
 ```{r, echo=FALSE, fig.height=4, betasPCAHist, fig.width=15}
 par(mar = c(4,4,4,1))
