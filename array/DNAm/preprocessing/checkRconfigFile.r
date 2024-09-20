@@ -60,6 +60,7 @@ check_parameters <- function(parameters, type_check, warning_message) {
 check_parameters(qcthres, is.numeric, "must be numeric")
 check_parameters(logicalParams, is.logical, "must be TRUE or FALSE")
 
+if (!exists("ctCheck")) ctCheck <- FALSE
 if (ctCheck) {
   message(
     "\n`ctCheck` is set to TRUE.",
