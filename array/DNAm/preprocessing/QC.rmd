@@ -27,6 +27,7 @@ library(data.table)
 source(args[4]) ### change the content of this file to run QC with different thresholds
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 
+
 refDir <- args[3]
 dataDir <- args[2]
 setwd(dataDir) 
@@ -38,6 +39,10 @@ load(qcData)
 if(!"Cell_Type" %in% colnames(QCmetrics)){
   QCmetrics$Cell_Type <- NA
 }
+
+# extract Sentrix_ID and _Position from basename as excel can sometimes cause them to be in sci not
+QCmetrics[["Sentrix_ID"]] <- substr(QCmetrics[["Basename"]], 1, 12)
+QCmetrics[["Sentrix_Position"]] = substr(QCmetrics[["Basename"]], 14, 19)
 
 
 nSamIP<-sum(QCmetrics$intensPASS)
@@ -108,11 +113,10 @@ remove_unwanted_columns <- function(columns, QCmetrics) {
 }
 
 define_plot_parameters <- function(QCmetrics, projVar) {
-  plot_columns <- remove_unwanted_columns(projVar, QCmetrics)
+  plot_columns <- c(remove_unwanted_columns(projVar, QCmetrics), "Sentrix_ID", "Sentrix_Position")
 
-  plotCols <- data.frame("Basename" = QCmetrics[["Basename"]],
-                        "Sentrix_ID" = substr(QCmetrics[["Basename"]], 1, 12),
-                        "Sentrix_Position" = substr(QCmetrics[["Basename"]], 14, 19))
+  plotCols <- data.frame("Basename" = QCmetrics[["Basename"]])
+                     
   legendParams <- list()
 
   for (column_name in plot_columns) {
@@ -161,10 +165,32 @@ These are only included if they are categorical. For this study the following pr
 
 ```{r projVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
+send_removal_message <- function(column_name, QCmetrics) {
+  column <- parse_column(column_name, QCmetrics)
+
+  removal_message <- function(column_name, reason) {
+    message("Column ", column_name, " was excluded because ", reason,
+      ". Associated plots would give no useful information.")
+  }
+
+  if (all(is.na(column))) {
+    removal_message(column_name, "all values were labelled as missing")
+    return()
+  }
+  if (length(unique(column)) == 1L) {
+    removal_message(column_name, "all values were equivalent")
+    return()
+  }
+  if (anyDuplicated(column) == 0L) {
+    removal_message(column_name, "all values were distinct")
+    return()
+  }
+}
+
 for (column_name in projVar) send_removal_message(column_name, QCmetrics)
 
 projVar <- remove_unwanted_columns(projVar, QCmetrics)
-for(item in prrojVar){
+for(item in projVar){
   pander(
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
