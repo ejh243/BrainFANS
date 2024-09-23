@@ -27,6 +27,7 @@ library(data.table)
 source(args[4]) ### change the content of this file to run QC with different thresholds
 ### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
 
+
 refDir <- args[3]
 dataDir <- args[2]
 setwd(dataDir) 
@@ -39,8 +40,11 @@ if(!"Cell_Type" %in% colnames(QCmetrics)){
   QCmetrics$Cell_Type <- NA
 }
 
+# extract Sentrix_ID and _Position from basename as excel can sometimes cause them to be in sci not
+QCmetrics[["Sentrix_ID"]] <- substr(QCmetrics[["Basename"]], 1, 12)
+QCmetrics[["Sentrix_Position"]] = substr(QCmetrics[["Basename"]], 14, 19)
 
-nSamAll<-nrow(QCmetrics)
+
 nSamIP<-sum(QCmetrics$intensPASS)
 
 par(mar = c(4,4,1,1))
@@ -108,11 +112,11 @@ remove_unwanted_columns <- function(columns, QCmetrics) {
   return(columns[columns_to_keep])
 }
 
-define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
-  potential_plot_columns <- c(techVar, bioVar)
-  plot_columns <- remove_unwanted_columns(potential_plot_columns, QCmetrics)
+define_plot_parameters <- function(QCmetrics, projVar) {
+  plot_columns <- c(remove_unwanted_columns(projVar, QCmetrics), "Sentrix_ID", "Sentrix_Position")
 
   plotCols <- data.frame("Basename" = QCmetrics[["Basename"]])
+                     
   legendParams <- list()
 
   for (column_name in plot_columns) {
@@ -130,9 +134,8 @@ define_plot_parameters <- function(QCmetrics, techVar, bioVar) {
 }
 
 
-if (!exists("techVar")) techVar <- NULL
-if (!exists("bioVar")) bioVar <- NULL
-plot_parameters <- define_plot_parameters(QCmetrics, techVar, bioVar)
+if (!exists("projVar")) projVar <- NULL
+plot_parameters <- define_plot_parameters(QCmetrics, projVar)
 plotCols <- plot_parameters[[1]]
 legendParams <- plot_parameters[[2]]
 ```
@@ -156,11 +159,12 @@ This report documents the internal quality control (QC) process of DNA methylati
 Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$Individual_ID))` individuals.
 
 
-## Summary of Technical Variables
+## Summary of Project Variables
 
-These are only included if they are categorical. For this study the following technical variables were included:
+These are only included if they are categorical. For this study the following project variables were included:
 
-```{r techVarSpecification, results = "asis", echo = FALSE}
+```{r projVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
+
 send_removal_message <- function(column_name, QCmetrics) {
   column <- parse_column(column_name, QCmetrics)
 
@@ -183,31 +187,10 @@ send_removal_message <- function(column_name, QCmetrics) {
   }
 }
 
-for (column_name in techVar) send_removal_message(column_name, QCmetrics)
+for (column_name in projVar) send_removal_message(column_name, QCmetrics)
 
-techVar <- remove_unwanted_columns(techVar, QCmetrics)
-for(item in techVar){
-  tabTemp<-as.data.frame(table(QCmetrics[,item]))
-  if(nrow(tabTemp) < 2){
-    pander(
-      t(tabTemp),
-      caption = paste("Summary of samples categorised by", item),
-      row.names = c("Variable", "Number of Samples")
-    )
-  }
-}
-```
-
-## Summary of Biological Variables
-
-These are only included if they are categorical. For this study the following biological variables were included:
-
-```{r bioVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
-
-for (column_name in bioVar) send_removal_message(column_name, QCmetrics)
-
-bioVar <- remove_unwanted_columns(bioVar, QCmetrics)
-for(item in bioVar){
+projVar <- remove_unwanted_columns(projVar, QCmetrics)
+for(item in projVar){
   pander(
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
@@ -218,7 +201,7 @@ for(item in bioVar){
 
 # Quality Control: Data Quality
 
-A series of quality control (QC) metrics have been calculated for all samples and are reported below. After reviewing this report, exclusion thresholds to identify poorly performing samples can be provided to the normalisation script. For some QC metrics we use the provided technical and biological variables to aid identification of any patterns behind sample failures or artefacts that need to be included in the analysis. 
+A series of quality control (QC) metrics have been calculated for all samples and are reported below. After reviewing this report, exclusion thresholds to identify poorly performing samples can be provided to the normalisation script. For some QC metrics we use the provided project variables to aid identification of any patterns behind sample failures or artefacts that need to be included in the analysis. 
 
 
 ## Signal Intensities

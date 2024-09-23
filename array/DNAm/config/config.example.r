@@ -5,12 +5,8 @@ tissueType<-"brain" # needs to be brain or blood to generate relevant cell compo
 arrayType<-"V2" # must be one of "450K" / "V1" / "V2"
 
 
-## technical variables
-techVar<-c("Sentrix_ID","Sentrix_Position")
-
-
-## biological variables
-bioVar<-c("Individual_ID","Cell_Type","Sex")
+## project variables
+projVar<-c("Cell_Type", "Sex") # Used to colour plots
 
 
 ## QC thresholds

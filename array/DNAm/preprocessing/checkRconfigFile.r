@@ -31,7 +31,7 @@ qcRmdParams <- c("projectTitle", "processedBy")
 qcthres <- c("thresBS", "intenThres", "nvThres", "perMiss")
 logicalParams <- c("sexCheck", "snpCheck", "ctCheck")
 
-ungrouped <- c("tissueType", "arrayType", "techVar", "bioVar")
+ungrouped <- c("tissueType", "arrayType", "projVar")
 
 ctThres <- c("studentThres", "nSDThres")
 ctCellParams <- c("predDistinctCT", "neunCT")
@@ -80,24 +80,9 @@ if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
   warning("\nUnrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'\n")
 }
 
-
-for (i in c("Individual_ID", "Sex")) {
-  if (!i %in% bioVar) {
-    bad_parameter_exists <- TRUE
-    warning("\n'", i, "' must be included in bioVar\n")
-  }
-}
-
-if (!"Cell_Type" %in% bioVar && ctCheck) {
+if (!"Cell_Type" %in% projVar && ctCheck) {
   bad_parameter_exists <- TRUE
-  warning("\n'Cell_Type' must be included in bioVar if 'ctCheck' is true\n")
-}
-
-for (i in c("Sentrix_ID", "Sentrix_Position")) {
-  if (!i %in% techVar) {
-    bad_parameter_exists <- TRUE
-    warning("\n'", i, "' must be included in techVar\n")
-  }
+  warning("\n'Cell_Type' must be included in projVar if 'ctCheck' is true\n")
 }
 
 if (bad_parameter_exists) {
