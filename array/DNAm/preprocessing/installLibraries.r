@@ -30,6 +30,7 @@ if (!require("BiocManager", quietly = TRUE))
 #---------------------------------------------------------------------#	
 	
 #Bigmelon required for all scripts
+install.packages("remotes") # install remotes package to install from github
 remotes::install_github("schalkwyk/wateRmelon")
 remotes::install_github("tjgorrie/bigmelon")
 
@@ -45,8 +46,8 @@ if(arrayType=='V1'){
   BiocManager::install("IlluminaHumanMethylationEPICmanifest")
 }
 if(arrayType=='V2'){
-	install("jokergoo/IlluminaHumanMethylationEPICv2manifest")
-	install("jokergoo/IlluminaHumanMethylationEPICv2anno.20a1.hg38")
+	BiocManager::install("jokergoo/IlluminaHumanMethylationEPICv2manifest")
+	BiocManager::install("jokergoo/IlluminaHumanMethylationEPICv2anno.20a1.hg38")
 
 }
 
@@ -67,7 +68,7 @@ packageVersion("matrixStats")
 # INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
 #---------------------------------------------------------------------#
 #Creating QC reports
-pkgs_rep <- c("pander","kableExtra")
+pkgs_rep <- c("pander","kableExtra", "gplots", "diptest", "corrplot", "pheatmap", "mixtools")
 install.packages(setdiff(pkgs_rep, rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 #Additional packages for Brain Cell Proportion Prediction
