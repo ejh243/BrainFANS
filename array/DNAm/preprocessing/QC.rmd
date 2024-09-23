@@ -433,7 +433,7 @@ Detection p values provide a measure of the accuracy of DNAm value at a specific
 
 ## Principal Component Analysis
 
-To identify and visually inspect potential outliers we performed principal component analysis on the autosomal probes. We identified `r length(which(ctrl.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
+To identify and visually inspect potential outliers we performed principal component analysis on the autosomal probes. We identified `r length(which(betas.pca > 0.01))` PCs which explained > 1% of the variance and focused on these for characterisation. 
 
 ```{r, betasPCAPlot, fig.width = 6, fig.height = 4, echo = FALSE}
 par(mar = c(4,4,1,1))
@@ -441,7 +441,7 @@ plot(1:20, betas.pca[1:20]*100, type = "b", ylab = "% variance explained", xlab 
 abline(h=1, col = "red")
 ```
 
-We will use histograms and scatterplots below to visualally inspect for potential outliers or patterns in the data. In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
+We will use histograms and scatterplots below to visually inspect for potential outliers or patterns in the data. In the histograms below, the red dashed lines indicate 2 and 3 SD from the mean. 
 
 ```{r, echo=FALSE, fig.height=4, betasPCAHist, fig.width=15}
 par(mar = c(4,4,4,1))
