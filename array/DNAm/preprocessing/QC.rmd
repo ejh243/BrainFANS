@@ -110,7 +110,9 @@ remove_unwanted_columns <- function(columns, QCmetrics) {
 define_plot_parameters <- function(QCmetrics, projVar) {
   plot_columns <- remove_unwanted_columns(projVar, QCmetrics)
 
-  plotCols <- data.frame("Basename" = QCmetrics[["Basename"]])
+  plotCols <- data.frame("Basename" = QCmetrics[["Basename"]],
+                        "Sentrix_ID" = substr(QCmetrics[["Basename"]], 1, 12),
+                        "Sentrix_Position" = substr(QCmetrics[["Basename"]], 14, 19))
   legendParams <- list()
 
   for (column_name in plot_columns) {
