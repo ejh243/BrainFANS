@@ -40,7 +40,6 @@ if(!"Cell_Type" %in% colnames(QCmetrics)){
 }
 
 
-nSamAll<-nrow(QCmetrics)
 nSamIP<-sum(QCmetrics$intensPASS)
 
 par(mar = c(4,4,1,1))
