@@ -68,12 +68,12 @@ packageVersion("matrixStats")
 # INSTALL PACKAGES FOR BRAIN CELL PROPORTION PREDICTION
 #---------------------------------------------------------------------#
 #Creating QC reports
-pkgs_rep <- c("pander","kableExtra", "gplots", "diptest", "corrplot", "pheatmap", "mixtools")
+pkgs_rep <- c("pander","kableExtra", "gplots", "diptest", "corrplot", "pheatmap", "mixtools", "RColorBrewer", "rmarkdown") 
 install.packages(setdiff(pkgs_rep, rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 #Additional packages for Brain Cell Proportion Prediction
 BiocManager::install(c("genefilter", "minfi"))
-pkgs_pred <- c("devtools","quadprog")
+pkgs_pred <- c("devtools","quadprog", "reshape2")
 install.packages(setdiff(pkgs_pred, rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 # load devtools to install from GitHub
