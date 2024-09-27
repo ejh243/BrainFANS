@@ -54,7 +54,7 @@ Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
 
 Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
 
-most_recent_git_tag=$(git describe --tags)
+most_recent_git_tag=$(git describe --tags --abbrev=0)
 current_commit_hash=$(git rev-parse HEAD)
 Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" \
     --args "${DATADIR}" "${REFDIR}" "${RCONFIG}" "${USER}" \
