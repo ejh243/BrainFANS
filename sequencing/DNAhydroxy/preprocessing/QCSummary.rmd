@@ -51,13 +51,6 @@ sexChrTotalsMacs<-t(aggregate(. ~ Chr, data = sexCountsMacs,sum))
 sexChrTotals<-data.frame("chrXepic" = as.numeric(sexChrTotalsEpic[-c(1:6), 1]), "chrYepic" = as.numeric(sexChrTotalsEpic[-c(1:6), 2]),"chrXmacs" = as.numeric(sexChrTotalsMacs[-c(1:6), 1]), "chrYmacs" = as.numeric(sexChrTotalsMacs[-c(1:6), 2]))
 sexChrTotals$Sex<-sampleSheet$sex[match(gsub("[I|P]C", "", colnames(sexCountsEpic)[-c(1:6)]), make.names(sampleSheet$sampleID))]
 
-
-
-
-## load gene body counts
-
-"/gpfs/mrc0/projects/Research_Project-MRC190311/DNAhydroxySeq/mrcScz/5_peakCounts/GENCODE/geneCounts.summary"
-
 ```
 
 
@@ -163,9 +156,4 @@ ggplot(sexChrTotals, aes(x=chrXmacs, y=chrYmacs, color=Sex)) +
     x = "X chr",
     y = "Y chr"
   ) + theme_bw() 
-```
-
-```{r}
-
-
 ```
