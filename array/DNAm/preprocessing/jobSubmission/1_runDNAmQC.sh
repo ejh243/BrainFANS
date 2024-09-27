@@ -54,7 +54,11 @@ Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
 
 Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
 
-Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${REFDIR} ${RCONFIG} $USER
+most_recent_git_tag=$(git describe --tags)
+current_commit_hash=$(git rev-parse HEAD)
+Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" \
+    --args "${DATADIR}" "${REFDIR}" "${RCONFIG}" "${USER}" \
+    "${most_recent_git_tag}" "${current_commit_hash}"
 
 ## mv markdown report to correct location
 mv QC.html ${GDSDIR}/QCmetrics/
