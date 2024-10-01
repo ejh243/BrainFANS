@@ -35,4 +35,5 @@ yarn-error.log*
 
 # Data files
 *.csv
+!sampleSheet.example.csv    # except example sampleSheet
 *.pdf
