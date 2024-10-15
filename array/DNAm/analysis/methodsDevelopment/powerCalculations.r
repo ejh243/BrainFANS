@@ -24,11 +24,13 @@ normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
 
 library(data.table)
 library(ggplot2)
+library(ggpubr)
 library(reshape2)
 library(RColorBrewer)
 library(BrainPower)
 library(pwr)
 library(doParallel)
+library(dplyr)
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -94,7 +96,9 @@ dev.off()
 plotList <- c( lapply(c(2,5), function(meanDiff){
     allSamples <- calcSamples(allSDs, meanDiff = meanDiff, dataType = "SDs")
     allProps <-calcProps(allSamples)
-    x <- plotPower(allProps, "samples")
+    x <- plotPower(allProps, "samples") + 
+      theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14), 
+      legend.title = element_text(size = 14), legend.text = element_text(size = 14))
     return(x)
 
 }),
@@ -102,7 +106,9 @@ plotList <- c( lapply(c(2,5), function(meanDiff){
 lapply(c(100, 200), function(sampleSize){
   allSamples <- calcDiff(allSDs, nSamples = sampleSize, dataType = "SDs")
     allProps <-calcProps(allSamples)
-    x <- plotPower(allProps, "difference")
+    x <- plotPower(allProps, "difference") + 
+      theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14), 
+      legend.title = element_text(size = 14), legend.text = element_text(size = 14))
     return(x)
 
 }))
@@ -112,6 +118,6 @@ combinedPlot <- ggarrange(plotList[[1]], plotList[[2]],plotList[[3]],plotList[[4
                            ncol = 2, nrow = 2, 
                            common.legend = TRUE, legend = "bottom")
 
-pdf(file.path(resPath, paste0("PanelledPowerCurves.pdf"), width = 10, height = 10))
+pdf(file.path(resPath, "Plots", paste0("PanelledPowerCurves.pdf")), width = 10, height = 10)
 combinedPlot
 dev.off()
