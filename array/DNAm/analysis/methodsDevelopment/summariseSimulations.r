@@ -185,6 +185,15 @@ sumSimComb<-lapply(sumSimComb, function(mat) {
 
 sumSimComb <- lapply(sumSimComb, replace_na, list(0))
 
+# fix NAs in simulations with no cell specific effects
+
+sumSimComb <- lapply(sumSimComb, function(mat){
+	mat[which(mat$nCTspecific == 0), "Double-_nCSTrueDMPs"] <- 0
+	mat[which(mat$nCTspecific == 0),"NeuN+_nCSTrueDMPs"] <- 0
+	mat[which(mat$nCTspecific == 0),"Sox10+_nCSTrueDMPs"] <- 0
+	return(mat)
+})
+
 ## calculate True positive rate for all DMPs (regardless of type) and regardless of which term in the model
 tpRate<- lapply(sumSimComb, function(mat){
 	tpRate<-cbind(mat$MeanDiff, (mat$LM_ME_nSigTrueDMPs + mat$LM_Int_nSigTrueDMPs)/(mat$nProbes), 
@@ -362,23 +371,9 @@ for(meanDiff in c(0.02,0.05)){
 				   geom = "point", 
 				   position = pos) +  theme(text = element_text(size = 20))  + 
 				   ylab("True positive rate")    + xlab("Method") +labs(title = "Cell-specific DMPs")
-				   
-	fig2a[[4]] <- as.data.frame(fpRate)%>% 
-	filter(MeanDiff == meanDiff & pThres == pThres) %>% 
-	select(allLR_ME:"ctLR_Sox10+") %>% 
-	replace_na(list("ctLR_Double-" = 0, "ctLR_NeuN+" = 0, "ctLR_Sox10+" = 0))%>% 
-	melt() %>% separate(variable, c("Regression", "Term")) %>% 
-	mutate(Term = factor(Term, levels = c("Double", "NeuN", "Sox10", "ME","Int"))) %>% 
-	mutate(Regression = factor(Regression, levels = c("ctLR", "allLR", "MER", "CRR"))) %>% 
-	ggplot( aes(x=Term, y=value, fill = Regression))  +
-	  geom_violin(position = pos, scale = 'width')  + scale_fill_manual(values = methodCols, labels = methodLabels)+
-	  stat_summary(fun = "mean", 
-				   geom = "point", 
-				   position = pos) +  theme(text = element_text(size = 20))  + 
-				   ylab("False positive rate")    + xlab("Method") +labs(title = "")
 
 
-	fig2a<-ggarrange(plotlist=fig2a, nrow = 2, ncol = 2, common.legend = TRUE)
+	fig2a<-ggarrange(plotlist=fig2a, nrow = 1, ncol = 3, common.legend = TRUE)
 
 	ggsave(file.path(dataDir, "Plots", paste0("ViolinPlotCTEWASTPFPRatesMeanDiff", meanDiff, ".pdf")), 
 	plot = fig2a, height = 12, width = 12) 
