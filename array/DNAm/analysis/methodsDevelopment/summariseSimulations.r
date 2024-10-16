@@ -376,7 +376,7 @@ for(meanDiff in c(0.02,0.05)){
 	fig2a<-ggarrange(plotlist=fig2a, nrow = 1, ncol = 3, common.legend = TRUE)
 
 	ggsave(file.path(dataDir, "Plots", paste0("ViolinPlotCTEWASTPFPRatesMeanDiff", meanDiff, ".pdf")), 
-	plot = fig2a, height = 12, width = 12) 
+	plot = fig2a, height = 6, width = 18) 
 
 }
 
