@@ -115,14 +115,14 @@ for(j in 1:length(powerCalcDat)){
 
 write.csv(outPowerCalcs, file.path(resPath, "Tables", "ParametersFor80%Power.csv"))
 
-plotList <- c( lapply(powerCalcDat[1:2], function(allProps){
+plotList <- c(lapply(powerCalcDat[1:2], function(allProps){
     x <- plotPower(allProps, "samples") + 
       theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14), 
       legend.title = element_text(size = 14), legend.text = element_text(size = 14))
     return(x)
 }),
 
-lapply( lapply(powerCalcDat[3:4], function(allProps){
+lapply(powerCalcDat[3:4], function(allProps){
     x <- plotPower(allProps, "difference") + 
       theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14), 
       legend.title = element_text(size = 14), legend.text = element_text(size = 14))
