@@ -93,19 +93,36 @@ dev.off()
 # POWER CALCULATIONS
 #----------------------------------------------------------------------#
 
-plotList <- c( lapply(c(2,5), function(meanDiff){
+powerCalcDat<-c(lapply(c(2,5), function(meanDiff){
     allSamples <- calcSamples(allSDs, meanDiff = meanDiff, dataType = "SDs")
     allProps <-calcProps(allSamples)
+    return(allProps)
+
+}),
+  lapply(c(100, 200), function(sampleSize){
+  allSamples <- calcDiff(allSDs, nSamples = sampleSize, dataType = "SDs")
+    allProps <-calcProps(allSamples)
+    return(allProps)
+
+}))
+
+outPowerCalcs<-matrix(data = NA, ncol = ncol(powerCalcDat[[1]])-1, nrow = length(powerCalcDat))
+for(j in 1:length(powerCalcDat)){
+  for(i in 2:ncol(powerCalcDat[[1]])){
+    outPowerCalcs[j, i - 1] <- powerCalcDat[[j]][which(powerCalcDat[[j]][,i] > 0.8)[1], 1]
+  }
+}
+
+write.csv(outPowerCalcs, file.path(resPath, "Tables", "ParametersFor80%Power.csv"))
+
+plotList <- c( lapply(powerCalcDat[1:2], function(allProps){
     x <- plotPower(allProps, "samples") + 
       theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14), 
       legend.title = element_text(size = 14), legend.text = element_text(size = 14))
     return(x)
-
 }),
 
-lapply(c(100, 200), function(sampleSize){
-  allSamples <- calcDiff(allSDs, nSamples = sampleSize, dataType = "SDs")
-    allProps <-calcProps(allSamples)
+lapply( lapply(powerCalcDat[3:4], function(allProps){
     x <- plotPower(allProps, "difference") + 
       theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14), 
       legend.title = element_text(size = 14), legend.text = element_text(size = 14))
