@@ -24,7 +24,6 @@ dataDir <- args[1]
 refDir <- args[2]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
-msetFile <- paste0(dataDir, "/2_gds/mset.rdat")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
 configFile <- paste0(dataDir, "/config.r")
@@ -100,6 +99,7 @@ rm(probeAnnot)
 #----------------------------------------------------------------------#
 # CALCULATE QC METRICS
 #----------------------------------------------------------------------#
+
 # calculate median M & U intensity
 if(!"M.median" %in% colnames(QCmetrics)){
 	print("Calculating signal intensity statistics")
@@ -121,8 +121,6 @@ if(!"M.median" %in% colnames(QCmetrics)){
 }
 
 
-
-
 # calculate bisulfite conversion statistic
 if(!"bisulfCon" %in% colnames(QCmetrics)){	
 	print("Calculating bisulfite conversion statistics")
@@ -132,6 +130,7 @@ if(!"bisulfCon" %in% colnames(QCmetrics)){
 	bisulfCon[which(intensPASS == FALSE)]<-NA
 	QCmetrics<-cbind(QCmetrics,bisulfCon)
 }
+
 
 # PCA of control-probe intensities
 if(!"PC1_cp" %in% colnames(QCmetrics)){	
@@ -188,9 +187,10 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 	#QCmetrics<-cbind(QCmetrics,outlierDetect)
 #}
 
-# detection p value filtering at this stage only interested in sample filtering, will repeat later for probe filtering
+
+# detection p value filtering for sample filtering
 if(!"pFilter" %in% colnames(QCmetrics)){	
-	print("Running pfilter")
+	print("Running pfilter at sample level")
 
 	pFOut<-apply.gdsn(node = pvals(gfile), margin = 2, FUN = function(x,
 				y, z) {
@@ -200,6 +200,30 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 	pFOut[!QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut)
 }
+
+
+# detection p value and beacd count filtering for probe filtering
+if(!exists("probeFilt")){
+	# exclude really poor intensity, low bisulf conversion and failed pFilt samples
+	goodsamps <- c(QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & QCmetrics$pFilter)
+
+	print("Running pfilter at probe level")
+	pFiltProbesPass<-apply.gdsn(node = pvals(gfile),
+	 margin = 1, FUN = function(x, y, z, passed) {
+				(sum(x[passed] > y, na.rm = TRUE)) < ((sum(!is.na(x)) * z)/100)
+			}, as.is = "logical", y = 0.05, z = 1, passed = goodsamps)
+
+	print("Calculating probe beadcounts")
+	beadcounts <- apply(index.gdsn(gfile, 'NBeads')[,], MARGIN = 1,
+                            FUN = function(x,passed){
+                            x[x<3] <- NA
+                           	length(which(is.na(x[passed])=="TRUE"))
+                            }, passed = goodsamps)
+	beadFiltPass <- beadcounts<((nrow(QCmetrics) * 1)/100)
+
+	probeFilt <- cbind(pFiltProbesPass, beadFiltPass)	
+}
+
 
 # NOTE this currently averages beta values accross duplicated probes
 # calc Horvaths epigenetic age
@@ -464,7 +488,7 @@ write.csv(QCmetrics, paste0(dataDir, "/2_gds/QCmetrics/QCMetricsPostSampleCheck.
 
 # save QC metrics and SNP correlations to generate QC report
 if(file.exists(genoFile) & exists("indexIID") & length(indexIID) == 1 ){
-	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, betas.rs, rsbetas, file = qcData)
+	save(QCmetrics, probeFilt, snpCor, betas.pca, ctrl.pca, pFOut, geno.mat, betas.rs, rsbetas, file = qcData)
 } else {
-	save(QCmetrics, snpCor, betas.pca, ctrl.pca, pFOut, rsbetas, file = qcData)
+	save(QCmetrics, probeFilt, snpCor, betas.pca, ctrl.pca, pFOut, rsbetas, file = qcData)
 }
