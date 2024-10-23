@@ -44,6 +44,8 @@ setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
+probeFilt <- with(new.env(), {load(file.path(qcOutFolder, "QCmetrics.rdata")); get("probeFilt")})
+
 
 # filter samples
 if(ctCheck){
@@ -74,7 +76,9 @@ for(node in ls.gdsn(gfile)){
 # filter out samples that fail QC
 # match to basename not colnames
 rawbetas<-betas(normfile)[,]
-subSet(normfile, i=1:length(rownames(normfile)), j=match(passQC, colnames(rawbetas))) 
+passedProbes <- which(probeFilt[,"pFiltProbesPass"] & probeFilt[,"beadFiltPass"])
+
+subSet(normfile, i=passedProbes, j=match(passQC, colnames(rawbetas)))
 
 # close gds file in order to open in another R session
 closefn.gds(gfile)
@@ -98,11 +102,6 @@ if(arrayType == "V1"){
 	print("loaded EpicV1 manifest")
 }
 
-#if(arrayType == "V2"){
-#manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-#manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-#print("loaded EpicV2 manifest")
-#}
 if(arrayType == "V2"){
   probeAnnot<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
   probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$IlmnID), c("CHR", "Infinium_Design_Type")]
@@ -111,12 +110,9 @@ if(arrayType == "V2"){
 }
 
 
-
 #----------------------------------------------------------------------#
 # NORMALISE ALL SAMPLES TOGETHER
 #----------------------------------------------------------------------#
-
-#dasen(normfile, node="normbeta", onetwo=probeAnnot$designType)
 
 normbeta<-dasen(meth, unmeth, probeAnnot$designType)
 add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
@@ -148,6 +144,7 @@ if(length(cellTypes) > 1){
 # SAVE AND CLOSE
 #----------------------------------------------------------------------#
 
+print(paste0("The final normalised dataset contains ", ncol(rawbetas), " samples and ", nrow(rawbetas), " probes"))
 
 closefn.gds(normfile)
 

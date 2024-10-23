@@ -414,7 +414,10 @@ for(i in 2:ncol(plotCols)){
 
 ## Detection P values
 
-Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise. At this stage we are only interested in sample filtering; probe-level filtering will happen after we have removed samples. For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter, na.rm = TRUE)` samples are recommended for removal. 
+Detection p values provide a measure of the accuracy of DNAm value at a specific probe for a specific sample above background noise and is performed at both a sample and probe level. 
+For each sample we calculate the number of sites where the signal is not detectable above the background. Samples with a high percentage of these sites are excluded. In this data `r nrow(QCmetrics)-sum(QCmetrics$pFilter, na.rm = TRUE)` samples are recommended for removal.
+For each probe we calculate the percentage of samples where the signal is not detectable above the background. Probes with a high percentage of samples are excluded. In this data `r nrow(probeFilt) - sum(probeFilt[,"pFiltProbesPass"])` probes are recommeded for removal.
+Additionally, probes with a high percentage of samples with a beadcount less than 3 are excluded. In this data `r nrow(probeFilt) - sum(probeFilt[,"beadFiltPass"])` probes are recommend for removal.
 
 
 ## Principal Component Analysis
