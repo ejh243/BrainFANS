@@ -192,10 +192,16 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 if(!"pFilter" %in% colnames(QCmetrics)){	
 	print("Running pfilter")
 
-	pFOut<-apply.gdsn(node = pvals(gfile), margin = 2, FUN = function(x,
-								   y, z) {
+	pFOut<-apply.gdsn(
+		node = pvals(gfile),
+		margin = 2,
+		FUN = function(x, y, z) {
 			(sum(x > y, na.rm = TRUE)) < ((sum(!is.na(x)) * z)/100)
-		}, as.is = "logical", y = 0.05, z = 1)
+		},
+		as.is = "logical",
+		y = 0.05,
+		z = 1
+	)
 
 	pFOut[!QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut)
