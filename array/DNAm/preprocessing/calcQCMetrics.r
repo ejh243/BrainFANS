@@ -205,7 +205,7 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 # detection p value and beacd count filtering for probe filtering
 if(!exists("probeFilt")){
 	# exclude really poor intensity, low bisulf conversion and failed pFilt samples
-	goodsamps <- c(QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & QCmetrics$pFilter)
+	goodsamps <- QCmetrics$intensPASS & QCmetrics$bisulfCon > thresBS & QCmetrics$pFilter
 
 	print("Running pfilter at probe level")
 	pFiltProbesPass<-apply.gdsn(node = pvals(gfile),
