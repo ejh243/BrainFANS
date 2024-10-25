@@ -221,7 +221,9 @@ if(!"DNAmAge" %in% colnames(QCmetrics)){
 if ((!"CCDNAmAge" %in% colnames(QCmetrics)) && tolower(tissueType) == "brain") {
 	print("Calculating Shireby's Cortical Clock epigenetic age")
 	CC_coef<-read.csv(paste0(refDir, "/CortexClock/CorticalClockCoefficients.csv"), stringsAsFactors = FALSE)
-	anti.trafo= function(x,adult.age=20) { ifelse(x<0, (1+adult.age)*exp(x)-1, (1+adult.age)*x+adult.age) }
+	anti.trafo <- function(x,adult.age=20) { 
+		ifelse(x<0, (1+adult.age)*exp(x)-1, (1+adult.age)*x+adult.age) 
+	}
 	if(arrayType == "V2"){
 		cc <- CC_coef[CC_coef$probe %in% row.names(epicv2clean(betas(gfile)[])),]
 		CCDNAmAge<- anti.trafo(as.numeric(CC_coef[1,2] + t(epicv2clean(betas(gfile)[])[row.names(epicv2clean(betas(gfile)[])) %in% CC_coef[-1,1],]) %*% cc[,2]))
