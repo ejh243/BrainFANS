@@ -44,7 +44,7 @@ library(data.table)
 library(bigmelon)
 library(wateRmelon)
 
-	
+
 #----------------------------------------------------------------------#
 # IMPORT DATA
 #----------------------------------------------------------------------#
@@ -81,18 +81,18 @@ if(file.exists(qcData)){
 
 
 if(arrayType == "V2"){
-manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-print("loaded EpicV2 manifest")
+	manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
+	manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
+	print("loaded EpicV2 manifest")
 }
 
 if(arrayType == "HM450K"){
-load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
-manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
-colnames(manifest) <- c("CHR", "Infinium_Design_Type")
-manifest$CHR <- paste0("chr", manifest$CHR)
-print("loaded hm450k manifest")
-rm(probeAnnot)
+	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
+	manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
+	colnames(manifest) <- c("CHR", "Infinium_Design_Type")
+	manifest$CHR <- paste0("chr", manifest$CHR)
+	print("loaded hm450k manifest")
+	rm(probeAnnot)
 }
 
 
@@ -137,11 +137,11 @@ if(!"bisulfCon" %in% colnames(QCmetrics)){
 if(!"PC1_cp" %in% colnames(QCmetrics)){	
 	print("Calculating PCs of control probes")
 	# exclude really poor intensity samples
-	
+
 	qc.meth<-QCmethylated(gfile)[,QCmetrics$intensPASS]
 	qc.unmeth<-QCunmethylated(gfile)[,QCmetrics$intensPASS]
 
-	
+
 	# remove negative controls
 	qc.meth<-qc.meth[grep("Negative", rownames(qc.meth), invert=TRUE),]
 	qc.unmeth<-qc.unmeth[grep("Negative", rownames(qc.unmeth), invert=TRUE),]
@@ -166,10 +166,10 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 	print("Calculating PCs of autosomal beta values")
 	# filter to autosomal only
 	if(arrayType == "V2" | arrayType == "HM450K"){
-    auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
-  } else {
-    auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
-  }
+		auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
+	} else {
+		auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
+	}
 
 	pca <- prcomp(t(na.omit(betas(gfile)[,][auto.probes,QCmetrics$intensPASS])))
 	betas.scores = pca$x
@@ -184,8 +184,8 @@ if(!"PC1_betas" %in% colnames(QCmetrics)){
 # Identify outlier samples 
 # excluded as comparable to PC filtering already included
 #if(!"iqr" %in% colnames(QCmetrics)){
-	#outlierDetect<- outlyx(rawbetas, plot = FALSE)
-	#QCmetrics<-cbind(QCmetrics,outlierDetect)
+#outlierDetect<- outlyx(rawbetas, plot = FALSE)
+#QCmetrics<-cbind(QCmetrics,outlierDetect)
 #}
 
 # detection p value filtering at this stage only interested in sample filtering, will repeat later for probe filtering
@@ -193,9 +193,9 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 	print("Running pfilter")
 
 	pFOut<-apply.gdsn(node = pvals(gfile), margin = 2, FUN = function(x,
-				y, z) {
-				(sum(x > y, na.rm = TRUE)) < ((sum(!is.na(x)) * z)/100)
-			}, as.is = "logical", y = 0.05, z = 1)
+								   y, z) {
+			(sum(x > y, na.rm = TRUE)) < ((sum(!is.na(x)) * z)/100)
+		}, as.is = "logical", y = 0.05, z = 1)
 
 	pFOut[!QCmetrics$intensPASS]<-NA
 	QCmetrics<-cbind(QCmetrics,"pFilter"= pFOut)
@@ -206,55 +206,55 @@ if(!"pFilter" %in% colnames(QCmetrics)){
 if(!"DNAmAge" %in% colnames(QCmetrics)){
 	print("Calculating Horvath's pan tissue epigenetic age")
 	if(arrayType == "V2"){
-        DNAmAge<-agep(epicv2clean(betas(gfile)[]))
-      } else {
-        data(coef)
-        DNAmAge<-agep(gfile, coef=coef)
-      }
-      colnames(DNAmAge)[1] <- "DNAmAge"
-      DNAmAge[!QCmetrics$intensPASS,]<-NA
-      QCmetrics<-cbind(QCmetrics,DNAmAge)
-  }  
- 
+		DNAmAge<-agep(epicv2clean(betas(gfile)[]))
+	} else {
+		data(coef)
+		DNAmAge<-agep(gfile, coef=coef)
+	}
+	colnames(DNAmAge)[1] <- "DNAmAge"
+	DNAmAge[!QCmetrics$intensPASS,]<-NA
+	QCmetrics<-cbind(QCmetrics,DNAmAge)
+}  
+
 # NOTE this currently averages beta values accross duplicated probes
 # calc Cortical Clock Age
-    if(!"CCDNAmAge" %in% colnames(QCmetrics)){	
-      print("Calculating Shireby's Cortical Clock epigenetic age")
-      CC_coef<-read.csv(paste0(refDir, "/CortexClock/CorticalClockCoefficients.csv"), stringsAsFactors = FALSE)
-      anti.trafo= function(x,adult.age=20) { ifelse(x<0, (1+adult.age)*exp(x)-1, (1+adult.age)*x+adult.age) }
-      if(arrayType == "V2"){
-        cc <- CC_coef[CC_coef$probe %in% row.names(epicv2clean(betas(gfile)[])),]
-        CCDNAmAge<-	anti.trafo(as.numeric(CC_coef[1,2] + t(epicv2clean(betas(gfile)[])[row.names(epicv2clean(betas(gfile)[])) %in% CC_coef[-1,1],]) %*% cc[,2]))
-      } else {
-        CCDNAmAge<-	anti.trafo(as.numeric(CC_coef[1,2] + t(betas(gfile)[][CC_coef[-1,1],])  %*% CC_coef[-1,2]))
-      }
-        
-      QCmetrics<-cbind(QCmetrics,CCDNAmAge)
-      
-    }
-     
+if(!"CCDNAmAge" %in% colnames(QCmetrics)){	
+	print("Calculating Shireby's Cortical Clock epigenetic age")
+	CC_coef<-read.csv(paste0(refDir, "/CortexClock/CorticalClockCoefficients.csv"), stringsAsFactors = FALSE)
+	anti.trafo= function(x,adult.age=20) { ifelse(x<0, (1+adult.age)*exp(x)-1, (1+adult.age)*x+adult.age) }
+	if(arrayType == "V2"){
+		cc <- CC_coef[CC_coef$probe %in% row.names(epicv2clean(betas(gfile)[])),]
+		CCDNAmAge<-	anti.trafo(as.numeric(CC_coef[1,2] + t(epicv2clean(betas(gfile)[])[row.names(epicv2clean(betas(gfile)[])) %in% CC_coef[-1,1],]) %*% cc[,2]))
+	} else {
+		CCDNAmAge<-	anti.trafo(as.numeric(CC_coef[1,2] + t(betas(gfile)[][CC_coef[-1,1],])  %*% CC_coef[-1,2]))
+	}
+
+	QCmetrics<-cbind(QCmetrics,CCDNAmAge)
+
+}
 
 
-    
-    # check effect of normalisation
-    if(!"rmsd" %in% colnames(QCmetrics)){
-      print("Calculating effect of normalisation")
-        
-        if(arrayType == "V2"){
-          normbeta <- adjustedDasen(
-            onetwo = manifest$Infinium_Design_Type,
-            chr = manifest$CHR,
-            mns = read.gdsn(methylated(gfile)),
-            uns = read.gdsn(unmethylated(gfile)))
-          add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
-        } else {
-        dasen(gfile, node="normbeta")
-        normbeta<-index.gdsn(gfile, "normbeta")[,]
-        }
-      qualDat<-qual(betas(gfile)[,], normbeta)
-      qualDat[which(intensPASS == FALSE),]<-NA
-      QCmetrics<-cbind(QCmetrics,qualDat)
-    }
+
+
+# check effect of normalisation
+if(!"rmsd" %in% colnames(QCmetrics)){
+	print("Calculating effect of normalisation")
+
+	if(arrayType == "V2"){
+		normbeta <- adjustedDasen(
+			onetwo = manifest$Infinium_Design_Type,
+			chr = manifest$CHR,
+			mns = read.gdsn(methylated(gfile)),
+			uns = read.gdsn(unmethylated(gfile)))
+		add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
+	} else {
+		dasen(gfile, node="normbeta")
+		normbeta<-index.gdsn(gfile, "normbeta")[,]
+	}
+	qualDat<-qual(betas(gfile)[,], normbeta)
+	qualDat[which(intensPASS == FALSE),]<-NA
+	QCmetrics<-cbind(QCmetrics,qualDat)
+}
 
 # count number of missing values
 if(!"nNAsPer" %in% colnames(QCmetrics)){
@@ -271,46 +271,46 @@ if(!"nNAsPer" %in% colnames(QCmetrics)){
 # NOTE threshold for M prediction not valid for epicV2 data
 if(!"predSex" %in% colnames(QCmetrics)){	
 	print("Performing sex prediction from sex chromosome profiles")	
-		if(arrayType == "V2" | arrayType == "HM450K"){
-        x.probes<-which(manifest$CHR == "chrX")
-        y.probes<-which(manifest$CHR == "chrY")
-      } else {
-        x.probes<-which(fData(gfile)$chr == "chrX")
-        y.probes<-which(fData(gfile)$chr == "chrY")
-      }
-		ints.auto<-methylated(gfile)[c(x.probes, y.probes),]+unmethylated(gfile)[c(x.probes, y.probes),]
-		ints.X<-methylated(gfile)[x.probes,]+unmethylated(gfile)[x.probes,]
-		ints.Y<-methylated(gfile)[y.probes,]+unmethylated(gfile)[y.probes,]
+	if(arrayType == "V2" | arrayType == "HM450K"){
+		x.probes<-which(manifest$CHR == "chrX")
+		y.probes<-which(manifest$CHR == "chrY")
+	} else {
+		x.probes<-which(fData(gfile)$chr == "chrX")
+		y.probes<-which(fData(gfile)$chr == "chrY")
+	}
+	ints.auto<-methylated(gfile)[c(x.probes, y.probes),]+unmethylated(gfile)[c(x.probes, y.probes),]
+	ints.X<-methylated(gfile)[x.probes,]+unmethylated(gfile)[x.probes,]
+	ints.Y<-methylated(gfile)[y.probes,]+unmethylated(gfile)[y.probes,]
 
 
 	x.cp<-colMeans(ints.X, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
 	y.cp<-colMeans(ints.Y, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
-	
+
 
 	if(arrayType == "V2"){
-	# base prediction on y chromosome
-	predSex.y<-rep(NA, length(y.cp))
-	predSex.y[which(y.cp > 1.0 & intensPASS == TRUE)]<-"M"
-	predSex.y[which(y.cp < 0.5 & intensPASS == TRUE)]<-"F"
-	
-	# base prediction on x chromosome
-	predSex.x<-rep(NA, length(x.cp))
-	predSex.x[which(x.cp < 1 & intensPASS == TRUE)]<-"M"
-	predSex.x[which(x.cp > 1.01 & intensPASS == TRUE)]<-"F"
+		# base prediction on y chromosome
+		predSex.y<-rep(NA, length(y.cp))
+		predSex.y[which(y.cp > 1.0 & intensPASS == TRUE)]<-"M"
+		predSex.y[which(y.cp < 0.5 & intensPASS == TRUE)]<-"F"
+
+		# base prediction on x chromosome
+		predSex.x<-rep(NA, length(x.cp))
+		predSex.x[which(x.cp < 1 & intensPASS == TRUE)]<-"M"
+		predSex.x[which(x.cp > 1.01 & intensPASS == TRUE)]<-"F"
 	} else {
 
-	# base prediction on y chromosome
-	predSex.y<-rep(NA, length(y.cp))
-	predSex.y[which(y.cp > 1.1 & intensPASS == TRUE)]<-"M"
-	predSex.y[which(y.cp < 0.9 & intensPASS == TRUE)]<-"F"
-	
-	# base prediction on x chromosome
-	predSex.x<-rep(NA, length(x.cp))
-	predSex.x[which(x.cp < 0.996 & intensPASS == TRUE)]<-"M"
-	predSex.x[which(x.cp > 1.005 & intensPASS == TRUE)]<-"F"
+		# base prediction on y chromosome
+		predSex.y<-rep(NA, length(y.cp))
+		predSex.y[which(y.cp > 1.1 & intensPASS == TRUE)]<-"M"
+		predSex.y[which(y.cp < 0.9 & intensPASS == TRUE)]<-"F"
+
+		# base prediction on x chromosome
+		predSex.x<-rep(NA, length(x.cp))
+		predSex.x[which(x.cp < 0.996 & intensPASS == TRUE)]<-"M"
+		predSex.x[which(x.cp > 1.005 & intensPASS == TRUE)]<-"F"
 
 	}
-	
+
 	# check for consistent prediction
 	predSex<-rep(NA, length(x.cp))
 	predSex[which(predSex.x == predSex.y)]<-predSex.x[which(predSex.x == predSex.y)]
@@ -341,13 +341,13 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 	if (exists("indexIID") & length(indexIID) != 1){
 		message("Warning: Genotype_IID column is missing, unable to compare external SNP data.")
 	}else{
-	   geno<-geno[match(QCmetrics$Genotype_IID, geno$IID),]
-	   rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
-	
+		geno<-geno[match(QCmetrics$Genotype_IID, geno$IID),]
+		rsIDs<-gsub("_.", "", colnames(geno)[-c(1:6)])
+
 		if(arrayType == "V2"){
-		betas.rs<-epicv2clean(betas(gfile)[,])[rsIDs,]
+			betas.rs<-epicv2clean(betas(gfile)[,])[rsIDs,]
 		} else {
-		betas.rs<-betas(gfile)[,][rsIDs,]
+			betas.rs<-betas(gfile)[,][rsIDs,]
 		}
 
 
@@ -388,8 +388,8 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 			}
 			write.csv(dupIDs, paste0(dataDir, "/2_gds/QCmetrics/IndividualsWithIdenticalGenotypeCombinationsInComparisionWithSNPData.csv"))
 		}
-			
-		
+
+
 		genoMatch<-rep(NA, nrow(QCmetrics))
 		genoMatchVal<-rep(NA, nrow(QCmetrics))
 		for(i in 1:ncol(betas.rs)){
@@ -397,8 +397,8 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 				corVals<-rep(NA, nrow(geno.all.mat))
 				for(j in 1:nrow(geno.all.mat)){
 					corVals[j]<-cor(geno.all.mat[j,], betas.rs[,i], use = "pairwise.complete.obs")
-					}
 				}
+			}
 			if(max(corVals, na.rm = TRUE) > 0.9){ 
 				# as possible to match multipe, save all
 				genoMatch[i]<-paste(rownames(geno.all.mat)[which(corVals > 0.9)], collapse = ";")
@@ -407,7 +407,7 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 		}
 		QCmetrics<-cbind(QCmetrics,genoCheck, genoMatch, genoMatchVal)
 	}
-	
+
 }
 
 
@@ -415,25 +415,25 @@ if(!"genoCheck"%in% colnames(QCmetrics) & file.exists(genoFile)){
 ## perform sample filtering
 
 QCSum<-cbind(QCmetrics$bisulfCon > thresBS,(QCmetrics$M.median > intenThres & QCmetrics$U.median > intenThres), QCmetrics$rmsd < nvThres, QCmetrics$nNAsPer < perMiss, QCmetrics$pFilter, QCmetrics$intens.ratio < 4)
-	colnames(QCSum)<-c(paste0("BSConversion>",thresBS),  paste0("intens>", intenThres), paste0("normviolence<", nvThres), paste0("%MissingSites<", perMiss), "DetectionPvalues", "MethylatedControl")
+colnames(QCSum)<-c(paste0("BSConversion>",thresBS),  paste0("intens>", intenThres), paste0("normviolence<", nvThres), paste0("%MissingSites<", perMiss), "DetectionPvalues", "MethylatedControl")
 
 QCSum<-cbind(QCSum, rowSums(QCSum, na.rm = TRUE) == rowSums(!is.na(QCSum)))
 colnames(QCSum)[ncol(QCSum)]<-"passQCS1"
-	
+
 if(sexCheck){
 	sexPass <- as.character(QCmetrics$predSex) == as.character(QCmetrics$Sex)
 	sexPass[is.na(QCmetrics$predSex)]<-FALSE
-    ## if unable to predict sex, change to fail
+	## if unable to predict sex, change to fail
 	QCSum<-cbind(QCSum, sexPass)
 }else{
- 	QCSum<-cbind(QCSum, NA)
+	QCSum<-cbind(QCSum, NA)
 }
 colnames(QCSum)[ncol(QCSum)]<-"sexCheck"
 
 if(snpCheck & "genoCheck"%in% colnames(QCmetrics)){
 	QCSum<-cbind(QCSum, QCmetrics$genoCheck > 0.8)
 }else{
- 	QCSum<-cbind(QCSum, NA)
+	QCSum<-cbind(QCSum, NA)
 }
 colnames(QCSum)[ncol(QCSum)]<-"snpCheck"
 
