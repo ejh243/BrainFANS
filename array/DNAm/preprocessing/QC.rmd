@@ -1019,7 +1019,7 @@ if(length(errorIndexes) > 0){
 ```
 
 
-## Age Prediction
+<!-- Age Prediction -->
 
 ```{r ageSetup, echo=FALSE}
 ageExists <- "Age" %in% colnames(QCmetrics) 
@@ -1034,6 +1034,7 @@ if (ageExists) {
 
 ```{r dnamage, results = 'asis', echo = FALSE, eval = ageValid}
 cat(
+"## Age Prediction\n",
 "The age of samples can be predicted from the DNAm data using the Epigenetic
 Clock algorithm developed by Steve Horvath. These predicted values are compared
 to the samples' reported ages. As on a sample level this estimaion can be
