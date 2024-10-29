@@ -1035,13 +1035,13 @@ if (ageExists) {
 ```{r dnamage, results = 'asis', echo = FALSE, eval = ageValid}
 cat(
 "## Age Prediction\n",
-"The age of samples can be predicted from the DNAm data using the Epigenetic
-Clock algorithm developed by Steve Horvath. These predicted values are compared
-to the samples' reported ages. As on a sample level this estimaion can be
-inaccurate it is used as a quality check of the overall data set and not as a
-reason to exclude individual samples. The overall correlation was ",
+"The age of samples can be predicted from the DNAm data using the Epigenetic",
+"Clock algorithm developed by Steve Horvath. These predicted values are compared",
+"to the samples' reported ages. As on a sample level this estimaion can be",
+"inaccurate it is used as a quality check of the overall data set and not as a",
+"reason to exclude individual samples. The overall correlation was",
 signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = 'pairwise.complete.obs'),3),
-"and the root mean square error was ",
+"and the root mean square error was",
 signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3),
 "years.")
 ```
@@ -1059,9 +1059,9 @@ abline(a = 0, b = 1)
 
 ```{r ccdnamage, results = 'asis', echo = FALSE, eval = CCDNAmAgeExists}
 cat(
-"We also applied a custom clock algorithm developed secifically for cortical samples. The overall correlation was ",
+"We also applied a custom clock algorithm developed secifically for cortical samples. The overall correlation was",
 signif(cor(as.numeric(QCmetrics$Age), QCmetrics$CCDNAmAge, use = "pairwise.complete.obs"),3),
-"and the root mean square error was ",
+"and the root mean square error was",
 signif(sqrt(mean((QCmetrics$Age-QCmetrics$CCDNAmAge)^2, na.rm = TRUE)),3),
 "years.")
 ```
