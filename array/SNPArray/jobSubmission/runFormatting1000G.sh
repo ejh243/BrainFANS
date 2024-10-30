@@ -1,12 +1,13 @@
 #!/bin/bash
-#PBS -V # export all environment variables to the batch job.
-#PBS -q sq # submit to the serial queue
-#PBS -l walltime=24:00:00 # Maximum wall time for the job.
-#PBS -A Research_Project-MRC190311 # research project to submit under. 
-#PBS -l procs=1 # specify number of processors.
-#PBS -m e -M e.j.hannon@exeter.ac.uk # email me at job completion
-#PBS -e format1KG.err # error file
-#PBS -o format1KG.log # output file
+#SBATCH --export=ALL
+#SBATCH -p mrcq
+#SBATCH --time=24:00:00
+#SBATCH -A Research_Project-MRC190311
+#SBATCH --nodes=1 
+#SBATCH --ntasks-per-node=16
+#SBATCH --mail-type=END
+#SBATCH --error=format1KG.err
+#SBATCH --output=format1KG.log
 
 ## Output some useful job information
 
