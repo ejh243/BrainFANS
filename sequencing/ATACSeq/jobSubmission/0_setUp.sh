@@ -36,11 +36,12 @@
 echo Job started on:
 date -u
 
-LOG_DIR=./ATACSeq/logFiles/${USER}/${SLURM_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
-mkdir -p $LOG_DIR
-mv ATACSetUpS0-${SLURM_JOB_ID}* $LOG_DIR
+cat <<EOF
 
+Running scripts from: $PWD
+Log files will be in current directory: $PWD
+
+EOF
 
 ## ============ ##
 ##    CHECKS    ##
@@ -113,11 +114,10 @@ done
 
 ## Load required modules ##
 
-module load ${ACVERS}
-module load ${PVERS}
-module load ${RVERS}
+ml ${MCVERS}
+ml ${RVERS}
 
-## Check that the SAMstats environment exists and create it if not
+## Check that a conda environment exists and create it if not
 
 if [[ -d ${CONDA} ]]
 then 
@@ -125,15 +125,24 @@ then
 else
 	echo "${PROJECT} environment does not exist"
 	echo "Creating environment"
-  source ${CONDA_ENV}
+  source activate base #${CONDA_ENV}
   if [[ -f ${CONDA_FILE} ]]
   then
+    #conda create -n ${PROJECT}
 	  conda env create --name ${PROJECT} --file ${CONDA_FILE}
     conda deactivate
   else
     echo "File with packages to install in conda environment not found."
   fi
-  
+  if [[ -f ${PIP_FILE} ]]
+  then
+    source activate ${PROJECT}
+    pip install -r ${PIP_FILE}
+    conda deactivate
+  else
+    echo "File with packages to install in conda environment through pip not found."
+  fi
+
   if [[ -d ${CONDA} ]]
   then 
 	  echo "${PROJECT} conda environment has been created"
@@ -142,34 +151,16 @@ else
   fi
 fi
 
-## Check that pip environment exist and create it if not
 
-if [[ -d ${PIP_ENV} ]]
-then
-  echo "${PROJECT} pip environment exists."
-else
-  echo "Pip environment does not exist."
-  echo "Creating environment."
-  python -m venv ${PIP_ENV}
-  source ${PIP_ENV}/bin/activate
-  
-  if [[ -f ${PIP_FILE} ]]
-  then 
-    echo "Installing basic libraries needed in pipeline"
-    python3 -m pip install -r ${PIP_FILE}
-  else
-    echo "Pip file with required libraries not found."
-  fi
-  deactivate
-fi
 
-echo "R packages will be checked and installed if not found."
+cat <<EOF
 
-echo "R libraries will be installed in ${RLIB}"
+R packages will be checked and installed if not found.
+R libraries will be installed in ${RLIB}
+
+EOF
 
 ## Check that required R libraries are installed
 Rscript ${RSCRIPTS_DIR}/intallLibraries.r ${RLIB}
 
 echo "Set up for ATAC-seq pipeline to be run on ${PROJECT} complete."
-  
-  

@@ -44,7 +44,7 @@ calcNucleoProps<-function(fraglen.stand){
 fdsPlots <- function(listSamples){
   counter = 1
   list_plots <-list()
-  samples <- ls(listSamples)
+  samples <- names(listSamples)
   for(i in 1:length(listSamples)) {
     df <-data.frame(listSamples[i])
     colnames(df)<- c("Var1", "Freq")
@@ -66,20 +66,22 @@ configFile <-args[6]
 source(configFile)
 batchNum<-as.numeric(args[7]) ## nb starts from 0
 
+options(scipen=5)
 library(ATACseqQC)
 library(diptest)
 library(ptest)
 library(plyr)
 library(ggplot2)
 library(ggpubr)
-
+library(gridExtra)
 ## get filepaths of aligned indexed QC'd bam file
 samples<-read.table(file.path(metaDir, "/samples.txt"))[,1]
 aQCFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam.bai$", recursive = TRUE, full.names = TRUE)
 aQCFiles<-gsub(".bai", "", aQCFiles)
 aQCFiles <- aQCFiles[match(samples,gsub(paste0(alignedDir,"/"),"",gsub(".filt.nodup.bam", "", aQCFiles)))]
 aQCSampleNames<-gsub(".filt.nodup.bam", "", basename(aQCFiles))
-
+aQCSampleNames <- na.omit(aQCSampleNames)
+aQCFiles <- na.omit(aQCFiles)
 ## filter to subset of samples specified by array number
 index<-c(1:10)+(batchNum*10)
 ## if number of samples is not a function of ten adjust index
@@ -94,6 +96,8 @@ nSamples <- length(index)
 if(nSamples > 0){
 
 	## create summary of fragment size using filtered aligned files
+  print("Samples in batch: ")
+  print(aQCSampleNames[index])
 	fragSizeHist<-fragSizeDist(aQCFiles[index], aQCSampleNames[index])
 		
 	fragSizeNorm <-lapply(fragSizeHist,standardizeValues)
@@ -117,34 +121,19 @@ if(nSamples > 0){
   ## output Fragment size distribution plots for the corresponding batch of samples
   
   ## split samples in two groups for plotting purposes
+  BatchSamples <- fdsPlots(fragSizeHist)
+  BatchSamples.split <- split(BatchSamples,BatchSamples$sample)
+  p<- NULL
   
-  if(length(fragSizeHist) < 10){
-    fragSizeHist.1<-fragSizeHist[c(1:length(fragSizeHist))]
-    fragSizeHist.2<-fragSizeHist.1
-    
-  } else {
-    fragSizeHist.1<-fragSizeHist[c(1:5)]
-    fragSizeHist.2<-fragSizeHist[c(6:10)]
-    
+  for(i in 1:length(BatchSamples.split)){
+    fdValues <- BatchSamples.split[[i]]
+    axis1 <- seq(from=0, to=max(fdValues[,1]), by=100)
+    p[[i]] <- ggplot(fdValues, aes(x=Var1, y=Freq)) + geom_line()+theme_bw()+
+  labs(x="Fragment size (bp)",y="Frequency", title=names(BatchSamples.split)[i]) +scale_x_continuous(breaks=axis1)
   }
-  
-  BatchSamples.1 <-fdsPlots(fragSizeHist.1)
-  BatchSamples.2 <-fdsPlots(fragSizeHist.2)
 
-  axis1 <- seq(from=0, to=max(BatchSamples.1[,1]), by=100)
-  p.01 <- ggplot(BatchSamples.1, aes(x=BatchSamples.1[,1], y=BatchSamples.1[,2], group=sample, col=sample, fill=sample)) + geom_line()+
-  labs(x="Fragment size (bp)",y="Frequency", title=paste0("Fragment size distribution batch ",batchNum," ,set 1")) +scale_x_continuous(breaks=axis1)
-  
-  axis2 <- seq(from=0, to=max(BatchSamples.2[,1]), by=100)
-  p.02 <- ggplot(BatchSamples.2, aes(x=BatchSamples.2[,1], y=BatchSamples.2[,2], group=sample, col=sample, fill=sample)) + geom_line()+scale_x_continuous(breaks=axis2)+
-  labs(x="Fragment size (bp)",y="Frequency", title=paste0("Fragment size distribution batch ",batchNum, " ,set 2"))
-  
-  ## Plots for batch will be output in a single pdf
-  plots<-ggarrange(p.01, p.02,  
-          ncol = 1, nrow = 2)
-
-  pdf(file.path(paste0(alignedDir, "/QCOutput/FSD_batch_", batchNum, ".pdf")), width = 9, height = 8)
-  print(plots)
+  pdf(file.path(paste0(alignedDir, "/QCOutput/FSD_batch_", batchNum, ".pdf")), width = 10, height = 5)
+  print(p)
   dev.off()
   
 }

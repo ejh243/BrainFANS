@@ -29,10 +29,18 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
 - Requires config files (file paths should be specified in config.txt):
   - config.txt: with variables for bash scripts.
   - config.r with parameters for R scripts
-  - packagesPip.txt : list of packages and their version to be installed in the created pip virtual environment.
   - environment.yml : file with packages and their version to be installed by conda.
+  - packagesPip.txt : list of packages and their version to be installed by pip in the conda environment. 
 - Requires a samples.txt file in the META_DATA (0_metadata) folder with the names of the samples that will be used to run the pipeline.
 - Samples need to be in the RAWDATADIR folder in the project folder (1_raw)
+
+## Software 
+
+Several software are needed to run the pipeline. Some of these can be used from a conda or pip environment. The set up script (0_setUp.sh) will create a conda environment where some of these packages will be installed either by conda or pip. As explained in *Requisites*, the packagesPip.txt and environment.yml files are needed for the conda environment to be set up. This can be done using either Anaconda or Miniconda, which module version needs to be specified in the *config.txt* file. 
+
+Important software that will be installed in this environment are: MACS3 (3.0.2) and samstats. If you already have a conda environment, please specify its name or path in the *config.txt* file. Please check the python version in this conda environment is <= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
+
+Other software needed are: BEDTools, SAMtools, Bowtie2, Picard and R. Note two versions of R are needed: version 4.2 for almost all scripts and version 3.6 only for STEP 3.1-SHIFT, as one of the packages used is only available for this version of R. 
 
 ## STEPS
 
@@ -52,14 +60,15 @@ This script checks for required files, packages or libraries that are needed lat
 - `(project-name)` project's directory.
 
 ##### -requires-
-- packagesPip.txt: list of packages to be installed in pip environment.
+- packagesPip.txt: list of packages to be installed by pip in the conda environment.
 - environment.yml: list of conda packages to be installed in conda.
 - config.r: R config file with data paths and thresholds used in analysis.
 
 #### -outputs-
 - creates data folder if not found: 2_trimmed, 3_aligned, 4_calledPeaks
+- creates conda environment with required software for later subprocesses of the pipeline.
 - installs R libraries.
-- 
+
 
 ### 1. Pre-analysis (QC and alignment)
 

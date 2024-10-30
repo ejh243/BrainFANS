@@ -36,6 +36,7 @@
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
 ## - Subscripts: shiftAlignedReads.sh, samplePeaks.sh, collateCalcFrip.sh                                             ||
 ## - For STEP 3.3 FRIP, a single job array number should be used, e.g. -array=0                                       ||
+## - SHIFT step requires R version 3.6.3 or a R version that supports spp package                                     ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -101,7 +102,7 @@ then
   module purge
 	module load $BEDTVERS
   module load $SAMTVERS
-	module load $RVERS
+	module load R/3.6.3-foss-2020a
  
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
@@ -124,8 +125,8 @@ if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
 
 	module purge
-	module load ${PVERS}
-  source ${PIP_ENV}/bin/activate
+	module load ${ACVERS}
+  source activate ${CONDA_ENVDIR}
 	module load $BEDTVERS
  
   mapfile -t SAMPLES < ${META_DIR}/samples.txt

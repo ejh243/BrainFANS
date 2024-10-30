@@ -122,9 +122,9 @@ if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
   
   module purge
-  module load $PVERS
-  source ${PIP_ENV}/bin/activate
-  module load $BEDTVERS
+	module load ${ACVERS}
+  source activate ${CONDA_ENVDIR}
+	module load $BEDTVERS
   
 cat <<EOF
 
