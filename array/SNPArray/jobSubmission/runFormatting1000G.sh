@@ -20,7 +20,7 @@ echo Job started on:
 date -u
 
 
-cd "$SLURM_SUBMIT_DIR"
+cd "$SLURM_SUBMIT_DIR" || exit 1
 
 ####### 
 ## NOTE: Do not store confidential information in this file use the config file
