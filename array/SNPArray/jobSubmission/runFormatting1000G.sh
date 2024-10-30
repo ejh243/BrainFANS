@@ -11,17 +11,16 @@
 
 ## Output some useful job information
 
-echo PBS: working directory is $PBS_O_WORKDIR
-echo PBS: job identifier is $PBS_JOBID
-echo PBS: job name is $PBS_JOBNAME
-echo PBS: current home directory is $PBS_O_HOME
+echo "SLURM: working directory is $SLURM_SUBMIT_DIR"
+echo "SLURM: job identifier is $SLURM_JOB_ID"
+echo "SLURM: job name is $SLURM_JOB_NAME"
 
 ## print start date and time
 echo Job started on:
 date -u
 
 
-cd $PBS_O_WORKDIR
+cd "$SLURM_SUBMIT_DIR"
 
 ####### 
 ## NOTE: Do not store confidential information in this file use the config file
