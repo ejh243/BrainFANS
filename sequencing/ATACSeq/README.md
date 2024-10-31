@@ -41,7 +41,7 @@ Several software are needed to run the pipeline. Some of these can be used from 
 
 Important software that will be installed in this environment are: MACS3 (3.0.2) and samstats. If you already have a conda environment, please specify its name or path in the *config.txt* file. Please check the python version in this conda environment is <= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
 
-Other software needed are: BEDTools, Bowtie2, Picard and R. Note R also needs to be installed in the conda environment, as there are some packages that are not available for latter versions of R. 
+Other software needed are: BEDTools, Bowtie2, Picard and R. Note R also needs to be installed in the conda environment, as there are some packages that are not available for later versions of R. 
 
 ## STEPS
 
