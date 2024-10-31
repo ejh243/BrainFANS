@@ -200,7 +200,7 @@ This script will detect possible DNA contamination in order to ensure high quali
 
  `sbatch ./jobSubmission/7_batchPeakCallingByGroup.sh (project directory) [STEPS] [GROUP]`
 
-This script groups samples per cell type, perform group level peak calling and gets read counts in peaks called. Samples used are those that have passed previous quality control stages 1 and 2. Cell fractions to which samples belong to need to be specified in the *config.txt* file.
+This script groups samples per cell type, performs group level peak calling and gets read counts in peaks called. Samples used are those that have passed previous quality control stages 1 and 2. Cell fractions to which samples belong to need to be specified in the *config.txt* file.
 
 ##### -scripts executed-
 - ./Rscripts/samplesForGroupAnalysis.r: creates a file with samples of cell group input.
