@@ -33,6 +33,7 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
   - packagesPip.txt : list of packages and their version to be installed by pip in the conda environment. 
 - Requires a samples.txt file in the META_DATA (0_metadata) folder with the names of the samples that will be used to run the pipeline.
 - Samples need to be in the RAWDATADIR folder in the project folder (1_raw)
+- An array of cell types to which samples belong to needs to be specified in the *config.txt* file as `CELLTYPES` in order to perform peak calling by cell group (STEP 7).
 
 ## Software 
 
@@ -40,7 +41,7 @@ Several software are needed to run the pipeline. Some of these can be used from 
 
 Important software that will be installed in this environment are: MACS3 (3.0.2) and samstats. If you already have a conda environment, please specify its name or path in the *config.txt* file. Please check the python version in this conda environment is <= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
 
-Other software needed are: BEDTools, SAMtools, Bowtie2, Picard and R. Note two versions of R are needed: version 4.2 for almost all scripts and version 3.6 only for STEP 3.1-SHIFT, as one of the packages used is only available for this version of R. 
+Other software needed are: BEDTools, Bowtie2, Picard and R. Note R also needs to be installed in the conda environment, as there are some packages that are not available for latter versions of R. 
 
 ## STEPS
 
@@ -195,33 +196,26 @@ This script will detect possible DNA contamination in order to ensure high quali
   - `SWITCH`: Indentify only mismatched genotype samples and output potential switches and seach for alternative genotype.
 
 
-#### Still to be developed ####
-
-
 ### 7. Group peak calling
 
- 7.0) `sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_helperTools.sh (project directory) [GROUPS] [STEPS]`
- 
-This script includes several MACS functionalities/tools and samtools to perform different functionalities, such as produce samples with a subset of reads or create pseudo-replicates. 
+ `sbatch ./jobSubmission/7_batchPeakCallingByGroup.sh (project directory) [STEPS] [GROUP]`
 
-
- 7.1) `sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_1_batchPeakCallingByGroup.sh (project directory) [GROUPS] [STEPS]`
-
-This script repeats peak calling but on groups of samples, which can be grouped by cell fraction or if they have passed the first stage of quality control.  
+This script groups samples per cell type, perform group level peak calling and gets read counts in peaks called. Samples used are those that have passed previous quality control stages 1 and 2. Cell fractions to which samples belong to need to be specified in the *config.txt* file.
 
 ##### -scripts executed-
-- /general/processing/makeGroupAnalysisFile.r : creates a txt file (samplesForGroupAnalysis.txt) with samples classified by fraction/tissue
-    * tissue can be specified, default is "prefrontal cortex|PFC"
-- ATACSeq/preprocessing/groupPeaks.sh : performs peak calling on the subsets of samples specified 
-- ATACSeq/preprocessing/calcFripGroup.sh : calculates fraction of reads in peaks in subsets of samples specified. 
+- ./Rscripts/samplesForGroupAnalysis.r: creates a file with samples of cell group input.
+- ./Rscripts/fragDistributionForPeaks.r: outputs the fragment distribution of samples that are used for group peak calling, in order to check their ATAC-seq quality.
+- ./subScripts/groupPeaks.sh : performs peak calling on samples that belong to the cell group chosen by the user.
+- ./Rscripts/countsInPeaks.r: : gets read counts in peaks called on each cell group.
 
 ##### -parameters-
-- `--array` : cell fraction corresponding number.
 - `(project-directory)` project's directory.
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. GENCHECK,COMPARE. Default if left blank is to run all of them.
+- `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
+  -`FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
+  - `PEAKS`: Performs peak calling on samples chosen for peak calling using MACS3 in paired-end mode.
+  - `COUNTS`: Gets read counts in peaks called at cell group level.
 
-  7.2) `sbatch --array=<number of batch jobs> ATACSeq/jobSubmission/7_2_batchPeakCallingExtra.sh (project directory) [GROUPS] [STEPS]`
 
 ### 8. Advanced analysis
 
