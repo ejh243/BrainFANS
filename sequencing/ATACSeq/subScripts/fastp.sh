@@ -9,7 +9,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - Variables in config file: RAWDATADIR, TRIM_DIR                                                                   ||
-## - Software: fastp, fastqc                                                                                          ||
+## - Software: fastp, fastqc (in conda environment)                                                                   ||
 ## - Read 1 and Read 2 of the same sample in the same directory (RAWDATADIR)                                          ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 

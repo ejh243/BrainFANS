@@ -10,7 +10,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - Variables in config file: RAWDATADIR, FASTQCDIR                                                                  ||
-## - Software: fastqc                                                                                                 ||
+## - Software: fastqc (in conda environment)                                                                          ||
 ## - Paired-end files for sample: Read 1 and Read 2 in the same directory (RAWDATADIR)                                ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
@@ -38,7 +38,7 @@ echo $sampleName
 ##    QC      ##
 ## ========== ##
 
-fastqc  ${RAWDATADIR}/${f1}  ${RAWDATADIR}/${f2} -t 8 -o ${FASTQCDIR}
+fastqc ${RAWDATADIR}/${f1}  ${RAWDATADIR}/${f2} -t 8 -o ${FASTQCDIR}
 
 ending=".fq.gz"
 out1=${f1/$ending/}

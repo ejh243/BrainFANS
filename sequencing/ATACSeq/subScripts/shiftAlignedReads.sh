@@ -16,7 +16,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - aligned filtered, no duplicated bam file: <sampleName>.filt.nodup.bam                                            ||
-## - BEDTools, SAMtools, R/3.6.3-foss-2020a                                                                           ||
+## - BEDTools, SAMtools (in a conda environment), R/3.6.3-foss-2020a                                                  ||
 ## - Variables to be specified in config file: ALIGNED_DIR, PHANTOMPEAK                                               ||
 ## - Script run_spp.R from PhantomPeak                                                                                ||
 ##                                                                                                                    ||

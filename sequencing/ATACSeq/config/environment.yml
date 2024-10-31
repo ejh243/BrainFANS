@@ -4,3 +4,8 @@ dependencies:
   - samstats=0.2.2
   - samtools=1.16.1
   - setuptools=65.5.1
+  - fastqc
+  - fastp
+  - r-base
+  - r-essentials
+  - r-spp

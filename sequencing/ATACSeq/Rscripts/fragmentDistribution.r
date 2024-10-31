@@ -1,14 +1,14 @@
 ## =========================================================================================================================##
 ##                             ATAC-seq pipeline STEP 2.1: fragment distribution and post-alignment metrics                 ##
 ## =========================================================================================================================##
-## EXECUTION: Rscript ./sequencing/ATACSeq/preprocessing/fragmentDistribution.sh <project> <batch number>                   ||
+## EXECUTION: Rscript ./sequencing/ATACSeq/Rscripts/fragmentDistribution.r <project> <batch number>                         ||
 ## - execute from scripts directory                                                                                         ||
 ##                                                                                                                          ||
 ## DESCRIPTION: This script uses the ATACseqQC R package to generate the fragment distribution and calculate some           ||
 ## summary statistics to assess the periodicity                                                                             ||
 ##                                                                                                                          ||
 ## INPUTS:                                                                                                                  ||
-## - <project> : project on which analysis is being run                                                                    ||
+## - <project> : project on which analysis is being run                                                                     ||
 ## - <batch number>: number of samples to process at a time, should be <10                                                  ||
 ##                                                                                                                          ||
 ## OUTPUTS:                                                                                                                 ||

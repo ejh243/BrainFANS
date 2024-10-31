@@ -11,7 +11,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - Variables in config file: RAWDATADIR, TRIM_DIR, ALIGNED_DIR, REFGENOME, multimap                                 ||
-## - Software: bowtie2, samtools, picard                                                                              ||
+## - Software: bowtie2, samtools (in conda environment), picard                                                       ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <sampleName> Name of sample specified in command line. Reads should be previously trimmed                    ||

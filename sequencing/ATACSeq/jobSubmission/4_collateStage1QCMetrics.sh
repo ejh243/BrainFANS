@@ -86,7 +86,7 @@ fi
 if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
 then 
   
-  ##Conda environment is activated to run multiqc
+  module purge
   module load MultiQC
 
   mkdir -p ${FASTQCDIR}/multiqc

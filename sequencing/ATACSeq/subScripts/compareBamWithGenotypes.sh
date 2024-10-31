@@ -21,7 +21,7 @@
 ##                                                                                                      ||
 ## REQUIRES:                                                                                            ||
 ## - sorted bam file, VCF file with SNP chip data                                                       ||
-## - Softwares: gatk, samtools, picard, verifyBamID                                                     ||
+## - Softwares: gatk, samtools (in a conda environment), picard, verifyBamID                            ||
 ## - Variables in config file: ALIGNED_DIR, GENOMEFASTA, KGREF,GENODIR,VERIFYBAMID                      ||
 ## - Reference genome: GENOMEFASTA: genome.fa                                                           ||
 ##                                                                                                      ||

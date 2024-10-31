@@ -31,9 +31,10 @@
 ## - File with samples IDs and their matching VCF IDs: ${META_DIR}/matchedVCFIDs.txt                                           ||
 ## - Config.txt file in <project directory>.                                                                                   ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, ALIGNED_DIR, SCRIPTS_DIR, PROJECT,PEAK_DIR ||
-## - Version/directory of the following modules should be specified in config file: PICARDVERS, RVERS, SAMTVERS,GATKVERS       ||
-## - Softwares: Picard, GATK, SAMtools, R, Pandoc,                                                                             ||
+## - Version/directory of the following modules should be specified in config file: PICARDVERS, RVERS, GATKVERS                ||
+## - Softwares: Picard, GATK, R, Pandoc                                                                                        ||
 ## - For modules or references required, please refer to each subscript run in this script.                                    ||
+## - A conda environment setup with several modules: samtools                                                                  ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                                     ||
 ## - Subscripts: compareBamWithGenotypes.sh, searchBestGenoMatch.sh                                                            ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                                        ||
@@ -99,7 +100,9 @@ then
   module purge
   module load $PICARDVERS
   module load $GATKVERS
-  module load $SAMTVERS
+  ## load conda env for Samtools
+  module load ${MCVERS}
+  source activate ${CONDA}
   
 cat <<EOF
 
@@ -116,6 +119,7 @@ EOF
   
   sh "${SUB_SCRIPTS_DIR}/compareBamWithGenotypes.sh" ${IDS[@]}
   
+  conda deactivate
 fi
 
 ## option GENCHECK: Sex check and Genotype check results are collated in Rmarkdown   
@@ -144,7 +148,9 @@ then
   module purge
   module load $PICARDVERS
   module load $GATKVERS
-  module load $SAMTVERS
+  ## load conda env for Samtools
+  module load ${MCVERS}
+  source activate ${CONDA}
   
 cat <<EOF
 
@@ -168,6 +174,8 @@ EOF
   echo "Samples that is likely to have been swapped with another sample: ${IDS[@]}" 
   
   sh "${SUB_SCRIPTS_DIR}/searchBestGenoMatch.sh" ${IDS[@]}
+  
+  conda deactivate
  
 fi
 

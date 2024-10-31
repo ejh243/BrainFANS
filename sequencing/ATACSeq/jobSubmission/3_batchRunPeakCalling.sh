@@ -29,14 +29,14 @@
 ## - Config.txt file in <project directory>.                                                                          ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, ALIGNED_DIR, PEAK_DIR, PROJECT    ||
 ##   SCRIPTS_DIR, PEAK_DIR, RSCRIPTS_DIR                                                                              ||
-## - Version/directory of the following modules should be specified in config file: RVERS, SAMTVERS, PIP_ENV, PVERS   ||
-##   BEDTVERS, PIP_ENV                                                                                                ||
+## - Version/directory of the following modules should be specified in config file: RVERS, BEDTVERS,CONDA_ENV, CONDA  ||
 ## - For modules or references required, please refer to each subscript run in this script.                           ||
+## - A conda environment setup with several modules: samtools, MACS3                                                  ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                            ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
 ## - Subscripts: shiftAlignedReads.sh, samplePeaks.sh, collateCalcFrip.sh                                             ||
 ## - For STEP 3.3 FRIP, a single job array number should be used, e.g. -array=0                                       ||
-## - SHIFT step requires R version 3.6.3 or a R version that supports spp package                                     ||
+## - SHIFT step requires R in a conda environment so that spp package is available                                    ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
@@ -101,8 +101,10 @@ if [ $# = 1 ] || [[ $2 =~ 'SHIFT' ]]
 then
   module purge
 	module load $BEDTVERS
-  module load $SAMTVERS
-	module load R/3.6.3-foss-2020a
+  ## load conda env for samtools
+  module load ${MCVERS}
+  source activate ${CONDA}
+	
  
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
@@ -118,6 +120,7 @@ EOF
   
   sh "${SUB_SCRIPTS_DIR}/shiftAlignedReads.sh" ${sample}
   
+  conda deactivate
 fi
 
 ## option PEAKS: peak calling is performed using MACS3 in paired-end 
@@ -125,10 +128,11 @@ if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
 
 	module purge
-	module load ${ACVERS}
-  source activate ${CONDA_ENVDIR}
-	module load $BEDTVERS
- 
+  module load $BEDTVERS
+	## load conda env for MACS3
+  module load ${MCVERS}
+  source activate ${CONDA}
+	
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   sample=${SAMPLES[${SLURM_ARRAY_TASK_ID}]}
   mkdir -p ${PEAK_DIR}/BAMPE
@@ -143,7 +147,8 @@ Sample specified by array number in command line is: ${sample}
 EOF
   
   sh "${SUB_SCRIPTS_DIR}/samplePeaks.sh" ${sample}
-	
+  
+	conda deactivate
 fi
 
 ## option FRIP: collate peak calling results statistics in a single csv file
@@ -152,7 +157,9 @@ then
 
 	module purge
 	module load $BEDTVERS
-  module load $SAMTVERS
+  ## load conda env for samtools
+  module load ${MCVERS}
+  source activate ${CONDA}
   
   mapfile -t SAMPLES < ${META_DIR}/samples.txt
   mkdir -p ${PEAK_DIR}/QCOutput
@@ -168,7 +175,8 @@ Number samples found: ${#SAMPLES[@]}
 EOF
 
   sh "${SUB_SCRIPTS_DIR}/collateCalcFrip.sh" ${SAMPLES[@]}
-	
+  
+	conda deactivate
 fi
 
 echo Job finished on:

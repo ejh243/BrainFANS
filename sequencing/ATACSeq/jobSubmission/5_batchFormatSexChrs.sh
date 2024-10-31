@@ -30,8 +30,9 @@
 ## - Config.txt file in <project directory>.                                                                          ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, PEAKCOUNTS, ALIGNED_DIR, PEAK_DIR ||
 ##   SCRIPTS_DIR, PROJECT,RSCRIPTS_DIR                                                                                ||
-## - Version/directory of the following modules should be specified in config file: SAMTVERS, RVERS, PIP_ENV          ||
+## - Version/directory of the following modules should be specified in config file: RVERS, PIP_ENV                    ||
 ## - For modules or references required, please refer to each subscript run in this script.                           ||
+## - A conda environment setup with several modules: samtools, MACS3                                                  ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subScripts                                                            ||
 ## - Subscripts: subsetSexChrs.sh, sexChrPeaks.sh                                                                     ||
 ## - R scripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                                  ||
@@ -94,7 +95,9 @@ fi
 if [ $# = 1 ] || [[ $2 =~ 'SPLIT' ]]
 then
   module purge
-  module load $SAMTVERS
+  ## load conda env for samtools
+  module load ${MCVERS}
+  source activate ${CONDA}
   
   ## load sample to process from samples that passed QC stage 1
   mapfile -t SAMPLEIDS < ${META_DIR}/samples.txt
@@ -115,6 +118,7 @@ EOF
   
   sh "${SUB_SCRIPTS_DIR}/subsetSexChrs.sh" ${sampleID}
   
+  conda deactivate
 fi
 
 ## option PEAKS: peaks are called only in sex chromosomes
@@ -122,10 +126,11 @@ if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
   
   module purge
-	module load ${ACVERS}
-  source activate ${CONDA_ENVDIR}
-	module load $BEDTVERS
-  
+  module load $BEDTVERS
+	## load conda env for MACS3
+  module load ${MCVERS}
+  source activate ${CONDA}
+	
 cat <<EOF
 
 || Running STEP 5.2 of ATAC-seq pipeline: PEAKS. Peaks will be called in sex chromosomes using MACS3 Single-end mode.||
@@ -141,6 +146,7 @@ EOF
   
   sh "${SUB_SCRIPTS_DIR}/sexChrPeaks.sh"
 
+  conda deactivate
 fi
 
 ## option CHECK: results from previous steps are used to check assigned sex of samples

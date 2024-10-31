@@ -15,7 +15,7 @@
 ## - PEAK_DIR/QCOUTPUT/FRIP_all_samples.csv                                                                           ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
-## - BEDTools, SAMtools                                                                                               ||
+## - BEDTools, SAMtools (in a conda environment)                                                                      ||
 ## - Variables in config file: ALIGNED_DIR, PEAK_DIR                                                                  ||
 ## - Peak files for samples: <sampleName>.broadPeak.filt                                                              ||
 ## - Bam files for samples: <sampleName>.filt.nodup.bam                                                               ||
@@ -48,10 +48,10 @@ do
   fi  
   
   ## MACS3 peaks called from bam files with paired end and number of reads in those peaks
-  if [ -s ${PEAK_DIR}/BAMPE/${sampleName}.broadPeak.filt ]
+  if [ -s ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt ]
   then
-  	echo -n $(wc -l ${PEAK_DIR}/BAMPE/${sampleName}.broadPeak.filt | cut -f1 -d' '), >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  	echo $(bedtools sort -i ${PEAK_DIR}/BAMPE/${sampleName}.broadPeak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNED_DIR}/${bamFile} -b stdin -ubam | samtools view -c) >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
+  	echo -n $(wc -l ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt | cut -f1 -d' '), >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
+  	echo $(bedtools sort -i ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNED_DIR}/${bamFile} -b stdin -ubam | samtools view -c) >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
   else
   	echo -n NA, >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
     echo NA >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
