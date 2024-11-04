@@ -68,14 +68,13 @@ install.packages(setdiff(pkgs_rep, rownames(installed.packages())),repos = "http
 
 #Additional packages for Brain Cell Proportion Prediction
 BiocManager::install(c("genefilter", "minfi"))
-pkgs_pred <- c("devtools","quadprog", "reshape2")
+pkgs_pred <- c("quadprog", "reshape2")
 install.packages(setdiff(pkgs_pred, rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 # load devtools to install from GitHub
-library(devtools)
 install.packages("remotes") # install remotes package to install from github
-install_github("ds420/CETYGO", quiet=TRUE)
-install_github("EpigeneticsExeter/cdegUtilities", quiet=TRUE)
+remotes::install_github("ds420/CETYGO", quiet=TRUE)
+remotes::install_github("EpigeneticsExeter/cdegUtilities", quiet=TRUE)
 remotes::install_github("schalkwyk/wateRmelon")
 remotes::install_github("tjgorrie/bigmelon")
 
