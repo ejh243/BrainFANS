@@ -42,7 +42,7 @@ if(arrayType=='450K'){
   BiocManager::install("IlluminaHumanMethylation450kmanifest")
 }
 if(arrayType=='V1'){
-  BiocManager::install("IlluminaHumanMethylationEPICanno.ilm10b2.hg19")
+  BiocManager::install("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
   BiocManager::install("IlluminaHumanMethylationEPICmanifest")
 }
 if(arrayType=='V2'){
@@ -88,7 +88,7 @@ if(arrayType=='450K'){
   all_pkgs <- c(all_pkgs, "IlluminaHumanMethylation450kanno.ilmn12.hg19", "IlluminaHumanMethylation450kmanifest")
 }
 if(arrayType=='V1'){
-  all_pkgs <- c(all_pkgs, "IlluminaHumanMethylationEPICanno.ilm10b2.hg19", "IlluminaHumanMethylationEPICmanifest")
+  all_pkgs <- c(all_pkgs, "IlluminaHumanMethylationEPICanno.ilm10b4.hg19", "IlluminaHumanMethylationEPICmanifest")
 }
 if(arrayType=='V2'){
   all_pkgs <- c(all_pkgs, "IlluminaHumanMethylationEPICv2anno.20a1.hg38", "IlluminaHumanMethylationEPICv2manifest")
