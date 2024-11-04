@@ -71,7 +71,6 @@ BiocManager::install(c("genefilter", "minfi"))
 pkgs_pred <- c("quadprog", "reshape2")
 install.packages(setdiff(pkgs_pred, rownames(installed.packages())),repos = "https://cran.r-project.org")
 
-# load devtools to install from GitHub
 install.packages("remotes") # install remotes package to install from github
 remotes::install_github("ds420/CETYGO", quiet=TRUE)
 remotes::install_github("EpigeneticsExeter/cdegUtilities", quiet=TRUE)
@@ -96,7 +95,4 @@ if(all(all_pkgs %in% rownames(installed.packages()))){
   absent <- all_pkgs[all_pkgs %ni% rownames(installed.packages())]
   print(paste("Failed installation of", length(absent), "packages:", absent))
 }
-
-
-
 
