@@ -28,11 +28,6 @@ if (!require("BiocManager", quietly = TRUE))
 #---------------------------------------------------------------------#
 # INSTALL BIGMELON
 #---------------------------------------------------------------------#	
-	
-#Bigmelon required for all scripts
-install.packages("remotes") # install remotes package to install from github
-remotes::install_github("schalkwyk/wateRmelon")
-remotes::install_github("tjgorrie/bigmelon")
 
 #GDS script
 
@@ -78,8 +73,11 @@ install.packages(setdiff(pkgs_pred, rownames(installed.packages())),repos = "htt
 
 # load devtools to install from GitHub
 library(devtools)
+install.packages("remotes") # install remotes package to install from github
 install_github("ds420/CETYGO", quiet=TRUE)
 install_github("EpigeneticsExeter/cdegUtilities", quiet=TRUE)
+remotes::install_github("schalkwyk/wateRmelon")
+remotes::install_github("tjgorrie/bigmelon")
 
 
 ## Check all packages installed successfully ##
