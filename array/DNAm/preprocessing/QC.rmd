@@ -1046,7 +1046,7 @@ signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3),
 "years.")
 ```
 
-```{r dnamage-models echo=FALSE, fig.width = 10, fig.height = 5, eval = ageValid}
+```{r dnamage-models, echo=FALSE, fig.width = 10, fig.height = 5, eval = ageValid}
 par(mfrow = c(1,1))
 
 model<-lm(QCmetrics$Age~QCmetrics$DNAmAge)
