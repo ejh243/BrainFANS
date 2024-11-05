@@ -68,7 +68,7 @@ install.packages(setdiff(pkgs_rep, rownames(installed.packages())),repos = "http
 
 #Additional packages for Brain Cell Proportion Prediction
 BiocManager::install(c("genefilter", "minfi"))
-pkgs_pred <- c("quadprog", "reshape2")
+pkgs_pred <- c("quadprog", "reshape2", "gridExtra")
 install.packages(setdiff(pkgs_pred, rownames(installed.packages())),repos = "https://cran.r-project.org")
 
 install.packages("remotes") # install remotes package to install from github
