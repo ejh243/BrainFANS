@@ -1022,32 +1022,59 @@ if(length(errorIndexes) > 0){
 ```
 
 
-## Age Prediction
+<!-- Age Prediction -->
 
 ```{r ageSetup, echo=FALSE}
-show_text <- "Age" %in% colnames(QCmetrics)
+ageExists <- "Age" %in% colnames(QCmetrics) 
+ageValid <- FALSE
+CCDNAmAgeExists <- FALSE
+if (ageExists) {
+  ageValid <- (sum(!is.na(QCmetrics$Age)) > 1)
+  CCDNAmAgeExists <- "CCDNAmAge" %in% colnames(QCmetrics) && ageValid
+}
 ```
 
-The age of samples can be predicted from the DNAm data using the Epigenetic Clock algorithm developed by Steve Horvath. These predicted values are compared to the samples' reported ages. As on a sample level this estimaion can be inaccurate it is used as a quality check of the overall data set and not as a reason to exclude individual samples. The overall correlation was `r if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age)) ) {signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = "pairwise.complete.obs"),3)}` and the root mean square error was `r if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age))){signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3)}` years. We also applied a custom clock algorithm developed secifically for cortical samples. The overall correlation was `r if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age))){signif(cor(as.numeric(QCmetrics$Age), QCmetrics$CCDNAmAge, use = "pairwise.complete.obs"),3)}` and the root mean square error was `r if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age))){signif(sqrt(mean((QCmetrics$Age-QCmetrics$CCDNAmAge)^2, na.rm = TRUE)),3)}` years.
 
-```{r dnamage, echo=FALSE, fig.width = 10, fig.height = 5, eval = show_text}
-if("Age" %in% colnames(QCmetrics) & sum(!is.na(QCmetrics$Age)) > 1){
-  par(mfrow = c(1,2))
-  
-  model<-lm(QCmetrics$Age~QCmetrics$DNAmAge)
-  plot(QCmetrics$DNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Horvath Clock", pch=16, col="purple")
-  title(main = paste("r = ", signif(cor(QCmetrics$DNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
-  title(main = paste("RMSE = ", signif(sqrt(mean(abs(QCmetrics$DNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
-  abline(model, lty = 2)
-  abline(a = 0, b = 1)
-  
-  model<-lm(QCmetrics$Age~QCmetrics$CCDNAmAge)
-  plot(QCmetrics$CCDNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Cortical Clock", pch=16, col="purple")
-  title(main = paste("r = ", signif(cor(QCmetrics$CCDNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
-  title(main = paste("RMSE = ", signif(sqrt(mean(abs(QCmetrics$CCDNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
-  abline(model, lty = 2)
-  abline(a = 0, b = 1)
-}
+```{r dnamage, results = 'asis', echo = FALSE, eval = ageValid}
+cat(
+"## Age Prediction\n",
+"The age of samples can be predicted from the DNAm data using the Epigenetic",
+"Clock algorithm developed by Steve Horvath. These predicted values are compared",
+"to the samples' reported ages. As on a sample level this estimation can be",
+"inaccurate it is used as a quality check of the overall data set and not as a",
+"reason to exclude individual samples. The overall correlation was",
+signif(cor(as.numeric(QCmetrics$Age), QCmetrics$DNAmAge, use = 'pairwise.complete.obs'),3),
+"and the root mean square error was",
+signif(sqrt(mean((QCmetrics$Age-QCmetrics$DNAmAge)^2, na.rm = TRUE)),3),
+"years.")
+```
+
+```{r dnamage-models, echo=FALSE, fig.width = 10, fig.height = 5, eval = ageValid}
+par(mfrow = c(1,1))
+
+model<-lm(QCmetrics$Age~QCmetrics$DNAmAge)
+plot(QCmetrics$DNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Horvath Clock", pch=16, col="purple")
+title(main = paste("r = ", signif(cor(QCmetrics$DNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
+title(main = paste("RMSE = ", signif(sqrt(mean(abs(QCmetrics$DNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
+abline(model, lty = 2)
+abline(a = 0, b = 1)
+```
+
+```{r ccdnamage, results = 'asis', echo = FALSE, eval = CCDNAmAgeExists}
+cat(
+"We also applied a custom clock algorithm developed secifically for cortical samples. The overall correlation was",
+signif(cor(as.numeric(QCmetrics$Age), QCmetrics$CCDNAmAge, use = "pairwise.complete.obs"),3),
+"and the root mean square error was",
+signif(sqrt(mean((QCmetrics$Age-QCmetrics$CCDNAmAge)^2, na.rm = TRUE)),3),
+"years.")
+```
+```{r ccdnamage-model, echo=FALSE, fig.width = 10, fig.height = 5, eval = CCDNAmAgeExists}
+model<-lm(QCmetrics$Age~QCmetrics$CCDNAmAge)
+plot(QCmetrics$CCDNAmAge, QCmetrics$Age, xlab = "Predicted", ylab = "Reported", main="Cortical Clock", pch=16, col="purple")
+title(main = paste("r = ", signif(cor(QCmetrics$CCDNAmAge, QCmetrics$Age, use = "pairwise.complete.obs"),3)), line = 0.5, adj = 1)
+title(main = paste("RMSE = ", signif(sqrt(mean(abs(QCmetrics$CCDNAmAge-QCmetrics$Age)^2, na.rm = TRUE)),3)), line = 2, adj = 1)
+abline(model, lty = 2)
+abline(a = 0, b = 1)
 ```
 
 
