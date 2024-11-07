@@ -35,12 +35,11 @@ library(cdegUtilities)
 
 
 if(arrayType=='450K'){
-  #library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
   library("IlluminaHumanMethylation450kanno.ilmn12.hg19")
   library("IlluminaHumanMethylation450kmanifest")
 }
 if(arrayType=='V1'){
-  library("IlluminaHumanMethylationEPICanno.ilm10b2.hg19")
+  library("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
   library("IlluminaHumanMethylationEPICmanifest")
 }
 if(arrayType=='V2'){
