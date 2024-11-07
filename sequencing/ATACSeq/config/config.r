@@ -28,6 +28,9 @@ analysisDir<-paste0(dir, "/6_analysis")
 ## create colourblind friendly palette
 colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999", 
                        "#F0E442", "#0072B2",  "#E69F00", "#56B4E9")
+                       
+## Cell types (list of cell types ordered alphabetically
+cellTypes <- c("IRF8", "NEUN", "SOX10", "TN")
 
 ## Thresholds applied in the first stage of QC
 nrfThres <- 0.7

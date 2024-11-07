@@ -64,3 +64,4 @@ fi
 
 ## QC is performed in trimmed reads
 fastqc ${TRIM_DIR}/${outf1} ${TRIM_DIR}/${outf2} -t 8 -o ${TRIM_DIR}/qc/
+

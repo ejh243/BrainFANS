@@ -17,13 +17,12 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - aligned filtered, no duplicated bam file for MACS3 PE: <sampleName>.filt.nodup.bam                               ||
-## - MACS3 installed in a conda environment, bedtools                                                                 ||
+## - MACS3 and bedtools installed in a conda environment                                                              ||
 ## - Variables in config file: ALIGNED_DIR, PEAK_DIR, BLACKLIST                                                       ||
 ## - BLACKLIST: list of blacklist regions to exclude peaks called in these                                            ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
-pip list
 ## ============ ##
 ##    SET UP    ##
 ## ============ ##

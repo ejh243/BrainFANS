@@ -29,8 +29,7 @@
 ## - File in ${META_DIR}/samples.txt that lists sample names.                                                         ||
 ## - Config.txt file in <project directory>.                                                                          ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, PEAKCOUNTS, ALIGNED_DIR, PEAK_DIR ||
-##   SCRIPTS_DIR, PROJECT,RSCRIPTS_DIR                                                                                ||
-## - Version/directory of the following modules should be specified in config file: RVERS, PIP_ENV                    ||
+##   SCRIPTS_DIR, PROJECT,RSCRIPTS_DIR, CONDA, CONDA_ENV                                                              ||
 ## - For modules or references required, please refer to each subscript run in this script.                           ||
 ## - A conda environment setup with several modules: samtools, MACS3                                                  ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subScripts                                                            ||
@@ -64,6 +63,9 @@ Log files will be moved to dir: $LOG_DIR
 
 EOF
 
+## Activate conda environment with packages/modules
+source ${CONDA} 
+conda activate ${CONDA_ENV}
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -94,10 +96,6 @@ fi
 ## option SPLIT: subset reads from chromosomes X and Y to prepare samples for peak calling   
 if [ $# = 1 ] || [[ $2 =~ 'SPLIT' ]]
 then
-  module purge
-  ## load conda env for samtools
-  module load ${MCVERS}
-  source activate ${CONDA}
   
   ## load sample to process from samples that passed QC stage 1
   mapfile -t SAMPLEIDS < ${META_DIR}/samples.txt
@@ -117,19 +115,12 @@ EOF
   mkdir -p ${ALIGNED_DIR}/sexChr
   
   sh "${SUB_SCRIPTS_DIR}/subsetSexChrs.sh" ${sampleID}
-  
-  conda deactivate
+
 fi
 
 ## option PEAKS: peaks are called only in sex chromosomes
 if [ $# = 1 ] || [[ $2 =~ 'PEAKS' ]]
 then
-  
-  module purge
-  module load $BEDTVERS
-	## load conda env for MACS3
-  module load ${MCVERS}
-  source activate ${CONDA}
 	
 cat <<EOF
 
@@ -146,15 +137,11 @@ EOF
   
   sh "${SUB_SCRIPTS_DIR}/sexChrPeaks.sh"
 
-  conda deactivate
 fi
 
 ## option CHECK: results from previous steps are used to check assigned sex of samples
 if [ $# = 1 ] || [[ $2 =~ 'CHECK' ]]
 then
-  
-  module purge
-  module load $RVERS
   
 cat <<EOF
 
@@ -167,6 +154,8 @@ EOF
   Rscript ${RSCRIPTS_DIR}/collateSexChecks.r ${CONFIGR}
   
 fi
+
+conda deactivate 
 
 echo Job finished on:
 date -u

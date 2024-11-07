@@ -29,13 +29,11 @@
 ## - File in ${META_DIR}/samples.txt that lists sample names.                                                         ||
 ## - Config.txt file in <project directory>.                                                                          ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, RAWDATADIR, ALIGNED_DIR, TRIM_DIR ||
-##   SCRIPTS_DIR, PROJECT                                                                                             ||
-## - Version/directory of the following modules should be specified in config file: BOWTIEVERS, PICARDVERS,           ||
-##   BEDTVERS, ACVERS, CONDA_ENV, CONDA, UTILS.                                                                       ||
+##   SCRIPTS_DIR, PROJECT, CONDA_ENV, CONDA, UTILS                                                                    ||
 ## - For modules or references required, please refer to each subscript run in this script.                           ||
-## - A conda environment setup with several modules: samtools, fastqc, samstats and fastp                             ||
+## - A conda environment setup with several modules: samtools, fastqc, samstats,bedtools, bowtie2 and fastp           ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subScripts                                                            ||
-## - Subscripts: fastqc.sh, fastp.sh, alignment.sh and calcENCODEQCMetrics.sh                                         ||
+## - Subscripts: fastqc.sh, fastp.sh, alignment.sh, assign_multimappers.py and calcENCODEQCMetrics.sh                 ||
 ## ===================================================================================================================##
 
 ## ============ ##
@@ -62,6 +60,10 @@ Script is running from directory:  ${SCRIPTS_DIR}
 Log files will be moved to dir:  $LOG_DIR
 
 EOF
+
+## Activate conda environment with packages/modules
+source ${CONDA} 
+conda activate ${CONDA_ENV}
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -112,60 +114,40 @@ then
     ## option FASTQC: run sequencing QC on raw reads files        
     if [ $# == 1 ] || [[ $2 =~ 'FASTQC' ]]
     then
-      module purge  
-      ## load conda env for fastqc    
-      module load ${MCVERS}
-      source activate ${CONDA}
       
 cat <<EOF
 
 || Running STEP 1.1 of ATAC-seq pipeline: FASTQC ||
-Starting fastqc on ${sampleID}
 
+Starting fastqc on ${sampleID}
 Output written to ${FASTQCDIR}
 
 EOF
       
       sh "${SUB_SCRIPTS_DIR}/fastqc.sh" ${sampleID} ${toProcess[0]} ${toProcess[1]}  
-      
-      conda deactivate
           
     fi
     
     ## option TRIM: run trimming on raw reads files and output trimmed reads.
     if [ $# == 1 ] || [[ $2 =~ 'TRIM' ]]
     then
-      module purge
-      ## load conda env for fastp
-      module load ${MCVERS}
-      source activate ${CONDA}
       
 cat <<EOF
 
-|| Running STEP 1.2 of ATAC-seq pipeline: TRIM ||"
+|| Running STEP 1.2 of ATAC-seq pipeline: TRIM ||
 
 Starting trimming on ${sampleID} at: 
-
 Output written to  ${TRIM_DIR}
 
 EOF
       
       sh "${SUB_SCRIPTS_DIR}/fastp.sh" ${sampleID} ${toProcess[0]} ${toProcess[1]}
       
-      conda deactivate
     fi
 
     ## option ALIGN: run alignment and post processing on sample
 	  if [ $# == 1 ] || [[ $2 =~ 'ALIGN' ]]
   	then
-   
-  		module purge
-  		module load $BOWTIEVERS
-  		module load $PICARDVERS
-     ## load conda env for samtools
-      module load ${MCVERS}
-      source activate ${CONDA}
-  		export PATH="$PATH:${UTILS}"
      
 cat <<EOF
 
@@ -182,12 +164,6 @@ EOF
   	if [ $# == 1 ] || [[ $2 =~ 'ENCODE' ]]
   	then
       
-  		module purge
-  		module load $BEDTVERS
-      ## load conda env for samstats
-      module load ${MCVERS}
-      source activate ${CONDA}
-      
 cat <<EOF
 
 || Running STEP 1.4 of ATAC-seq pipeline: ENCODE ||
@@ -197,13 +173,14 @@ Output written to ${ALIGNED_DIR}/ENCODEMetrics
 EOF
       
       sh "${SUB_SCRIPTS_DIR}/calcENCODEQCMetrics.sh" ${sampleID}
-      
-      conda deactivate
+
     fi
 
 else
     echo "File list not found"
 fi
+
+conda deactivate 
 
 echo Job finished on:
 date -u 

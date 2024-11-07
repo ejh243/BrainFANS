@@ -36,7 +36,6 @@ cf <- args[7]
 ## ==========##
 
 fdsPlots <- function(listSamples){
-  counter = 1
   list_plots <-list()
   samples <- names(listSamples)
   for(i in 1:length(listSamples)) {
@@ -44,7 +43,6 @@ fdsPlots <- function(listSamples){
     colnames(df)<- c("Var1", "Freq")
     df$sample <-samples[i]
     list_plots[[i]] <- df
-    counter = counter + 1
   }
   bigdf <-ldply(list_plots, data.frame)
   bigdf[,1]<- as.integer(as.character(bigdf[,1]))

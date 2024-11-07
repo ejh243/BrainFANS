@@ -19,9 +19,12 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
     - `MAIN_DIR`: full path to the project's folder.
     - `REFERENCES_DIR`: full path to directory with all references used throughout the pipeline.
     - Specify the modules versions to be loaded and the full paths to the softwares used in the pipeline (e.g. picard).
+  - An alphabetically ordered array of cell types to which samples belong to: `CELLTYPES`. 
 - config.r: This is the configuration file for running R scripts.
   - The `dir` variable should be changed to be the full path to the project's directory. This should match `MAIN_DIR` variable in the config.txt file.
   - Other parameters or threshold should be changed as required.
+  - An alphabetically ordered list of cell types to which samples belong to needs to be specified as *cellTypes*.
+- Additional source files of R packages that are installed manually will also be located in this folder.
 
 ## Requisites:
 
@@ -33,15 +36,25 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
   - packagesPip.txt : list of packages and their version to be installed by pip in the conda environment. 
 - Requires a samples.txt file in the META_DATA (0_metadata) folder with the names of the samples that will be used to run the pipeline.
 - Samples need to be in the RAWDATADIR folder in the project folder (1_raw)
-- An array of cell types to which samples belong to needs to be specified in the *config.txt* file as `CELLTYPES` in order to perform peak calling by cell group (STEP 7).
+- An alphabetically ordered array of cell types to which samples belong to needs to be specified in the *config.txt* file as `CELLTYPES` in order to perform peak calling by cell group (STEP 7). This also required in the *config.r* file.
+- A Reference folder is needed with the following resources:
+  - Reference genome in .fa format (hg38): [UCSC](https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/)
+  - Index for Bowtie2 alignment: [Bowtie index](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer)
+  - ENCODE blacklist regions: [hg38](https://github.com/Boyle-Lab/Blacklist/blob/master/lists/hg38-blacklist.v2.bed.gz)
+  - Pseudoautosomal regions (PAR)
+  - 1000 Genomes Project [data](https://www.ensembl.org/Homo_sapiens/Info/Index)
+  - X chromosome gene list.
 
 ## Software 
 
-Several software are needed to run the pipeline. Some of these can be used from a conda or pip environment. The set up script (0_setUp.sh) will create a conda environment where some of these packages will be installed either by conda or pip. As explained in *Requisites*, the packagesPip.txt and environment.yml files are needed for the conda environment to be set up. This can be done using either Anaconda or Miniconda, which module version needs to be specified in the *config.txt* file. 
+Several software are needed to run the pipeline. Some of these can be used from a conda or pip environment. The set up script (0_setUp.sh) will create a conda environment where some of these packages will be installed either by conda or pip. As explained in *Requisites*, the packagesPip.txt and environment.yml files are needed for the conda environment to be set up. This can be done using either Anaconda or Miniconda, which local source directory needs to be specified in the *config.txt* file (`CONDA`). In order to download and install refer to: [Anaconda](https://docs.anaconda.com/anaconda/install/) or [Miniconda](https://docs.anaconda.com/miniconda/miniconda-install/)
 
-Important software that will be installed in this environment are: MACS3 (3.0.2) and samstats. If you already have a conda environment, please specify its name or path in the *config.txt* file. Please check the python version in this conda environment is <= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
-
-Other software needed are: BEDTools, Bowtie2, Picard and R. Note R also needs to be installed in the conda environment, as there are some packages that are not available for latter versions of R. 
+Important software that will be installed in this environment are: MACS3 (3.0.2), SAMstats, SAMtools, BEDTools, Bowtie2, MultiQC, R, Python3, Picard, Pandoc, GATK. If you already have a conda environment, please specify its name or path in the *config.txt* file. 
+  - Python version in this conda environment should be >= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
+  - R version should be >= 4.2. Some packages are no longer supported in the regular CRAN repository and need to be installed from source. To do this, download the source file of the package [ptest R package](https://cran.r-project.org/src/contrib/Archive/ptest/), keep this in the *config* folder and this will be installed from source at the *0_setUp.sh* script.
+Other software that needs to be available locally are (and path to these need to be specified in the *config.txt* file):
+  - [VerifyBamID](https://github.com/Griffan/VerifyBamID)
+  - [Phantompeakqualtools](https://github.com/kundajelab/phantompeakqualtools)
 
 ## STEPS
 

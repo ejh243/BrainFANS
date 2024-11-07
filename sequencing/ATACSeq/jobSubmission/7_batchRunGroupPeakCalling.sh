@@ -166,7 +166,7 @@ Output directory is ${PEAKCOUNTS}/Counts/
 
 EOF
 
-  Rscript ${RSCRIPTS_DIR}/countsInPeaks.r ${CONFIGR}
+  Rscript ${RSCRIPTS_DIR}/countsInPeaks.r ${CONFIGR} 
 fi
 
 echo Job finished on:

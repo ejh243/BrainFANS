@@ -56,40 +56,45 @@ for(each in peakFiles){
                                               end.field="V3",
                                               ignore.strand=TRUE)
 }
-names(peaks) <- c("IRF8", "NEUN", "SOX10", "TN")
-peaksAnno<-lapply(peaks,  annotatePeak, tssRegion=c(-1000, 1000),TxDb=TxDb.Hsapiens.UCSC.hg38.knownGene, annoDb="org.Hs.eg.db", verbose = FALSE)
+names(peaks) <- cellTypes
 
+## Annotate peaks
+peaksAnno<-lapply(peaks,  annotatePeak, tssRegion=c(-1000, 1000),TxDb=TxDb.Hsapiens.UCSC.hg38.knownGene, annoDb="org.Hs.eg.db", verbose = FALSE)
 
 bamFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam$", recursive = TRUE, include.dirs = TRUE)
 sampleNames<-gsub(".filt.nodup.bam$", "", bamFiles)
 sampleNames <- sampleNames[sampleNames %in% pheno$sampleID]
 bamFiles<-bamFiles[bamFiles %in% unlist(lapply(sampleNames, function(x) paste0(x,".filt.nodup.bam")))]
 
-ctPromotorPeaks<-c(peaksAnno[["NEUN"]]@anno[grep("Promoter", peaksAnno[["NEUN"]]@anno$annotation),], 
-                   peaksAnno[["SOX10"]]@anno[grep("Promoter", peaksAnno[["SOX10"]]@anno$annotation),],peaksAnno[["TN"]]@anno[grep("Promoter", peaksAnno[["TN"]]@anno$annotation),], 
-                   peaksAnno[["IRF8"]]@anno[grep("Promoter", peaksAnno[["IRF8"]]@anno$annotation),])                   
-
-##If working with only peaks annotated as promoters
-ctPeaks<-data.frame("GeneID"=ctPromotorPeaks$V4, "Chr"=seqnames(ctPromotorPeaks), "Start"=start(ctPromotorPeaks), "End"=end(ctPromotorPeaks), "Strand"="*")
-
 ## ======================##
 ##   COUNTS (PROMOTERS)  ##
 ## ======================##
 
+ctPromotorPeaks <- list()
+for(i in 1:length(cellTypes)){
+  ct <- cellTypes[i]
+  ctPromotorPeaks[[i]] <- peaksAnno[[ct]]@anno[grep("Promoter", peaksAnno[[ct]]@anno$annotation),]
+}
+ctPromotorPeaks <- do.call(c, ctPromotorPeaks)
+ctPeaks<-data.frame("GeneID"=ctPromotorPeaks$V4, "Chr"=seqnames(ctPromotorPeaks), "Start"=start(ctPromotorPeaks), "End"=end(ctPromotorPeaks), "Strand"="*")
+
+## Get counts in peaks annotated as promoters
 fc_ctPeaks <- featureCounts(file.path(paste0(alignedDir,"/", bamFiles)),annot.ext=ctPeaks, allowMultiOverlap = TRUE, isPairedEnd = TRUE, nthreads = 10, fracOverlap=0.2)
 save(fc_ctPeaks, file = paste0(dir,"/5_countPeaks/Counts/peakCounts_prom.rdata"))
 
-ctPromotorPeaks<-c(peaksAnno[["NEUN"]]@anno, 
-                   peaksAnno[["SOX10"]]@anno,peaksAnno[["TN"]]@anno, 
-                   peaksAnno[["IRF8"]]@anno)                   
-
-
-##If working with all peaks 
-ctPeaks<-data.frame("GeneID"=ctPromotorPeaks$V4, "Chr"=seqnames(ctPromotorPeaks), "Start"=start(ctPromotorPeaks), "End"=end(ctPromotorPeaks), "Strand"="*")
 
 ## ================##
 ##   COUNTS (ALL)  ##
 ## ================##
 
+allPeaks <- list()
+for(i in 1:length(cellTypes)){
+  ct <- cellTypes[i]
+  allPeaks[[i]] <- peaksAnno[[ct]]@anno
+}
+allPeaks <- do.call(c, allPeaks)
+ctPeaks<-data.frame("GeneID"=allPeaks$V4, "Chr"=seqnames(allPeaks), "Start"=start(allPeaks), "End"=end(allPeaks), "Strand"="*")
+
+## Get counts in all peaks
 fc_ctPeaks <- featureCounts(file.path(paste0(alignedDir,"/", bamFiles)),annot.ext=ctPeaks, allowMultiOverlap = TRUE, isPairedEnd = TRUE, nthreads = 10, fracOverlap=0.2)
 save(fc_ctPeaks, file = paste0(dir,"/5_countPeaks/Counts/peakCounts.rdata"))

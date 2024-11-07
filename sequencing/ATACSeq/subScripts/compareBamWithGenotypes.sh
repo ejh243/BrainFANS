@@ -21,7 +21,7 @@
 ##                                                                                                      ||
 ## REQUIRES:                                                                                            ||
 ## - sorted bam file, VCF file with SNP chip data                                                       ||
-## - Softwares: gatk, samtools (in a conda environment), picard, verifyBamID                            ||
+## - Softwares: gatk, samtools and picard (in a conda environment), verifyBamID                         ||
 ## - Variables in config file: ALIGNED_DIR, GENOMEFASTA, KGREF,GENODIR,VERIFYBAMID                      ||
 ## - Reference genome: GENOMEFASTA: genome.fa                                                           ||
 ##                                                                                                      ||
@@ -57,17 +57,11 @@ then
     fi
 
     ## mark duplicates only
-    java -jar $EBROOTPICARD/picard.jar  MarkDuplicates INPUT=${ALIGNED_DIR}/${bamfile} OUTPUT=${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam METRICS_FILE=${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt     
+    picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${bamfile} -OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam -METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt     
 
     ## add read group
-    java -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
-           I=${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam \
-           O=${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
-           RGID=${projectID} \
-           RGLB=lib1 \
-           RGPL=ILLUMINA \
-           RGPU=unit1 \
-           RGSM=${sampleName}
+    picard AddOrReplaceReadGroups -I ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam -O ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
+           -RGID ${projectID} -RGLB lib1 -RGPL ILLUMINA -RGPU unit1 -RGSM ${sampleName}
 
     rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam
 

@@ -27,9 +27,8 @@
 ## summary statistics (e.g. multimodality of reads, periodicity)                                                      ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
-## - Variables in config file: MAIN_DIR, SCRIPTS_DIR, LOG_DIR, ALIGNED_DIR, RSCRIPTS_DIR                              ||
-## - Software version specified in config file: RVERS                                                                 ||
-## - R version should be > 4.2                                                                                        ||
+## - Variables in config file: MAIN_DIR, SCRIPTS_DIR, LOG_DIR, ALIGNED_DIR, RSCRIPTS_DIR, CONDA, CONDA_ENV            ||
+## - R version should be > 4.2 in conda environment.                                                                  ||
 ## - fragmentDistribution.r file in ${RSCRIPTS_DIR} = ./Rscripts directory                                            ||
 ## ===================================================================================================================##
 
@@ -43,6 +42,7 @@ echo Job started on:
 date -u
 
 source "${1}/config.txt" || { echo "No project directory specified or could not be found." ; exit 1; }
+
 ## Log files directory
 LOG_DIR=${LOG_DIR}/${USER}/${SLURM_ARRAY_JOB_ID}
 mkdir -p $LOG_DIR
@@ -64,11 +64,15 @@ then
     { echo "Job does not appear to be an array. Please specify --array on the command line." ; exit 1; }
 fi
 
+
+## Activate conda environment with packages/modules
+source ${CONDA} 
+conda activate ${CONDA_ENV}
+
 ##  ==================  ##
 ##     CALCQCMetrics    ##
 ##  ==================  ##
 
-module load $RVERS
 mkdir -p ${ALIGNED_DIR}/QCOutput
 
 cat <<EOF
@@ -76,7 +80,6 @@ cat <<EOF
 || Running STEP 2 of ATAC-seq pipeline: Post alignment processing (QC metrics and fragment distribution). ||
 
 Calculating QC metrics and fragment distribution for samples in batch ${SLURM_ARRAY_TASK_ID} 
-
 Output directory is ${ALIGNED_DIR}/QCOutput/
 
 EOF

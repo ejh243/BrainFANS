@@ -2,7 +2,7 @@
 ## ===================================================================================================================##
 ##                    ATAC-seq pipeline STEP 1.4: Pre-analysis -- ENCODEQC metrics calculation                        ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch ./subScripts/calcENCODEQCMetrics.sh <sampleName>                                        ||
+## EXECUTION: sbatch ./subScripts/calcENCODEQCMetrics.sh <sampleName>                                                 ||
 ## - execute from pipeline's subScripts directory                                                                     ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script calculates ENCODE library complexity metrics according to                                 ||
@@ -10,7 +10,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - Variables in config file: ALIGNED_DIR                                                                            ||
-## - Software: samtools, samstats, bedtools                                                                           ||
+## - Software: samtools, samstats, bedtools  (in a conda environment)                                                 ||
 ## - Aligned <sampleName>.filt.nodup.bam file in ALIGNED_DIR directory                                                ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 

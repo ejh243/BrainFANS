@@ -32,24 +32,23 @@ sampleName=$1
 f1=$(basename $2)
 f2=$(basename $3)
 
-echo $sampleName
-
 ## ========== ##
 ##    QC      ##
 ## ========== ##
 
 fastqc ${RAWDATADIR}/${f1}  ${RAWDATADIR}/${f2} -t 8 -o ${FASTQCDIR}
 
-ending=".fq.gz"
-out1=${f1/$ending/}
-out2=${f2/$ending/}
+ending1=".fastq.gz"
+ending2=".fq.gz"
+out1=$(echo "$f1" | sed -e "s/$ending1//g" -e "s/$ending2//g")
+out2=$(echo "$f2" | sed -e "s/$ending1//g" -e "s/$ending2//g")
 
 echo ${out1}
 
 if [[ ! -f "${FASTQCDIR}/${out1}_fastqc.html" ]] && [[ ! -f "${FASTQCDIR}/${out2}_fastqc.html" ]]
 then 
   { echo "FASTQC on ${sampleID} was not completed. Please check variables and inputs." ; exit 1; }
-fi  
+fi 
 
 echo Job finished on:
 date -u 

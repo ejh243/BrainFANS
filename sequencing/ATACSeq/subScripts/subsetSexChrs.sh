@@ -15,7 +15,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - aligned filtered, no duplicated tagAlign reads: <sampleName>.tn5.tagAlign.gz                                     ||
-## - Software: bedtools                                                                                               ||
+## - Software: bedtools in conda environment                                                                          ||
 ## - Variables in config file: ALIGNED_DIR                                                                            ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
@@ -29,7 +29,7 @@ tagalign=${sampleName}.tn5.tagAlign.gz
 
 if [[ ! -f ${ALIGNED_DIR}/${tagalign} ]]
 then
-   { echo "Sample in tagAlign format not found. Please refer to STEP 3.1 to get this." ; exit 1 ;}
+   { echo "Sample in tagAlign format not found. Please refer to STEP 3.1 to obtain this." ; exit 1 ;}
 else
   echo "Sample in tagAlign format found: $tagalign. Reads in sex chromosomes will be subset."
 fi

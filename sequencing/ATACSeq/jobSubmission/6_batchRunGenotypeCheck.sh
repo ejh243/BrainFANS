@@ -31,10 +31,10 @@
 ## - File with samples IDs and their matching VCF IDs: ${META_DIR}/matchedVCFIDs.txt                                           ||
 ## - Config.txt file in <project directory>.                                                                                   ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, ALIGNED_DIR, SCRIPTS_DIR, PROJECT,PEAK_DIR ||
-## - Version/directory of the following modules should be specified in config file: PICARDVERS, RVERS, GATKVERS                ||
-## - Softwares: Picard, GATK, R, Pandoc                                                                                        ||
+##   CONDA, CONDA_ENV
+## - Directory of the following software should be specified in config file: verifyBAMID (VERIFYBAMID)                         ||
+## - Softwares: Picard, GATK, R, Pandoc, samtools in conda environment                                                         ||
 ## - For modules or references required, please refer to each subscript run in this script.                                    ||
-## - A conda environment setup with several modules: samtools                                                                  ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                                     ||
 ## - Subscripts: compareBamWithGenotypes.sh, searchBestGenoMatch.sh                                                            ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                                        ||
@@ -68,6 +68,9 @@ Log files will be moved to dir:  $LOG_DIR
 
 EOF
 
+## Activate conda environment with packages/modules
+source ${CONDA} 
+conda activate ${CONDA_ENV}
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -97,12 +100,6 @@ fi
 ## option COMPARE: genotype of samples are verified by comparing them with existing genotype information   
 if [ $# = 1 ] || [[ $2 =~ 'COMPARE' ]]
 then
-  module purge
-  module load $PICARDVERS
-  module load $GATKVERS
-  ## load conda env for Samtools
-  module load ${MCVERS}
-  source activate ${CONDA}
   
 cat <<EOF
 
@@ -119,17 +116,12 @@ EOF
   
   sh "${SUB_SCRIPTS_DIR}/compareBamWithGenotypes.sh" ${IDS[@]}
   
-  conda deactivate
 fi
 
 ## option GENCHECK: Sex check and Genotype check results are collated in Rmarkdown   
 if [ $# = 1 ] || [[ $2 =~ 'GENCHECK' ]]
 then
-  
-	module purge
-	module load ${RVERS}
-	module load Pandoc
- 
+
 cat <<EOF
 
 || Running STEP 6.2 of ATAC-seq pipeline: GENCHECK. Results from genotype and sex check will be collated in a Rmarkdown report.||
@@ -145,15 +137,8 @@ fi
 ## option SWITCH: Samples with non-matching genotype are suggested to be switched
 if [ $# = 1 ] || [[ $2 =~ 'SWITCH' ]]
 then
-  module purge
-  module load $PICARDVERS
-  module load $GATKVERS
-  ## load conda env for Samtools
-  module load ${MCVERS}
-  source activate ${CONDA}
   
 cat <<EOF
-
 
 || Running STEP 6.3 of ATAC-seq pipeline: SWITCH. Samples with potential genotype contamination will be selected for potential switches.||
 
@@ -174,10 +159,10 @@ EOF
   echo "Samples that is likely to have been swapped with another sample: ${IDS[@]}" 
   
   sh "${SUB_SCRIPTS_DIR}/searchBestGenoMatch.sh" ${IDS[@]}
-  
-  conda deactivate
- 
+
 fi
+
+conda deactivate
 
 echo Job finished on:
 date -u

@@ -17,7 +17,7 @@
 ##                                                                                                 ||
 ## REQUIRES:                                                                                       ||
 ## - shifted TagAlign files, split chromosomes for MACS3 TA in ${ALIGNED_DIR}/sexChr/              ||
-## - MACS3 installed in a pip environment, bedtools                                                ||
+## - MACS3 and BEDtools installed in a conda environment                                           ||
 ## - Variables in config file: ALIGNED_DIR, PEAK_DIR, XCHRBED,PEAKCOUNTS, PAR                      ||
 ##                                                                                                 ||
 ## ================================================================================================##
