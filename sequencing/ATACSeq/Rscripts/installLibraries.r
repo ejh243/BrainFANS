@@ -17,17 +17,17 @@ args <- commandArgs()
 rlibrary <-args[6]
 
 ##Vectors with all required R packages in the pipeline
-packagesBase <- c("diptest", "ptest", "plyr","dplyr","ggplot2","ggpubr","RColorBrewer",  "pheatmap", "gridExtra", "FME", "data.table", "readr","scales","tibble","kableExtra","tidyverse","rstatix","conflicted","knitr","vioplot",
-"corrplot","reshape2","cowplot")
+packagesBase <- c("diptest", "plyr","dplyr","ggplot2","ggpubr","RColorBrewer",  "pheatmap", "gridExtra", "FME", "data.table", "readr","scales","tibble","kableExtra","tidyverse","rstatix","conflicted","knitr","vioplot","corrplot","reshape2","cowplot")
 packagesBiocM <- c("BiocManager","ATACseqQC","Rsubread","GenomicRanges","ChIPpeakAnno","ChIPseeker","TxDb.Hsapiens.UCSC.hg38.knownGene","org.Hs.eg.db","edgeR","DiffBind","csaw","GenomicAlignments", "GenomicTools.fileHandler", 
 "rtracklayer", "clusterProfiler","ReactomePA","DESeq2", "ChIPQC")
 
 ## As most packages are installed through BiocManager, we first installed this if not found
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-BiocManager::install(version = "3.16",lib = rlibrary)
+BiocManager::install(version = "3.18",lib = rlibrary)
 
 BiocManager::install(packagesBiocM, lib = rlibrary) 
 
 ## Then we install the rest of packages if not installed already
 install.packages(setdiff(packagesBase, rownames(installed.packages())),lib = rlibrary)  
+install.packages(paste0(dir,"/config/ptest_1.0-8.tar.gz",lib = rlibrary)

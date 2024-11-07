@@ -30,9 +30,8 @@
 ## - File in ${META_DIR}/samples.txt that lists sample names.                                                         ||
 ## - Config.txt file in <project directory>.                                                                          ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, ALIGNED_DIR, PEAK_DIR, PEAKCOUNTS ||
-##   SCRIPTS_DIR, PROJECT,CONFIGR,RSCRIPTS_DIR                                                                        ||
+##   SCRIPTS_DIR, PROJECT,CONFIGR,RSCRIPTS_DIR,CONDA_ENV, CONDA                                                       ||
 ## - A list of cell types of samples specified in config file: CELLTYPES                                              ||
-## - Version/directory of the following modules should be specified in config file: RVERS, BEDTVERS,CONDA_ENV, MCVERS ||
 ## - For modules or references required, please refer to each subscript run in this script.                           ||
 ## - A conda environment setup with several modules: samtools, MACS3                                                  ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subScripts                                                            ||
@@ -66,9 +65,20 @@ Log files will be moved to dir:  $LOG_DIR
 
 EOF
 
+## Activate conda environment with packages/modules
+source ${CONDA} 
+conda activate ${CONDA_ENV}
+
 ## ================ ##
 ##    VARIABLES     ##
 ## ================ ##
+
+export GROUP=$3
+
+cat << EOF
+Available cell fractions are: ${CELLTYPES[@]}
+
+EOF
 
 if [[ $2 == '' ]] 
 then
@@ -76,32 +86,31 @@ then
 fi
 
 ## check step method matches required options and exit if not
-if [[ ! $2 =~ "FRAGSIZE" ]] && [[ ! $2 =~ "PEAKS" ]] && [[ ! $2 =~ "COUNTS" ]] &&[[ ! $2 == '' ]];
+if [[ ! $2 =~ "FRAGSIZE" ]] && [[ ! $2 =~ "PEAKS" ]] && [[ ! $2 =~ "COUNTS" ]] && [[ ! $2 == '' ]];
 then 
     { echo "Unknown step specified. Please use SHIFT, PEAKS, FRIP or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
-export GROUP=$3
-echo $GROUP
-if [[ ! " ${CELLTYPES[*]} " == *" $GROUP "* ]] && [[ $2 =~ "FRAGSIZE" ]] && [[ $2 =~ "PEAKS" ]] ; 
+if [[ ! " ${CELLTYPES[*]} " == *" $GROUP "* && ($2 =~ "FRAGSIZE" || $2 =~ "PEAKS")]]; 
 then
   { echo "Cell group specified not found. Please check whether samples that belong to that cell fraction exist."; exit 1; }            
 fi
 
-cat << EOF
-Available cell fractions are: ${CELLTYPES[@]}
-Chosen cell fraction is ${GROUP}
-EOF
 
-module purge
-module load ${RVERS}
-Rscript ${RSCRIPTS_DIR}/samplesForGroupAnalysis.r ${CONFIGR} ${GROUP}
+if [[ ! ${GROUP} == '' && ($2 =~ "FRAGSIZE" || $2 =~ "PEAKS")]]
+then
+  echo "Chosen cell fraction is ${GROUP}"
+  ## Samples for group peak calling are gathered for input cell fraction
+  Rscript ${RSCRIPTS_DIR}/samplesForGroupAnalysis.r ${CONFIGR} ${GROUP}
 
-## Retrieve samples from the same cell fraction
-mapfile -t SAMPLES < ${META_DIR}/samplesForGroupAnalysisOrdered_${GROUP}.txt
+  ## Retrieve samples from the same cell fraction
+  mapfile -t SAMPLES < ${META_DIR}/samplesForGroupAnalysisOrdered_${GROUP}.txt
 
-echo "Number of samples found in ${GROUP} is:" """${#SAMPLES[@]}"""
-echo "Samples that belong to ${GROUP} are:" ${SAMPLES[@]}
+  echo "Number of samples found in ${GROUP} is:" """${#SAMPLES[@]}"""
+  echo "Samples that belong to ${GROUP} are:" ${SAMPLES[@]}
+else
+  echo "No cell group specified."
+fi
 
 
 ## ========= ##
@@ -111,63 +120,57 @@ echo "Samples that belong to ${GROUP} are:" ${SAMPLES[@]}
 ## option FRAGSIZE: plot fragment size distribution of samples chosen for group peak calling to check they are good ATAC-seq samples
 if [ $# = 1 ] || [[ $2 == 'FRAGSIZE' ]]
 then
-  module purge
-  module load $RVERS
   
 cat <<EOF
 
-|| Running STEP 7.1 of ATAC-seq pipeline: FRAGSIZE. Fragment size distribution of samples will be output in a pdf file ||
+|| Running STEP 7.1 of ATAC-seq pipeline: FRAGSIZE ||
 
+Fragment size distribution of samples will be output in a pdf file
 Output directory is ${PEAKCOUNTS}
 
 EOF
 
-  Rscript ${RSCRIPTS_DIR}/fragDistributionForPeaks.r ${CONFIGR} ${GROUP}
+  Rscript "${RSCRIPTS_DIR}/fragDistributionForPeaks.r" ${CONFIGR} ${GROUP}
+  
 fi
 
 ## option PEAKS: peak calling is performed using MACS3 in paired-end at group level  
 if [ $# = 1 ] || [[ $2 == 'PEAKS' ]]
 then
-
-	module purge
-	module load $BEDTVERS
-  ## load conda env for MACS3
-  module load ${MCVERS}
-  source activate ${CONDA}
   
-  mkdir -p ${PEAK_DIR}/MACS/BAMPE/group
+  mkdir -p ${PEAK_DIR}/MACS/group
   
 cat <<EOF
 
-|| Running STEP 7.2 of ATAC-seq pipeline: PEAKS. Peak calling on $GROUP samples will be performed. ||
+|| Running STEP 7.2 of ATAC-seq pipeline: PEAKS ||
 
+Peak calling on $GROUP samples will be performed.
 Output directory is ${PEAK_DIR}/MACS/group
 
 EOF
 
   sh "${SUB_SCRIPTS_DIR}/groupPeaks.sh" ${SAMPLES[@]}
-  
-	conda deactivate
 
 fi
 
 if [ $# = 1 ] || [[ $2 == 'COUNTS' ]]
 then
-  ml purge
-  ml $RVERS
   
   mkdir -p ${PEAKCOUNTS}/Counts/
   
 cat <<EOF
 
-|| Running STEP 7.3 of ATAC-seq pipeline: COUNTS. Counts in peaks will be output in a single file. ||
+|| Running STEP 7.3 of ATAC-seq pipeline: COUNTS ||
 
+Counts in peaks will be output in a single file.
 Output directory is ${PEAKCOUNTS}/Counts/
 
 EOF
 
-  Rscript ${RSCRIPTS_DIR}/countsInPeaks.r ${CONFIGR} 
+  Rscript "${RSCRIPTS_DIR}/countsInPeaks.r" ${CONFIGR} 
 fi
+
+conda deactivate
 
 echo Job finished on:
 date -u

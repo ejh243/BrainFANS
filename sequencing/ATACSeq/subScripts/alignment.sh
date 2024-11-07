@@ -11,7 +11,8 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - Variables in config file: RAWDATADIR, TRIM_DIR, ALIGNED_DIR, REFGENOME, multimap                                 ||
-## - Software: bowtie2, samtools (in conda environment), picard                                                       ||
+## - Software: bowtie2, samtools, picard (in conda environment)                                                       ||
+## - assign_multimappers.py file in ./subScripts folder.                                                              ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <sampleName> Name of sample specified in command line. Reads should be previously trimmed                    ||
@@ -73,8 +74,7 @@ samtools stats ${ALIGNED_DIR}/${sampleName}_noMT.bam	> ${ALIGNED_DIR}/QCOutput/$
 # only keep properly paired reads
 echo "filtering aligned reads"
 samtools view -F 524 -f 2  -q 30 -u ${ALIGNED_DIR}/${sampleName}_noMT.bam | samtools sort -n /dev/stdin -o ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.bam
-echo $MULTIMAP/assign_multimappers.py
-samtools view -h ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.bam | $MULTIMAP/assign_multimappers.py -k $multimap --paired-end | samtools fixmate -r /dev/stdin ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
+samtools view -h ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.bam | ${SUB_SCRIPTS_DIR}/assign_multimappers.py -k $multimap --paired-end | samtools fixmate -r /dev/stdin ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.fixmate.bam
 
 # Remove orphan reads (pair was removed)
 # and read pairs mapping to different chromosomes
@@ -86,7 +86,9 @@ rm ${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.bam
 rm ${ALIGNED_DIR}/${sampleName}_noMT.bam
 
 # Mark duplicates
-java -Xmx4G -jar ${PICARD}/picard.jar MarkDuplicates INPUT=${ALIGNED_DIR}/${sampleName}.filt.bam OUTPUT=${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam METRICS_FILE=${ALIGNED_DIR}/${sampleName}_dupMetrics.txt VALIDATION_STRINGENCY=LENIENT ASSUME_SORTED=true REMOVE_DUPLICATES=false
+samtools addreplacerg -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o ${ALIGNED_DIR}/${sampleName}_filt.name.bam ${ALIGNED_DIR}/${sampleName}.filt.bam
+
+picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${sampleName}_filt.name.bam -OUTPUT ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam -METRICS_FILE ${ALIGNED_DIR}/${sampleName}_dupMetrics.txt -VALIDATION_STRINGENCY LENIENT -ASSUME_SORTED true -REMOVE_DUPLICATES false
 
 rm ${ALIGNED_DIR}/${sampleName}.filt.bam
 
@@ -99,7 +101,7 @@ samtools index ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam
 ## get sum stats post to filtering
 samtools stats ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam	> ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.stats
 
-if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]] && [[ ! -f ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.stats ]]
+if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]] || [[ ! -f ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.stats ]]
 then 
   { echo "Alignment for ${sampleName} could not be completed." ; exit 1; }
 else

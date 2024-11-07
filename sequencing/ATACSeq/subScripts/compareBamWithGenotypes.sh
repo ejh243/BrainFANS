@@ -55,12 +55,15 @@ then
     else
        projectID="NA"
     fi
+    
+    samtools addreplacerg -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o ${ALIGNED_DIR}/${sampleName}_sorted_name.bam ${ALIGNED_DIR}/${sampleName}_sorted.bam
 
     ## mark duplicates only
-    picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${bamfile} -OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam -METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt     
+    picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${sampleName}_sorted_name.bam -OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam -METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt
 
     ## add read group
-    picard AddOrReplaceReadGroups -I ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam -O ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
+    picard AddOrReplaceReadGroups -I ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam \
+           -O ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
            -RGID ${projectID} -RGLB lib1 -RGPL ILLUMINA -RGPU unit1 -RGSM ${sampleName}
 
     rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam

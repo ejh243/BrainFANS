@@ -54,9 +54,7 @@ export LOG_DIR="${SCRIPTS_DIR}/logFiles"
 ## Specify full path to the required softwares ##
 export RLIB="/path/to/users/R/libraries"
 export VERIFYBAMID="/path/to/verifyBamID/bin/verifyBamID,  version should be > verifyBamID_1.1.3"
-export PICARD="/path/to/picard/Java/file"
 export LDPATH="/path/to/ldsc"
-export RSTUDIO_PANDOC="/usr/lib/rstudio-server/bin/pandoc"
 export PHANTOMPEAK="/path/to/phantompeakqualtools"
 
 ## Specify full path to conda environment ##

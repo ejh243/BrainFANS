@@ -36,10 +36,15 @@
 echo Job started on:
 date -u
 
+LOG_DIR=./ATACSeq/logFiles/${USER}/${SLURM_JOB_ID}
+echo "Log files will be moved to dir: " $LOG_DIR
+mkdir -p $LOG_DIR
+mv ATACSetUpS0-${SLURM_JOB_ID}* $LOG_DIR
+
 cat <<EOF
 
 Running scripts from: $PWD
-Log files will be in current directory: $PWD
+Log files will be in current directory: $LOG_DIR
 
 EOF
 
@@ -110,25 +115,20 @@ do
 	fi
 done
 
-## MODULES ##
-
-## Load required modules ##
-
-ml ${MCVERS}
-ml ${RVERS}
+## Activate conda environment with packages/modules
+source ${CONDA} 
 
 ## Check that a conda environment exists and create it if not
 
-if [[ -d ${CONDA} ]]
+if [[ -d ${CONDA_ENV} ]]
 then 
 	echo "${PROJECT} conda environment exists"
 else
 	echo "${PROJECT} environment does not exist"
 	echo "Creating environment"
-  source activate base #${CONDA_ENV}
+  conda activate base
   if [[ -f ${CONDA_FILE} ]]
   then
-    #conda create -n ${PROJECT}
 	  conda env create --name ${PROJECT} --file ${CONDA_FILE}
     conda deactivate
   else
@@ -136,14 +136,30 @@ else
   fi
   if [[ -f ${PIP_FILE} ]]
   then
-    source activate ${PROJECT}
+    conda activate ${CONDA_ENV}
     pip install -r ${PIP_FILE}
     conda deactivate
   else
     echo "File with packages to install in conda environment through pip not found."
   fi
+  
+  if [[ -f ${RSCRIPTS_DIR}/intallLibraries.r ]]
+  then 
+    conda activate ${CONDA_ENV}
+  
+cat <<EOF
 
-  if [[ -d ${CONDA} ]]
+R packages will be checked and installed if not found.
+R libraries will be installed in ${RLIB}
+
+EOF  
+    ## Check that required R libraries are installed
+    Rscript ${RSCRIPTS_DIR}/intallLibraries.r ${RLIB}
+  else
+    echo "Setup R libraries script not found. Please make sure this is in the ${RSCRIPTS_DIR} directory"
+  fi
+
+  if [[ -d ${CONDA_ENV} ]]
   then 
 	  echo "${PROJECT} conda environment has been created"
   else
@@ -151,16 +167,7 @@ else
   fi
 fi
 
-
-
-cat <<EOF
-
-R packages will be checked and installed if not found.
-R libraries will be installed in ${RLIB}
-
-EOF
-
-## Check that required R libraries are installed
-Rscript ${RSCRIPTS_DIR}/intallLibraries.r ${RLIB}
-
 echo "Set up for ATAC-seq pipeline to be run on ${PROJECT} complete."
+
+conda deactivate
+
