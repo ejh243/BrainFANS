@@ -63,6 +63,14 @@ setup_conda_environment() {
         --file "$(dirname "$0")/requirements-${environment_name}.txt"
 }
 
+install_r_libraries() {
+    # This isn't strictly required here, but we might as well check that the
+    # environment correctly installs now to give better error messaging.
+    echo "Installing R libraries using renv, please follow on-screen instructions."
+    cd "${SCRIPTSDIR}/array/DNAm/preprocessing/" || exit 1
+    R
+}
+
 main() {
     config_file_path=$1
     source_config_file "$config_file_path"
@@ -74,7 +82,6 @@ main() {
             install_conda
     fi
     setup_conda_environment
-    install_renv
     install_r_libraries
     check_installation
 }
