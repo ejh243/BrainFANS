@@ -68,6 +68,7 @@ libzlib=1.3.1=hb9d3cd8_2
 make=4.4.1=hb9d3cd8_2
 ncurses=6.5=he02047a_1
 openssl=3.3.2=hb9d3cd8_0
+pandoc=3.5=ha770c72_0
 pango=1.54.0=h4c5309f_1
 pcre2=10.44=hba22ea6_2
 pixman=0.43.2=h59595ed_0
