@@ -1,7 +1,7 @@
 all_pkgs <- c(
     "pander", "kableExtra", "gplots", "diptest", "corrplot", "pheatmap",
     "mixtools", "RColorBrewer", "rmarkdown", "e1071", "stringdist",
-    "data.table", "MatrixStats", "quadprog", "reshape2", "wateRmelon",
+    "data.table", "matrixStats", "quadprog", "reshape2", "wateRmelon",
     "bigmelon", "genefilter", "minfi", "CETYGO", "cdegUtilities",
     "IlluminaHumanMethylation450kanno.ilmn12.hg19",
     "IlluminaHumanMethylation450kmanifest",
@@ -11,6 +11,7 @@ all_pkgs <- c(
     "IlluminaHumanMethylationEPICv2manifest"
 )
 
+'%ni%' <- Negate('%in%')
 if (all(all_pkgs %in% rownames(installed.packages()))) {
     print("All packages successfully installed")
 } else {
