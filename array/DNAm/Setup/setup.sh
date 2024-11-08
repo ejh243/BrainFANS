@@ -7,10 +7,19 @@ $(basename "$0")
 ============================================================================
 Purpose: Execute this script before running the QC pipeline. It will install
 the necessary dependencies required automatically for you.
+Arguments: \$1 -> full/relative path to config.txt file
 Contact: s.o.fletcher@exeter.ac.uk
 ============================================================================
 USAGE
     exit 0
+}
+
+source_config_file() {
+    config_file_path=$1
+    source "${config_file_path}" || {
+            >&2 echo "ERROR: config file not found at ${config_file_path}. Please check this."
+            exit 2
+        }
 }
 
 check_cmd() {
@@ -55,6 +64,9 @@ setup_conda_environment() {
 }
 
 main() {
+    config_file_path=$1
+    source_config_file "$config_file_path"
+
     if check_cmd "conda"; then
         print_conda_missing_message
         read -r continue_install
@@ -67,5 +79,5 @@ main() {
     check_installation
 }
 
-if [[ $# -ne 0 ]]; then usage; fi
-main
+if [[ $# -ne 1 ]]; then usage; fi
+main "$1"
