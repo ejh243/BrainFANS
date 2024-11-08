@@ -71,6 +71,23 @@ install_r_libraries() {
     R
 }
 
+print_installation_unsuccessful_message() {
+cat << MESSAGE
+ERROR:
+Installation of R libraries was not successful. 
+Please create a bug report at: 
+https://github.com/ejh243/BrainFANS/issues/new/choose
+MESSAGE
+}
+
+check_installation() {
+    if Rscript "${SCRIPTSDIR}/array/DNAm/preprocessing/checkRPackages.R"; then
+        echo "Installation successful"
+    else
+        print_installation_unsuccessful_message
+    fi
+}
+
 main() {
     config_file_path=$1
     source_config_file "$config_file_path"
