@@ -71,7 +71,6 @@ find_conda_shell() {
     while [[ ! -f "${conda_shell_location}" ]]; do
         get_conda_shell
     done
-    CONDA_SHELL="${conda_shell_location}"
 }
 
 setup_conda_environment() {
@@ -121,8 +120,8 @@ add_to_config_file() {
     config_file_path=$1
 cat >> "${config_file_path}" << EOF 
 
-CONDA_SHELL=$CONDA_SHELL
-DNAM_CONDA_ENVIRONMENT=$environment_name
+CONDA_SHELL=${conda_shell_location}
+DNAM_CONDA_ENVIRONMENT=${environment_name}
 
 EOF
 }
