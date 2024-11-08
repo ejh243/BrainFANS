@@ -35,10 +35,10 @@ fi
 
 echo "Processing data located in :" ${DATADIR}
 
-## load modules
-echo "Loading R module :" $RVERS
-module load Pandoc
-module load $RVERS   # load specified R version
+source $1 || exit 1
+
+source "${CONDA_SHELL}"
+conda activate "${DNAM_CONDA_ENVIRONMENT}"
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
@@ -77,6 +77,8 @@ chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
 Rscript CETYGOdeconvolution.r ${DATADIR}
+
+conda deactivate
 
 ## print finish date and time
 echo Job finished on:

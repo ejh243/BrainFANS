@@ -98,6 +98,16 @@ check_installation() {
     fi
 }
 
+add_to_config_file() {
+    config_file_path=$1
+cat >> "${config_file_path}" << EOF 
+
+CONDA_SHELL=$conda_path/etc/profile.d/conda.sh
+DNAM_CONDA_ENVIRONMENT=$environment_name
+
+EOF
+}
+
 main() {
     config_file_path=$1
     source_config_file "$config_file_path"
@@ -111,6 +121,7 @@ main() {
     setup_conda_environment
     install_r_libraries
     check_installation
+    add_to_config_file "${config_file_path}"
 }
 
 if [[ $# -ne 1 ]]; then usage; fi
