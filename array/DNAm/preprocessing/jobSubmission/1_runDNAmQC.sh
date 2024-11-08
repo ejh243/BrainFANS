@@ -27,17 +27,13 @@ source $1 || exit 1
 
 
 if [[ -z "${DNAM_CONDA_ENVIRONMENT}" ]]; then
-    echo "First time running pipeline, executing setup script..."
-    if ! bash ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh $1; then 
-        >&2 echo "Installation unsuccessful."
-        exit 1
-    fi
+    echo "Conda environment does not exist, please run the setup script first."
+    echo "The setup script can be found at ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh"
+    exit 1
 fi
     
 
 echo "Processing data located in :" ${DATADIR}
-
-source $1 || exit 1
 
 source "${CONDA_SHELL}"
 conda activate "${DNAM_CONDA_ENVIRONMENT}"
