@@ -25,12 +25,10 @@
 ## REQUIRES:                                                                                                          ||
 ## - Config.txt file in <project directory>.                                                                          ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, RAWDATADIR, ALIGNED_DIR, TRIM_DIR ||
-##   SCRIPTS_DIR, PROJECT,FASTQCDIR                                                                                   ||
-## - Version/directory of the following modules should be specified in config file: ACVERS, CONDA_ENV, CONDA, RVERS   ||
-## - Softwares: Pandoc                                                                                                ||
+##   SCRIPTS_DIR, PROJECT,FASTQCDIR,CONDA_ENV, CONDA                                                                  ||
 ## - For modules or references required, please refer to each subscript run in this script.                           ||
 ## - Subscripts to be in ${SUB_SCRIPTS_DIR} = ./subscripts                                                            ||
-## - Subscripts: progressReport.sh,  countMTcollateFS.sh                                                              ||
+## - Subscripts: progressReport.sh, countMTcollateFS.sh                                                               ||
 ## - R subscripts to be in ${RSCRIPTS_DIR} = ./Rscripts                                                               ||
 ## - R scripts: collateDataQualityStats.Rmd                                                                           ||
 ## - No array job number is required.                                                                                 ||
@@ -62,6 +60,10 @@ Log files will be moved to dir: $LOG_DIR
 
 EOF
 
+## Activate conda environment with packages/modules
+source ${CONDA} 
+conda activate ${CONDA_ENV}
+
 
 ## ================ ##
 ##    VARIABLES     ##
@@ -85,9 +87,6 @@ fi
 ## option MULTIQC: collate QC output statistics in a single report   
 if [ $# = 1 ] || [[ $2 =~ 'MULTIQC' ]]
 then 
-  
-  module purge
-  module load MultiQC
 
   mkdir -p ${FASTQCDIR}/multiqc
   mkdir -p ${ALIGNED_DIR}/multiqc
@@ -98,7 +97,6 @@ cat <<EOF
 || Running STEP 4.1 of ATAC-seq pipeline: MULTIQC ||
 
 Results of fastqc on raw reads, trimming and alignment will be collated in a single report for each process.
-
 Output dir for FASTQC multiqc is ${FASTQCDIR}/multiqc
 Output dir for Alignment multiqc is ${ALIGNED_DIR}/multiqc
 Output dir for Trimming multiqc is ${TRIM_DIR}/fastqc/multiqc
@@ -138,22 +136,20 @@ fi
 ## option SUMMARY: collate output from previous steps into a single r markdown report
 if [ $# = 1 ] || [[ $2 =~ 'SUMMARY' ]]
 then
-  
-  module purge
-	module load ${RVERS}
-	module load Pandoc
  
 cat <<EOF
 
 || Running step 4.3 of ATAC-seq pipeline: SUMMARY ||
 
 Summary of results to this point are collated in a Rmarkdown report
-Output directory is $PEAK_DIR/QCOutput
+Output directory is ${PEAK_DIR}/QCOutput
 
 EOF
   
 	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1],'/collateDataQualityStats.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/QCOutput/stage1SummaryStats.html'))" "${RSCRIPTS_DIR}" "$PEAK_DIR" "${CONFIGR}"
 fi
+
+conda deactivate
 
 echo Job finished on:
 date -u 

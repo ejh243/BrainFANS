@@ -6,6 +6,11 @@ dependencies:
   - setuptools=65.5.1
   - fastqc
   - fastp
-  - r-base
+  - r-base=4.2.1
   - r-essentials
   - r-spp
+  - bedtools
+  - picard
+  - gatk4
+  - pandoc
+  - bowtie2
