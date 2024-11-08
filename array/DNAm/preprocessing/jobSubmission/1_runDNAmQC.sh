@@ -25,9 +25,9 @@ echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}
 
 source $1 || exit 1
 
-echo "Executing setup..."
 
 if [[ -z "${DNAM_CONDA_ENVIRONMENT}" ]]; then
+    echo "First time running pipeline, executing setup script..."
     if ! bash ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh $1; then 
         >&2 echo "Installation unsuccessful."
         exit 1
