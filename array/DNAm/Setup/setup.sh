@@ -26,24 +26,6 @@ check_cmd() {
     command -v "$1" > /dev/null
 }
 
-get_conda_shell() {
-cat << EOF
-Could not automatically find conda.sh. Please provide the full path to this
-file. If you are finding this difficult, it should be inside your conda
-installation directory under:
-.../conda-installation-folder/etc/profile.d/conda.sh
-EOF
-    read -r conda_shell_location
-}
-
-find_conda_shell() {
-    conda_shell_location="${HOME}/miniconda3/etc/profile.d/conda.sh"
-    while [[ ! -f "${conda_shell_location}" ]]; do
-        get_conda_shell
-    done
-    CONDA_SHELL="${conda_shell_location}"
-}
-
 print_conda_missing_message() {
 cat << MESSAGE
 ${RED}
@@ -71,6 +53,25 @@ install_conda() {
 
     source "${conda_path}/bin/activate"
     conda init --all
+}
+
+get_conda_shell() {
+cat << EOF
+Could not automatically find conda.sh. Please provide the full path to this
+file. If you are finding this difficult, it should be inside your conda
+installation directory under:
+.../conda-installation-folder/etc/profile.d/conda.sh
+EOF
+    read -r conda_shell_location
+}
+
+find_conda_shell() {
+    # Initial guess will work if this script installed conda for the user
+    conda_shell_location="${conda_path}/etc/profile.d/conda.sh"
+    while [[ ! -f "${conda_shell_location}" ]]; do
+        get_conda_shell
+    done
+    CONDA_SHELL="${conda_shell_location}"
 }
 
 setup_conda_environment() {
@@ -130,14 +131,13 @@ main() {
     config_file_path=$1
     source_config_file "$config_file_path"
 
-    if check_cmd "conda"; then
-        find_conda_shell
-    else
+    if ! check_cmd "conda"; then
         print_conda_missing_message
         read -r continue_install
         if [[ "${continue_install}" == "n" ]]; then exit 1; fi
             install_conda
     fi
+    find_conda_shell
     setup_conda_environment
     install_r_libraries
     check_installation
