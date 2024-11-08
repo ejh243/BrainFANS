@@ -17,6 +17,14 @@ check_cmd() {
     command -v "$1" > /dev/null
 }
 
+print_conda_missing_message() {
+cat << MESSAGE
+WARNING:
+Conda is not installed/is not on PATH!
+Would you like to install conda? (y/n)
+MESSAGE
+}
+
 get_conda_path() {
     default_conda_path="${HOME}/miniconda3"
     echo "Please enter the path you want to install conda to (default is $default_conda_path): "
@@ -38,14 +46,10 @@ install_conda() {
 
 main() {
     if check_cmd "conda"; then
-cat << MESSAGE
-WARNING:
-Conda is not installed/is not on PATH!
-Would you like to install conda? (y/n)
-MESSAGE
-    read -r continue_install
-    if [[ "${continue_install}" == "n" ]]; then exit 0; fi
-        install_conda
+        print_conda_missing_message
+        read -r continue_install
+        if [[ "${continue_install}" == "n" ]]; then exit 0; fi
+            install_conda
     fi
     setup_conda_environment
     install_renv
