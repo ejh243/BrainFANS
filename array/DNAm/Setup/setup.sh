@@ -101,7 +101,7 @@ main() {
     if check_cmd "conda"; then
         print_conda_missing_message
         read -r continue_install
-        if [[ "${continue_install}" == "n" ]]; then exit 0; fi
+        if [[ "${continue_install}" == "n" ]]; then exit 1; fi
             install_conda
     fi
     setup_conda_environment
