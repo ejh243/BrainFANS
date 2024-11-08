@@ -44,6 +44,16 @@ install_conda() {
     conda init --all
 }
 
+setup_conda_environment() {
+    environment_name="BrainFANS_DNAm"
+    conda config --add channels bioconda
+    conda config --add channels conda-forge
+    conda create \
+        -y \
+        --name "${environment_name}" \
+        --file "$(dirname "$0")/requirements-${environment_name}.txt"
+}
+
 main() {
     if check_cmd "conda"; then
         print_conda_missing_message
