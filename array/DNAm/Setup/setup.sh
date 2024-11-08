@@ -28,9 +28,11 @@ check_cmd() {
 
 print_conda_missing_message() {
 cat << MESSAGE
+${RED}
 WARNING:
 Conda is not installed/is not on PATH!
 Would you like to install conda? (y/n)
+${NO_COLOUR}
 MESSAGE
 }
 
@@ -78,10 +80,12 @@ EOF
 
 print_installation_unsuccessful_message() {
 cat << MESSAGE
+${RED}
 ERROR:
 Installation of R libraries was not successful. 
 Please create a bug report at: 
-https://github.com/ejh243/BrainFANS/issues/new/choose
+${BLUE}https://github.com/ejh243/BrainFANS/issues/new/choose
+${NO_COLOUR}
 MESSAGE
 }
 
@@ -110,4 +114,7 @@ main() {
 }
 
 if [[ $# -ne 1 ]]; then usage; fi
+RED='[0;31m'
+BLUE='[0;34m'
+NO_COLOUR='[0m'
 main "$1"
