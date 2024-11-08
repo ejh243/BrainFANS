@@ -133,8 +133,8 @@ main() {
 
     if ! check_cmd "conda"; then
         print_conda_missing_message
-        read -r continue_install
-        if [[ "${continue_install}" == "n" ]]; then exit 1; fi
+        read -r install
+        if [[ "${install}" == "n" ]]; then exit 1; fi
             install_conda
     fi
     find_conda_shell
