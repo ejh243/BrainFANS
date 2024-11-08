@@ -48,8 +48,6 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-Rscript installLibraries.r ${DATADIR}
-
 Rscript checkColnamesSampleSheet.r ${DATADIR}
 
 mkdir -p ${GDSDIR}/QCmetrics
