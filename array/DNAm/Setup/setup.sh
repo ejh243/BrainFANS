@@ -57,9 +57,9 @@ install_conda() {
 
 get_conda_shell() {
 cat << EOF
-Could not automatically find conda.sh. Please provide the full path to this
-file. If you are finding this difficult, it should be inside your conda
-installation directory under:
+Could not find conda.sh at ${conda_shell_location}. Please provide the full
+path to this file. If you are finding this difficult, it should be inside your
+conda installation directory under:
 .../conda-installation-folder/etc/profile.d/conda.sh
 EOF
     read -r conda_shell_location
