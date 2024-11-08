@@ -17,7 +17,7 @@ USAGE
 source_config_file() {
     config_file_path=$1
     source "${config_file_path}" || {
-            >&2 echo "ERROR: config file not found at ${config_file_path}. Please check this."
+            >&2 echo "${RED}ERROR: config file not found at ${config_file_path}. Please check this path is correct.${NO_COLOUR}"
             exit 2
         }
 }
