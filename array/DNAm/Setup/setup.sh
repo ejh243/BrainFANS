@@ -71,7 +71,7 @@ install_r_libraries() {
     # libraries (e.g. systemfonts).
 cat > "${SCRIPTSDIR}/array/DNAm/preprocessing/.Rprofile" << EOF
 source("renv/activate.R")
-.libPaths("$conda_path/envs/$environment_name/lib/R/library", .libPaths()))
+.libPaths(c("$conda_path/envs/$environment_name/lib/R/library", .libPaths()))
 EOF
     echo "Installing R libraries using renv, please follow on-screen instructions."
     cd "${SCRIPTSDIR}/array/DNAm/preprocessing/" || exit 1
