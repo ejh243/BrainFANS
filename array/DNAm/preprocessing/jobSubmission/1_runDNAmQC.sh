@@ -27,9 +27,11 @@ source $1 || exit 1
 
 echo "Executing setup..."
 
-if ! bash ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh $1; then 
-    >&2 echo "Installation unsuccessful."
-    exit 1
+if [[ -z "${DNAM_CONDA_ENVIRONMENT}" ]]; then
+    if ! bash ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh $1; then 
+        >&2 echo "Installation unsuccessful."
+        exit 1
+    fi
 fi
     
 
