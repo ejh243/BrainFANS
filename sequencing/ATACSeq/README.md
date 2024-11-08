@@ -49,12 +49,18 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
 
 Several software are needed to run the pipeline. Some of these can be used from a conda or pip environment. The set up script (0_setUp.sh) will create a conda environment where some of these packages will be installed either by conda or pip. As explained in *Requisites*, the packagesPip.txt and environment.yml files are needed for the conda environment to be set up. This can be done using either Anaconda or Miniconda, which local source directory needs to be specified in the *config.txt* file (`CONDA`). In order to download and install refer to: [Anaconda](https://docs.anaconda.com/anaconda/install/) or [Miniconda](https://docs.anaconda.com/miniconda/miniconda-install/)
 
+<<<<<<< HEAD
 Important software that will be installed in this environment are: MACS3 (3.0.2), SAMstats, SAMtools, BEDTools, Bowtie2, MultiQC, R, Python3, Pandoc, GATK, Picard. If you already have a conda environment, please specify its name or path in the *config.txt* file. 
   - Python version in this conda environment should be >= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
   - R version should be >= 4.2. Some packages are no longer supported in the regular CRAN repository and need to be installed from source. To do this, download the source file of the package [ptest R package](https://cran.r-project.org/src/contrib/Archive/ptest/), keep this in the *config* folder and this will be installed from source at the *0_setUp.sh* script.
 Other software that needs to be available locally are (and path to these need to be specified in the *config.txt* file):
   - [VerifyBamID](https://github.com/Griffan/VerifyBamID)
   - [Phantompeakqualtools](https://github.com/kundajelab/phantompeakqualtools)
+=======
+Important software that will be installed in this environment are: MACS3 (3.0.2) and samstats. If you already have a conda environment, please specify its name or path in the *config.txt* file. Please check the python version in this conda environment is <= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
+
+Other software needed are: BEDTools, Bowtie2, Picard and R. Note R also needs to be installed in the conda environment, as there are some packages that are not available for later versions of R. 
+>>>>>>> origin/atac-update
 
 ## STEPS
 
@@ -213,7 +219,7 @@ This script will detect possible DNA contamination in order to ensure high quali
 
  `sbatch ./jobSubmission/7_batchPeakCallingByGroup.sh (project directory) [STEPS] [GROUP]`
 
-This script groups samples per cell type, perform group level peak calling and gets read counts in peaks called. Samples used are those that have passed previous quality control stages 1 and 2. Cell fractions to which samples belong to need to be specified in the *config.txt* file.
+This script groups samples per cell type, performs group level peak calling and gets read counts in peaks called. Samples used are those that have passed previous quality control stages 1 and 2. Cell fractions to which samples belong to need to be specified in the *config.txt* file.
 
 ##### -scripts executed-
 - ./Rscripts/samplesForGroupAnalysis.r: creates a file with samples of cell group input.
