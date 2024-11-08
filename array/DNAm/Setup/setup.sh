@@ -90,6 +90,7 @@ check_installation() {
         echo "Installation successful"
     else
         print_installation_unsuccessful_message
+        exit 1
     fi
 }
 

@@ -25,6 +25,14 @@ echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}
 
 source $1 || exit 1
 
+echo "Executing setup"
+
+if ! bash ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh $1; then 
+    >&2 echo "Installation unsuccessful"
+    exit 1
+fi
+    
+
 echo "Processing data located in :" ${DATADIR}
 
 ## load modules
