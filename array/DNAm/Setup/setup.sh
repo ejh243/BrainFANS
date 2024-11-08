@@ -17,7 +17,7 @@ USAGE
 source_config_file() {
     config_file_path=$1
     source "${config_file_path}" || {
-            >&2 echo "${RED}ERROR: config file not found at ${config_file_path}. Please check this path is correct.${NO_COLOUR}"
+            echo "${RED}ERROR: config file not found at ${config_file_path}. Please check this path is correct.${NO_COLOUR}"
             exit 2
         }
 }
@@ -38,7 +38,7 @@ MESSAGE
 
 get_conda_path() {
     default_conda_path="${HOME}/miniconda3"
-    echo "Please enter the path you want to install conda to (default is $default_conda_path): "
+    echo "Please enter the path you want to install conda to (default is ${default_conda_path}, press enter for this path): "
     read -r conda_path
     if [[ -z "${conda_path}" ]]; then conda_path="${default_conda_path}"; fi
 }
