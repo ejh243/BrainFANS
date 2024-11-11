@@ -137,9 +137,7 @@ main() {
         if [[ "${install}" == "n" ]]; then exit 1; fi
             install_conda
     else
-        # Need to use where, as `which conda` returns a function, not the
-        # binary file.
-        conda_bin=$(where conda | tail -1)
+        conda_bin=$(which conda)
         conda_path=${conda_bin%/condabin/conda}
     fi
     find_conda_shell
