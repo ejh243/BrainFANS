@@ -94,7 +94,7 @@ source("renv/activate.R")
 EOF
     echo "Installing R libraries using renv, please follow on-screen instructions."
     cd "${SCRIPTSDIR}/array/DNAm/preprocessing/" || exit 1
-    R
+    Rscript "installPackages.R"
 }
 
 print_installation_unsuccessful_message() {
