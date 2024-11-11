@@ -76,12 +76,14 @@ find_conda_shell() {
 
 setup_conda_environment() {
     environment_name="BrainFANS_DNAm"
-    conda config --add channels bioconda
-    conda config --add channels conda-forge
-    conda create \
-        -y \
-        --name "${environment_name}" \
-        --file "$(dirname "$0")/requirements-${environment_name}.txt"
+    if ! conda env list | grep -q "${environment_name}"; then
+        conda config --add channels bioconda
+        conda config --add channels conda-forge
+        conda create \
+            -y \
+            --name "${environment_name}" \
+            --file "$(dirname "$0")/requirements-${environment_name}.txt"
+    fi
 }
 
 install_r_libraries() {
