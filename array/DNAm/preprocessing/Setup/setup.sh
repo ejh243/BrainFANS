@@ -63,6 +63,7 @@ conda installation directory under:
 .../conda-installation-folder/etc/profile.d/conda.sh
 EOF
     read -r conda_shell_location
+    conda_path=${conda_shell_location%/etc/profile.d/conda.sh}
 }
 
 find_conda_shell() {
@@ -135,6 +136,11 @@ main() {
         read -r install
         if [[ "${install}" == "n" ]]; then exit 1; fi
             install_conda
+    else
+        # Need to use where, as `which conda` returns a function, not the
+        # binary file.
+        conda_bin=$(where conda | tail -1)
+        conda_path=${conda_bin%/condabin/conda}
     fi
     find_conda_shell
     setup_conda_environment
