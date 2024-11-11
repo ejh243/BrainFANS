@@ -2,6 +2,7 @@ This readme explains how to use the scripts for running the DNAm analysis pipeli
 
 PREQUISITES:
 	* A config file with the file paths specific to their project 
+	* Run the setup script found in .../Setup, provide the config file as a command line argument
 	* A file named sampleSheet.csv in the 0_metadata folder which lists the samples to process 
 	* idats are in the 1_raw folder
 
