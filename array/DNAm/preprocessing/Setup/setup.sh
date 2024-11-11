@@ -18,7 +18,7 @@ source_config_file() {
     config_file_path=$1
     source "${config_file_path}" || {
             echo "${RED}ERROR: config file not found at ${config_file_path}. Please check this path is correct.${NO_COLOUR}"
-            exit 2
+            exit 1
         }
 }
 
