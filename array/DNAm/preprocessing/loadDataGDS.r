@@ -143,7 +143,7 @@ for(i in 1:length(loadGroups)){
   ## update feature data
   if(updateProbes){
     print("Updating Feature data")
-    if(arrayType== "450k"){
+    if(arrayType== "450K"){
       annoObj <- minfi::getAnnotationObject("IlluminaHumanMethylation450kanno.ilmn12.hg19")
     }
     if(arrayType == "V1"){
