@@ -61,12 +61,12 @@ manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infi
 print("loaded EpicV2 manifest")
 }
 
-if(arrayType == "HM450K"){
+if(arrayType == "450K"){
 load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
 colnames(manifest) <- c("CHR", "Infinium_Design_Type")
 manifest$CHR <- paste0("chr", manifest$CHR)
-print("loaded hm450k manifest")
+print("loaded 450k manifest")
 rm(probeAnnot)
 }
 
@@ -80,7 +80,7 @@ QCmetrics<-QCmetrics[match(passQC, QCmetrics$Basename),]
 
 rawbetas<-gfile[,, node = "betas"]
 rawbetas<-rawbetas[,match(passQC, colnames(rawbetas))]
-if(arrayType == "V2" | arrayType == "HM450K"){
+if(arrayType == "V2" | arrayType == "450K"){
     auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
   } else {
     auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")

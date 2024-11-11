@@ -89,11 +89,11 @@ unmeth<-unmethylated(normfile)[,]
 rawbetas<-betas(normfile)[,]
 
 # need to know which probe type
-if(arrayType == "HM450K"){
+if(arrayType == "450K"){
 	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$TargetID),]
 	colnames(probeAnnot)[which(colnames(probeAnnot) == "INFINIUM_DESIGN_TYPE")]<-"designType"
-	print("loaded hm450k manifest")
+	print("loaded 450k manifest")
 } 
 
 if(arrayType == "V1"){
