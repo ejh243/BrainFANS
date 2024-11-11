@@ -75,9 +75,9 @@ if (!toupper(tissueType) %in% c("BRAIN", "BLOOD")) {
   bad_parameter_exists <- TRUE
   warning("\nUnrecognised tissueType. Must be either 'blood' or 'brain'\n")
 }
-if (!toupper(arrayType) %in% c("HM450K", "V1", "V2")) {
+if (!toupper(arrayType) %in% c("450K", "V1", "V2")) {
   bad_parameter_exists <- TRUE
-  warning("\nUnrecognised arrayType. Must be 'HM450K', 'V1' or 'V2'\n")
+  warning("\nUnrecognised arrayType. Must be '450K', 'V1' or 'V2'\n")
 }
 
 if (!"Cell_Type" %in% projVar && ctCheck) {

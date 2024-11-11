@@ -85,12 +85,12 @@ if(arrayType == "V2"){
 	print("loaded EpicV2 manifest")
 }
 
-if(arrayType == "HM450K"){
+if(arrayType == "450K"){
 	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 	manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
 	colnames(manifest) <- c("CHR", "Infinium_Design_Type")
 	manifest$CHR <- paste0("chr", manifest$CHR)
-	print("loaded hm450k manifest")
+	print("loaded 450k manifest")
 	rm(probeAnnot)
 }
 
@@ -164,7 +164,7 @@ if(!"PC1_cp" %in% colnames(QCmetrics)){
 if(!"PC1_betas" %in% colnames(QCmetrics)){
 	print("Calculating PCs of autosomal beta values")
 	# filter to autosomal only
-	if(arrayType == "V2" | arrayType == "HM450K"){
+	if(arrayType == "V2" | arrayType == "450K"){
 		auto.probes<-which(manifest$CHR != "chrX" & manifest$CHR != "chrY")
 	} else {
 		auto.probes<-which(fData(gfile)$chr != "chrX" & fData(gfile)$chr != "chrY")
@@ -303,7 +303,7 @@ if(!"nNAsPer" %in% colnames(QCmetrics)){
 # NOTE threshold for M prediction not valid for epicV2 data
 if(!"predSex" %in% colnames(QCmetrics)){	
 	print("Performing sex prediction from sex chromosome profiles")	
-	if(arrayType == "V2" | arrayType == "HM450K"){
+	if(arrayType == "V2" | arrayType == "450K"){
 		x.probes<-which(manifest$CHR == "chrX")
 		y.probes<-which(manifest$CHR == "chrY")
 	} else {
