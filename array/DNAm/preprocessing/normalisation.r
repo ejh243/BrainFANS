@@ -93,7 +93,7 @@ if(arrayType == "450K"){
 	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$TargetID),]
 	colnames(probeAnnot)[which(colnames(probeAnnot) == "INFINIUM_DESIGN_TYPE")]<-"designType"
-	print("loaded 450k manifest")
+	print("loaded 450K manifest")
 } 
 
 if(arrayType == "V1"){
