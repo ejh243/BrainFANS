@@ -11,10 +11,13 @@ all_pkgs <- c(
     "IlluminaHumanMethylationEPICv2manifest"
 )
 
-'%ni%' <- Negate('%in%')
+"%ni%" <- Negate("%in%")
 if (all(all_pkgs %in% rownames(installed.packages()))) {
     print("All packages successfully installed")
 } else {
     absent <- all_pkgs[all_pkgs %ni% rownames(installed.packages())]
-    stop("Failed installation of ", length(absent), " packages: ", absent)
+    stop(
+        "Failed installation of ", length(absent), " packages: ",
+        cat(absent, sep = ", ")
+    )
 }
