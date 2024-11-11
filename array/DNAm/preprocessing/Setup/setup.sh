@@ -139,8 +139,7 @@ main() {
         if [[ "${install}" == "n" ]]; then exit 1; fi
             install_conda
     else
-        conda_bin=$(which conda)
-        conda_path=${conda_bin%/condabin/conda}
+        conda_path=${CONDA_EXE%/bin/conda}
     fi
     find_conda_shell
     setup_conda_environment
