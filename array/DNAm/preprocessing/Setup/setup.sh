@@ -142,6 +142,7 @@ main() {
         conda_path=${CONDA_EXE%/bin/conda}
     fi
     find_conda_shell
+    source "${conda_shell_location}" || exit 1
     setup_conda_environment
     conda activate "${environment_name}"
     install_r_libraries
