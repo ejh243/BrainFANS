@@ -143,6 +143,7 @@ main() {
     fi
     find_conda_shell
     setup_conda_environment
+    conda activate "${environment_name}"
     install_r_libraries
     check_installation
     add_to_config_file "${config_file_path}"
