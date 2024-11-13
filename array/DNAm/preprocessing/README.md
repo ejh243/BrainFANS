@@ -5,6 +5,7 @@ This readme explains how to use the scripts for running the DNAm analysis pipeli
 * A config file with the file paths specific to their project 
 * Run the setup script found in array/DNAm/preprocessing/Setup and provide the
 full path config file as the only command line argument
+	* With 32GB of RAM and an i7-10610U CPU, the installation process took 1 hour and 37 minutes.
 * A file named sampleSheet.csv in the 0_metadata folder which lists the samples
 to process 
 * idats are in the 1_raw folder
