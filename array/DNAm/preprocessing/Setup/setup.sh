@@ -92,7 +92,7 @@ install_r_libraries() {
     # libraries (e.g. systemfonts).
 cat > "${SCRIPTSDIR}/array/DNAm/preprocessing/.Rprofile" << EOF
 source("renv/activate.R")
-.libPaths(c("$conda_path/envs/$environment_name/lib/R/library", .libPaths()))
+.libPaths(c("${conda_path}/envs/${environment_name}/lib/R/library", .libPaths()))
 EOF
     echo "Installing R libraries using renv, please follow on-screen instructions."
     cd "${SCRIPTSDIR}/array/DNAm/preprocessing/" || exit 1
@@ -110,7 +110,7 @@ cat << MESSAGE
 ${GREEN}
 Installation successful.
 ${BLUE}
-Installation process took a total of: $time_taken_minutes minutes.
+Installation process took a total of: ${time_taken_minutes} minutes.
 ${NO_COLOUR}
 MESSAGE
 }
@@ -148,7 +148,7 @@ EOF
 
 main() {
     config_file_path=$1
-    source_config_file "$config_file_path"
+    source_config_file "${config_file_path}"
 
     if ! check_cmd "conda"; then
         print_conda_missing_message
