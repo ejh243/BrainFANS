@@ -145,6 +145,10 @@ main() {
     source "${conda_shell_location}" || exit 1
     setup_conda_environment
     conda activate "${environment_name}"
+    
+    # This assists R in finding the correct pkg-config files so that curl
+    # can be properly configured.
+    export PKG_CONFIG_PATH="${conda_path}/envs/${environment_name}/lib/pkgconfig"
     install_r_libraries
     check_installation
     add_to_config_file "${config_file_path}"
