@@ -175,6 +175,6 @@ main() {
 if [[ $# -ne 1 ]]; then usage; fi
 RED='[0;31m'
 BLUE='[0;34m'
-GREEN='0;32m'
+GREEN='[0;32m'
 NO_COLOUR='[0m'
 main "$1"
