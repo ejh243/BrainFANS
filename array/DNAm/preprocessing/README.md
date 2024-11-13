@@ -1,6 +1,6 @@
 This readme explains how to use the scripts for running the DNAm analysis pipeline
 
-PREQUISITES:
+## PREQUISITES:
 
 * A config file with the file paths specific to their project 
 * Run the setup script found in array/DNAm/preprocessing/Setup and provide the
@@ -9,13 +9,13 @@ full path config file as the only command line argument
 to process 
 * idats are in the 1_raw folder
 
-OUTPUT:
+## OUTPUT:
 
 * html QC report are located in 2_gds/QCmetrics
 * text file summarising the QC metrics and filtering are located in 2_gds/QCmetrics
 * log files are saved to logFiles in the data directory with the prefix `QCDNAdata`
 
-#### Data pre-processing
+## Data pre-processing
 
 Provided is a SLURM job submission script which automates the preprocessing and can be submitted as follows
 
