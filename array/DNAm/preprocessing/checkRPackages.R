@@ -17,6 +17,6 @@ if (!all(required_packages %in% rownames(installed.packages()))) {
         required_packages[required_packages %ni% rownames(installed.packages())]
     stop(
         "Failed installation of ", length(absent_packages), " packages: ",
-        cat(absent_packages, sep = ", ")
+        paste(absent_packages, sep = ", ")
     )
 }
