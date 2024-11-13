@@ -12,9 +12,7 @@ all_pkgs <- c(
 )
 
 "%ni%" <- Negate("%in%")
-if (all(all_pkgs %in% rownames(installed.packages()))) {
-    print("All packages successfully installed")
-} else {
+if (!all(all_pkgs %in% rownames(installed.packages()))) {
     absent <- all_pkgs[all_pkgs %ni% rownames(installed.packages())]
     stop(
         "Failed installation of ", length(absent), " packages: ",
