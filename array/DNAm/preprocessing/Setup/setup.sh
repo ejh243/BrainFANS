@@ -99,6 +99,22 @@ EOF
     Rscript "installPackages.R"
 }
 
+print_installation_successful_message() {
+    start_time=$1
+    local end_time
+    local time_taken_minutes
+
+    end_time=$(date +%s)
+    time_taken_minutes=$(((end_time - start_time) / 60))
+cat << MESSAGE
+${GREEN}
+Installation successful.
+${BLUE}
+Installation process took a total of: $time_taken_minutes minutes.
+${NO_COLOUR}
+MESSAGE
+}
+
 print_installation_unsuccessful_message() {
 cat << MESSAGE
 ${RED}
@@ -111,8 +127,9 @@ MESSAGE
 }
 
 check_installation() {
+    start_time=$1
     if Rscript "${SCRIPTSDIR}/array/DNAm/preprocessing/checkRPackages.R"; then
-        echo "${GREEN}Installation successful${NO_COLOUR}"
+        print_installation_successful_message "${start_time}"
     else
         print_installation_unsuccessful_message
         exit 1
@@ -143,6 +160,7 @@ main() {
     fi
     find_conda_shell
     source "${conda_shell_location}" || exit 1
+    start_time=$(date +%s)
     setup_conda_environment
     conda activate "${environment_name}"
     
@@ -150,7 +168,7 @@ main() {
     # can be properly configured.
     export PKG_CONFIG_PATH="${conda_path}/envs/${environment_name}/lib/pkgconfig"
     install_r_libraries
-    check_installation
+    check_installation "${start_time}"
     add_to_config_file "${config_file_path}"
 }
 
