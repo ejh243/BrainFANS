@@ -1,4 +1,4 @@
-all_pkgs <- c(
+required_packages <- c(
     "pander", "kableExtra", "gplots", "diptest", "corrplot", "pheatmap",
     "mixtools", "RColorBrewer", "rmarkdown", "e1071", "stringdist",
     "data.table", "matrixStats", "quadprog", "reshape2", "wateRmelon",
@@ -12,10 +12,11 @@ all_pkgs <- c(
 )
 
 "%ni%" <- Negate("%in%")
-if (!all(all_pkgs %in% rownames(installed.packages()))) {
-    absent <- all_pkgs[all_pkgs %ni% rownames(installed.packages())]
+if (!all(required_packages %in% rownames(installed.packages()))) {
+    absent_packages <-
+        required_packages[required_packages %ni% rownames(installed.packages())]
     stop(
-        "Failed installation of ", length(absent), " packages: ",
-        cat(absent, sep = ", ")
+        "Failed installation of ", length(absent_packages), " packages: ",
+        cat(absent_packages, sep = ", ")
     )
 }
