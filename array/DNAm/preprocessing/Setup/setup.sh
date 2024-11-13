@@ -94,7 +94,7 @@ cat > "${SCRIPTSDIR}/array/DNAm/preprocessing/.Rprofile" << EOF
 source("renv/activate.R")
 .libPaths(c("${conda_path}/envs/${environment_name}/lib/R/library", .libPaths()))
 EOF
-    echo "Installing R libraries using renv, please follow on-screen instructions."
+    echo "Installing R libraries using renv..."
     cd "${SCRIPTSDIR}/array/DNAm/preprocessing/" || exit 1
     Rscript "installPackages.R"
 }
