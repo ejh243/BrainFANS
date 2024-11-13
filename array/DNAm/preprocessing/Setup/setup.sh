@@ -112,7 +112,7 @@ MESSAGE
 
 check_installation() {
     if Rscript "${SCRIPTSDIR}/array/DNAm/preprocessing/checkRPackages.R"; then
-        echo "Installation successful"
+        echo "${GREEN}Installation successful${NO_COLOUR}"
     else
         print_installation_unsuccessful_message
         exit 1
@@ -157,5 +157,6 @@ main() {
 if [[ $# -ne 1 ]]; then usage; fi
 RED='[0;31m'
 BLUE='[0;34m'
+GREEN='0;32m'
 NO_COLOUR='[0m'
 main "$1"
