@@ -15,8 +15,12 @@ required_packages <- c(
 if (!all(required_packages %in% rownames(installed.packages()))) {
     absent_packages <-
         required_packages[required_packages %ni% rownames(installed.packages())]
+    number_of_missing_packages <- length(absent_packages)
+    absent_packages <- paste(absent_packates, sep = ", ")
     stop(
-        "Failed installation of ", length(absent_packages), " packages: ",
-        paste(absent_packages, sep = ", ")
+        "Failed installation of ",
+        number_of_missing_packages,
+        " packages: ",
+        absent_packages
     )
 }
