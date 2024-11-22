@@ -169,7 +169,9 @@ main() {
     export PKG_CONFIG_PATH="${conda_path}/envs/${environment_name}/lib/pkgconfig"
     install_r_libraries
     check_installation "${start_time}"
-    add_to_config_file "${config_file_path}"
+    if ! grep -q "CONDA_SHELL" "${config_file_path}"; then
+        add_to_config_file "${config_file_path}"
+    fi
 }
 
 if [[ $# -ne 1 ]]; then usage; fi
