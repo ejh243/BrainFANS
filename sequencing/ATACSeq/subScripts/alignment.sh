@@ -88,7 +88,8 @@ rm ${ALIGNED_DIR}/${sampleName}_noMT.bam
 # Mark duplicates
 samtools addreplacerg -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o ${ALIGNED_DIR}/${sampleName}_filt.name.bam ${ALIGNED_DIR}/${sampleName}.filt.bam
 
-picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${sampleName}_filt.name.bam -OUTPUT ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam -METRICS_FILE ${ALIGNED_DIR}/${sampleName}_dupMetrics.txt -VALIDATION_STRINGENCY LENIENT -ASSUME_SORTED true -REMOVE_DUPLICATES false
+picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${sampleName}_filt.name.bam -OUTPUT ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam -METRICS_FILE ${ALIGNED_DIR}/${sampleName}_dupMetrics.txt \
+-VALIDATION_STRINGENCY LENIENT -ASSUME_SORTED true -REMOVE_DUPLICATES false --TMP_DIR ${TMPDIR}
 
 rm ${ALIGNED_DIR}/${sampleName}.filt.bam
 

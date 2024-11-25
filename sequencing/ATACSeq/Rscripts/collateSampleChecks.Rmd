@@ -7,8 +7,7 @@ output:
     toc_float: true
     code_folding: hide
 params:
-  project: !r commandArgs(trailingOnly=T)[3]
-  configFile: !r file.path(commandArgs(trailingOnly=T)[2], "/ATACSeq/config/config.r")
+  configFile: !r commandArgs(trailingOnly=TRUE)[3]
 ---
 
 ```{r setup, include=FALSE}
@@ -20,13 +19,14 @@ library(ggplot2)
 library(ggpubr)
 library(tidyverse)
 library(kableExtra)
+library(gridExtra)
 
-source(file.path(commandArgs(trailingOnly=T)[2],"ATACSeq/preprocessing/rmdLoadConfig.r"))
+source(params$configFile)
 
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 
-s1Pass<-read.table(file.path(metaDir, "/passStage1SampleList.txt"))
-
+s1Pass <- read.csv(file.path(metaDir, "/passStage1Status.csv"),header = TRUE)
+s1Pass <- s1Pass[match(pheno$sampleID, s1Pass$sampleID),]
 ```
 
 ## Overview
@@ -40,7 +40,7 @@ nCTStart<-table(pheno$fraction)
 nSBStart<-table(pheno$sequencingBatch)
 nBBStart<-table(pheno$cohort)
 
-pheno<-pheno[match(s1Pass$V1, pheno$sampleID),]
+pheno<-pheno[match(s1Pass$sampleID, pheno$sampleID),]
 
 nCTMid<-table(pheno$fraction)
 nSBMid<-table(pheno$sequencingBatch)
@@ -76,33 +76,34 @@ kbl(bbCounts) %>%
 
 ## reads in peaks annotated to XIST and FIRRE
 
-xPeakFile<-file.path(dir, "5_countPeaks", "MACS","ShiftedTagAlign", "sexChr", "chrX.peakcounts.txt")
-yPeakFile<-file.path(dir, "5_countPeaks", "MACS","ShiftedTagAlign","sexChr", "chrY.peakcounts.txt")
+xPeakFile<-file.path(dir, "/5_countPeaks", "ShiftedTagAlign", "sexChr", "chrX.peakcounts.txt")
+yPeakFile<-file.path(dir, "/5_countPeaks", "ShiftedTagAlign","sexChr", "chrY.peakcounts.txt")
+
 xPeaks<-read.table(xPeakFile, stringsAsFactors = FALSE)
-yPeaks<-read.table(yPeakFile, stringsAsFactors = FALSE)
+yPeaks<-read.table(yPeakFile, stringsAsFactors = FALSE,fill = TRUE)
 
-xPeaks<-unique(xPeaks)
+colnames(xPeaks)[c(4,17,18)] <- c("sex-gene","counts","sampleID")
+colnames(yPeaks)[c(4,10,11)] <- c("peak-name","counts","sampleID")
 
-xPeaks$V18<-basename(xPeaks$V18)
-yPeaks$V10<-basename(yPeaks$V10)
+xPeaks$sampleID<-basename(xPeaks$"sampleID")
+yPeaks$sampleID<-basename(yPeaks$"sampleID")
+
 xPeaksWide = xPeaks %>% 
-	select(V4, V17, V18) %>% 
-  spread(V4, V17)
+	select("sex-gene","counts","sampleID") %>% 
+  spread("sex-gene","counts")
 
 yPeaksWide = yPeaks %>% 
-	select(V4, V10, V11) %>% 
-  spread(V4, V11)
+	select("peak-name","counts","sampleID") %>%
+ spread("peak-name","counts")
 
-## filter to samples pass S1
-xPeaksWide$V18<-gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$V18)
-yPeaksWide$V10<-gsub(".chrY.tn5.tagAlign.gz", "", yPeaksWide$V10)
+xPeaksWide$sampleID<-gsub(".chrX.tn5.tagAlign.gz", "", xPeaksWide$sampleID, fixed = TRUE)
+yPeaksWide$sampleID<-gsub(".chrY.tn5.tagAlign.gz", "", yPeaksWide$sampleID,fixed = TRUE)
 
-xPeaksWide<-xPeaksWide[match(pheno$sampleID, xPeaksWide$V18), ]
-yPeaksWide<-yPeaksWide[match(pheno$sampleID,yPeaksWide$V10 ),]
+xPeaksWide<-xPeaksWide[match(pheno$sampleID,xPeaksWide$sampleID), ]
+yPeaksWide<-yPeaksWide[match(pheno$sampleID,yPeaksWide$sampleID),]
 
 xPeaksWide$YTot<-rowSums(yPeaksWide[,-1])
 xPeaksWide$sex<-pheno$gender
- 
 
 ## determine threshold as a line to bisect the two groups 
 ratioF<-xPeaksWide$YTot/xPeaksWide$FIRRE
@@ -138,7 +139,7 @@ dev.off()
 		  
 ## predict sex
 
-sexPredict<-data.frame("sampleID" = xPeaksWide$V18,"LabelledSex" = xPeaksWide$sex, "FIRREratio" = ratioF > thresF,"XISTratio" = ratioX > thresX)
+sexPredict<-data.frame("sampleID" = xPeaksWide$sampleID,"LabelledSex" = xPeaksWide$sex, "FIRREratio" = ratioF > thresF,"XISTratio" = ratioX > thresX)
 
 ## TRUE means male
 sexPredict[sexPredict == TRUE]<-"M"
@@ -146,8 +147,6 @@ sexPredict[sexPredict == FALSE]<-"F"
 sexPredict$concordantPredictions<-sexPredict$FIRREratio == sexPredict$XISTratio
 sexPredict$concordantLabel<-xPeaksWide$sex == sexPredict$FIRREratio
 sexPredict$concordantLabel[sexPredict$concordantPredictions != TRUE]<-FALSE
-
-write.csv(sexPredict, file.path(dir, "3_aligned", "QCOutput", "sexPredictions.csv"))
 ```
 
 Sex was predicted from the ATAC data as follows. Peak calling was performed with MACS2 on the X and Y chromsome. Three metrics were then generated for each sample. The read counts of OCRs adjacent to FIRRE and XIST, which are only, or predominantly, accessible in females and aggregate read counts in OCRs on chromosome Y outside the pseudoautosomal region. Sex predictions were made by plotting each of the two X chromosome counts against the single Y chromosome counts. The samples then cluster into two groups, representing each sex (see below). Females are then predicted where the X chromosome counts are greater than the Y chromosome counts. 
@@ -190,7 +189,11 @@ for(each in outFiles){
 colnames(genoScores)<-c("sampleID", "SEQ_ID", "RG", "CHIP_ID", "nSNPS", "nREADS", "AVG_DP", "FREEMIX", "FREELK1", "FREELK0", "FREE_RH", "FREE_RA", "CHIPMIX","CHIPLK1","CHIPLK0","CHIP_RH","CHIP_RA","DPREF","RDPHET","RDPALT")
 
 genoScores<-genoScores[match(pheno$sampleID, genoScores$sampleID),]
-
+fraction <- pheno[match(genoScores$sampleID, pheno$sampleID),]$fraction
+genoScores$fraction <- fraction
+genoScores$cohort <- pheno[match(genoScores$sampleID, pheno$sampleID),]$cohort
+genoScores$batch <- pheno[match(genoScores$sampleID, pheno$sampleID),]$sequencingBatch
+genoScores.plots <- genoScores %>% drop_na(sampleID)
 ```
 
 
@@ -212,26 +215,30 @@ hist(genoScores$CHIPMIX, breaks = 50, col = "grey", ylab = "Number of samples", 
 
 ```
 
-```{r}
+```{r fig.height = 10, fig.width = 10}
+p <- NULL
+p[[1]] <- ggplot(genoScores.plots, aes(x=FREEMIX, y=CHIPMIX, color=fraction))+geom_point(size=3)+ geom_vline(xintercept=0.1) + geom_hline(yintercept=0.1)+ geom_hline(yintercept=0.9) + xlab("Proportion contamination (seq only) (FREEMIX)")+ylab("Proportion contamination (given genotypes) (CHIPMIX)") + theme(legend.title = element_blank(), 
+          legend.position = 'bottom')+theme_bw()
 
-plot(genoScores$FREEMIX, genoScores$CHIPMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Proportion contamination (seq only)", ylab = "Proportion contamination (given genotypes)")
-abline(v = 0.1)
-abline(h = c(0.1,0.9))
+p[[2]] <- ggplot(genoScores.plots, aes(x=FREEMIX, y=CHIPMIX, color=cohort))+geom_point(size=3)+ geom_vline(xintercept=0.1) + geom_hline(yintercept=0.1)+ geom_hline(yintercept=0.9) + xlab("Proportion contamination (seq only) (FREEMIX)")+ylab("Proportion contamination (given genotypes) (CHIPMIX)")+ theme(legend.title = element_blank(), 
+          legend.position = 'bottom')+theme_bw()
+
+p[[3]] <- ggplot(genoScores.plots, aes(x=FREEMIX, y=CHIPMIX, color=as.factor(batch)))+geom_point(size=3)+ geom_vline(xintercept=0.1) + geom_hline(yintercept=0.1)+ geom_hline(yintercept=0.9) + xlab("Proportion contamination (seq only)")+ylab("Proportion contamination (given genotypes)")+ theme(legend.title = element_blank(), 
+          legend.position = 'bottom')+theme_bw()
+grid.arrange(grobs = p,ncol=2)
 
 ```
 
 Let's compare the contamination statistics against other metrics of data quality.
 
-```{r}
-par(mfrow = c(1,2))
-plot(genoScores$nREADS/1e6, genoScores$FREEMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Number of reads (M)", ylab = "Proportion contamination (seq only")
-abline(v = 10)
-abline(h = c(0.1,0.9))
+```{r fig.height = 7, fig.width = 10}
 
-plot(genoScores$nREADS/1e6, genoScores$CHIPMIX, pch = 16, col = colorBlindGrey8[as.factor(pheno$fraction)], xlab = "Number of reads (M)", ylab = "Proportion contamination (given genotypes)")
-abline(v = 10)
-abline(h = c(0.1,0.9))
+p <- NULL
+p[[1]] <- ggplot(genoScores.plots, aes(x=nREADS/1e6, y=FREEMIX, color=fraction))+geom_point(size=3)+ geom_hline(yintercept=0.1)+ geom_hline(yintercept=0.9) +xlab("Number of reads (M)")+ylab("Proportion contamination (seq only (FREEMIX))") +theme_bw()
 
+p[[2]] <- ggplot(genoScores.plots, aes(x=nREADS/1e6, y=CHIPMIX, color=fraction))+geom_point(size=3)+ geom_hline(yintercept=0.1)+ geom_hline(yintercept=0.9) +xlab("Number of reads (M)")+ylab("Proportion contamination (seq only (CHIPMIX)")+theme_bw()
+
+grid.arrange(grobs = p,ncol=2)
 
 ```
 
@@ -241,7 +248,7 @@ We will define samples that match their genotype data those with < 0.1 contamina
 ```{r}
 
 genoCheck<-genoScores$FREEMIX < 0.1 & genoScores$CHIPMIX < 0.1
-
+genoScores$genoCheck<-genoScores$FREEMIX < 0.1 & genoScores$CHIPMIX < 0.1
 contamCheck<-table(genoScores$FREEMIX < 0.1,cut(genoScores$CHIPMIX, breaks = c(0,0.1, 0.9,1)))
 
 kbl(contamCheck) %>%
@@ -256,11 +263,12 @@ We will define candidates for potential swaps as those with > 0.9 contamination 
 
 ```{r samplePASS}
 # generate a txt file of passed samples
-QCPASS<-cbind(sexPredict$concordantLabel, genoCheck)
-
+QCPASS<-cbind(sexPredict$concordantLabel, genoScores$genoCheck)
 colnames(QCPASS)<-c("sexCheck", "genoCheck")
-
-write.csv(cbind(pheno, QCPASS), file = file.path(metaDir, "/passStage2Status.csv"))
+pheno <- pheno[match(sexPredict$sampleID, pheno$sampleID),]
+passStage2<- cbind(pheno, QCPASS)
+passStage2$genoCheck[is.na(passStage2$genoCheck)& passStage2$sexCheck == TRUE]<- TRUE
+write.csv(passStage2, file = file.path(metaDir, "/passStage2Status.csv"))
 
 # need to keep samples without sex or genotype data to confirm.
 keep<-rowSums(QCPASS) == rowSums(!is.na(QCPASS))
@@ -269,6 +277,19 @@ write.table(names(keep[keep==TRUE]), file = file.path(metaDir, "/passStage2Sampl
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 QCPASS<-cbind(QCPASS, "QCPASS" = rowSums(QCPASS) == ncol(QCPASS))
+QCPASS <- as.data.frame(QCPASS)
+QCPASS$QCPASS[is.na(QCPASS$genoCheck)& QCPASS$sexCheck == TRUE]<- TRUE
+QCPASS$QCPASS[is.na(QCPASS$genoCheck)& QCPASS$sexCheck == FALSE]<- FALSE
+QCPASS$QCPASS[is.na(QCPASS$sexCheck)& QCPASS$genoCheck == FALSE]<- FALSE
+QCPASS$QCPASS[is.na(QCPASS$sexCheck)& is.na(QCPASS$genoCheck)]<- FALSE
+QCPASSALL<-cbind(passStage2, "QCS1" = s1Pass$QCPASS, "QCS2" = QCPASS$QCPASS)
+#QCPASSALL$QCS2[is.na(QCPASSALL$QCS2)& QCPASSALL$sexCheck == TRUE]<- TRUE
+QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == TRUE]<- TRUE
+QCPASSALL$PASSALL[QCPASSALL$QCS2==FALSE & QCPASSALL$QCS1 == TRUE]<- FALSE
+QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == FALSE]<- FALSE
+QCPASSALL$PASSALL[QCPASSALL$QCS2==FALSE & QCPASSALL$QCS1 == FALSE]<- FALSE
+QCPASSALL$PASSALL[is.na(QCPASSALL$QCS2) & QCPASSALL$QCS1 == FALSE]<- FALSE
+write.csv(QCPASSALL, file = file.path(metaDir, "/passAllStatus.csv"), row.names = FALSE)
 ```
 
 Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.

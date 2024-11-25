@@ -57,9 +57,9 @@ then
     fi
     
     samtools addreplacerg -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o ${ALIGNED_DIR}/${sampleName}_sorted_name.bam ${ALIGNED_DIR}/${sampleName}_sorted.bam
-
+    
     ## mark duplicates only
-    picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${sampleName}_sorted_name.bam -OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam -METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt
+    picard MarkDuplicates -INPUT ${ALIGNED_DIR}/${sampleName}_sorted_name.bam -OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam -METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt -TMP_DIR ${TMPDIR}
 
     ## add read group
     picard AddOrReplaceReadGroups -I ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam \

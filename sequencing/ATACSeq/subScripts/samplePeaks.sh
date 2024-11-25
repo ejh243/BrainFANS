@@ -43,19 +43,19 @@ fi
 sampleBAM=${sampleName}.filt.nodup.bam
 
 echo "Calling peaks using MACS3 PE for"" ${sampleName}"
-macs3 callpeak -t ${ALIGNED_DIR}/${sampleBAM} --outdir ${PEAK_DIR}/MACS/BAMPE -n ${sampleName} -f BAMPE -g 2.9e9 -q 5e-2 --keep-dup all --broad --broad-cutoff 5e-2
+macs3 callpeak -t ${ALIGNED_DIR}/${sampleBAM} --outdir ${PEAK_DIR}/BAMPE -n ${sampleName} -f BAMPE -g 2.9e9 -q 5e-2 --keep-dup all --broad --broad-cutoff 5e-2
 
 ## exclude peaks aligned to blacklist regions, exclude peaks called in chr X and Y, sorted by chromosome
-bedtools intersect -v -a ${PEAK_DIR}/MACS/BAMPE/${sampleName}_peaks.broadPeak -b ${BLACKLIST} \
+bedtools intersect -v -a ${PEAK_DIR}/BAMPE/${sampleName}_peaks.broadPeak -b ${BLACKLIST} \
 | awk '!/^(chrY|chrX)/' \
 | sort -k1 \
-| awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' > ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt
+| awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' > ${PEAK_DIR}/BAMPE/${sampleName}.broadPeak.filt
 
-rm ${PEAK_DIR}/MACS/BAMPE/${sampleName}_peaks.broadPeak
-rm ${PEAK_DIR}/MACS/BAMPE/${sampleName}_peaks.xls
-rm ${PEAK_DIR}/MACS/BAMPE/${sampleName}_peaks.gappedPeak  
+rm ${PEAK_DIR}/BAMPE/${sampleName}_peaks.broadPeak
+rm ${PEAK_DIR}/BAMPE/${sampleName}_peaks.xls
+rm ${PEAK_DIR}/BAMPE/${sampleName}_peaks.gappedPeak  
 
-if [[ ! -f ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt ]]
+if [[ ! -f ${PEAK_DIR}/BAMPE/${sampleName}.broadPeak.filt ]]
 then
   { echo "Peak calling on ${sampleName} could not be completed. Please make sure STEP 1.3 ALIGN was properly run." ; exit 1; }
 else
