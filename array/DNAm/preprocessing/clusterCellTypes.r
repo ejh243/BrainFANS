@@ -60,6 +60,8 @@ manifest <- cdegUtilities::readManifest(
 	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
 	arrayType = arrayType 
 )
+if (!exists("manifest"))
+	stop("Manifest file could not be loaded correctly")
 
 QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 passQC<-QCSum$Basename[QCSum[,"passQCS2"]]

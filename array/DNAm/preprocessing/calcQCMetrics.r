@@ -83,6 +83,8 @@ manifest <- cdegUtilities::readManifest(
 	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
 	arrayType = arrayType 
 )
+if (!exists("manifest"))
+	stop("Manifest file could not be loaded correctly")
 
 
 

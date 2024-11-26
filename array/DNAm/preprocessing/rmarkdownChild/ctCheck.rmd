@@ -11,6 +11,8 @@ manifest <- cdegUtilities::readManifest(
 	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
 	arrayType = arrayType 
 )
+if (!exists("manifest"))
+	stop("Manifest file could not be loaded correctly")
 
 ## filter samples
 QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
