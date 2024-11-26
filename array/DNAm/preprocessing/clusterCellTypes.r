@@ -164,9 +164,9 @@ for(i in 1:nrow(QCmetrics)){
 keepCols<-c("Individual_ID", "Sex", "Age", "Phenotype", "Tissue.Centre") 
 keepCols<-keepCols[keepCols %in% colnames(QCmetrics)]
 uniqueIDs<-unique(QCmetrics[,keepCols]) 
-if (is.character(uniqueIDs)) {
+if (!is.data.frame(uniqueIDs)) {
     uniqueIDs <- data.frame(Individual_ID=uniqueIDs)
-} 
+}
 
 indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell_Type != "Total")], by = 
 list(QCmetrics$Individual_ID[which(QCmetrics$Cell_Type != "Total")]), FUN = median, na.rm = 
