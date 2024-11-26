@@ -78,21 +78,11 @@ if(file.exists(qcData)){
 	print("QC object initiated")
 }
 
-
-if(arrayType == "V2"){
-	manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-	manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-	print("loaded EpicV2 manifest")
-}
-
-if(arrayType == "450K"){
-	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
-	manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
-	colnames(manifest) <- c("CHR", "Infinium_Design_Type")
-	manifest$CHR <- paste0("chr", manifest$CHR)
-	print("loaded 450K manifest")
-	rm(probeAnnot)
-}
+manifest <- cdegUtilities::readManifest(
+	referenceDirectory = refDir,
+	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
+	arrayType = arrayType 
+)
 
 
 
@@ -274,7 +264,7 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 
 	if(arrayType == "V2"){
 		normbeta <- adjustedDasen(
-			onetwo = manifest$Infinium_Design_Type,
+			onetwo = manifest$designType,
 			chr = manifest$CHR,
 			mns = read.gdsn(methylated(gfile)),
 			uns = read.gdsn(unmethylated(gfile)))

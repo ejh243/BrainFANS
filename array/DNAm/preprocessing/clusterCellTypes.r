@@ -55,21 +55,11 @@ setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
-if(arrayType== "V2"){
-manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-print("loaded EpicV2 manifest")
-}
-
-if(arrayType == "450K"){
-load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
-manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
-colnames(manifest) <- c("CHR", "Infinium_Design_Type")
-manifest$CHR <- paste0("chr", manifest$CHR)
-print("loaded 450K manifest")
-rm(probeAnnot)
-}
-
+manifest <- cdegUtilities::readManifest(
+	referenceDirectory = refDir,
+	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
+	arrayType = arrayType 
+)
 
 QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 passQC<-QCSum$Basename[QCSum[,"passQCS2"]]

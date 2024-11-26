@@ -88,33 +88,17 @@ meth<-methylated(normfile)[,]
 unmeth<-unmethylated(normfile)[,]
 rawbetas<-betas(normfile)[,]
 
-# need to know which probe type
-if(arrayType == "450K"){
-	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
-	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$TargetID),]
-	colnames(probeAnnot)[which(colnames(probeAnnot) == "INFINIUM_DESIGN_TYPE")]<-"designType"
-	print("loaded 450K manifest")
-} 
-
-if(arrayType == "V1"){
-	probeAnnot<-read.table(file.path(refDir, "EPICArray/EPIC.anno.GRCh38.tsv"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-	probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$probeID),]
-	print("loaded EpicV1 manifest")
-}
-
-if(arrayType == "V2"){
-  probeAnnot<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-  probeAnnot<-probeAnnot[match(rownames(rawbetas), probeAnnot$IlmnID), c("CHR", "Infinium_Design_Type")]
-  colnames(probeAnnot)[colnames(probeAnnot)=="Infinium_Design_Type"] <- "designType"
-  print("loaded EpicV2 manifest")
-}
-
+manifest <- cdegUtilities::readManifest(
+	referenceDirectory = refDir,
+	probeMatchingIndex = rownames(rawbetas),
+	arrayType = arrayType 
+)
 
 #----------------------------------------------------------------------#
 # NORMALISE ALL SAMPLES TOGETHER
 #----------------------------------------------------------------------#
 
-normbeta<-dasen(meth, unmeth, probeAnnot$designType)
+normbeta<-dasen(meth, unmeth, manifest$designType)
 add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
 
 #----------------------------------------------------------------------#
@@ -129,7 +113,7 @@ if(length(cellTypes) > 1){
 	for(each in cellTypes){
 		index<-which(QCmetrics$Cell_Type == each)
 		if(length(index) > 2){
-			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
+			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], manifest$designType)
 		}
 	}
 	add.gdsn(normfile, 'celltypenormbeta', val = celltypeNormbeta, replace = TRUE)
