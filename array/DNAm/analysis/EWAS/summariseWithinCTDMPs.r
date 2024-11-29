@@ -184,7 +184,13 @@ write.csv(nDMPs, file.path(resPath, "Tables", "DMPCountsPerCelltypeAcrossWithinC
 
 for(each in cellTypes){
 	write.csv(res[[each]][which(res[[each]][,"FullModel_SCZ_P"] < thres),], file.path(resPath, "Tables", paste0("DiscoveryDMPsWithin", each, "LM.csv")))
+
+    ## Look at other sites nearby
+
 }
+
+
+
 
 ## COMPARE DMPS ACROSS CELL TYPES
 thres<-1e-5
