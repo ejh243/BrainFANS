@@ -114,7 +114,11 @@ if(arrayType == "V2"){
 # NORMALISE ALL SAMPLES TOGETHER
 #----------------------------------------------------------------------#
 
-normbeta<-dasen(meth, unmeth, probeAnnot$designType)
+normbeta<-adjustedDasen(
+			onetwo = probeAnnot$designType,
+			chr = probeAnnot$CHR,
+			mns = meth,
+			uns = unmeth)
 add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
 
 #----------------------------------------------------------------------#
@@ -129,7 +133,11 @@ if(length(cellTypes) > 1){
 	for(each in cellTypes){
 		index<-which(QCmetrics$Cell_Type == each)
 		if(length(index) > 2){
-			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], probeAnnot$designType)
+			celltypeNormbeta[,index] <- as.matrix(adjustedDasen(
+				onetwo = probeAnnot$designType,
+				chr = probeAnnot$CHR,
+				mns = meth[,index],
+				uns = unmeth[,index]))
 		}
 	}
 	add.gdsn(normfile, 'celltypenormbeta', val = celltypeNormbeta, replace = TRUE)
