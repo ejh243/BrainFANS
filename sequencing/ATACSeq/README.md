@@ -77,7 +77,7 @@ Samples must be in the same order as in the samples.txt file. An example of info
 - `fraction`: cell type
 - `individualID`: ID of the individual to which the sample belongs to. All samples that belong to the same individual must have the same ID.
 - `age`
-- `gender`
+- `gender`: F or M.
 - `clinical`: braak stage
 - `vcfID`: ID of imputed array data to perform genotype comparison and confirm sample's identity.
 
