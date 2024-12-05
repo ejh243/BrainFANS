@@ -36,6 +36,7 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
   - environment.yml : file with packages and their version to be installed by conda.
   - packagesPip.txt : list of packages and their version to be installed by pip in the conda environment. 
 - Requires a samples.txt file in the META_DATA (0_metadata) folder with the names of the samples that will be used to run the pipeline.
+- Requires a sampleSheet.csv file in the META_DATA (0_metadata) folder with information about the samples. More information below.
 - Samples need to be in the RAWDATADIR folder in the project folder (1_raw)
 - An alphabetically ordered array of cell types to which samples belong to needs to be specified in the *config.txt* file as `CELLTYPES` in order to perform peak calling by cell group (STEP 7). This also required in the *config.r* file.
 - A Reference folder is needed with the following resources:
@@ -59,6 +60,26 @@ Other software that needs to be available locally are (and path to these need to
 Important software that will be installed in this environment are: MACS3 (3.0.2) and samstats. If you already have a conda environment, please specify its name or path in the *config.txt* file. Please check the python version in this conda environment is <= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
 
 Other software needed are: BEDTools, Bowtie2, Picard and R. Note R also needs to be installed in the conda environment, as there are some packages that are not available for later versions of R. 
+
+## Sample sheet 
+
+A sample sheet with the metadata about samples is essential to run the ATAC-seq pipeline. This should be located in the META_DATA (0_metadata) folder and should be named as sampleSheet.csv. 
+Samples must be in the same order as in the samples.txt file. An example of information about a sample is shown below.
+
+| sequencingBatch | sampleID | sampleCode | cohort | fraction | individualID | age | gender | clinical | vcfID |
+| --------------- | -------- | ---------- |------- | -------- | ------------ | --- | ------ | -------- | ----- |
+| 11031	| 11031_EX161_NEUN_S1	| EX161_NEUN | BRISTOL_A	| NEUN | 859 | 85	| F |	5	| 201023670019_R08C02_EX161 |
+
+- `sequencingBatch`: sequencing batch number
+- `sampleID`: name of sample in samples.txt and name of fastq file corresponding to the sample. This is usually formed by the sequencingBatchNumber_sampleID_fraction_SNumber.
+- `sampleCode`: ID of sample.
+- `cohort`: brain bank or cohort.
+- `fraction`: cell type
+- `individualID`: ID of the individual to which the sample belongs to. All samples that belong to the same individual must have the same ID.
+- `age`
+- `gender`
+- `clinical`: braak stage
+- `vcfID`: ID of imputed array data to perform genotype comparison and confirm sample's identity.
 
 ## STEPS
 
