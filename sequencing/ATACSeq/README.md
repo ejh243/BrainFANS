@@ -64,7 +64,7 @@ Other software needed are: BEDTools, Bowtie2, Picard and R. Note R also needs to
 ## Sample sheet 
 
 A sample sheet with the metadata about samples is essential to run the ATAC-seq pipeline. This should be located in the META_DATA (0_metadata) folder and should be named as sampleSheet.csv. 
-Samples must be in the same order as in the samples.txt file. An example of information about a sample is shown below.
+Samples must be in the same order as in the samples.txt file. An example of information about a sample is shown below. 
 
 | sequencingBatch | sampleID | sampleCode | cohort | fraction | individualID | age | gender | clinical | vcfID |
 | --------------- | -------- | ---------- |------- | -------- | ------------ | --- | ------ | -------- | ----- |
