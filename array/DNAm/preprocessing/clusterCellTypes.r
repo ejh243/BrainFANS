@@ -26,7 +26,6 @@ qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
 configFile <- paste0(dataDir, "/config.r")
-epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
 
 source(configFile)
 
