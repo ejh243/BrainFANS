@@ -149,7 +149,7 @@ sexPredict$concordantLabel<-xPeaksWide$sex == sexPredict$FIRREratio
 sexPredict$concordantLabel[sexPredict$concordantPredictions != TRUE]<-FALSE
 ```
 
-Sex was predicted from the ATAC data as follows. Peak calling was performed with MACS2 on the X and Y chromsome. Three metrics were then generated for each sample. The read counts of OCRs adjacent to FIRRE and XIST, which are only, or predominantly, accessible in females and aggregate read counts in OCRs on chromosome Y outside the pseudoautosomal region. Sex predictions were made by plotting each of the two X chromosome counts against the single Y chromosome counts. The samples then cluster into two groups, representing each sex (see below). Females are then predicted where the X chromosome counts are greater than the Y chromosome counts. 
+Sex was predicted from the ATAC data as follows. Peak calling was performed with MACS3 on the X and Y chromsome. Three metrics were then generated for each sample. The read counts of OCRs adjacent to FIRRE and XIST, which are only, or predominantly, accessible in females and aggregate read counts in OCRs on chromosome Y outside the pseudoautosomal region. Sex predictions were made by plotting each of the two X chromosome counts against the single Y chromosome counts. The samples then cluster into two groups, representing each sex (see below). Females are then predicted where the X chromosome counts are greater than the Y chromosome counts. 
 
 ```{r, fig.width = 10}
 figa
@@ -262,34 +262,37 @@ We will define candidates for potential swaps as those with > 0.9 contamination 
 # QC Summary: Sample Filtering
 
 ```{r samplePASS}
-# generate a txt file of passed samples
+
 QCPASS<-cbind(sexPredict$concordantLabel, genoScores$genoCheck)
 colnames(QCPASS)<-c("sexCheck", "genoCheck")
 pheno <- pheno[match(sexPredict$sampleID, pheno$sampleID),]
 passStage2<- cbind(pheno, QCPASS)
 passStage2$genoCheck[is.na(passStage2$genoCheck)& passStage2$sexCheck == TRUE]<- TRUE
+
+passStage2<-cbind(passStage2, "QCPASS" = rowSums(QCPASS) == ncol(QCPASS))
+passStage2 <- as.data.frame(passStage2)
+passStage2$QCPASS[passStage2$genoCheck == TRUE & passStage2$sexCheck == TRUE]<- TRUE
+passStage2$QCPASS[is.na(passStage2$genoCheck)& passStage2$sexCheck == TRUE]<- TRUE
+passStage2$QCPASS[is.na(passStage2$genoCheck)& passStage2$sexCheck == FALSE]<- FALSE
+passStage2$QCPASS[is.na(passStage2$sexCheck)& passStage2$genoCheck == FALSE]<- FALSE
+passStage2$QCPASS[is.na(passStage2$sexCheck)& passStage2$genoCheck == TRUE]<- TRUE
+passStage2$QCPASS[is.na(passStage2$sexCheck)& is.na(passStage2$genoCheck)]<- FALSE
+
+# generate a csv file of passed samples in the second stage of QC
 write.csv(passStage2, file = file.path(metaDir, "/passStage2Status.csv"))
 
-# need to keep samples without sex or genotype data to confirm.
-keep<-rowSums(QCPASS) == rowSums(!is.na(QCPASS))
-
-write.table(names(keep[keep==TRUE]), file = file.path(metaDir, "/passStage2SampleList.txt"), 
+# generate a txt file of passed samples
+write.table(passStage2[passStage2$QCPASS==TRUE,]$sampleID, file = file.path(metaDir, "/passStage2SampleList.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-QCPASS<-cbind(QCPASS, "QCPASS" = rowSums(QCPASS) == ncol(QCPASS))
-QCPASS <- as.data.frame(QCPASS)
-QCPASS$QCPASS[is.na(QCPASS$genoCheck)& QCPASS$sexCheck == TRUE]<- TRUE
-QCPASS$QCPASS[is.na(QCPASS$genoCheck)& QCPASS$sexCheck == FALSE]<- FALSE
-QCPASS$QCPASS[is.na(QCPASS$sexCheck)& QCPASS$genoCheck == FALSE]<- FALSE
-QCPASS$QCPASS[is.na(QCPASS$sexCheck)& is.na(QCPASS$genoCheck)]<- FALSE
-QCPASSALL<-cbind(passStage2, "QCS1" = s1Pass$QCPASS, "QCS2" = QCPASS$QCPASS)
-#QCPASSALL$QCS2[is.na(QCPASSALL$QCS2)& QCPASSALL$sexCheck == TRUE]<- TRUE
+# generate a csv file of passed samples after stage 1 and 2 QC
+QCPASSALL<-cbind(pheno, "QCS1" = s1Pass$QCPASS, "QCS2" = passStage2$QCPASS)
 QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == TRUE]<- TRUE
 QCPASSALL$PASSALL[QCPASSALL$QCS2==FALSE & QCPASSALL$QCS1 == TRUE]<- FALSE
 QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == FALSE]<- FALSE
 QCPASSALL$PASSALL[QCPASSALL$QCS2==FALSE & QCPASSALL$QCS1 == FALSE]<- FALSE
 QCPASSALL$PASSALL[is.na(QCPASSALL$QCS2) & QCPASSALL$QCS1 == FALSE]<- FALSE
-write.csv(QCPASSALL, file = file.path(metaDir, "/passAllStatus.csv"), row.names = FALSE)
+write.csv(QCPASSALL, file = file.path(metaDir, "/passS1S2Status.csv"), row.names = FALSE)
 ```
 
 Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.
