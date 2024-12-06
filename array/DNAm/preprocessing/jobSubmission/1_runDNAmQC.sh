@@ -25,12 +25,18 @@ echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}
 
 source $1 || exit 1
 
+
+if [[ -z "${DNAM_CONDA_ENVIRONMENT}" ]]; then
+    echo "Conda environment does not exist, please run the setup script first."
+    echo "The setup script can be found at ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh"
+    exit 1
+fi
+    
+
 echo "Processing data located in :" ${DATADIR}
 
-## load modules
-echo "Loading R module :" $RVERS
-module load Pandoc
-module load $RVERS   # load specified R version
+source "${CONDA_SHELL}"
+conda activate "${DNAM_CONDA_ENVIRONMENT}"
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
@@ -39,8 +45,6 @@ if [[ $? -ne 0 ]]; then
     echo "Malformed config file has been identified. Exiting..."
     exit 1
 fi
-
-Rscript installLibraries.r ${DATADIR}
 
 Rscript checkColnamesSampleSheet.r ${DATADIR}
 
@@ -71,6 +75,8 @@ chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
 Rscript CETYGOdeconvolution.r ${DATADIR}
+
+conda deactivate
 
 ## print finish date and time
 echo Job finished on:
