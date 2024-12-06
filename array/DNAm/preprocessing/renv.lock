@@ -1082,12 +1082,12 @@
       "Version": "0.0.1",
       "Source": "GitHub",
       "RemoteType": "github",
+      "RemoteHost": "api.github.com",
       "RemoteUsername": "EpigeneticsExeter",
       "RemoteRepo": "cdegUtilities",
       "RemoteRef": "main",
-      "RemoteSha": "434f7c0c715cb0c84733f84032e1c050f9d46e46",
-      "RemoteHost": "api.github.com",
-      "Hash": "254629d9e6de2b1b81b695afb043eb42"
+      "RemoteSha": "da6304a0bb37dfb1c0b410aed65abcf39bd26db0",
+      "Hash": "d3304e697373e7973fbc94537a85f427"
     },
     "class": {
       "Package": "class",
