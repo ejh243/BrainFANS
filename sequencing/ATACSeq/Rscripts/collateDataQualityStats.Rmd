@@ -29,6 +29,7 @@ library(kableExtra)
 library(scales)
 library(tibble)
 library(ChIPQC)
+library(plotly)
 
 ## load config variables
 source(params$configFile)
@@ -76,7 +77,7 @@ colnames(mergeStats)[ncol(mergeStats)]<-"PercentMTReads"
 aIndex<-match(processSum$sampleID, gsub("\\.bowtie", "", alignQC$Sample))
 alignQC$aligned_total<-rowSums(alignQC[,c("paired_aligned_one", "paired_aligned_multi")])
 mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "aligned_total")])
-mergeStats<-cbind("Sample"=processSum$sampleID, mergeStats)
+mergeStats<-cbind(sample=processSum$sampleID, mergeStats)
 
 ## load flagstat metrics calculated as part of encode qc pipeline
 flagstat<-flagstat[match(processSum$sampleID, flagstat$V1),]
@@ -138,7 +139,7 @@ for(i in readThres){
   }
 }
 
-propNucleosomesAll <- na.omit(propNucleosomesAll)
+#propNucleosomesAll <- na.omit(propNucleosomesAll)
 ## a successful ATAC experiment should have decreasing proportions in the nucleosome, mono, di,tri- nucleosomes
 ## define a tolerance for these comparisons
 tol <- 0
@@ -266,13 +267,14 @@ A good ATAC-seq experiment will capture enrichment at a broad range of genomic l
 
 ``` {r uniqueReads}
 ## plot %unique reads against read number
-ggplot(mergeStats[,c(1,2)], aes(x = Total.Sequences, y = total_deduplicated_percentage, colour = pheno$fraction))+
+p <- ggplot(mergeStats[,c(1,2)], aes(x = Total.Sequences, y = total_deduplicated_percentage, colour = pheno$fraction, label= mergeStats$Sample))+
   geom_point() +
   labs(x = 'Number of Reads', y = '% unique reads')+
   theme_bw() +
   scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
   theme(legend.title = element_blank(),
         legend.position = 'bottom')
+ggplotly(p, tooltip = "label")
 ```
 
 ``` {r violinUniqueReads, fig.width = 10, fig.height = 15}
@@ -311,7 +313,7 @@ The plot below shows the alignment rate and number of mapped reads per sample. W
 
 ```{r alignment rate}
 ## plot alignment rate against number of reads
-ggplot(mergeStats[,c('aligned_total','overall_alignment_rate')], aes(x = aligned_total, y = overall_alignment_rate, colour = pheno$fraction))+
+p <-ggplot(mergeStats[,c('aligned_total','overall_alignment_rate',"Sample")], aes(x = aligned_total, y = overall_alignment_rate, colour = pheno$fraction, label = Sample))+
   geom_point() +
   geom_hline(yintercept=c(95, 80), #acceptable
              color = c('black', colorBlindGrey8[2]))+
@@ -321,6 +323,7 @@ ggplot(mergeStats[,c('aligned_total','overall_alignment_rate')], aes(x = aligned
   theme(legend.title = element_blank(),
         legend.position = 'bottom')+
 	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+ggplotly(p, tooltip = "label")
 ```
 
 
@@ -388,8 +391,8 @@ In this section we will assess the number of unique aligned reads as the number 
 
 ``` {r dedupreads}
 # plot unique reads against total reads
-data.frame(mergeStats[,1], mergeStats$DistinctReadPairs, pheno$fraction) %>%
-  ggplot(aes(x=.[,1], y = .[,2], colour = .[,3]))+
+libcomp <- data.frame(x = mergeStats[,1], y = mergeStats$DistinctReadPairs, fraction = pheno$fraction, name =pheno$sampleID) 
+p <- ggplot(libcomp,aes(x=x, y = y, colour = fraction,label = name))+
       geom_point()+
       theme_bw()+
       labs(x = "Number of reads", y = "Number of distinct aligned reads")+
@@ -398,6 +401,7 @@ data.frame(mergeStats[,1], mergeStats$DistinctReadPairs, pheno$fraction) %>%
             legend.position = 'bottom') +
 	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))+
 	scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+ggplotly(p, tooltip = "label")
 ```
 
 We will also calculate additional statistics recommended by the ENCODE ATAC-seq pipeline: PCR Bottlenecking Coefficients 1 & 2 (PBC1 & PBC2) and Non-Redundant Fraction (NRF) and compare these to their reference values. The plots below contain data from `r sum(!is.na(eMetrics[,1]))` samples.
@@ -469,8 +473,8 @@ We need to apply thresholds to satisfy the following criteria
 ```{r periodicity2}
 
 # plot proportion of nucleosome free against mono
-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=propNucleosomesAll[,2], y=propNucleosomesAll[,1]))+
+prop <- data.frame(propNucleosomesAll)
+p <-ggplot(prop, aes(x=propNucleosomesAll[,2], y=propNucleosomesAll[,1]))+
     geom_point()+
     theme_bw()+
     labs(x= "Proportion fragments classed as mono", y = "Proportion fragments class as nucleosome free")+
@@ -481,7 +485,7 @@ data.frame(propNucleosomesAll)%>%
     geom_vline(xintercept = c(monoThres)) +
     geom_polygon(data = data.frame("x" = c(monoThres, nucfThres, 1,monoThres), "y" = c(nucfThres, nucfThres, 1, 1)), aes(x = x, y = y), fill = "grey", alpha = 0.2, size = 2)
 
-
+p
 ```
 
 Alternatively we can test for periodicity (i.e. multimodality) using Hartigan's Dip test for Unimodality. Here a significant p-value indicates the presence of multiple modes as we would expect in a successful ATAC experiment. The plot below contains data from `r sum(!is.na(diptestStatsAll[,1]))` samples.  
@@ -644,7 +648,7 @@ data.frame(fripStats$FripMACS3PE)%>%
       theme_bw()
 
 
-p<- ggplot(fripStats, aes(x=BAMPeaks, y = FripMACS3PE, colour = pheno$fraction))+
+p<- ggplot(fripStats, aes(x=BAMPeaks, y = FripMACS3PE, colour = pheno$fraction, label = SampleName))+
     geom_point()+
     theme_bw()+
     labs(title = 'MACS3: PE', x = "Number of peaks (100000s)", y = "Fraction reads in peaks")+
@@ -652,7 +656,7 @@ p<- ggplot(fripStats, aes(x=BAMPeaks, y = FripMACS3PE, colour = pheno$fraction))
     scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))+
     theme(legend.title = element_blank(), 
           legend.position = 'bottom')
-p
+ggplotly(p, tooltip ="label")
 ```
 
 # QC Summary: Sample Filtering
@@ -689,7 +693,7 @@ Samples will now be filtered based on thresholds defined in the config file. The
 
 ```{r, echo = FALSE}
 
-kbl(colSums(!QCPASS, na.rm = TRUE))
+kbl(colSums(QCPASS, na.rm = TRUE))
 
 # create cross tab table
 xTab<-matrix(data = NA, ncol = ncol(QCPASS), nrow = ncol(QCPASS))
