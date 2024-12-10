@@ -127,7 +127,7 @@ Output directory will be: ${PEAKCOUNTS}
 
 EOF
  
-	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1], '/collateCellTypeCheck.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/stage3SummaryStats_all.html'))" "${RSCRIPTS_DIR}" "${PEAKCOUNTS}" "${CONFIGR}" "${SETPEAKS}"
+	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1], '/collateCellTypeCheck.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/stage3SummaryStats_',commandArgs(trailingOnly=TRUE)[4],'.html'))" "${RSCRIPTS_DIR}" "${PEAKCOUNTS}" "${CONFIGR}" "${SETPEAKS}"
   
 fi
 conda deactivate
