@@ -25,7 +25,7 @@ configR <-source(args[6])
 cf <- args[7]
 
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
-passAllQC <- read.csv(file.path(metaDir, "/passAllStatus.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
+passAllQC <- read.csv(file.path(metaDir, "/passS1S2Status.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
 passAllQC <- passAllQC[match(pheno$sampleID,passAllQC$sampleID),]
 passAllQC <- passAllQC[passAllQC$QCS2 == TRUE & passAllQC$QCS1 == TRUE,]
 write.csv(passAllQC, file = file.path(metaDir, "/samplesGroupAnalysis.csv"), row.names = FALSE)
