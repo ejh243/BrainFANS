@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=150:00:00 # Maximum wall time for the job.
+#SBATCH --time=24:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
@@ -88,9 +88,9 @@ then
 fi
 
 ## check step method matches required options and exit if not
-if [[ ! $2 =~ "COMPARE" ]] && [[ ! $2 =~ "GENCHECK" ]] && [[ ! $2 =~ "SWITCH" ]] &&[[ ! $2 == '' ]];
+if [[ ! $2 =~ "COMPARE" ]] && [[ ! $2 =~ "GENCHECK" ]] && [[ ! $2 =~ "SWITCH" ]] && [[ ! $2 =~ "COLLATE" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use COMPARE, GENCHECK, SWITCH or some combination of this as a single string (i.e. SPLIT,CHECK)" ; exit 1; }            
+    { echo "Unknown step specified. Please use COMPARE, COLLATE, GENCHECK, SWITCH or some combination of this as a single string (i.e. SPLIT,CHECK)" ; exit 1; }            
 fi
 
 ## ============ ##
@@ -103,7 +103,9 @@ then
   
 cat <<EOF
 
-|| Running STEP 6.1 of ATAC-seq pipeline: COMPARE. Samples will be compared to their matching genotype data.||
+|| Running STEP 6.1 of ATAC-seq pipeline: COMPARE. ||
+
+Samples will be compared to their matching genotype data.
 
 Output directory will be: ${ALIGNED_DIR}/genotypeConcordance
 Output directory will be: ${ALIGNED_DIR}/baseRecalibrate
@@ -118,14 +120,33 @@ EOF
   
 fi
 
+## option COLLATE: collate other QC metrics
+if [ $# = 1 ] || [[ $2 =~ 'COLLATE' ]]
+then
+
+cat <<EOF
+
+|| Running step 6.2 of ATAC-seq pipeline: COLLATE ||
+
+It will be checked that all samples had gone through all processes and had produced the right outputs.
+Output directory is ${META_DIR}
+
+EOF
+ 
+	sh ${SUB_SCRIPTS_DIR}/progressReportS2.sh 
+	
+fi
+
+
 ## option GENCHECK: Sex check and Genotype check results are collated in Rmarkdown   
 if [ $# = 1 ] || [[ $2 =~ 'GENCHECK' ]]
 then
 
 cat <<EOF
 
-|| Running STEP 6.2 of ATAC-seq pipeline: GENCHECK. Results from genotype and sex check will be collated in a Rmarkdown report.||
+|| Running STEP 6.3 of ATAC-seq pipeline: GENCHECK. ||
 
+Results from genotype and sex check will be collated in a Rmarkdown report.
 Output directory will be: ${PEAK_DIR}/QCOutput
 
 EOF
@@ -140,8 +161,9 @@ then
   
 cat <<EOF
 
-|| Running STEP 6.3 of ATAC-seq pipeline: SWITCH. Samples with potential genotype contamination will be selected for potential switches.||
+|| Running STEP 6.4 of ATAC-seq pipeline: SWITCH. ||
 
+Samples with potential genotype contamination will be selected for potential switches.
 Output directory will be: ${ALIGNED_DIR}/genotypeConcordance
 Output directory will be: ${ALIGNED_DIR}/baseRecalibrate
 

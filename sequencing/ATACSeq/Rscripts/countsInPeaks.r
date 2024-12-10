@@ -97,4 +97,4 @@ ctPeaks<-data.frame("GeneID"=allPeaks$V4, "Chr"=seqnames(allPeaks), "Start"=star
 
 ## Get counts in all peaks
 fc_ctPeaks <- featureCounts(file.path(paste0(alignedDir,"/", bamFiles)),annot.ext=ctPeaks, allowMultiOverlap = TRUE, isPairedEnd = TRUE, nthreads = 10, fracOverlap=0.2)
-save(fc_ctPeaks, file = paste0(dir,"/5_countPeaks/Counts/peakCounts.rdata"))
+save(fc_ctPeaks, file = paste0(dir,"/5_countPeaks/Counts/peakCounts_all.rdata"))
