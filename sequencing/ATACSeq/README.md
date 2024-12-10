@@ -250,7 +250,7 @@ This script groups samples per cell type, performs group level peak calling and 
 - `(project-directory)` project's directory.
 -optional-
 - `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
-  -`FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
+  - `FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
   - `PEAKS`: Performs peak calling on samples chosen for peak calling using MACS3 in paired-end mode.
   - `COUNTS`: Gets read counts in peaks called at cell group level.
 
