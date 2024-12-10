@@ -65,6 +65,7 @@ EOF
 source ${CONDA} 
 conda activate ${CONDA_ENV}
 
+
 ## ================ ##
 ##    VARIABLES     ##
 ## ================ ##
@@ -79,6 +80,14 @@ if [[ ! $2 =~ "NORM" ]] && [[ ! $2 =~ "CTCHECK" ]]  && [[ ! $2 == '' ]];
 then 
     { echo "Unknown step specified. Please use NORM, CTCHECK, or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
+
+## Input in command line what set of peaks to perform analysis on: promoter peaks (prom) or all peaks (all)
+if [[ ! $3 == "PROM" ]] && [[ ! $3 == "ALL" ]];
+then
+  echo "No peak set specified. Please choose either PROM or ALL to select counts in promoter peaks or all peaks, respectively" ; exit 1; }     
+fi
+
+SETPEAKS=$3
 
 ## ========= ##
 ##   STEPS   ##
@@ -102,7 +111,7 @@ Output directory is ${PEAKCOUNTS}/normCounts
 
 EOF
 
-  Rscript "${RSCRIPTS_DIR}/normCounts.r" ${CONFIGR}
+  Rscript "${RSCRIPTS_DIR}/normCounts.r" ${CONFIGR} ${SETPEAKS}
   
 fi
 
@@ -118,7 +127,7 @@ Output directory will be: ${PEAKCOUNTS}
 
 EOF
  
-	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1], '/collateCellTypeCheck.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/stage3SummaryStats.html'))" "${RSCRIPTS_DIR}" "${PEAKCOUNTS}" "${CONFIGR}"
+	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1], '/collateCellTypeCheck.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/stage3SummaryStats_all.html'))" "${RSCRIPTS_DIR}" "${PEAKCOUNTS}" "${CONFIGR}" "${SETPEAKS}"
   
 fi
 conda deactivate

@@ -211,11 +211,11 @@ This script creates bam files for each sample containing only reads aligned to s
   - `PEAKS`: Perform only peak calling on new sex chromosomes reads samples.
   - `CHECK`: Collate peak calling on sex chromosomes results and check assigned sex of each sample.
 
-### 6. Genotype check
+### 6. Genotype check and Stage 2 QC metrics summary
 
   `sbatch --array=<number of batch jobs> ./jobSubmission/6_batchRunGenotypeCheck.sh (project directory) [STEPS]`
 
-This script will detect possible DNA contamination in order to ensure high quality sequence reads. If any contamination is detected, possible swaps will be suggested. 
+This script will detect possible DNA contamination in order to ensure high quality sequence reads. If any contamination is detected, possible swaps will be suggested. It will also collate results from stage 2 of QC.
 
 ##### -scripts executed-
 - ./subScripts/compareBamWithGenotypes.sh  : prepares bam file for comparison of assigned genotype of each sample and runs verifyBamID 
@@ -223,13 +223,15 @@ This script will detect possible DNA contamination in order to ensure high quali
 - ./Rscripts/collateSampleChecks.Rmd : collates results from previous steps (sex and genotype check).
 - ./subScripts/searchBestGenoMatch.sh : Outputs a summary of stats from previous step and finds any sample that might be contaminated.
   * Contaminated samples will go to a created file potentialSwitches.txt. If this file is not empty, searchBestGenoMatch.sh is executed and an alternative Genotype search is done for the sample.
-  
+- ./subScripts/progressReportS2.sh : identifies what samples have been through stage 2 of QC in order to avoid missing processing samples
+
 ##### -parameters-
 - `--array` : number of batch jobs, each number matches a sample. Starting from 2
 - `(project-directory)` project's directory.
 -optional-
 - `[STEPS]` They may be combined, with desired steps included as single string, i.e. GENCHECK,COMPARE. Default if left blank is to run all of them.
   - `COMPARE`: Compare only samples genotype with matched VCF file genotype.
+  - `COLLATE`: Collate results from all samples to show progress of each sample through stage 2 of QC pipeline in order to avoid missing steps or samples.
   - `GENCHECK`: Sex and gencheck results are collated in a report.
   - `SWITCH`: Indentify only mismatched genotype samples and output potential switches and seach for alternative genotype.
 
@@ -250,19 +252,25 @@ This script groups samples per cell type, performs group level peak calling and 
 - `(project-directory)` project's directory.
 -optional-
 - `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
-  -`FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
+  - `FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
   - `PEAKS`: Performs peak calling on samples chosen for peak calling using MACS3 in paired-end mode.
   - `COUNTS`: Gets read counts in peaks called at cell group level.
+- `[GROUP]` Select cell-type of group of samples to perform peak calling on. This is only needed for the `PEAKS` step.
 
+### 8. Stage 3 QC metrics summary
 
-### 8. Advanced analysis
+ `sbatch ./jobSubmission/8_collateStage3QCMatrics.sh (project directory) [STEPS] [peakSet]`
 
-  8.1) `sbatch --array=<number of batch jobs> ./sequencing/ATACSeq/jobSubmission/8_1_idrAnalysis.sh <projectName> [GROUPS] [STEPS]`
-  
-  This script performs IDR analysis.
-  
-  8.2) `sbatch --array=<number of batch jobs> ./sequencing/ATACSeq/jobSubmission/8_2_diffAnalysis.sh <projectName> [GROUPS] [STEPS]`
-  
-  This script performs counts in peaks, various ways of normalisation of peaks and differential accessibility analysis.
-  
+This script normalises counts in peaks and uses results to check cell-type identity of samples, as this might be of poor quality or mislabelled.
 
+##### -scripts executed-
+- ./Rscripts/normCounts.r: outputs results of Variance Partition Analysis (VPA) on raw counts, normalising counts in peaks and results of VPA in these.
+- ./Rscripts/collateCellTypeCheck.Rmd: outputs a summary report of VPA on raw and normalised counts, the normalisation results and identifies samples that fail cell-type check.
+
+##### -parameters-
+- `(project-directory)` project's directory.
+-optional-
+- `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
+  - `NORM`: performs Variance Partition Analysis (VPA) on raw counts, normalises counts in peaks and performs VPA again in these.
+  - `CTCHECK`: Collates results from before in a Rmarkdown report and identifies samples that fail cell-type identity check.
+- `[peakSet]` : as counts in peaks have been produced for only promoters or all peaks, user can choose whether this stage is performed using either of those peak sets.
