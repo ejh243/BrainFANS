@@ -262,17 +262,13 @@ if ((!"CCDNAmAge" %in% colnames(QCmetrics)) && tolower(tissueType) == "brain") {
 if(!"rmsd" %in% colnames(QCmetrics)){
 	print("Calculating effect of normalisation")
 
-	if(arrayType == "V2"){
-		normbeta <- adjustedDasen(
-			onetwo = manifest$designType,
-			chr = manifest$CHR,
-			mns = read.gdsn(methylated(gfile)),
-			uns = read.gdsn(unmethylated(gfile)))
-		add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
-	} else {
-		dasen(gfile, node="normbeta")
-		normbeta<-index.gdsn(gfile, "normbeta")[,]
-	}
+	normbeta <- adjustedDasen(
+		onetwo = manifest$designType,
+		chr = manifest$CHR,
+		mns = read.gdsn(methylated(gfile)),
+		uns = read.gdsn(unmethylated(gfile)))
+	add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
+	
 	qualDat<-qual(betas(gfile)[,], normbeta)
 	qualDat[which(intensPASS == FALSE),]<-NA
 	QCmetrics<-cbind(QCmetrics,qualDat)
