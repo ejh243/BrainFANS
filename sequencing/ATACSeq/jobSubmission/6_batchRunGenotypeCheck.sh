@@ -151,7 +151,7 @@ Output directory will be: ${PEAK_DIR}/QCOutput
 
 EOF
  
-	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1], '/collateSampleChecks.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/QCOutput/stage2SummaryStats.html'))" "${RSCRIPTS_DIR}" "$PEAK_DIR" "${CONFIGR}"
+	Rscript -e "rmarkdown::render('${RSCRIPTS_DIR}/collateSampleChecks.Rmd', output_file='$PEAK_DIR/QCOutput/stage2SummaryStats.html')" "${CONFIGR}"
   
 fi
 

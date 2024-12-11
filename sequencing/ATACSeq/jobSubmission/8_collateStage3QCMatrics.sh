@@ -84,7 +84,7 @@ fi
 ## Input in command line what set of peaks to perform analysis on: promoter peaks (prom) or all peaks (all)
 if [[ ! $3 == "PROM" ]] && [[ ! $3 == "ALL" ]];
 then
-  echo "No peak set specified. Please choose either PROM or ALL to select counts in promoter peaks or all peaks, respectively" ; exit 1; }     
+  { echo "No peak set specified. Please choose either PROM or ALL to select counts in promoter peaks or all peaks, respectively" ; exit 1; }     
 fi
 
 SETPEAKS=$3
@@ -127,8 +127,7 @@ Output directory will be: ${PEAKCOUNTS}
 
 EOF
  
-	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1], '/collateCellTypeCheck.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/stage3SummaryStats_',commandArgs(trailingOnly=TRUE)[4],'.html'))" "${RSCRIPTS_DIR}" "${PEAKCOUNTS}" "${CONFIGR}" "${SETPEAKS}"
-  
+	Rscript -e "rmarkdown::render('${RSCRIPTS_DIR}/collateCellTypeCheck.Rmd', output_file='${PEAKCOUNTS}/stage3SummaryStats_${SETPEAKS}.html')" "${CONFIGR}" "${SETPEAKS}"
 fi
 conda deactivate
 

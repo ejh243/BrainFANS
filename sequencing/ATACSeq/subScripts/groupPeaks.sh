@@ -45,7 +45,7 @@ echo "Starting peak calling using MACS3 PE on samples that belong to cell fracti
 date -u
 
 cd ${TMPDIR}
-macs3 callpeak -t  ${bamFiles[@]} --outdir ${PEAK_DIR}/MACS/BAMPE/group -n ${GROUP} -f BAMPE -g 2.9e9 -q 5e-2 --keep-dup all --nomodel --broad --broad-cutoff 5e-2
+macs3 callpeak -t  ${bamFiles[@]} --outdir ${PEAK_DIR}/MACS/BAMPE/group -n ${GROUP} -f BAMPE -g 2.9e9 -q 1e-3 --keep-dup all --nomodel --broad --broad-cutoff 1e-3
 
 ## exclude peaks aligned to blacklist regions and peaks called in chr X and Y
 bedtools intersect -v -a ${PEAK_DIR}/MACS/BAMPE/group/${GROUP}_peaks.broadPeak -b ${BLACKLIST} \
