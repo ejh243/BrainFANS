@@ -27,7 +27,9 @@ cf <- args[7]
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 passAllQC <- read.csv(file.path(metaDir, "/passS1S2Status.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
 passAllQC <- passAllQC[match(pheno$sampleID,passAllQC$sampleID),]
-passAllQC <- passAllQC[passAllQC$QCS2 == TRUE & passAllQC$QCS1 == TRUE,]
+passAllQC <- passAllQC[passAllQC$PASSALL == TRUE ,]
+loSamples <- read.table(file.path(paste0(metaDir,"/leaveOutSamples2.txt")))[,1]
+passAllQC <- passAllQC[!passAllQC$sampleID %in% loSamples,]
 write.csv(passAllQC, file = file.path(metaDir, "/samplesGroupAnalysis.csv"), row.names = FALSE)
 
 samples <- passAllQC[passAllQC$fraction == cf,]$sampleID

@@ -35,11 +35,14 @@ configFile<-args[1]
 setPeaks<-args[1]
 source(configFile)
 
-library(variancePartition)
-library(DESeq2)
-library(ruvIIInb)
-library(SummarizedExperiment)
-library(scater)
+suppressWarnings(suppressPackageStartupMessages({
+  library(variancePartition)
+  library(DESeq2)
+  library(ruvIIInb)
+  library(SummarizedExperiment)
+  library(scater)
+}))
+
 
 ## ============= ##
 ##   FUNCTIONS   ##

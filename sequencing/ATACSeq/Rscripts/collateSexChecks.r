@@ -17,13 +17,21 @@
 ## - R/4.2.1-foss-2022a, libraries: ggpubr, tidyverse,ggplot2                                ||
 ## ==========================================================================================##
 
+
+
+## ==========##
+##   SET-UP  ##
+## ==========##
+
 args<-commandArgs(trailingOnly=TRUE)
 configFile<-args[1]
 source(configFile)
 
-library(ggplot2)
-library(ggpubr)
-library(tidyverse)
+suppressWarnings(suppressPackageStartupMessages({
+  library(ggplot2)
+  library(ggpubr)
+  library(tidyverse)
+}))
 
 ## reads in peaks annotated to XIST and FIRRE
 sampleSheet<-read.csv(file.path(dir, "/0_metadata", "sampleSheet.csv"), stringsAsFactors = FALSE,colClasses="character")
