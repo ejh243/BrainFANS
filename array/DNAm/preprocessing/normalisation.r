@@ -99,7 +99,11 @@ if (!exists("manifest"))
 # NORMALISE ALL SAMPLES TOGETHER
 #----------------------------------------------------------------------#
 
-normbeta<-dasen(meth, unmeth, manifest$designType)
+normbeta<-adjustedDasen(
+                       onetwo = manifest$designType,
+                       chr = manifest$CHR,
+                       mns = meth,
+                       uns = unmeth)
 add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
 
 #----------------------------------------------------------------------#
@@ -114,7 +118,11 @@ if(length(cellTypes) > 1){
 	for(each in cellTypes){
 		index<-which(QCmetrics$Cell_Type == each)
 		if(length(index) > 2){
-			celltypeNormbeta[,index]<-dasen(meth[,index], unmeth[,index], manifest$designType)
+			celltypeNormbeta[,index] <- as.matrix(adjustedDasen(
+                               		onetwo = manifest$designType,
+                               		chr = manifest$CHR,
+                               		mns = meth[,index],
+                               		uns = unmeth[,index]))		
 		}
 	}
 	add.gdsn(normfile, 'celltypenormbeta', val = celltypeNormbeta, replace = TRUE)
@@ -132,4 +140,3 @@ if(length(cellTypes) > 1){
 print(paste0("The final normalised dataset contains ", ncol(rawbetas), " samples and ", nrow(rawbetas), " probes"))
 
 closefn.gds(normfile)
-
