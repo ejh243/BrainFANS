@@ -32,7 +32,7 @@
 
 args <- commandArgs(trailingOnly=TRUE)
 configFile<-args[1]
-setPeaks<-args[1]
+setPeaks<-args[2]
 source(configFile)
 
 suppressWarnings(suppressPackageStartupMessages({
