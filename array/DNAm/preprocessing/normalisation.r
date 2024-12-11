@@ -100,8 +100,8 @@ if (!exists("manifest"))
 #----------------------------------------------------------------------#
 
 normbeta<-adjustedDasen(
-                       onetwo = probeAnnot$designType,
-                       chr = probeAnnot$CHR,
+                       onetwo = manifest$designType,
+                       chr = manifest$CHR,
                        mns = meth,
                        uns = unmeth)
 add.gdsn(normfile, 'normbeta', val = normbeta, replace = TRUE)
@@ -119,8 +119,8 @@ if(length(cellTypes) > 1){
 		index<-which(QCmetrics$Cell_Type == each)
 		if(length(index) > 2){
 			celltypeNormbeta[,index] <- as.matrix(adjustedDasen(
-                               		onetwo = probeAnnot$designType,
-                               		chr = probeAnnot$CHR,
+                               		onetwo = manifest$designType,
+                               		chr = manifest$CHR,
                                		mns = meth[,index],
                                		uns = unmeth[,index]))		
 		}
