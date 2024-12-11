@@ -161,16 +161,19 @@ for(i in 1:nrow(QCmetrics)){
 #----------------------------------------------------------------------#
 # CALCULATE INDIVIDUAL FACS SCORE
 #----------------------------------------------------------------------#
-keepCols<-c("Individual_ID", "Sex", "Age", "Phenotype", "Tissue.Centre") 
+keepCols<-c("Individual_ID", "Sex", "Age", "Phenotype", "Tissue.Centre")
 keepCols<-keepCols[keepCols %in% colnames(QCmetrics)]
-uniqueIDs<-unique(QCmetrics[,keepCols]) 
+uniqueIDs<-unique(QCmetrics[,keepCols])
+
 if (!is.data.frame(uniqueIDs)) {
     uniqueIDs <- data.frame(Individual_ID=uniqueIDs)
 }
 
-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell_Type != "Total")], by = 
-list(QCmetrics$Individual_ID[which(QCmetrics$Cell_Type != "Total")]), FUN = median, na.rm = 
-TRUE)
+indFACSEff<-aggregate(
+	maxSD[which(QCmetrics$Cell_Type != "Total")],
+	by = list(QCmetrics$Individual_ID[which(QCmetrics$Cell_Type != "Total")]),
+	FUN = median,
+	na.rm = TRUE)
 nFACs<-table(QCmetrics$Individual_ID[QCmetrics$Cell_Type != "Total"])
 
 uniqueIDs$Individual_ID <- as.character(uniqueIDs$Individual_ID)
