@@ -1,0 +1,16 @@
+dependencies:
+  - pip=24.3.1
+  - python=3.12
+  - samstats=0.2.2
+  - samtools=1.16.1
+  - setuptools=65.5.1
+  - fastqc
+  - fastp
+  - r-base=4.2.1
+  - r-essentials
+  - r-spp
+  - bedtools
+  - picard
+  - gatk4
+  - pandoc
+  - bowtie2

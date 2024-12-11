@@ -140,4 +140,3 @@ if(length(cellTypes) > 1){
 print(paste0("The final normalised dataset contains ", ncol(rawbetas), " samples and ", nrow(rawbetas), " probes"))
 
 closefn.gds(normfile)
-
