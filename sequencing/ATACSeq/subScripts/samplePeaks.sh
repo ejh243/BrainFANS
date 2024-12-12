@@ -17,7 +17,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - aligned filtered, no duplicated bam file for MACS3 PE: <sampleName>.filt.nodup.bam                               ||
-## - MACS3 installed in a conda environment, bedtools                                                                   ||
+## - MACS3 installed in a conda environment, bedtools                                                                 ||
 ## - Variables in config file: ALIGNED_DIR, PEAK_DIR, BLACKLIST                                                       ||
 ## - BLACKLIST: list of blacklist regions to exclude peaks called in these                                            ||
 ##                                                                                                                    ||
@@ -41,9 +41,10 @@ fi
 ## ============================= ##
 
 sampleBAM=${sampleName}.filt.nodup.bam
-
-echo "Calling peaks using MACS3 PE for"" ${sampleName}"
-macs3 callpeak -t ${ALIGNED_DIR}/${sampleBAM} --outdir ${PEAK_DIR}/BAMPE -n ${sampleName} -f BAMPE -g 2.9e9 -q 5e-2 --keep-dup all --broad --broad-cutoff 5e-2
+echo "Starting peak calling using MACS3 PE for ${sampleName} at:"
+date -u
+echo "Cutoff for broad peak calling is $MACS_SAMPLE"
+macs3 callpeak -t ${ALIGNED_DIR}/${sampleBAM} --outdir ${PEAK_DIR}/BAMPE -n ${sampleName} -f BAMPE -g 2.9e9 -q $MACS_SAMPLE --keep-dup all --broad --broad-cutoff $MACS_SAMPLE
 
 ## exclude peaks aligned to blacklist regions, exclude peaks called in chr X and Y, sorted by chromosome
 bedtools intersect -v -a ${PEAK_DIR}/BAMPE/${sampleName}_peaks.broadPeak -b ${BLACKLIST} \

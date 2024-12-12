@@ -20,6 +20,10 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
     - `REFERENCES_DIR`: full path to directory with all references used throughout the pipeline.
     - Specify the modules versions to be loaded and the full paths to the softwares used in the pipeline (e.g. picard).
   - An alphabetically ordered array of cell types to which samples belong to: `CELLTYPES`. 
+  - Cutoff values for peak calling should be specified by the user. If not specified, default will be used.
+    - `MACS_SAMPLE` : Sample-level Peak calling q-value cutoff
+    - `MACS_GROUP` : Cell fraction-level Peak calling q-value cutoff
+    - `MACS_CHR` : Peak calling on sex chromosomes q-value cutoff
 - config.r: This is the configuration file for running R scripts.
   - The `dir` variable should be changed to be the full path to the project's directory. This should match `MAIN_DIR` variable in the config.txt file.
   - Other parameters or threshold should be changed as required.

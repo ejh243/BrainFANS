@@ -29,11 +29,14 @@
 for chr in chrX chrY
 do
 
-	echo "Calling peaks in ${chr} using MACS3 TA"
+  echo "Starting peak calling using MACS3 TA for peaks in ${chr} at:"
+  date -u
   f_TA=($(ls ${ALIGNED_DIR}/sexChr/*${chr}.tn5.tagAlign.gz))
   echo ${#f_TA[@]}
   cd ${PEAK_DIR}/ShiftedTagAlign/sexChr
-  macs3 callpeak -t ${f_TA[@]} -n ${chr} -f BED --outdir ${PEAK_DIR}/ShiftedTagAlign/sexChr -g 2.9e9 -q 1e-4 --keep-dup all --shift 100 --extsize 200 --nomodel --broad --broad-cutoff 1e-4
+  
+  echo "Cutoff for broad peak calling is $MACS_CHR"
+  macs3 callpeak -t ${f_TA[@]} -n ${chr} -f BED --outdir ${PEAK_DIR}/ShiftedTagAlign/sexChr -g 2.9e9 -q $MACS_CHR --keep-dup all --shift 100 --extsize 200 --nomodel --broad --broad-cutoff $MACS_CHR
    
   if [ ${chr} == chrX ]
 	then 

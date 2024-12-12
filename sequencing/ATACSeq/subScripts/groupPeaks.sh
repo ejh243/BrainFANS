@@ -45,17 +45,19 @@ echo "Starting peak calling using MACS3 PE on samples that belong to cell fracti
 date -u
 
 cd ${TMPDIR}
-macs3 callpeak -t  ${bamFiles[@]} --outdir ${PEAK_DIR}/MACS/BAMPE/group -n ${GROUP} -f BAMPE -g 2.9e9 -q 1e-3 --keep-dup all --nomodel --broad --broad-cutoff 1e-3
+
+echo "Cutoff for broad peak calling is $MACS_GROUP"
+macs3 callpeak -t  ${bamFiles[@]} --outdir ${PEAK_DIR}/BAMPE/group -n ${GROUP} -f BAMPE -g 2.9e9 -q $MACS_GROUP --keep-dup all --nomodel --broad --broad-cutoff $MACS_GROUP
 
 ## exclude peaks aligned to blacklist regions and peaks called in chr X and Y
-bedtools intersect -v -a ${PEAK_DIR}/MACS/BAMPE/group/${GROUP}_peaks.broadPeak -b ${BLACKLIST} \
+bedtools intersect -v -a ${PEAK_DIR}/BAMPE/group/${GROUP}_peaks.broadPeak -b ${BLACKLIST} \
 	| awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
-	| awk '!/^(chrY|chrX)/' > ${PEAK_DIR}/MACS/BAMPE/group/${GROUP}.broadPeak.filt
+	| awk '!/^(chrY|chrX)/' > ${PEAK_DIR}/BAMPE/group/${GROUP}.broadPeak.filt
 
 echo "Sorting peaks by chr for merged sample peaks"
-sort -k1 ${PEAK_DIR}/MACS/BAMPE/group/${GROUP}.broadPeak.filt > ${PEAK_DIR}/MACS/BAMPE/group/${GROUP}.sorted.broadPeak.filt
+sort -k1 ${PEAK_DIR}/BAMPE/group/${GROUP}.broadPeak.filt > ${PEAK_DIR}/BAMPE/group/${GROUP}.sorted.broadPeak.filt
 
-if [[ ! -f ${PEAK_DIR}/MACS/BAMPE/group/${GROUP}.sorted.broadPeak.filt ]]
+if [[ ! -f ${PEAK_DIR}/BAMPE/group/${GROUP}.sorted.broadPeak.filt ]]
 then
   { echo "Peak calling on ${sampleName} could not be completed. Please make sure STEP 7.0 was properly run." ; exit 1; }
 else
