@@ -43,8 +43,8 @@ if(!ctCheck){
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(bigmelon)
-library(data.table)
+library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
+library(data.table, warn.conflicts = FALSE, quietly = TRUE)
 
 #----------------------------------------------------------------------#
 # IMPORT DATA AND FORMAT

@@ -8,7 +8,7 @@ dataDir <- args[1]
 configFile <- paste0(dataDir, "/config.r")
 
 # Load libraries
-library(stringdist) # for amatch()
+library(stringdist, warn.conflicts = FALSE, quietly = TRUE) # for amatch()
 '%ni%' <- Negate('%in%') # define '%ni%' (not in)
 
 # Load sample sheet

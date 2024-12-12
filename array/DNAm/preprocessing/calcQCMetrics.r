@@ -1,3 +1,4 @@
+
 ##---------------------------------------------------------------------#
 ##
 ## Title: Calculate data quality metrics from raw DNAm data 
@@ -36,10 +37,10 @@ arrayType <- toupper(arrayType)
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(e1071)
-library(data.table)
-library(bigmelon)
-library(wateRmelon)
+library(e1071, warn.conflicts = FALSE, quietly = TRUE)
+library(data.table, warn.conflicts = FALSE, quietly = TRUE)
+library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
+library(wateRmelon, warn.conflicts = FALSE, quietly = TRUE)
 
 
 #----------------------------------------------------------------------#

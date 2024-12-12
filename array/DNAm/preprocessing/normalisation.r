@@ -1,3 +1,4 @@
+
 ##---------------------------------------------------------------------#
 ##
 ## Title: Normalisation
@@ -33,8 +34,8 @@ arrayType <- toupper(arrayType)
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
-library(bigmelon)
-library(data.table)
+library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
+library(data.table, warn.conflicts = FALSE, quietly = TRUE)
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -140,3 +141,4 @@ if(length(cellTypes) > 1){
 print(paste0("The final normalised dataset contains ", ncol(rawbetas), " samples and ", nrow(rawbetas), " probes"))
 
 closefn.gds(normfile)
+
