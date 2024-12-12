@@ -20,7 +20,7 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
     - `REFERENCES_DIR`: full path to directory with all references used throughout the pipeline.
     - Specify the modules versions to be loaded and the full paths to the softwares used in the pipeline (e.g. picard).
   - An alphabetically ordered array of cell types to which samples belong to: `CELLTYPES`. 
-  - Cutoff values for peak calling should be specified by the user. If not specified, default will be used.
+  - Cutoff values for peak calling should be specified by the user. If not specified, default will be used (0.05). For more information about what values to choose: [MACS documentation](https://macs3-project.github.io/MACS/docs/cutoffanalysis.html)
     - `MACS_SAMPLE` : Sample-level Peak calling q-value cutoff
     - `MACS_GROUP` : Cell fraction-level Peak calling q-value cutoff
     - `MACS_CHR` : Peak calling on sex chromosomes q-value cutoff
@@ -57,7 +57,7 @@ Several software are needed to run the pipeline. Some of these can be used from 
 
 Important software that will be installed in this environment are: MACS3 (3.0.2), SAMstats, SAMtools, BEDTools, Bowtie2, MultiQC, R, Python3, Pandoc, GATK, Picard. If you already have a conda environment, please specify its name or path in the *config.txt* file. 
   - Python version in this conda environment should be >= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
-  - R version should be >= 4.2. Some packages are no longer supported in the regular CRAN repository and need to be installed from source. To do this, download the source file of the package [ptest R package](https://cran.r-project.org/src/contrib/Archive/ptest/), keep this in the *config* folder and this will be installed from source at the *0_setUp.sh* script.
+  - R version should be >= 4.3. Some packages are no longer supported in the regular CRAN repository and need to be installed from source. To do this, download the source file of the package [ptest R package](https://cran.r-project.org/src/contrib/Archive/ptest/), keep this in the *config* folder and this will be installed from source at the *0_setUp.sh* script.
 Other software that needs to be available locally are (and path to these need to be specified in the *config.txt* file):
   - [VerifyBamID](https://github.com/Griffan/VerifyBamID)
   - [Phantompeakqualtools](https://github.com/kundajelab/phantompeakqualtools)
