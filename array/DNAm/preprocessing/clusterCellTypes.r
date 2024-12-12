@@ -26,7 +26,6 @@ qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
 configFile <- paste0(dataDir, "/config.r")
-epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
 
 source(configFile)
 
@@ -55,21 +54,13 @@ setwd(dataDir)
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
-if(arrayType== "V2"){
-manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-print("loaded EpicV2 manifest")
-}
-
-if(arrayType == "450K"){
-load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
-manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
-colnames(manifest) <- c("CHR", "Infinium_Design_Type")
-manifest$CHR <- paste0("chr", manifest$CHR)
-print("loaded 450K manifest")
-rm(probeAnnot)
-}
-
+manifest <- cdegUtilities::readManifest(
+	referenceDirectory = refDir,
+	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
+	arrayType = arrayType 
+)
+if (!exists("manifest"))
+	stop("Manifest file could not be loaded correctly")
 
 QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), row.names = 1, stringsAsFactors = FALSE)
 passQC<-QCSum$Basename[QCSum[,"passQCS2"]]
@@ -164,7 +155,16 @@ for(i in 1:nrow(QCmetrics)){
 keepCols<-c("Individual_ID", "Sex", "Age", "Phenotype", "Tissue.Centre")
 keepCols<-keepCols[keepCols %in% colnames(QCmetrics)]
 uniqueIDs<-unique(QCmetrics[,keepCols])
-indFACSEff<-indFACSEff<-aggregate(maxSD[which(QCmetrics$Cell_Type != "Total")], by = list(QCmetrics$Individual_ID[which(QCmetrics$Cell_Type != "Total")]), FUN = median, na.rm = TRUE)
+
+if (!is.data.frame(uniqueIDs)) {
+    uniqueIDs <- data.frame(Individual_ID=uniqueIDs)
+}
+
+indFACSEff<-aggregate(
+	maxSD[which(QCmetrics$Cell_Type != "Total")],
+	by = list(QCmetrics$Individual_ID[which(QCmetrics$Cell_Type != "Total")]),
+	FUN = median,
+	na.rm = TRUE)
 nFACs<-table(QCmetrics$Individual_ID[QCmetrics$Cell_Type != "Total"])
 
 uniqueIDs$Individual_ID <- as.character(uniqueIDs$Individual_ID)
