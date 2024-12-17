@@ -14,7 +14,7 @@
 ## - sexPredictions.csv, sexPredictions.pdf                                                  ||
 ##                                                                                           ||
 ## REQUIRES:                                                                                 ||
-## - R/4.2.1-foss-2022a, libraries: ggpubr, tidyverse,ggplot2                                ||
+## - R version > 4.3, libraries: ggpubr, tidyverse,ggplot2                                   ||
 ## ==========================================================================================##
 
 
