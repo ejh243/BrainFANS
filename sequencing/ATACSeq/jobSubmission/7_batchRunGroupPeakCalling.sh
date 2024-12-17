@@ -138,14 +138,14 @@ fi
 if [ $# = 1 ] || [[ $2 == 'PEAKS' ]]
 then
   
-  mkdir -p ${PEAK_DIR}/MACS/group
+  mkdir -p ${PEAK_DIR}/BAMPE/group
   
 cat <<EOF
 
 || Running STEP 7.2 of ATAC-seq pipeline: PEAKS ||
 
 Peak calling on $GROUP samples will be performed.
-Output directory is ${PEAK_DIR}/MACS/group
+Output directory is ${PEAK_DIR}/BAMPE/group
 
 EOF
 

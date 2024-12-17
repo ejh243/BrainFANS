@@ -61,10 +61,10 @@ fdsPlots <- function(listSamples){
 ##   SET-UP  ##
 ## ==========##
 
-args <- commandArgs()
-configFile <-args[6]
+args <- commandArgs(trailingOnly=TRUE)
+configFile<-args[1]
 source(configFile)
-batchNum<-as.numeric(args[7]) ## nb starts from 0
+batchNum<-as.numeric(args[2]) ## nb starts from 0
 
 options(scipen=5)
 suppressWarnings(suppressPackageStartupMessages({

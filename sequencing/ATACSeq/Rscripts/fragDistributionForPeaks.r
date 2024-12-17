@@ -22,9 +22,10 @@
 ## ==========##
 ##   SET-UP  ##
 ## ==========##
-args <- commandArgs()
-configR <-source(args[6])
-cf <- args[7]
+args <- commandArgs(trailingOnly=TRUE)
+configFile<-args[1]
+source(configFile)
+cf <- args[2]
 
 options(scipen=5)
 

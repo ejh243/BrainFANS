@@ -15,14 +15,15 @@
 ## - samplesForGroupAnalysisOrdered_<cell-group>.txt" in 0_metadata folder                                        ||
 ##                                                                                                                ||
 ## REQUIRES:                                                                                                      ||
-## - R/4.2.1-foss-2022a                                                                                           ||
-## - A csv file in the metadata folder with the summary of QC stages 1 and 2: passAllStatus.csv. This is produced ||
+## - R version > 4.3                                                                                              ||
+## - A csv file in the metadata folder with the summary of QC stages 1 and 2: passS1S2Status.csv. This is produced||
 ##   at STEP 6.2 CHECK                                                                                            ||
 ## ===============================================================================================================##
 
-args <- commandArgs()
-configR <-source(args[6])
-cf <- args[7]
+args <- commandArgs(trailingOnly=TRUE)
+configFile <-args[1]
+source(configFile)
+cf <- args[2]
 
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 passAllQC <- read.csv(file.path(metaDir, "/passS1S2Status.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
