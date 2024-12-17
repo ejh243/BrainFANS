@@ -96,4 +96,6 @@ export multimap=4
 
 ## cell types (ordered alphabetically)
 export CELLTYPES=("IRF8" "NEUN" "SOX" "TN" )
-
+export MACS_SAMPLE="Sample-level Peak calling q-value cutoff"
+export MACS_GROUP="Cell fraction-level Peak calling q-value cutoff"
+export MACS_CHR="Peak calling on sex chromosomes q-value cutoff"

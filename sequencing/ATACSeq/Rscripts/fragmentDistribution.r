@@ -61,19 +61,22 @@ fdsPlots <- function(listSamples){
 ##   SET-UP  ##
 ## ==========##
 
-args <- commandArgs()
-configFile <-args[6]
+args <- commandArgs(trailingOnly=TRUE)
+configFile<-args[1]
 source(configFile)
-batchNum<-as.numeric(args[7]) ## nb starts from 0
+batchNum<-as.numeric(args[2]) ## nb starts from 0
 
 options(scipen=5)
-library(ATACseqQC)
-library(diptest)
-library(ptest)
-library(plyr)
-library(ggplot2)
-library(ggpubr)
-library(gridExtra)
+suppressWarnings(suppressPackageStartupMessages({
+  library(ATACseqQC)
+  library(diptest)
+  library(ptest)
+  library(plyr)
+  library(ggplot2)
+  library(ggpubr)
+  library(gridExtra)
+}))
+
 ## get filepaths of aligned indexed QC'd bam file
 samples<-read.table(file.path(metaDir, "/samples.txt"))[,1]
 aQCFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam.bai$", recursive = TRUE, full.names = TRUE)

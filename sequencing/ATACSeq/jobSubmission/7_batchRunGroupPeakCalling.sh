@@ -13,7 +13,7 @@
 ## ===================================================================================================================##
 ##                           ATAC-seq pipeline STEP 7: Group Peak calling                                             ##
 ## ===================================================================================================================##
-## EXECUTION: sbatch  ./jobSubmission/7_batchRunGroupPeakCalling.sh <project directory> <STEP>                        ||
+## EXECUTION: sbatch  ./jobSubmission/7_batchRunGroupPeakCalling.sh <project directory> <STEP> <GROUP>                ||
 ## - execute from pipeline's main directory                                                                           ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script performs peak calling by grouping samples of the same cell type. This includes selecting  ||
@@ -88,7 +88,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 =~ "FRAGSIZE" ]] && [[ ! $2 =~ "PEAKS" ]] && [[ ! $2 =~ "COUNTS" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use SHIFT, PEAKS, FRIP or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use FRAGSIZE, PEAKS, COUNTS or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
 
 if [[ ! " ${CELLTYPES[*]} " == *" $GROUP "* && ($2 =~ "FRAGSIZE" || $2 =~ "PEAKS")]]; 
@@ -138,21 +138,22 @@ fi
 if [ $# = 1 ] || [[ $2 == 'PEAKS' ]]
 then
   
-  mkdir -p ${PEAK_DIR}/MACS/group
+  mkdir -p ${PEAK_DIR}/BAMPE/group
   
 cat <<EOF
 
 || Running STEP 7.2 of ATAC-seq pipeline: PEAKS ||
 
 Peak calling on $GROUP samples will be performed.
-Output directory is ${PEAK_DIR}/MACS/group
+Output directory is ${PEAK_DIR}/BAMPE/group
 
 EOF
 
-  sh "${SUB_SCRIPTS_DIR}/groupPeaks.sh" ${SAMPLES[@]}
+  sh "${SUB_SCRIPTS_DIR}/groupPeaks.sh" ${GROUP}
 
 fi
 
+## option COUNTS: get read counts in peaks called above
 if [ $# = 1 ] || [[ $2 == 'COUNTS' ]]
 then
   

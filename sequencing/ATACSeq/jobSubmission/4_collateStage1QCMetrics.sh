@@ -146,7 +146,7 @@ Output directory is ${PEAK_DIR}/QCOutput
 
 EOF
   
-	Rscript -e "rmarkdown::render(paste0(commandArgs(trailingOnly=TRUE)[1],'/collateDataQualityStats.Rmd'), output_file=paste0(commandArgs(trailingOnly=TRUE)[2], '/QCOutput/stage1SummaryStats.html'))" "${RSCRIPTS_DIR}" "$PEAK_DIR" "${CONFIGR}"
+	Rscript -e "rmarkdown::render('${RSCRIPTS_DIR}/collateDataQualityStats.Rmd', output_file='$PEAK_DIR/QCOutput/stage1SummaryStats.html')" "${CONFIGR}"
 fi
 
 conda deactivate

@@ -18,21 +18,27 @@
 ## - R/4.2.1-foss-2022a, libraries: ATACseqQC,plyr ,ggplot2                                                                 ||
 ## =========================================================================================================================##
 
-## ==========##
-## FUNCTIONS ##
-## ==========##
-options(scipen=5)
-
-library(ggplot2)
-library(ATACseqQC)
-library(plyr)
-
-args <- commandArgs()
-configR <-source(args[6])
-cf <- args[7]
 
 ## ==========##
 ##   SET-UP  ##
+## ==========##
+args <- commandArgs(trailingOnly=TRUE)
+configFile<-args[1]
+source(configFile)
+cf <- args[2]
+
+options(scipen=5)
+
+suppressWarnings(suppressPackageStartupMessages({
+
+  library(ggplot2)
+  library(ATACseqQC)
+  library(plyr)
+}))
+
+
+## ==========##
+## FUNCTIONS ##
 ## ==========##
 
 fdsPlots <- function(listSamples){
