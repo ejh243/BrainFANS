@@ -813,50 +813,63 @@ dev.off()
 
 ## Sex Prediction
 
-Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. Based on these assumptions we can predict male or female from each sex chromosome. 
 
-Let's look at the distribution of these fold change statistics. If you have > 1 sex you should see two peaks. You sometimes also see a third peak around 0, these are poor quality samples. The grey area on the graph highlights were the data are two ambigous to make a sex prediction. 
-
-```{r, plotSexChromosomeHist, echo = FALSE, fig.width = 12, fig.height=6}
-par(mfrow = c(1,2))
-hist(QCmetrics$x.cp, breaks = 25, main = "X chromosome FC")
-polygon(c(0.995,1.005,1.005,0.995), c(0,0,1000,1000), col = "grey")
-abline(v = 1)
-abline(v = 0.995, col = "red")
-abline(v = 1.005, col = "red")
-mtext("Female", side = 3, adj = 0.9, line = 0)
-mtext("Male", side = 3, adj = 0.1, line = 0)
-
-hist(QCmetrics$y.cp, breaks = 25, main = "Y chromosome FC")
-polygon(c(0.9,1.1,1.1,0.9), c(0,0,1000,1000), col = "grey")
-abline(v = 1)
-abline(v = 0.9, col = "red")
-abline(v = 1.1, col = "red")
-mtext("Male", side = 3, adj = 0.9, line = 0)
-mtext("Female", side = 3, adj = 0.1, line = 0)
-
-```
-
-In this dataset `r sum(is.na(QCmetrics$predSex))` samples did not have sex predicted.
-
-```{r, plotSexChromosomeFC, echo = FALSE, fig.width = 6, fig.height=6}
-plot(QCmetrics$x.cp, QCmetrics$y.cp, type = "n", xlab = "X chromosome FC", ylab = "Y chromosome FC")
-polygon(c(0.995,1.005,1.005,0.995), c(0.9, 0.9, 1.1, 1.1), col = "grey")
-abline(v = 1)
-abline(h = 1, pch = 16)
-points(QCmetrics$x.cp, QCmetrics$y.cp, col = as.factor(QCmetrics$Sex), pch = 16)
-
-
-#plot(QCmetrics$x.cp, QCmetrics$M.median, pch = 16, xlab = "X chromosome FC", ylab = "median M intenisty")
-
+```{r sexBimodalTest, echo = FALSE, eval = sexCheck}
+	bimodP.y<-dip.test(QCmetrics$y.cp)$p.value
 ```
 
 
-We will compare the sex predictions from the X and Y chromosomes.
+Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. 
+
+Let's look at the distribution of these fold change statistics. If you have > 1 sex you should see two peaks. You sometimes also see a third peak around 0, these are poor quality samples. Evidence of multiple sexes in the dataset is needed to enable sex predictions to be performed. This is checked intially with a dip test for multimodality in the distribution of standardized y chromosome intensities. In the density plots below we are looking for evidence of multiple distributions or a non-unimodal distribution. Hartigans dip test for unimodality / multimodality, indicates we can `r if(bimodP.y < 0.05){I(print("accept"))} else {I(print("reject"))} ` the alternative hypothesis of multiple modes (P = `r signif(bimodP.y,3)`).
+
+
+```{r plotSexCheck, echo = FALSE, eval = sexCheck}
+
+    if(bimodP.y < 0.05){
+        library(mixtools, warn.conflicts = FALSE, quietly = TRUE)
+        mixmdl.x = normalmixEM(QCmetrics$x.cp, mu = c(0.99, 1.01), sigma = c(0.05, 0.05))
+        mixmdl.y = normalmixEM(QCmetrics$y.cp, mu = c(0.3, 1.02), sigma = c(0.2, 0.2))
+
+        # plot density of standardized x and y chromosome intensities
+        par(mfrow = c(1,2))
+        plot(mixmdl.x,which=2, main2 = "X chr", xlab2 = "Standardized Mean Intensity")
+        lines(density(QCmetrics$x.cp), lty=2, lwd=2)
+        plot(mixmdl.y,which=2, main2 = "Y chr", xlab2 = "Standardized Mean Intensity")
+        lines(density(QCmetrics$y.cp), lty=2, lwd=2)
+
+    } else {
+        par(mfrow = c(1,2))
+        plot(density(QCmetrics$x.cp), lty=2, lwd=2, main = "X chr", xlab = "Standardized Mean Intensity")
+        plot(density(QCmetrics$y.cp), lty=2, lwd=2, main = "X chr", xlab = "Standardized Mean Intensity")
+
+    }
+```
+
+If predictions were made, we will compare the sex predictions between the X and Y chromosomes.
 
 ```{r tabSexpredictions, echo = FALSE}
-pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
+if(bimodP.y < 0.05){
+  pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
+} else {
+  print("Data did not have enough evidence of multimodality to make sex predictions.")
+}
 ``` 
+
+
+Sex is predicted using these standardized sex chromosome intensities, by first fitting two distributions to the data, where one distribution is expected to be the females and the second distribution is the males. We can then calculate for each sample the posterior probability that they belong to each distribution. Whichever distribution they have a higher posterior probability for they get predicted as. Ideally these posterior probabilities will be ~1 for at least one distribution to enable a clean prediction. This process is done separately for X and Y chromosomes. We can visulaise the distribution of posterior probabilities to check that these are distinct enough for making sex predictions. 
+
+```{r plotSexPosteriorProbabilities, echo = FALSE, eval = sexCheck}
+
+    if(bimodP.y < 0.05){
+        # plot posterior probabilities of sex predictions
+        par(mfrow = c(1,2))
+        plot(density(mixmdl.x$posterior[,1]), main = "X chr", xlab = "Posterior Probability Male")
+        abline(v = 0.5)
+        plot(density(mixmdl.y$posterior[,2]), main = "Y chr", xlab = "Posterior Probability Male")
+        abline(v = 0.5)
+    }
+```
 
 Perform sex check against phenotype reported sexes: `r sexCheck`. 
 
