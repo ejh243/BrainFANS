@@ -98,7 +98,6 @@ plotViolinWithMeans <- function(data, value_column, group_column = "Phenotype",
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(methylclockData)
 library(ggplot2)
 library(tidyr)
 library(dplyr)
@@ -165,14 +164,6 @@ CCDNAmAge$DNAmAge<-anti.trafo(coefHorvath$CoefficientTraining[1] +
 CCDNAmAge$AAhorvath <- residuals(lm(DNAmAge ~ Age, data=CCDNAmAge))
 CCDNAmAge$AAhorvathByCT <- residuals(lm(DNAmAge ~ Age + Cell.type, data=CCDNAmAge))
 
-## calculate PhenoAge clock
-coefLevine <- get_coefLevine()[,]
-coefLevine <- rbind(get_coefLevine()[1,], 
-    coefLevine[coefLevine$CpGmarker %in% rownames(celltypeNormbeta),])
-CCDNAmAge$PhenoAge<-anti.trafo(coefLevine$CoefficientTraining[1] + 
-    t(celltypeNormbeta[coefLevine$CpGmarker[-1],]) %*% coefLevine$CoefficientTraining[-1])
-CCDNAmAge$AApheno <- residuals(lm(PhenoAge ~ Age, data=CCDNAmAge))
-CCDNAmAge$AAphenoByCT <- residuals(lm(PhenoAge ~ Age + Cell.type, data=CCDNAmAge))
 
 #----------------------------------------------------------------------#
 # CREATE PLOTS & STATISITCAL TESTS
