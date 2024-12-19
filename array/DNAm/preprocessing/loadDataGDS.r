@@ -82,7 +82,7 @@ tryCatch(
   expr= {
     scanDate <- unlist(vapply(
       paste0("1_raw/", sampleSheet[["Basename"]], "_Red.idat"),
-      getScanDate,
+      cdegUtilities::getScanDate,
       character(1)
     ))
     sampleSheet <- cbind(sampleSheet, scanDate)
