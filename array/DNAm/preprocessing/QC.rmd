@@ -857,7 +857,7 @@ if(bimodP.y < 0.05){
 ``` 
 
 
-Sex is predicted using these standardized sex chromosome intensities, by first fitting two distributions to the data, where one distribution is expected to be the females and the second distribution is the males. We can then calculate for each sample the posterior probability that they belong to each distribution. Whichever distribution they have a higher posterior probability for they get predicted as. Ideally these posterior probabilities will be ~1 for at least one distribution to enable a clean prediction. This process is done separately for X and Y chromosomes. We can visulaise the distribution of posterior probabilities to check that these are distinct enough for making sex predictions. 
+Sex is predicted using these standardized sex chromosome intensities, by first fitting two distributions to the data, where one distribution is expected to be the females and the second distribution is the males. We can then calculate for each sample the posterior probability that they belong to each distribution. Whichever distribution they have a higher posterior probability for they get predicted as. Ideally these posterior probabilities will be near the extremes to enable a clean prediction. This process is done separately for X and Y chromosomes. We can visulaise the distribution of posterior probabilities to check that these are distinct enough for making sex predictions. 
 
 ```{r plotSexPosteriorProbabilities, echo = FALSE, eval = sexCheck}
 
