@@ -20,6 +20,7 @@ perMiss<-2
 sexCheck<-TRUE
 snpCheck<-TRUE
 ctCheck<-TRUE
+extractScanDate<-FALSE # Adds scan date to gds files
 
 
 ## ctCheck variables

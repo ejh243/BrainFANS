@@ -76,8 +76,14 @@ nProbes <- sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), readIDAT,
 if(length(nProbes)==0){
   stop("Error calculating number of probes from IDATs.")
 }
-scanDate <- unlist(sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), getScanDate))
-sampleSheet <- cbind(sampleSheet, nProbes, scanDate)
+
+## Old feature, not strictly required for remainder of the pipeline
+if (extractScanDate) {
+  scanDate <- unlist(sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), getScanDate))
+  sampleSheet <- cbind(sampleSheet, nProbes, scanDate)
+} else {
+  sampleSheet <- cbind(sampleSheet, nProbes)
+}
 
 ## load data separately
 loadGroups <- split(gsub("1_raw/|_Red.idat", "", names(nProbes)), as.factor(nProbes))
