@@ -56,7 +56,7 @@ if(!"Basename" %in% colnames(sampleSheet)){
 }
 
 
-gfile<-openfn.gds(gdsFile, readonly = TRUE, allow.fork = TRUE)
+gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
 # ensure sample sheet is in same order as data
 sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
 
@@ -266,7 +266,7 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 		chr = manifest$CHR,
 		mns = read.gdsn(methylated(gfile)),
 		uns = read.gdsn(unmethylated(gfile)))
-	#add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
+	add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
 	
 	qualDat<-qual(betas(gfile)[,], normbeta)
 	qualDat[which(intensPASS == FALSE),]<-NA
