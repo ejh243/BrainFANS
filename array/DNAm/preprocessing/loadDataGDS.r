@@ -80,7 +80,10 @@ sampleSheet <- cbind(sampleSheet, nProbes)
 
 tryCatch(
   expr= {
-    scanDate <- unlist(sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), getScanDate))
+    scanDate <- unlist(sapply(
+      paste0("1_raw/", sampleSheet[["Basename"]], "_Red.idat"),
+      getScanDate
+    ))
     sampleSheet <- cbind(sampleSheet, scanDate)
   },
   error = function(e) {
