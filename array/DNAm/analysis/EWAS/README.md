@@ -15,7 +15,8 @@ Scripts rely on the following packages being installed
 * tidyr
 * dplyr
 * IlluminaHumanMethylationEPICanno.ilm10b4.hg19
-
+* lme4
+* lmerTest
 
 ## Script Orientation
 
