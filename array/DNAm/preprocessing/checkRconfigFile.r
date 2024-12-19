@@ -29,7 +29,7 @@ source(configFile)
 
 qcRmdParams <- c("projectTitle", "processedBy")
 qcthres <- c("thresBS", "intenThres", "nvThres", "perMiss")
-logicalParams <- c("sexCheck", "snpCheck", "ctCheck")
+logicalParams <- c("sexCheck", "snpCheck", "ctCheck", "extractScanDate")
 
 ungrouped <- c("tissueType", "arrayType", "projVar")
 
