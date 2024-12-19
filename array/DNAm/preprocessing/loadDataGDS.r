@@ -80,9 +80,10 @@ sampleSheet <- cbind(sampleSheet, nProbes)
 
 tryCatch(
   expr= {
-    scanDate <- unlist(sapply(
+    scanDate <- unlist(vapply(
       paste0("1_raw/", sampleSheet[["Basename"]], "_Red.idat"),
-      getScanDate
+      getScanDate,
+      character(1)
     ))
     sampleSheet <- cbind(sampleSheet, scanDate)
   },
