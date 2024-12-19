@@ -79,7 +79,7 @@ if(length(nProbes)==0){
 sampleSheet <- cbind(sampleSheet, nProbes)
 
 tryCatch(
-  expr= {
+  expr = {
     scanDate <- unlist(vapply(
       paste0("1_raw/", sampleSheet[["Basename"]], "_Red.idat"),
       cdegUtilities::getScanDate,
