@@ -266,7 +266,7 @@ if(!"rmsd" %in% colnames(QCmetrics)){
 		chr = manifest$CHR,
 		mns = read.gdsn(methylated(gfile)),
 		uns = read.gdsn(unmethylated(gfile)))
-	add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
+	#add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
 	
 	qualDat<-qual(betas(gfile)[,], normbeta)
 	qualDat[which(intensPASS == FALSE),]<-NA
