@@ -76,8 +76,17 @@ nProbes <- sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), readIDAT,
 if(length(nProbes)==0){
   stop("Error calculating number of probes from IDATs.")
 }
-scanDate <- unlist(sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), getScanDate))
-sampleSheet <- cbind(sampleSheet, nProbes, scanDate)
+tryCatch(
+  expr= {
+    scanDate <- unlist(sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), getScanDate))
+    sampleSheet <- cbind(sampleSheet, nProbes, scanDate)
+  },
+  error = function(e) {
+    print(e)
+    message("No scan date could be found in at least one IDAT file.")
+    sampleSheet <- cbind(sampleSheet, nProbes)
+  }
+)
 
 ## load data separately
 loadGroups <- split(gsub("1_raw/|_Red.idat", "", names(nProbes)), as.factor(nProbes))
