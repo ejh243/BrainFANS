@@ -14,8 +14,10 @@
 
 module load MACS2
 
-ALIGNEDDIR=/gpfs/mrc0/projects/Research_Project-MRC190311/CEGX/alignedData
-PEAKDIR=/gpfs/mrc0/projects/Research_Project-MRC190311/CEGX/calledPeaks/IncreasingSampleSizes
+source $1
+
+ALIGNEDDIR=${DATADIR}/alignedData
+PEAKDIR=${DATADIR}/calledPeaks/IncreasingSampleSizes
 
 cd ${ALIGNEDDIR}
 
