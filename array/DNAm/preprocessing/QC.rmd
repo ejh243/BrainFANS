@@ -197,7 +197,7 @@ for(item in projVar){
   DT::datatable(
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
-    col.names = c("Variable", "Number of Samples")
+    colnames = c("Variable", "Number of Samples")
   )
 }
 ```
@@ -545,14 +545,14 @@ We identified `r length(unique(predictedduplicates))` genetically unique individ
 
 
 ```{r,echo = FALSE, results = "asis"}
-DT::datatable(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(t(as.data.frame(table(table(predictedduplicates)))), rownames = c("Number of Samples", "Number of Individuals"))
 
 ```
 
 We can compare this to the expected distribution of number of samples per individuals based on the sample sheet. 
 
 ```{r,echo = FALSE, results = "asis"}
-DT::datatable(t(as.data.frame(table(table(QCmetrics$Individual_ID)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(t(as.data.frame(table(table(QCmetrics$Individual_ID)))), rownames = c("Number of Samples", "Number of Individuals"))
 
 ```
 
@@ -944,7 +944,7 @@ Post QC we identified `r length(unique(predictedduplicates))` genetically unique
 
 
 ```{r,echo = FALSE, results = "asis"}
-DT::datatable(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(t(as.data.frame(table(table(predictedduplicates)))), rownames = c("Number of Samples", "Number of Individuals"))
 
 ```
 
