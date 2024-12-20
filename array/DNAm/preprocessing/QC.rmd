@@ -916,9 +916,13 @@ for(i in 1:ncol(QCSum.min)){
 colnames(xTab)<-colnames(QCSum.min)
 rownames(xTab)<-colnames(QCSum.min)
 
-kbl(xTab) %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
+DT::datatable(
+  xTab,
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 ```
 
 ## Correlations between QC metrics
