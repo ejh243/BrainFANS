@@ -2,6 +2,9 @@
 */config.txt
 */config.r
 
+# R files
+array/DNAm/preprocessing/.Rprofile
+
 # Log and Error files
 *.log
 *.err
