@@ -199,6 +199,7 @@ for(item in projVar){
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
     colnames = c("Variable", "Number of Samples"),
+    rownames = FALSE,
     extensions = "Buttons", options = list(
       dom = "Bfrtip",
       buttons = c("copy", "csv")
