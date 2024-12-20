@@ -194,7 +194,7 @@ for (column_name in projVar) send_removal_message(column_name, QCmetrics)
 
 projVar <- remove_unwanted_columns(projVar, QCmetrics)
 for(item in projVar){
-  pander(
+  DT::datatable(
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
     col.names = c("Variable", "Number of Samples")
@@ -545,14 +545,14 @@ We identified `r length(unique(predictedduplicates))` genetically unique individ
 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
 
 ```
 
 We can compare this to the expected distribution of number of samples per individuals based on the sample sheet. 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(QCmetrics$Individual_ID)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(t(as.data.frame(table(table(QCmetrics$Individual_ID)))), row.names = c("Number of Samples", "Number of Individuals"))
 
 ```
 
@@ -855,7 +855,7 @@ points(QCmetrics$x.cp, QCmetrics$y.cp, col = as.factor(QCmetrics$Sex), pch = 16)
 We will compare the sex predictions from the X and Y chromosomes.
 
 ```{r tabSexpredictions, echo = FALSE}
-pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
+DT::datatable(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
 ``` 
 
 Perform sex check against phenotype reported sexes: `r sexCheck`. 
@@ -944,7 +944,7 @@ Post QC we identified `r length(unique(predictedduplicates))` genetically unique
 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
 
 ```
 
