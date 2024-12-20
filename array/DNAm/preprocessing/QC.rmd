@@ -161,6 +161,12 @@ Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$
 
 These are only included if they are categorical. For this study the following project variables were included:
 
+```{r, echo=FALSE,include = FALSE}
+# You need this code to conduct the magic dependences attaching so that we
+# can create DT::datatables() in a loop. I hate pandoc.
+DT::datatable(matrix())
+```
+
 ```{r projVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
 send_removal_message <- function(column_name, QCmetrics) {
@@ -189,7 +195,7 @@ for (column_name in projVar) send_removal_message(column_name, QCmetrics)
 
 projVar <- remove_unwanted_columns(projVar, QCmetrics)
 for(item in projVar){
-  DT::datatable(
+  cat(knitr::knit_print(DT::datatable(
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
     colnames = c("Variable", "Number of Samples"),
@@ -197,7 +203,7 @@ for(item in projVar){
       dom = "Bfrtip",
       buttons = c("copy", "csv")
     )
-  )
+  )))
 }
 ```
 
