@@ -113,7 +113,7 @@ dataDir <- args[1]
 refDir <- args[2]
 
 normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
-resPath<-file.path(dataDir, "/4_analysis")
+resPath<-file.path(dataDir, "/4_analysis/EWAS/")
 
 #----------------------------------------------------------------------#
 # LOAD AND PREPARE DATA
@@ -177,8 +177,8 @@ rmsePerCT<-rbind("CCDNAmAge" = c(rmse(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge),rmseBy
 corPerCT<-rbind("CCDNAmAge" = c(cor(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge),corByGroup(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge, CCDNAmAge$Cell.type)),
 "DNAmAge" = c(cor(CCDNAmAge$Age, CCDNAmAge$DNAmAge),corByGroup(CCDNAmAge$Age, CCDNAmAge$DNAmAge, CCDNAmAge$Cell.type)))
 
-write.csv(rmsePerCT, "RMSEEpigeneticClockAgeByCelltypes.csv")
-write.csv(corPerCT, "CorEpigeneticClockAgeByCelltypes.csv")
+write.csv(rmsePerCT,file.path(resPath, "Tables", "RMSEEpigeneticClockAgeByCelltypes.csv"))
+write.csv(corPerCT, file.path(resPath, "Tables", "CorEpigeneticClockAgeByCelltypes.csv"))
 
 
 plotViolinWithMeans(CCDNAmAge, value_column = "AAbrain")
@@ -203,7 +203,7 @@ for(each in c("CCDNAmAge", "DNAmAge")){
     )
 }
 
-write.csv(ageCorP, "MLMEpigeneticClockAgeByCelltypes.csv")
+write.csv(ageCorP, file.path(resPath, "Tables", "MLMEpigeneticClockAgeByCelltypes.csv"))
 
 sczCorP<-matrix(data = NA, nrow = 3, ncol = 12)
 rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge")
@@ -239,4 +239,4 @@ colnames(AABySCZ)<-c("Clock", "CT", apply(expand.grid(
     c("Coef", "P"), 
     c("Age", "SchizophreniaStatus","AgeBySchizophrenia")), 1, paste, collapse = "_"), "Ttest_MeanDiff", "Ttest_P")
 
-write.csv(AABySCZ, "EpigeneticClockAgeBySchizophrenia.csv")
+write.csv(AABySCZ, file.path(resPath, "Tables", "EpigeneticClockAgeBySchizophrenia.csv"))
