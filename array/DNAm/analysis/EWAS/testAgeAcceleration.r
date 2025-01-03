@@ -171,14 +171,11 @@ CCDNAmAge$AAhorvathByCT <- residuals(lm(DNAmAge ~ Age + Cell.type, data=CCDNAmAg
 
 plotScatterAgainstAge(CCDNAmAge, CCDNAmAge)
 plotScatterAgainstAge(CCDNAmAge, DNAmAge)
-plotScatterAgainstAge(CCDNAmAge, PhenoAge)
 
 rmsePerCT<-rbind("CCDNAmAge" = c(rmse(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge),rmseByGroup(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge, CCDNAmAge$Cell.type)),
-"DNAmAge" = c(rmse(CCDNAmAge$Age, CCDNAmAge$DNAmAge),rmseByGroup(CCDNAmAge$Age, CCDNAmAge$DNAmAge, CCDNAmAge$Cell.type)),
-"PhenoAge" = c(rmse(CCDNAmAge$Age, CCDNAmAge$PhenoAge),rmseByGroup(CCDNAmAge$Age, CCDNAmAge$PhenoAge, CCDNAmAge$Cell.type)))
+"DNAmAge" = c(rmse(CCDNAmAge$Age, CCDNAmAge$DNAmAge),rmseByGroup(CCDNAmAge$Age, CCDNAmAge$DNAmAge, CCDNAmAge$Cell.type)))
 corPerCT<-rbind("CCDNAmAge" = c(cor(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge),corByGroup(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge, CCDNAmAge$Cell.type)),
-"DNAmAge" = c(cor(CCDNAmAge$Age, CCDNAmAge$DNAmAge),corByGroup(CCDNAmAge$Age, CCDNAmAge$DNAmAge, CCDNAmAge$Cell.type)),
-"PhenoAge" = c(cor(CCDNAmAge$Age, CCDNAmAge$PhenoAge),corByGroup(CCDNAmAge$Age, CCDNAmAge$PhenoAge, CCDNAmAge$Cell.type)))
+"DNAmAge" = c(cor(CCDNAmAge$Age, CCDNAmAge$DNAmAge),corByGroup(CCDNAmAge$Age, CCDNAmAge$DNAmAge, CCDNAmAge$Cell.type)))
 
 write.csv(rmsePerCT, "RMSEEpigeneticClockAgeByCelltypes.csv")
 write.csv(corPerCT, "CorEpigeneticClockAgeByCelltypes.csv")
@@ -188,17 +185,15 @@ plotViolinWithMeans(CCDNAmAge, value_column = "AAbrain")
 plotViolinWithMeans(CCDNAmAge, value_column = "AAbrainByCT")
 plotViolinWithMeans(CCDNAmAge, value_column = "AAhorvath")
 plotViolinWithMeans(CCDNAmAge, value_column = "AAhorvathByCT")
-plotViolinWithMeans(CCDNAmAge, value_column = "AApheno")
-plotViolinWithMeans(CCDNAmAge, value_column = "AAphenoByCT")
 
 
 ageCorP<-matrix(data = NA, nrow = 3, ncol = 12)
-rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge", "PhenoAge")
+rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge")
 colnames(ageCorP)<-c("Intercept", apply(expand.grid(
     c("Coef", "P"), 
     c("Age", "Cell.typeNeuN+","Cell.typeSox10+","Age_Cell.typeNeuN+" ,"Age_Cell.typeSox10+")), 1, paste, collapse = "_"),
     "P_Individual")
-for(each in c("CCDNAmAge", "DNAmAge", "PhenoAge")){
+for(each in c("CCDNAmAge", "DNAmAge")){
     ageCorP[each,]<-runAgeCTCorTests(
     data = CCDNAmAge,
     dependent_var = !!sym(each),
@@ -211,12 +206,12 @@ for(each in c("CCDNAmAge", "DNAmAge", "PhenoAge")){
 write.csv(ageCorP, "MLMEpigeneticClockAgeByCelltypes.csv")
 
 sczCorP<-matrix(data = NA, nrow = 3, ncol = 12)
-rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge", "PhenoAge")
+rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge")
 colnames(ageCorP)<-c("Intercept", apply(expand.grid(
     c("Coef", "P"), 
     c("Age", "Cell.typeNeuN+","Cell.typeSox10+","Age_Cell.typeNeuN+" ,"Age_Cell.typeSox10+")), 1, paste, collapse = "_"),
     "P_Individual")
-for(each in c("CCDNAmAge", "DNAmAge", "PhenoAge")){
+for(each in c("CCDNAmAge", "DNAmAge")){
     ageCorP[each,]<-runAgeCTCorTests(
     data = CCDNAmAge,
     dependent_var = !!sym(each),
@@ -227,7 +222,7 @@ for(each in c("CCDNAmAge", "DNAmAge", "PhenoAge")){
 }
 
 AABySCZ<-NULL
-for(each in c("CCDNAmAge", "DNAmAge", "PhenoAge")){
+for(each in c("CCDNAmAge", "DNAmAge")){
     for(CT in cellTypes){
         dependent_var <- rlang::ensym(each)
         # Define the full model formula dynamically
