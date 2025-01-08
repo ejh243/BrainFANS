@@ -170,13 +170,16 @@ CCDNAmAge$AAhorvathByCT <- residuals(lm(DNAmAge ~ Age + Cell.type, data=CCDNAmAg
 # CREATE PLOTS & STATISTICAL TESTS
 #----------------------------------------------------------------------#
 
-p1<-plotScatterAgainstAge(CCDNAmAge, CCDNAmAge)
-p2<-plotScatterAgainstAge(CCDNAmAge, DNAmAge)
+p1<-plotScatterAgainstAge(CCDNAmAge, CCDNAmAge) + 
+    labs(colour = "Cell Type")
+p2<-plotScatterAgainstAge(CCDNAmAge, DNAmAge) + 
+    labs(colour = "Cell Type")
 combinedPlot <- ggarrange(p1,p2, 
                            ncol = 2, nrow = 1, 
                            common.legend = TRUE, legend = "bottom")
 
-pdf(file.path(resPath, paste0("ScatterplotEpigeneticAgeVsChronologicalAge.pdf")), width = 10, height = 10)
+pdf(file.path(resPath, "Plots", paste0("ScatterplotEpigeneticAgeVsChronologicalAge.pdf")), 
+    width = 10, height = 5)
 combinedPlot
 dev.off()
 
