@@ -215,7 +215,7 @@ pdf(file.path(resPath, "Plots", paste0("ViolinPlotAgeAccelerationByCTByCaseContr
 combinedPlot
 dev.off()
 
-ageCorP<-matrix(data = NA, nrow = 3, ncol = 12)
+ageCorP<-matrix(data = NA, nrow = 2, ncol = 12)
 rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge")
 colnames(ageCorP)<-c("Intercept", apply(expand.grid(
     c("Coef", "P"), 
@@ -233,7 +233,7 @@ for(each in c("CCDNAmAge", "DNAmAge")){
 
 write.csv(ageCorP, file.path(resPath, "Tables", "MLMEpigeneticClockAgeByCelltypes.csv"))
 
-sczCorP<-matrix(data = NA, nrow = 3, ncol = 12)
+sczCorP<-matrix(data = NA, nrow = 2, ncol = 12)
 rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge")
 colnames(ageCorP)<-c("Intercept", apply(expand.grid(
     c("Coef", "P"), 
