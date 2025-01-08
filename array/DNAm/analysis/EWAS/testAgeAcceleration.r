@@ -156,8 +156,8 @@ CCDNAmAge$AAbrain <- residuals(lm(CCDNAmAge~Age, data=CCDNAmAge))
 CCDNAmAge$AAbrainByCT <- residuals(lm(CCDNAmAge~Age + Cell.type, data=CCDNAmAge))
 
 ## calculate Horvath clock
-coefHorvath<- get_coefHorvath()[,]
-coefHorvath <- rbind(get_coefHorvath()[1,], 
+coefHorvath<- read.csv(file.path(refPath, "HorvathClock/HorvathClockCoefficients.csv"), stringsAsFactors = FALSE)
+coefHorvath <- rbind(coefHorvath[1,], 
     coefHorvath[coefHorvath$CpGmarker %in% rownames(celltypeNormbeta),])
 CCDNAmAge$DNAmAge<-anti.trafo(coefHorvath$CoefficientTraining[1] + 
     t(celltypeNormbeta[coefHorvath$CpGmarker[-1],]) %*% coefHorvath$CoefficientTraining[-1])
