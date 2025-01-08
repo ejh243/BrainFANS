@@ -103,6 +103,7 @@ library(tidyr)
 library(dplyr)
 library(lme4)
 library(lmerTest)
+library(ggpubr)
 
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
@@ -166,11 +167,18 @@ CCDNAmAge$AAhorvathByCT <- residuals(lm(DNAmAge ~ Age + Cell.type, data=CCDNAmAg
 
 
 #----------------------------------------------------------------------#
-# CREATE PLOTS & STATISITCAL TESTS
+# CREATE PLOTS & STATISTICAL TESTS
 #----------------------------------------------------------------------#
 
-plotScatterAgainstAge(CCDNAmAge, CCDNAmAge)
-plotScatterAgainstAge(CCDNAmAge, DNAmAge)
+p1<-plotScatterAgainstAge(CCDNAmAge, CCDNAmAge)
+p2<-plotScatterAgainstAge(CCDNAmAge, DNAmAge)
+combinedPlot <- ggarrange(p1,p2, 
+                           ncol = 2, nrow = 1, 
+                           common.legend = TRUE, legend = "bottom")
+
+pdf(file.path(resPath, paste0("ScatterplotEpigeneticAgeVsChronologicalAge.pdf")), width = 10, height = 10)
+combinedPlot
+dev.off()
 
 rmsePerCT<-rbind("CCDNAmAge" = c(rmse(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge),rmseByGroup(CCDNAmAge$Age, CCDNAmAge$CCDNAmAge, CCDNAmAge$Cell.type)),
 "DNAmAge" = c(rmse(CCDNAmAge$Age, CCDNAmAge$DNAmAge),rmseByGroup(CCDNAmAge$Age, CCDNAmAge$DNAmAge, CCDNAmAge$Cell.type)))
