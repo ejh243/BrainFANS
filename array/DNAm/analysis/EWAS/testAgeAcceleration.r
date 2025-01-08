@@ -256,7 +256,7 @@ for(each in c("CCDNAmAge", "DNAmAge")){
         # Define the full model formula dynamically
         full_model_formula <- as.formula(paste(rlang::as_label(dependent_var), "~ Age*Phenotype + Sex"))
         full_model <- lm(full_model_formula, data = CCDNAmAge, subset = which(Cell.type == CT))
-        residuals_reduced <- residuals(lm(CCDNAmAge ~ Age + Sex, data = CCDNAmAge, subset = which(Cell.type == CT)))
+        residuals_reduced <- residuals(lm(as.formula(paste(rlang::as_label(dependent_var), "~ Age + Sex")), data = CCDNAmAge, subset = which(Cell.type == CT)))
         ttest_result <- t.test( residuals_reduced ~ CCDNAmAge$Phenotype[which(CCDNAmAge$Cell.type == CT)])
         AABySCZ<-rbind(AABySCZ, (c(each, CT, 
         as.numeric(t(summary(full_model)$coefficients[c("Age", "PhenotypeSchizophrenia", "Age:PhenotypeSchizophrenia"), c("Estimate", "Pr(>|t|)")])),
