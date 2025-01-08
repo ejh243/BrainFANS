@@ -192,11 +192,28 @@ write.csv(rmsePerCT,file.path(resPath, "Tables", "RMSEEpigeneticClockAgeByCellty
 write.csv(corPerCT, file.path(resPath, "Tables", "CorEpigeneticClockAgeByCelltypes.csv"))
 
 
-plotViolinWithMeans(CCDNAmAge, value_column = "AAbrain")
-plotViolinWithMeans(CCDNAmAge, value_column = "AAbrainByCT")
-plotViolinWithMeans(CCDNAmAge, value_column = "AAhorvath")
-plotViolinWithMeans(CCDNAmAge, value_column = "AAhorvathByCT")
+p1 <- plotViolinWithMeans(CCDNAmAge, value_column = "AAbrain") + xlab("") + ylab("Age Acceleration (Cortical)")
+p2 <- plotViolinWithMeans(CCDNAmAge, value_column = "AAbrainByCT") + xlab("") + ylab("Age Acceleration (Cortical)")
+p3 <- plotViolinWithMeans(CCDNAmAge, value_column = "AAhorvath") + xlab("") + ylab("Age Acceleration (Horvath)")
+p4 <- plotViolinWithMeans(CCDNAmAge, value_column = "AAhorvathByCT") + xlab("") + ylab("Age Acceleration (Horvath)")
 
+combinedPlot <- ggarrange(p1,p3, 
+                           ncol = 1, nrow = 2, 
+                           common.legend = TRUE, legend = "bottom")
+
+pdf(file.path(resPath, "Plots", paste0("ViolinPlotAgeAccelerationAltogetherByCaseControl.pdf")), 
+    width = 10, height = 10)
+combinedPlot
+dev.off()
+
+combinedPlot <- ggarrange(p2,p4, 
+                           ncol = 1, nrow = 2, 
+                           common.legend = TRUE, legend = "bottom")
+
+pdf(file.path(resPath, "Plots", paste0("ViolinPlotAgeAccelerationByCTByCaseControl.pdf")), 
+    width = 10, height = 10)
+combinedPlot
+dev.off()
 
 ageCorP<-matrix(data = NA, nrow = 3, ncol = 12)
 rownames(ageCorP)<-c("CCDNAmAge", "DNAmAge")
