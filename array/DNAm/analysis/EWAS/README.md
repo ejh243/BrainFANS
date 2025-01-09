@@ -28,9 +28,11 @@ For example to run the **summariseDataset.r** script you might execute
 
 | Filename | Description | Required Arguments | 
 | --- | ----------- | ----------- |
-| summariseDataset.r | Create summary tables and plots of demographic variables | <ol><li> path to RDS file with normalised dataset, containing  phenotype matrix (`QCmetrics`) |
-| testCellComposition.r | Calculate celluar composition for each sample and test against case control status | <ol><li> path to RDS file with normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) |
-
+| summariseDataset.r | Create summary tables and plots of demographic variables | <ol><li> path to RDS file with normalised dataset, containing  phenotype matrix (`QCmetrics`) </ol></li> |
+| testCellComposition.r | path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </ol></li> |
+| testAgeAcceleration.r | Calculate epigenetic age for each sample and test against chronological age and age acceleration residuals against case control status | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </li><li> path to folder containing cs files with clock coefficients </ol></li> |
+| lmWithinCT.r | Performs case control EWAS for a single cell type | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </li><li> Cell Type to be analysed </ol></li>  |
+| summmariseWithinCTDMPs.r | Loads cell specific EWAS for all cell types and produces summary tables and plots | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </li><li> Path to folder where EPIC annotation files are stored </ol></li>  |
 
 
 ## Data Availablity
