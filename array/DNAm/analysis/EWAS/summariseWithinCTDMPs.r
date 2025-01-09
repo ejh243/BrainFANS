@@ -254,8 +254,8 @@ for(each in cellTypes){
             xlab("Cell composition P-value") + ylab("Schizophrenia P-value") + 
             scale_x_log10() + scale_y_log10() + geom_abline(intercept = 0, slope = 1)
             pdf(file.path(resPath, "Plots",paste0("ScatterPlotsCellProportionEffectsOnDiscoveryDMPsLMWithin", each, ".pdf")), width = 8, height = 8)
-            ggarrange(p1,p2, p3,p4,
-                           ncol = 2, nrow = 2)
+            print(ggarrange(p1,p2, p3,p4,
+                           ncol = 2, nrow = 2))
             dev.off()
         }
     }
