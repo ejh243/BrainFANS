@@ -370,16 +370,18 @@ dmpRes <- cbind(dmpRes, probeAnnot[match(rownames(dmpRes), probeAnnot$probeID), 
 
 for(each in cellTypes){
 	subRes <- dmpRes[which(dmpRes[,"DiscoveryCellType"] == each),]
-	pdf(file.path(resPath, "Plots", paste0("ViolinPlotDiscoveryDMPsWithin", each, "Models.pdf")), width = 6, height = 5)
+    if(nrow(subRes) > 0){
+        pdf(file.path(resPath, "Plots", paste0("ViolinPlotDiscoveryDMPsWithin", each, "Models.pdf")), width = 6, height = 5)
 
-	for(i in 1:nrow(subRes)){
-		tmpDat<-data.frame("CellType" = QCmetrics$Cell.type, "Phenotype" = QCmetrics$Phenotype, "DNAm" = celltypeNormbeta[rownames(subRes)[i],])
-		p<-ggplot(tmpDat, aes(x=CellType, y=DNAm, fill = Phenotype)) + 
-	  geom_violin(position = pos, scale = 'width') + ggtitle(paste(rownames(subRes)[i], subRes$GeneNames[i])) +
-	  stat_summary(fun = "mean", 
-				   geom = "point", 
-				   position = pos)
-		print(p)
-	}
-	dev.off()
+        for(i in 1:nrow(subRes)){
+            tmpDat<-data.frame("CellType" = QCmetrics$Cell.type, "Phenotype" = QCmetrics$Phenotype, "DNAm" = celltypeNormbeta[rownames(subRes)[i],])
+            p<-ggplot(tmpDat, aes(x=CellType, y=DNAm, fill = Phenotype)) + 
+        geom_violin(position = pos, scale = 'width') + ggtitle(paste(rownames(subRes)[i], subRes$GeneNames[i])) +
+        stat_summary(fun = "mean", 
+                    geom = "point", 
+                    position = pos)
+            print(p)
+        }
+        dev.off()
+    }
 }
