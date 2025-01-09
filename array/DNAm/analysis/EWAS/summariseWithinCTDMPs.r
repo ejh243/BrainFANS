@@ -329,20 +329,23 @@ pdf(file.path(resPath, "Plots","ViolinPlotsCelltypeEffectsDiscoveryDMPsLMWithinC
 ggarrange(p1, p2, nrow = 1, ncol = 2, common.legend = TRUE)
 dev.off()
 
-# To rule out power effects plot coeff against p-value
-
+# Evidence of bigger effects in any cell type?
 topSites<-NULL
 for(i in 1:3){
-    index<-order(res[[i]][,"FullModel_SCZ_P"])[1:100]
-    topSites<-rbind(topSites, cbind(cellTypes[i], res[[i]][index,c("FullModel_SCZ_P" , "FullModel_SCZ_coeff")]))
+    index<-order(res[[i]][,"NullModel_SCZ_P"])[1:100]
+    topSites<-rbind(topSites, cbind(cellTypes[i], res[[i]][index,c("NullModel_SCZ_P" , "NullModel_SCZ_coeff")]))
 }
 colnames(topSites)[1]<-"cellType"
 
 topSites[,2]<- -log10(topSites[,2])
 topSites[,3] <- abs(topSites[,3])
 
-ggplot(topSites, aes(x = FullModel_SCZ_P, y = FullModel_SCZ_coeff, color = cellType)) + geom_point() +
-xlab("-log10(P)") + ylab("Mean difference")
+pdf(file.path(resPath, "Plots","ViolinPlotCelltypeEffectsTop100DMPsLMWithinCTs.pdf"), width = 4, height = 4)
+ggplot(topSites, aes(x = cellType, y = NullModel_SCZ_coeff, fill = cellType)) + geom_violin() +
+stat_summary(fun=mean, geom="point", size=2, color="black") +
+ylab("Mean difference")  + xlab("Discovery Cell Type") +
+labs(fill = "Discovery Cell Type")
+dev.off()
 
 
 ## Plot DMPs
