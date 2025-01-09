@@ -83,20 +83,21 @@ for(i in 1:3){
 sampleNumbers<-table(QCmetrics$Phenotype, QCmetrics$Cell.type)
 
 
+
 #----------------------------------------------------------------------#
 # CALCULATE POWER
 #----------------------------------------------------------------------#
 
 ## identify NeuN DMPs
 pThres<-1e-6
-DMPindex<-which(res[["NeuN+"]][,"FullModel_SCZ_P"] < pThres)
+DMPindex<-which(res[["NeuN+"]][,"NullModel_SCZ_P"] < pThres)
 powerCalcs<-matrix(data = NA, nrow = length(DMPindex), ncol = 3)
 colnames(powerCalcs)<-cellTypes
 rownames(powerCalcs)<-names(DMPindex)
 for(probe in names(DMPindex)){
     for(CT in cellTypes){
         sigma<-sd(celltypeNormbeta[probe,which(QCmetrics$Cell.type == CT)])
-        powerCalcs[probe,CT] <- pwr.t2n.test(d = res[["NeuN+"]][probe,"FullModel_SCZ_coeff"]/sigma, 
+        powerCalcs[probe,CT] <- pwr.t2n.test(d = res[["NeuN+"]][probe,"NullModel_SCZ_coeff"]/sigma, 
             sig.level = 1e-6, 
             alternative = "two.sided", 
             n1 = sampleNumbers[1,CT], n2 = sampleNumbers[2,CT])$power
@@ -111,7 +112,7 @@ stat_summary(fun=mean, geom="point", size=2, color="black")
 
 
 ## but we would expect that cell specific effects are at other DMPs.
-typicalES <- median(abs(res[["NeuN+"]][DMPindex,"FullModel_SCZ_coeff"]))
+typicalES <- median(abs(res[["NeuN+"]][DMPindex,"NullModel_SCZ_coeff"]))
 binSize <- 500
 powerCalcs <- matrix(data = NA, nrow = binSize, ncol = length(cellTypes))
 colnames(powerCalcs)<-cellTypes
