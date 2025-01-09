@@ -232,11 +232,36 @@ for(each in cellTypes){
 
 }
 
+## Look at effect of cell composition on DMPs
+thres<-1e-6
 
+for(each in cellTypes){
+    if("CCModel_SCZ_P" %in% colnames(res[[each]])){
+        dmpRes<-res[[i]][which(res[[i]][,"NullModel_SCZ_P"] < thres),]
+        if(nrow(dmpRes) > 0){
+
+            ## plot effect size before and after adjusting for cell composition
+            p1<- ggplot(dmpRes, aes(x = NullModel_SCZ_coeff, y = CCModel_SCZ_coeff)) + geom_point() +
+            xlab("Mean difference") + ylab("Adj. mean difference") + geom_abline(intercept = 0, slope = 1)
+            ## plot effect against cell composition effect
+            p2<- ggplot(dmpRes, aes(x = CCModel_CellProportion_coeff, y = CCModel_SCZ_coeff)) + geom_point() +
+            xlab("Cell composition effect") + ylab("Adj. mean difference") + geom_hline(yintercept = 0) + geom_vline(xintercept = 0)
+            ## plot schizophrenia p-value against cell composition p value
+            p3<-ggplot(dmpRes, aes(x = CCModel_CellProportion_P, y = CCModel_SCZ_P)) + geom_point() +
+            xlab("Cell composition P-value") + ylab("Schizophrenia P-value") + 
+            scale_x_log10() + scale_y_log10()
+            combinedPlot <- ggarrange(p1,p2, p3,
+                           ncol = 3, nrow = 1)
+            pdf(file.path(resPath, "Plots",paste0("ScatterPlotsCellProportionEffectsOnDiscoveryDMPsLMWithin", each, ".pdf")), width = 12, height = 4)
+            combinedPlot
+            dev.off()
+        }
+    }
+}
 
 
 ## COMPARE DMPS ACROSS CELL TYPES
-thres<-1e-5
+
 
 dmpList<-NULL
 for(i in 1:3){
@@ -244,14 +269,10 @@ for(i in 1:3){
 }
 colnames(dmpList)<-c("ProbeID", "DiscoveryCellType")
 
-
-
 dmpRes<-cbind(dmpList, res[[1]][dmpList[,1], c("FullModel_SCZ_P", "FullModel_SCZ_coeff", "FullModel_SCZ_SE")],
 res[[2]][dmpList[,1], c("FullModel_SCZ_P", "FullModel_SCZ_coeff", "FullModel_SCZ_SE")],
 res[[3]][dmpList[,1], c("FullModel_SCZ_P", "FullModel_SCZ_coeff", "FullModel_SCZ_SE")])
 colnames(dmpRes)<-c("ProbeID", "DiscoveryCellType", outer(c("P", "Coeff", "SE"), cellTypes, paste, sep = ":"))
-
-
 
 diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ":")))
 diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]], fixed = TRUE)
