@@ -276,13 +276,15 @@ res[[2]][dmpList[,1], c("NullModel_SCZ_P", "NullModel_SCZ_coeff", "NullModel_SCZ
 res[[3]][dmpList[,1], c("NullModel_SCZ_P", "NullModel_SCZ_coeff", "NullModel_SCZ_SE")])
 colnames(dmpRes)<-c("ProbeID", "DiscoveryCellType", outer(c("P", "Coeff", "SE"), cellTypes, paste, sep = ":"))
 
-diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ":")))
-diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]], fixed = TRUE)
+diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ".")))
+diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]])
 diffLong$value<-abs(diffLong$value)
+dmp.labs <- paste(cellTypes, "DMPs")
+names(dmp.labs) <- cellTypes
 pdf(file.path(resPath, "Plots","ViolinPlotCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 8, height = 4)
 ggplot(diffLong, aes(x = name, y = value, fill = name)) + geom_violin() +
 xlab("Cell Type") + ylab("Mean difference") + 
-stat_summary(fun=mean, geom="point", size=2, color="black") + facet_wrap (~DiscoveryCellType)
+stat_summary(fun=mean, geom="point", size=2, color="black") + facet_wrap (~DiscoveryCellType, labeller = labeller(DiscoveryCellType = dmp.labs))
 dev.off()
 
 plotLim<-range(dmpRes[,c(4,7,10)])
