@@ -24,6 +24,38 @@ plotByStatus <- function(dmpCellType, contrastCellType, dmpRes, plotLim){
 
 }
 
+clumpResults<-function(resTmp, thres1 = 9e-8,thres2 = 1e-6,dist = 500, p_col = "FullModel_SCZ_P", chr_col = "chrm", bp_col = "start"){
+    ## Look at other sites nearby
+    tmpSites<-resTmp[which(resTmp[,p_col] < thres1),]
+    allNeighbours <-NULL
+    clumpCount <- NULL
+    message("Number of index DMPs found: ", nrow(tmpSites))
+    if(nrow(tmpSites) > 0){
+        for(j in 1:nrow(tmpSites)){
+            message("Processing DMP ", j)
+            index <- which(resTmp[,chr_col] == tmpSites[j,chr_col] & 
+                                    resTmp[,bp_col] <= (tmpSites[j,bp_col] + dist) & 
+                                    resTmp[,bp_col] >= (tmpSites[j,bp_col] - dist))
+            ## at a minimum this should find the index site
+            if(length(index) > 1){        
+                neighbourSites<-resTmp[index,]
+                n_support <- sum(neighbourSites[,p_col] < thres2) - 1
+                neighbourSites<-cbind(rownames(tmpSites)[j], neighbourSites)
+                allNeighbours <- rbind(allNeighbours, neighbourSites)
+            } else {
+                n_support <- NA
+                allNeighbours <- rbind(allNeighbours, cbind(rownames(tmpSites)[j], tmpSites[j,]))
+            }
+            clumpCount <- rbind(clumpCount,c(tmpSites[j,],length(index)-1, n_support))
+            
+        }
+        colnames(clumpCount) <- c(colnames(resTmp), "n_neighbouring_signals", "n_supportive")
+        colnames(allNeighbours)[1] <- "Index_Probe" 
+    }
+    return(list(clumpCount, allNeighbours))
+}
+
+
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
@@ -94,8 +126,10 @@ probeAnnot$start <- probeAnnot$start+1
 
 for(i in 1:3){
     res[[i]]<- cbind(res[[i]], probeAnnot[, c("chrm", "start", "GeneNames", "GeneClasses", "CGI", "CGIPosition")])
-    res[[i]]<- res[[i]][which(res[[i]][,"chrm"] != "Y"),]
+    res[[i]]<- res[[i]][!res[[i]][,"chrm"] %in% c("Y", "*"),]
 }
+
+
 
 #----------------------------------------------------------------------#
 # SUMMARY PLOTS
@@ -182,10 +216,19 @@ for(thres in c(9e-8, 1e-7, 1e-6, 1e-5)){
 
 write.csv(nDMPs, file.path(resPath, "Tables", "DMPCountsPerCelltypeAcrossWithinCTModels.csv"))
 
+dist<-500
 for(each in cellTypes){
-	write.csv(res[[each]][which(res[[each]][,"FullModel_SCZ_P"] < thres),], file.path(resPath, "Tables", paste0("DiscoveryDMPsWithin", each, "LM.csv")))
+    for(p_col in c("FullModel_SCZ_P", "NullModel_SCZ_P", "CCModel_SCZ_P")){
 
-    ## Look at other sites nearby
+        ## Look at other sites nearby
+        if(p_col %in% colnames(res[[each]])){
+            clumpRes <- clumpResults(res[[each]], p_col = p_col, thres1 = 1e-6, thres2 = 1e-6, dist = dist)
+            if(!is.null(clumpRes[[1]])){
+                write.csv(clumpRes[[1]], file.path(resPath, "Tables", paste0("DiscoveryDMPs", p_col, "Within", each, "LM.csv")))
+                write.csv(clumpRes[[2]], file.path(resPath, "Tables", paste0("NeighbouringSignalsDiscoveryDMPs", p_col, "Within", each, "LM.csv")))
+            }
+        }
+    }
 
 }
 
