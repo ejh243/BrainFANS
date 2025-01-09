@@ -17,6 +17,9 @@ Scripts rely on the following packages being installed
 * IlluminaHumanMethylationEPICanno.ilm10b4.hg19
 * lme4
 * lmerTest
+* doParallel
+* devtools
+* cdegUtilities
 
 ## Script Orientation
 
@@ -32,10 +35,12 @@ For example to run the **summariseDataset.r** script you might execute
 | testCellComposition.r | path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </ol></li> |
 | testAgeAcceleration.r | Calculate epigenetic age for each sample and test against chronological age and age acceleration residuals against case control status | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </li><li> path to folder containing cs files with clock coefficients </ol></li> |
 | lmWithinCT.r | Performs case control EWAS for a single cell type | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </li><li> Cell Type to be analysed </ol></li>  |
+| mlm.r | Performs case control EWAS across all cell types | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </ol></li>  |
 | summmariseWithinCTDMPs.r | Loads cell specific EWAS for all cell types and produces summary tables and plots | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </li><li> Path to folder where EPIC annotation files are stored </ol></li>  |
+| calcPowerinOtherCT.r | Performs power analysis for typical DMPs | <ol><li> path to project data folder where normalised dataset, containing  normalised beta matrix (`celltypeNormbeta`) and phenotype matrix (`QCmetrics`) is within a folder called 3_normalised </li><li> Path to folder where EPIC annotation files are stored </ol></li>  |
 
 
-## Data Availablity
+## Data Availability
 
 Raw and processed DNA methylation data are available from GEO under accession number GSE279509. 
 
