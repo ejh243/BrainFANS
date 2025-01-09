@@ -237,7 +237,7 @@ thres<-1e-6
 
 for(each in cellTypes){
     if("CCModel_SCZ_P" %in% colnames(res[[each]])){
-        dmpRes<-res[[i]][which(res[[i]][,"NullModel_SCZ_P"] < thres),]
+        dmpRes<-res[[each]][which(res[[each]][,"NullModel_SCZ_P"] < thres),]
         if(nrow(dmpRes) > 0){
 
             ## plot effect size before and after adjusting for cell composition
