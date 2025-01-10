@@ -22,7 +22,7 @@ cellTypes <- c("Double-", "NeuN+", "Sox10+")
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
-library(qqman)
+
 library(tidyr)
 library(ggplot2)
 library(ggpubr)
@@ -41,6 +41,7 @@ rm(outtab)
 #----------------------------------------------------------------------#
 # REMOVE CROSS HYB & SNP PROBES
 #----------------------------------------------------------------------#
+
 
 crosshyb <- read.table(file.path(refPath, "CrossHydridisingProbes_McCartney.txt"), stringsAsFactors = FALSE)
 tofilter <- read.csv(file.path(refPath, "EPICArrayProbesToFilter.csv"), stringsAsFactors = FALSE)
@@ -77,7 +78,7 @@ probeAnnot$start <- probeAnnot$start+1
 
 for(i in 1:3){
     res[[i]]<- cbind(res[[i]], probeAnnot[, c("chrm", "start", "GeneNames", "GeneClasses", "CGI", "CGIPosition")])
-    res[[i]]<- res[[i]][which(res[[i]][,"chrm"] != "Y"),]
+    res[[i]]<- res[[i]][!res[[i]][,"chrm"] %in% c("Y", "*"),]
 }
 
 sampleNumbers<-table(QCmetrics$Phenotype, QCmetrics$Cell.type)
