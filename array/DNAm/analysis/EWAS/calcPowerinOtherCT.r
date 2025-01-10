@@ -24,8 +24,10 @@ cellTypes <- c("Double-", "NeuN+", "Sox10+")
 #----------------------------------------------------------------------#
 
 library(tidyr)
+library(dplyr)
 library(ggplot2)
 library(ggpubr)
+library(pwr)
 
 #----------------------------------------------------------------------#
 # IMPORT DATA
@@ -37,6 +39,23 @@ for (each in cellTypes) {
     res[[each]] <- outtab
 }
 rm(outtab)
+
+
+setwd(dataDir)
+load(normData)
+
+## remove total samples and cell types with less than 20 samples
+QCmetrics<-QCmetrics[which(QCmetrics$Cell.type != "Total"),]
+nSample<-table(QCmetrics$Cell.type)
+QCmetrics<-QCmetrics[QCmetrics$Cell.type %in% names(nSample[which(nSample > 19)]),]
+
+# filter to schizophrenia and control only
+QCmetrics<-QCmetrics[QCmetrics$Phenotype %in% c("Schizophrenia", "Control"),]
+
+celltypeNormbeta<-celltypeNormbeta[,QCmetrics$Basename]
+
+sampleNumbers<-table(QCmetrics$Phenotype, QCmetrics$Cell.type)
+
 
 #----------------------------------------------------------------------#
 # REMOVE CROSS HYB & SNP PROBES
@@ -81,8 +100,6 @@ for(i in 1:3){
     res[[i]]<- res[[i]][!res[[i]][,"chrm"] %in% c("Y", "*"),]
 }
 
-sampleNumbers<-table(QCmetrics$Phenotype, QCmetrics$Cell.type)
-
 
 
 #----------------------------------------------------------------------#
@@ -94,8 +111,8 @@ pThres<-1e-6
 DMPindex<-which(res[["NeuN+"]][,"NullModel_SCZ_P"] < pThres)
 powerCalcs<-matrix(data = NA, nrow = length(DMPindex), ncol = 3)
 colnames(powerCalcs)<-cellTypes
-rownames(powerCalcs)<-names(DMPindex)
-for(probe in names(DMPindex)){
+rownames(powerCalcs)<-rownames(res[["NeuN+"]])[DMPindex]
+for(probe in rownames(res[["NeuN+"]])[DMPindex]){
     for(CT in cellTypes){
         sigma<-sd(celltypeNormbeta[probe,which(QCmetrics$Cell.type == CT)])
         powerCalcs[probe,CT] <- pwr.t2n.test(d = res[["NeuN+"]][probe,"NullModel_SCZ_coeff"]/sigma, 
@@ -106,13 +123,17 @@ for(probe in names(DMPindex)){
 }
 
 powerCalcsLong<-pivot_longer(as.data.frame(powerCalcs), cols = everything())
+
+pdf(file.path(resPath, "Plots","ViolinPlotPowerStatisticsDiscoveryNeuNDMPs.pdf"), width = 4, height = 4)
 ggplot(powerCalcsLong, aes(x = name, y = value, fill = name)) + geom_violin() +
 xlab("Cell Type") + ylab("Power") + 
-stat_summary(fun=mean, geom="point", size=2, color="black")
+stat_summary(fun=mean, geom="point", size=2, color="black") +
+labs(fill = "Cell Type")
+dev.off()
 
 
 
-## but we would expect that cell specific effects are at other DMPs.
+## BUT we would expect that cell specific effects for other cell types are at other sites
 typicalES <- median(abs(res[["NeuN+"]][DMPindex,"NullModel_SCZ_coeff"]))
 binSize <- 500
 powerCalcs <- matrix(data = NA, nrow = binSize, ncol = length(cellTypes))
@@ -133,9 +154,12 @@ for(each in cellTypes){
     }
 }
 
+pdf(file.path(resPath, "Plots","ViolinPlotPowerStatisticsAllSitesTypicalNeuNEffect.pdf"), width = 4, height = 4)
 powerCalcsLong<-pivot_longer(as.data.frame(powerCalcs), cols = everything())
 ggplot(powerCalcsLong, aes(x = name, y = value, fill = name)) + geom_violin() +
 xlab("Cell Type") + ylab("Power") + 
-stat_summary(fun=mean, geom="point", size=2, color="black")
+stat_summary(fun=mean, geom="point", size=2, color="black")+
+labs(fill = "Cell Type")
+dev.off()
 
     
