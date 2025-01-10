@@ -20,6 +20,7 @@ Scripts rely on the following packages being installed
 * doParallel
 * devtools
 * cdegUtilities
+* pwr
 
 ## Script Orientation
 
