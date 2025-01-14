@@ -280,10 +280,11 @@ diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]])
 diffLong$value<-abs(diffLong$value)
 dmp.labs <- paste(cellTypes, "DMPs")
 names(dmp.labs) <- cellTypes
-pdf(file.path(resPath, "Plots","ViolinPlotCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 8, height = 4)
+pdf(file.path(resPath, "Plots","ViolinPlotDiscoveryDMPsCelltypeEffectsLMWithinCTs.pdf"), width = 8, height = 4)
 ggplot(diffLong, aes(x = name, y = value, fill = name)) + geom_violin() +
-xlab("Cell Type") + ylab("Mean difference") + 
-stat_summary(fun=mean, geom="point", size=2, color="black") + facet_wrap (~DiscoveryCellType, labeller = labeller(DiscoveryCellType = dmp.labs))
+    xlab("Cell Type") + ylab("Mean difference") + 
+    stat_summary(fun=mean, geom="point", size=2, color="black") + 
+    facet_wrap (~DiscoveryCellType, labeller = labeller(DiscoveryCellType = dmp.labs))
 dev.off()
 
 plotLim<-range(dmpRes[,c(4,7,10)])
@@ -324,7 +325,7 @@ stat_summary(fun=mean, geom="point", size=2, color="black") +
 xlab("Discovery Cell Type") + ylab("Heterogeneity -log10P") + geom_hline(yintercept = -log10(0.05))  +
 labs(fill = "Discovery Cell Type")
 
-pdf(file.path(resPath, "Plots","ViolinPlotsCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 8, height = 4)
+pdf(file.path(resPath, "Plots","ViolinPlotsDiscoveryDMPsCelltypeEffectsFromMLM.pdf"), width = 8, height = 4)
 ggarrange(p1, p2, nrow = 1, ncol = 2, common.legend = TRUE)
 dev.off()
 
