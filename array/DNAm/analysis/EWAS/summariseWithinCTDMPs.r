@@ -50,6 +50,7 @@ clumpResults<-function(resTmp, thres1 = 9e-8,thres2 = 1e-6,dist = 500, p_col = "
             
         }
         colnames(clumpCount) <- c(colnames(resTmp), "n_neighbouring_signals", "n_supportive")
+        rownames(clumpCount) <- rownames(tmpSites)
         colnames(allNeighbours)[1] <- "Index_Probe" 
     }
     return(list(clumpCount, allNeighbours))
@@ -216,11 +217,10 @@ for(thres in c(9e-8, 1e-7, 1e-6, 1e-5)){
 
 write.csv(nDMPs, file.path(resPath, "Tables", "DMPCountsPerCelltypeAcrossWithinCTModels.csv"))
 
+## look for supporting signals at sites nearby
 dist<-500
 for(each in cellTypes){
     for(p_col in c("FullModel_SCZ_P", "NullModel_SCZ_P", "CCModel_SCZ_P")){
-
-        ## Look at other sites nearby
         if(p_col %in% colnames(res[[each]])){
             clumpRes <- clumpResults(res[[each]], p_col = p_col, thres1 = 1e-6, thres2 = 1e-6, dist = dist)
             if(!is.null(clumpRes[[1]])){
@@ -229,7 +229,6 @@ for(each in cellTypes){
             }
         }
     }
-
 }
 
 ## Look at effect of cell composition on DMPs
