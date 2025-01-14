@@ -284,7 +284,8 @@ dmp.labs <- paste(cellTypes, "DMPs")
 names(dmp.labs) <- cellTypes
 pdf(file.path(resPath, "Plots","ViolinPlotDiscoveryDMPsCelltypeEffectsLMWithinCTs.pdf"), width = 8, height = 4)
 ggplot(diffLong, aes(x = name, y = value, fill = name)) + geom_violin() +
-    xlab("Cell Type") + ylab("Mean difference") + 
+    xlab("Cell Type") + ylab("Mean difference")  +
+    labs(fill = "Cell Type") + 
     stat_summary(fun=mean, geom="point", size=2, color="black") + 
     facet_wrap (~DiscoveryCellType, labeller = labeller(DiscoveryCellType = dmp.labs))
 dev.off()
