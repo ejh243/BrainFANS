@@ -183,15 +183,15 @@ dev.off()
 
 png(file.path(resPath, "Plots", "ManhattanPlotsWithinCTLM.png"), width = 1400, height = 1000, res = 200)
 par(mfrow = c(3,1))
-par(mar = c(4,4,0.5,0.5))
+par(mar = c(4,4,1,0.5))
 par(mgp = c(2,0.75,0))
 for(i in 1:3){
     res[[i]][,"chrm"][which(res[[i]][,"chrm"] == "X")]<-"23"
     res[[i]][,"chrm"]<-as.numeric(as.character(res[[i]][,"chrm"]))
 
-    resMan<-data.frame("SNP" = rownames(res[[i]]), "P" = res[[i]][,"FullModel_SCZ_P"], "CHR" = res[[i]][,"chrm"],"BP" = res[[i]][,"start"])
+    resMan<-data.frame("SNP" = rownames(res[[i]]), "P" = res[[i]][,"NullModel_SCZ_P"], "CHR" = res[[i]][,"chrm"],"BP" = res[[i]][,"start"])
     resMan<-na.omit(resMan)
-    manhattan(resMan, genomewideline = -log10(9e-8), suggestiveline = -log10(1e-5), main = cellTypes[i])
+    manhattan(resMan, genomewideline = -log10(9e-8), suggestiveline = -log10(1e-6), main = cellTypes[i])
 } 
 dev.off()
 
