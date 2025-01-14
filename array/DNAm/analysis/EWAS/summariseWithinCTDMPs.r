@@ -275,6 +275,8 @@ res[[2]][dmpList[,1], c("NullModel_SCZ_P", "NullModel_SCZ_coeff", "NullModel_SCZ
 res[[3]][dmpList[,1], c("NullModel_SCZ_P", "NullModel_SCZ_coeff", "NullModel_SCZ_SE")])
 colnames(dmpRes)<-c("ProbeID", "DiscoveryCellType", outer(c("P", "Coeff", "SE"), cellTypes, paste, sep = ":"))
 
+
+
 diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ".")))
 diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]])
 diffLong$value<-abs(diffLong$value)
@@ -312,6 +314,8 @@ colnames(outtab)[(ncol(outtab)-2):ncol(outtab)]<-c("DNeg_Mean_Diff", "NEUN_Mean_
 
 dmpRes<-cbind(dmpRes, outtab[dmpList[,"ProbeID"],
 c("SCZ_P","CellType_SCZ_P","NeuN_SCZ_P","SOX10_SCZ_P","CellType_P", "DNeg_Mean_Diff", "NEUN_Mean_Diff", "SOX10_Mean_Diff")])
+
+write.csv(dmpRes, file.path(resPath, "Tables", "DiscoveryDMPswithMLMResults.csv"))
 
 # violin plot of cell type differences p-values
 p1 <- ggplot(dmpRes, aes(x = DiscoveryCellType, y = -log10(CellType_P), fill = DiscoveryCellType)) + geom_violin() + 
