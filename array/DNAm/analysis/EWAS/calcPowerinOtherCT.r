@@ -143,7 +143,7 @@ for(each in cellTypes){
   betasCell <- as.matrix(celltypeNormbeta[,QCmetrics$Cell.type == each])
   # calculate SD
   betasSD <- apply(as.matrix(betasCell),1,sd)
-    betasSD <- as.data.frame(betasSD) %>% mutate(points_bin = ntile(betasSD, n=binSize))
+  betasSD <- as.data.frame(betasSD) %>% mutate(points_bin = ntile(betasSD, n=binSize))
 
     for(j in unique(betasSD$points_bin)){
       meanSD <- mean(betasSD[which(betasSD$points_bin == j),1])
@@ -153,6 +153,8 @@ for(each in cellTypes){
             n1 = sampleNumbers[1,CT], n2 = sampleNumbers[2,CT])$power
     }
 }
+
+save(powerCalcs, file = file.path(resPath, "PowerCalcsTypicalNeuNDMP.rdata"))
 
 pdf(file.path(resPath, "Plots","ViolinPlotPowerStatisticsAllSitesTypicalNeuNEffect.pdf"), width = 4, height = 4)
 powerCalcsLong<-pivot_longer(as.data.frame(powerCalcs), cols = everything())
