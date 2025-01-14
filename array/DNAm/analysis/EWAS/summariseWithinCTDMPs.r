@@ -254,7 +254,7 @@ for(each in cellTypes){
             scale_x_log10() + scale_y_log10() + geom_abline(intercept = 0, slope = 1)
             pdf(file.path(resPath, "Plots",paste0("ScatterPlotsCellProportionEffectsOnDiscoveryDMPsLMWithin", each, ".pdf")), width = 8, height = 8)
             print(ggarrange(p1,p2, p3,p4,
-                           ncol = 2, nrow = 2))
+                           ncol = 2, nrow = 2, labels = c("A", "B", "C", "D")))
             dev.off()
         }
     }
