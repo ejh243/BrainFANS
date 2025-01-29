@@ -163,7 +163,7 @@ These are only included if they are categorical. For this study the following pr
 
 ```{r, echo=FALSE,include = FALSE}
 # You need this code to conduct the magic dependences attaching so that we
-# can create DT::datatables() in a loop. I hate pandoc.
+# can create DT::datatables() in a loop.
 DT::datatable(matrix())
 ```
 
