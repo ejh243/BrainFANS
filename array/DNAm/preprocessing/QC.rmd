@@ -13,15 +13,15 @@ knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache 
 
 ```{r setup, include=FALSE}
 args<-commandArgs(trailingOnly = TRUE)
-library(bigmelon)
-library(gplots)
-library(diptest)
-library(corrplot)
-library(pander)
-library(kableExtra)
-library(RColorBrewer)
-library(pheatmap)
-library(data.table)
+library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
+library(gplots, warn.conflicts = FALSE, quietly = TRUE)
+library(diptest, warn.conflicts = FALSE, quietly = TRUE)   
+library(corrplot, warn.conflicts = FALSE, quietly = TRUE)
+library(pander, warn.conflicts = FALSE, quietly = TRUE)
+library(kableExtra, warn.conflicts = FALSE, quietly = TRUE)
+library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
+library(pheatmap, warn.conflicts = FALSE, quietly = TRUE)
+library(data.table, warn.conflicts = FALSE, quietly = TRUE)
 
 
 source(args[4]) ### change the content of this file to run QC with different thresholds
@@ -49,11 +49,6 @@ QCmetrics[["Sentrix_Position"]] = substr(QCmetrics[["Basename"]], 14, 19)
 nSamIP<-sum(QCmetrics$intensPASS)
 
 par(mar = c(4,4,1,1))
-
-# When in a loop, pander() calls do not render. This option always allows these
-# calls to be rendered in the resultant html file. No, wrapping pander() calls
-# in a print() function does not work (well, not how we want them to at least).
-panderOptions('knitr.auto.asis', FALSE)
 
 ```
 
@@ -98,7 +93,7 @@ is_wanted_column <- function(column_name, QCmetrics) {
 
   return(!(
     all(is.na(column)) ||
-    length(unique(column)) == 1L ||
+    length(levels(column)) == 1L ||
     anyDuplicated(column) == 0L
   ))
 }
@@ -122,7 +117,7 @@ define_plot_parameters <- function(QCmetrics, projVar) {
 
   for (column_name in plot_columns) {
     column <- parse_column(column_name, QCmetrics)
-    unique_variables <- length(unique(column))
+    unique_variables <- length(levels(column))
     colours <- rainbow(unique_variables)[column]
 
     legendParams[[column_name]] <- cbind(
@@ -166,6 +161,12 @@ Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$
 
 These are only included if they are categorical. For this study the following project variables were included:
 
+```{r, echo=FALSE,include = FALSE}
+# You need this code to conduct the magic dependences attaching so that we
+# can create DT::datatables() in a loop.
+DT::datatable(matrix())
+```
+
 ```{r projVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
 send_removal_message <- function(column_name, QCmetrics) {
@@ -180,7 +181,7 @@ send_removal_message <- function(column_name, QCmetrics) {
     removal_message(column_name, "all values were labelled as missing")
     return()
   }
-  if (length(unique(column)) == 1L) {
+  if (length(levels(column)) == 1L) {
     removal_message(column_name, "all values were equivalent")
     return()
   }
@@ -194,11 +195,16 @@ for (column_name in projVar) send_removal_message(column_name, QCmetrics)
 
 projVar <- remove_unwanted_columns(projVar, QCmetrics)
 for(item in projVar){
-  pander(
+  cat(knitr::knit_print(DT::datatable(
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
-    col.names = c("Variable", "Number of Samples")
-  )
+    colnames = c("Variable", "Number of Samples"),
+    rownames = FALSE,
+    extensions = "Buttons", options = list(
+      dom = "Bfrtip",
+      buttons = c("copy", "csv")
+    )
+  )))
 }
 ```
 
@@ -242,7 +248,7 @@ for(i in 2:ncol(plotCols)){
 In order to decide a threshold to filter samples by, we will trying fitting a bimodal distribution to the distribution of intensities. The idea here being that there will be a distribution forthe failed samples and a distribution for the passed samples. 
 
 ```{r, echo = FALSE}
-library(mixtools)
+library(mixtools, warn.conflicts = FALSE, quietly = TRUE)
 mixmdl.m = normalmixEM(QCmetrics$M.median, mu = c(250, 3000), sigma = c(250, 1000))
 mixmdl.u = normalmixEM(QCmetrics$U.median, mu = c(250, 3000), sigma = c(250, 1000))
 
@@ -258,7 +264,7 @@ lines(density(QCmetrics$U.median), lty=2, lwd=2)
 ## Ratio of M and U Intensities
 
 ```{r, bimodalTest, echo = FALSE}
-library(diptest)
+library(diptest, warn.conflicts = FALSE, quietly = TRUE)
 bimodP<-dip.test(QCmetrics$intens.ratio)$p.value
 ```
 
@@ -545,14 +551,28 @@ We identified `r length(unique(predictedduplicates))` genetically unique individ
 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(
+  t(as.data.frame(table(table(predictedduplicates)))),
+  rownames = c("Number of Samples", "Number of Individuals"),
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 
 ```
 
 We can compare this to the expected distribution of number of samples per individuals based on the sample sheet. 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(QCmetrics$Individual_ID)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(
+  t(as.data.frame(table(table(QCmetrics$Individual_ID)))),
+  rownames = c("Number of Samples", "Number of Individuals"),
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 
 ```
 
@@ -855,7 +875,13 @@ points(QCmetrics$x.cp, QCmetrics$y.cp, col = as.factor(QCmetrics$Sex), pch = 16)
 We will compare the sex predictions from the X and Y chromosomes.
 
 ```{r tabSexpredictions, echo = FALSE}
-pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
+DT::datatable(
+  table(QCmetrics$predSex.x, QCmetrics$predSex.y),
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 ``` 
 
 Perform sex check against phenotype reported sexes: `r sexCheck`. 
@@ -890,9 +916,13 @@ for(i in 1:ncol(QCSum.min)){
 colnames(xTab)<-colnames(QCSum.min)
 rownames(xTab)<-colnames(QCSum.min)
 
-kbl(xTab) %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
+DT::datatable(
+  xTab,
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 ```
 
 ## Correlations between QC metrics
@@ -944,7 +974,14 @@ Post QC we identified `r length(unique(predictedduplicates))` genetically unique
 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(
+  t(as.data.frame(table(table(predictedduplicates)))),
+  rownames = c("Number of Samples", "Number of Individuals"),
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 
 ```
 

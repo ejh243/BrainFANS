@@ -39,8 +39,8 @@ arrayType <- toupper(arrayType)
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
-library(bigmelon)
-library(data.table)
+library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
+library(data.table, warn.conflicts = FALSE, quietly = TRUE)
 
 
 #----------------------------------------------------------------------#
@@ -80,7 +80,7 @@ load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
 manifest<-probeAnnot[match(fData(normfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
 colnames(manifest) <- c("CHR", "Infinium_Design_Type")
 manifest$CHR <- paste0("chr", manifest$CHR)
-print("loaded 450k manifest")
+print("loaded 450K manifest")
 rm(probeAnnot)
 }
 

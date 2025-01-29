@@ -1,3 +1,4 @@
+
 ##---------------------------------------------------------------------#
 ##
 ## Title: Calculate data quality metrics from raw DNAm data 
@@ -27,8 +28,6 @@ gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
 configFile <- paste0(dataDir, "/config.r")
-epic2Manifest <- paste0(refDir,"/EPICArray/EPIC-8v2-0_A1.csv")
-
 
 source(configFile)
 
@@ -38,10 +37,10 @@ arrayType <- toupper(arrayType)
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(e1071)
-library(data.table)
-library(bigmelon)
-library(wateRmelon)
+library(e1071, warn.conflicts = FALSE, quietly = TRUE)
+library(data.table, warn.conflicts = FALSE, quietly = TRUE)
+library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
+library(wateRmelon, warn.conflicts = FALSE, quietly = TRUE)
 
 
 #----------------------------------------------------------------------#
@@ -78,21 +77,13 @@ if(file.exists(qcData)){
 	print("QC object initiated")
 }
 
-
-if(arrayType == "V2"){
-	manifest<-fread(epic2Manifest, skip=7, fill=TRUE, data.table=F)
-	manifest<-manifest[match(fData(gfile)$Probe_ID, manifest$IlmnID), c("CHR", "Infinium_Design_Type")]
-	print("loaded EpicV2 manifest")
-}
-
-if(arrayType == "450K"){
-	load(file.path(refDir, "450K_reference/AllProbeIlluminaAnno.Rdata"))
-	manifest<-probeAnnot[match(fData(gfile)$Probe_ID, probeAnnot$ILMNID), c("CHR", "INFINIUM_DESIGN_TYPE")]
-	colnames(manifest) <- c("CHR", "Infinium_Design_Type")
-	manifest$CHR <- paste0("chr", manifest$CHR)
-	print("loaded 450k manifest")
-	rm(probeAnnot)
-}
+manifest <- cdegUtilities::readManifest(
+	referenceDirectory = refDir,
+	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
+	arrayType = arrayType 
+)
+if (!exists("manifest"))
+	stop("Manifest file could not be loaded correctly")
 
 
 
@@ -272,17 +263,13 @@ if ((!"CCDNAmAge" %in% colnames(QCmetrics)) && tolower(tissueType) == "brain") {
 if(!"rmsd" %in% colnames(QCmetrics)){
 	print("Calculating effect of normalisation")
 
-	if(arrayType == "V2"){
-		normbeta <- adjustedDasen(
-			onetwo = manifest$Infinium_Design_Type,
-			chr = manifest$CHR,
-			mns = read.gdsn(methylated(gfile)),
-			uns = read.gdsn(unmethylated(gfile)))
-		add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
-	} else {
-		dasen(gfile, node="normbeta")
-		normbeta<-index.gdsn(gfile, "normbeta")[,]
-	}
+	normbeta <- adjustedDasen(
+		onetwo = manifest$designType,
+		chr = manifest$CHR,
+		mns = read.gdsn(methylated(gfile)),
+		uns = read.gdsn(unmethylated(gfile)))
+	add.gdsn(gfile, "normbeta", normbeta, replace = TRUE)
+	
 	qualDat<-qual(betas(gfile)[,], normbeta)
 	qualDat[which(intensPASS == FALSE),]<-NA
 	QCmetrics<-cbind(QCmetrics,qualDat)

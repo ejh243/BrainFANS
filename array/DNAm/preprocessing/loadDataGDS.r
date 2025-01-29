@@ -30,21 +30,21 @@ arrayType <- toupper(arrayType)
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(bigmelon)
-library(cdegUtilities)
+library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
+library(cdegUtilities, warn.conflicts = FALSE, quietly = TRUE)
 
 
 if(arrayType=='450K'){
-  library("IlluminaHumanMethylation450kanno.ilmn12.hg19")
-  library("IlluminaHumanMethylation450kmanifest")
+  library("IlluminaHumanMethylation450kanno.ilmn12.hg19", warn.conflicts = FALSE, quietly = TRUE)
+  library("IlluminaHumanMethylation450kmanifest", warn.conflicts = FALSE, quietly = TRUE)
 }
 if(arrayType=='V1'){
-  library("IlluminaHumanMethylationEPICanno.ilm10b4.hg19")
-  library("IlluminaHumanMethylationEPICmanifest")
+  library("IlluminaHumanMethylationEPICanno.ilm10b4.hg19", warn.conflicts = FALSE, quietly = TRUE)
+  library("IlluminaHumanMethylationEPICmanifest", warn.conflicts = FALSE, quietly = TRUE)
 }
 if(arrayType=='V2'){
-library(IlluminaHumanMethylationEPICv2anno.20a1.hg38)
-library(IlluminaHumanMethylationEPICv2manifest)
+library(IlluminaHumanMethylationEPICv2anno.20a1.hg38, warn.conflicts = FALSE, quietly = TRUE)
+library(IlluminaHumanMethylationEPICv2manifest, warn.conflicts = FALSE, quietly = TRUE)
 
 }
 
@@ -76,8 +76,22 @@ nProbes <- sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), readIDAT,
 if(length(nProbes)==0){
   stop("Error calculating number of probes from IDATs.")
 }
-scanDate <- unlist(sapply(paste0("1_raw/", sampleSheet$Basename, "_Red.idat"), getScanDate))
-sampleSheet <- cbind(sampleSheet, nProbes, scanDate)
+sampleSheet <- cbind(sampleSheet, nProbes)
+
+tryCatch(
+  expr = {
+    scanDate <- unlist(vapply(
+      paste0("1_raw/", sampleSheet[["Basename"]], "_Red.idat"),
+      cdegUtilities::getScanDate,
+      character(1)
+    ))
+    sampleSheet <- cbind(sampleSheet, scanDate)
+  },
+  error = function(e) {
+    print(e)
+    message("No scan date could be found in at least one IDAT file.")
+  }
+)
 
 ## load data separately
 loadGroups <- split(gsub("1_raw/|_Red.idat", "", names(nProbes)), as.factor(nProbes))
@@ -143,7 +157,7 @@ for(i in 1:length(loadGroups)){
   ## update feature data
   if(updateProbes){
     print("Updating Feature data")
-    if(arrayType== "450k"){
+    if(arrayType== "450K"){
       annoObj <- minfi::getAnnotationObject("IlluminaHumanMethylation450kanno.ilmn12.hg19")
     }
     if(arrayType == "V1"){
