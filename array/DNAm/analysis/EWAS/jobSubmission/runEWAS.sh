@@ -25,9 +25,7 @@ source ./DNAm/config/config.txt
 
 module load R/3.6.3-foss-2020a
 
-Rscript DNAm/analysis/EWAS/lm.r ${DATADIR}
 Rscript DNAm/analysis/EWAS/mlm.r ${DATADIR}
-Rscript DNAm/analysis/EWAS/crr.r ${DATADIR}
 
 # print end date and time
 echo Job finished on:
