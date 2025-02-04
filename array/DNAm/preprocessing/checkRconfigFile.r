@@ -22,8 +22,7 @@
 print("checking config.r file parameters are present and correctly formatted...")
 
 args <- commandArgs(trailingOnly = TRUE)
-dataDir <- args[1]
-configFile <- file.path(dataDir, "config.r")
+configFile <- args[[1]]
 
 source(configFile)
 
