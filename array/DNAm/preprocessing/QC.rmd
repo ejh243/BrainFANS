@@ -23,15 +23,14 @@ library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
 library(pheatmap, warn.conflicts = FALSE, quietly = TRUE)
 library(data.table, warn.conflicts = FALSE, quietly = TRUE)
 
-
-source(args[4]) ### change the content of this file to run QC with different thresholds
-### prior to running this Rmarkdown which summarises the QC output, QC metrics must have been generated
-
-dataDir <- args[2]
-refDir <- args[3]
-most_recent_git_tag <- args[6]
-current_commit_hash <- args[7]
+dataDir <- args[[2]]
+refDir <- args[[3]]
+configFile <- args[[4]]
+most_recent_git_tag <- args[[6]]
+current_commit_hash <- args[[7]]
 setwd(dataDir) 
+
+source(configFile)
 
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 

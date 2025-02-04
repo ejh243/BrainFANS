@@ -18,14 +18,14 @@
 #----------------------------------------------------------------------#
 
 args<-commandArgs(trailingOnly = TRUE)
-dataDir <- args[1]
-refDir <- args[2]
+dataDir <- args[[1]]
+refDir <- args[[2]]
+configFile <- args[[3]]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
 qcOutFolder<-paste0(dataDir, "/2_gds/QCmetrics")
 qcData <-paste0(dataDir, "/2_gds/QCmetrics/QCmetrics.rdata")
 genoFile <- paste0(dataDir, "/0_metadata/epicSNPs.raw")
-configFile <- paste0(dataDir, "/config.r")
 
 source(configFile)
 

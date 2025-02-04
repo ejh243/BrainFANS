@@ -52,7 +52,7 @@ module load $RVERS   # load specified R version
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
-Rscript checkRconfigFile.r ${DATADIR}
+Rscript checkRconfigFile.r ${RCONFIG}
 config_malformed=$?
 if [[ "${config_malformed}" -ne 0 ]]; then
     print_error_message \
@@ -71,7 +71,7 @@ if [[ "${library_did_not_install}" -ne 0 ]]; then
         "Exiting..."
 fi
 
-Rscript checkColnamesSampleSheet.r ${DATADIR}
+Rscript checkColnamesSampleSheet.r ${RCONFIG}
 sample_sheet_malformed=$?
 if [[ "${sample_sheet_malformed}" -ne 0 ]]; then
     print_error_message \
@@ -81,7 +81,7 @@ fi
 
 mkdir -p ${GDSDIR}/QCmetrics
 
-Rscript loadDataGDS.r ${DATADIR}
+Rscript loadDataGDS.r ${DATADIR} ${RCONFIG}
 gds_problem_identified=$?
 if [[ "${gds_problem_identified}" -ne 0 ]]; then
     print_error_message \
@@ -91,9 +91,9 @@ fi
 
 chmod 755 ${DATADIR}/2_gds/raw.gds
 
-Rscript calcQCMetrics.r ${DATADIR} ${REFDIR}
+Rscript calcQCMetrics.r ${DATADIR} ${REFDIR} ${RCONFIG}
 
-Rscript clusterCellTypes.r ${DATADIR} ${REFDIR}
+Rscript clusterCellTypes.r ${DATADIR} ${REFDIR} ${RCONFIG}
 
 most_recent_git_tag=$(git describe --tags --abbrev=0)
 current_commit_hash=$(git rev-parse HEAD)
@@ -106,12 +106,12 @@ mv QC.html ${GDSDIR}/QCmetrics/
 
 mkdir -p ${DATADIR}/3_normalised
 
-Rscript normalisation.r ${DATADIR} ${REFDIR}
+Rscript normalisation.r ${DATADIR} ${REFDIR} ${RCONFIG}
 chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
-Rscript CETYGOdeconvolution.r ${DATADIR}
+Rscript CETYGOdeconvolution.r ${DATADIR} ${RCONFIG}
 
 ## print finish date and time
 echo Job finished on:
