@@ -50,11 +50,6 @@ nSamIP<-sum(QCmetrics$intensPASS)
 
 par(mar = c(4,4,1,1))
 
-# When in a loop, pander() calls do not render. This option always allows these
-# calls to be rendered in the resultant html file. No, wrapping pander() calls
-# in a print() function does not work (well, not how we want them to at least).
-panderOptions('knitr.auto.asis', FALSE)
-
 ```
 
 
@@ -166,6 +161,12 @@ Data was loaded for `r nrow(QCmetrics)` samples from `r length(unique(QCmetrics$
 
 These are only included if they are categorical. For this study the following project variables were included:
 
+```{r, echo=FALSE,include = FALSE}
+# You need this code to conduct the magic dependences attaching so that we
+# can create DT::datatables() in a loop.
+DT::datatable(matrix())
+```
+
 ```{r projVarSpecification, echo = FALSE, results = "asis", echo = FALSE}
 
 send_removal_message <- function(column_name, QCmetrics) {
@@ -194,11 +195,16 @@ for (column_name in projVar) send_removal_message(column_name, QCmetrics)
 
 projVar <- remove_unwanted_columns(projVar, QCmetrics)
 for(item in projVar){
-  pander(
+  cat(knitr::knit_print(DT::datatable(
     as.data.frame(table(QCmetrics[, item])),
     caption = paste("Summary of samples categorised by", item),
-    col.names = c("Variable", "Number of Samples")
-  )
+    colnames = c("Variable", "Number of Samples"),
+    rownames = FALSE,
+    extensions = "Buttons", options = list(
+      dom = "Bfrtip",
+      buttons = c("copy", "csv")
+    )
+  )))
 }
 ```
 
@@ -545,14 +551,28 @@ We identified `r length(unique(predictedduplicates))` genetically unique individ
 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(
+  t(as.data.frame(table(table(predictedduplicates)))),
+  rownames = c("Number of Samples", "Number of Individuals"),
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 
 ```
 
 We can compare this to the expected distribution of number of samples per individuals based on the sample sheet. 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(QCmetrics$Individual_ID)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(
+  t(as.data.frame(table(table(QCmetrics$Individual_ID)))),
+  rownames = c("Number of Samples", "Number of Individuals"),
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 
 ```
 
@@ -850,7 +870,13 @@ If predictions were made, we will compare the sex predictions between the X and 
 
 ```{r tabSexpredictions, echo = FALSE}
 if(bimodP.y < 0.05){
-  pander(table(QCmetrics$predSex.x, QCmetrics$predSex.y))
+  DT::datatable(
+    table(QCmetrics$predSex.x, QCmetrics$predSex.y),
+    extensions = "Buttons", options = list(
+      dom = "Bfrtip",
+      buttons = c("copy", "csv")
+    )
+  )
 } else {
   print("Data did not have enough evidence of multimodality to make sex predictions.")
 }
@@ -903,9 +929,13 @@ for(i in 1:ncol(QCSum.min)){
 colnames(xTab)<-colnames(QCSum.min)
 rownames(xTab)<-colnames(QCSum.min)
 
-kbl(xTab) %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
+DT::datatable(
+  xTab,
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 ```
 
 ## Correlations between QC metrics
@@ -957,7 +987,14 @@ Post QC we identified `r length(unique(predictedduplicates))` genetically unique
 
 
 ```{r,echo = FALSE, results = "asis"}
-pander(t(as.data.frame(table(table(predictedduplicates)))), row.names = c("Number of Samples", "Number of Individuals"))
+DT::datatable(
+  t(as.data.frame(table(table(predictedduplicates)))),
+  rownames = c("Number of Samples", "Number of Individuals"),
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons = c("copy", "csv")
+  )
+)
 
 ```
 

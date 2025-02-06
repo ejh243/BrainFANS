@@ -16,6 +16,21 @@
 
 #-----------------------------------------------------
 
+print_error_message() {
+    IFS=$'\n'
+    error_message=$*
+    RED='[0;31m'
+    NO_COLOUR='[0m'
+
+cat 1>&2 << MESSAGE
+${RED}
+ERROR:
+${error_message}
+${NO_COLOUR}
+MESSAGE
+
+    exit 1
+}
 
 ## print start date and time
 echo Job started on:
@@ -23,7 +38,10 @@ date -u
 
 echo Log files intially stored in: ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.log and ${SLURM_SUBMIT_DIR}/QCDNAdata_${SLURM_JOB_ID}.err
 
-source $1 || exit 1
+config_file=$1
+source "${config_file}" || print_error_message \
+    "The provided config file was not sourced correctly." \
+    "Please check the path you gave ('$config_file') exists, exiting..." 
 
 echo "Processing data located in :" ${DATADIR}
 
@@ -35,18 +53,41 @@ module load $RVERS   # load specified R version
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
 Rscript checkRconfigFile.r ${DATADIR}
-if [[ $? -ne 0 ]]; then
-    echo "Malformed config file has been identified. Exiting..."
-    exit 1
+config_malformed=$?
+if [[ "${config_malformed}" -ne 0 ]]; then
+    print_error_message \
+        "Malformed config file has been identified." \
+        "Please check the error logs for more information, exiting..."
 fi
 
 Rscript installLibraries.r ${DATADIR}
+library_did_not_install=$?
+if [[ "${library_did_not_install}" -ne 0 ]]; then
+    print_error_message \
+        "A required library did not install properly." \
+        "Please check the error logs as to why this happened." \
+        "If the problem is not easily fixed, consider opening an issue." \
+        "https://github.com/ejh243/BrainFANS/issues/new/choose" \
+        "Exiting..."
+fi
 
 Rscript checkColnamesSampleSheet.r ${DATADIR}
+sample_sheet_malformed=$?
+if [[ "${sample_sheet_malformed}" -ne 0 ]]; then
+    print_error_message \
+        "Malformed sample sheet has been identified." \
+        "Please check the error logs for more information, exiting..."
+fi
 
 mkdir -p ${GDSDIR}/QCmetrics
 
 Rscript loadDataGDS.r ${DATADIR}
+gds_problem_identified=$?
+if [[ "${gds_problem_identified}" -ne 0 ]]; then
+    print_error_message \
+        "A problem with the GDS data has been identified." \
+        "Please check the error logs for more information, exiting..."
+fi
 
 chmod 755 ${DATADIR}/2_gds/raw.gds
 
