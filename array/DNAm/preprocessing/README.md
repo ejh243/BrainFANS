@@ -1,4 +1,4 @@
-This readme explains how to use the scripts for running the DNAm analysis pipeline
+# How to use the DNAm preprocessing(QC) pipeline
 
 ## Prequisites:
 
