@@ -1,5 +1,19 @@
 # How to use the DNAm preprocessing(QC) pipeline
 
+## Required Software
+
+The DNAm QC pipeline requires the following software in order to run. Ensure
+that these software can be found on your `PATH` environment variable, *i.e.*
+you can run these from the command line directly. You can check this by using
+`which [command]`, for example `which conda`.
+
+- [bash](https://www.gnu.org/software/bash/) (>=4.2.46(2))
+- [SLURM Workload Manager](https://slurm.schedmd.com/overview.html) (>=20.02.3)
+- [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) (>=v23.10.0)
+
+All additional dependencies are downloaded and installed via conda upon
+completing [setup](#prerequisites).
+
 ## Prequisites
 
 1) Copy the provided example config files located in `.../array/DNAm/config` to
