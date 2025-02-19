@@ -36,29 +36,6 @@ Data_directory/
 └── 3_normalised
 ```
 
-
-## Outputs
-
-* A html QC report located in 2_gds/QCmetrics
-* A text file summarising the QC metrics and filtering are located in
-2_gds/QCmetrics
-
-## Log files
-
-All log files are saved to `logFiles` in the data directory. These log files
-will have a name of the form `QCDNAdata_%j.err` and `QCDNAdata_%j.log`. Where:
-
-* `%j` is the job ID given to the job by SLURM Workload Manager
-* `.err` contains any text that was sent to the standard error stream
-	* This doesn't necessarily only contain errors. Warning messages and a lot
-	of R output is written here (wrongfully, in my opinion)
-* `.log` contains any text that was sent to the standard output stream
-
-If the script fails in some way (job cancelled by user or a crash occurs), the
-log files will be located in the directory you submitted the script from. This
-is a quirk that is hard to avoid with job schedulers, if you can't find log
-files in the expected `logFiles` directory, this is likely why.
-
 ## Running the preprocessing(QC) pipeline
 
 A bash script is provided in `.../array/DNAm/preprocessing/jobSubmission` which
@@ -82,3 +59,25 @@ command line arguments using the provided config file:
 * Rendering of `QC.rmd`
 * `normalisation.r`
 * `CETYGOdeconvolution.r`
+
+## Outputs
+
+* A html QC report located in 2_gds/QCmetrics
+* A text file summarising the QC metrics and filtering are located in
+2_gds/QCmetrics
+
+## Log files
+
+All log files are saved to `logFiles` in the data directory. These log files
+will have a name of the form `QCDNAdata_%j.err` and `QCDNAdata_%j.log`. Where:
+
+* `%j` is the job ID given to the job by SLURM Workload Manager
+* `.err` contains any text that was sent to the standard error stream
+	* This doesn't necessarily only contain errors. Warning messages and a lot
+	of R output is written here (wrongfully, in my opinion)
+* `.log` contains any text that was sent to the standard output stream
+
+If the script fails in some way (job cancelled by user or a crash occurs), the
+log files will be located in the directory you submitted the script from. This
+is a quirk that is hard to avoid with job schedulers, if you can't find log
+files in the expected `logFiles` directory, this is likely why.
