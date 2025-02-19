@@ -37,11 +37,23 @@ Data_directory/
 ```
 
 
-## OUTPUT:
+## Outputs:
 
-* html QC report are located in 2_gds/QCmetrics
-* text file summarising the QC metrics and filtering are located in 2_gds/QCmetrics
-* log files are saved to logFiles in the data directory with the prefix `QCDNAdata`
+* A html QC report located in 2_gds/QCmetrics
+* A text file summarising the QC metrics and filtering are located in
+2_gds/QCmetrics
+
+## Log files:
+
+All log files are saved to `logFiles` in the data directory. These log files
+will have a name of the form `QCDNAdata_%j.err` and `QCDNAdata_%j.log`. Where:
+
+* `%j` is the job ID given to the job by SLURM Workload Manager
+* `.err` contains any text that was sent to the standard error stream
+	* This doesn't necessarily only contain errors. Warning messages and a lot
+	of R output is written here (wrongfully, in my opinion)
+* `.log` contains any text that was sent to the standard output stream
+
 
 ## Data pre-processing
 
