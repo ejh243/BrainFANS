@@ -54,27 +54,31 @@ will have a name of the form `QCDNAdata_%j.err` and `QCDNAdata_%j.log`. Where:
 	of R output is written here (wrongfully, in my opinion)
 * `.log` contains any text that was sent to the standard output stream
 
+If the script fails in some way (job cancelled by user or a crash occurs), the
+log files will be located in the directory you submitted the script from. This
+is a quirk that is hard to avoid with job schedulers, if you can't find log
+files in the expected `logFiles` directory, this is likely why.
 
-## Data pre-processing
+## Running the preprocessing(QC) pipeline
 
-Provided is a SLURM job submission script which automates the preprocessing and can be submitted as follows
+A bash script is provided in `.../array/DNAm/preprocessing/jobSubmission` which
+runs the full pipeline for you. It is to be submitted using SLURM Workload
+Manager with the `.txt` config file provided as the first (and only) argument.
 
-`sbatch 1_runDNAmQC.sh /path/to/configFile`
-	/path/to/configFile the path to config file which specifics the data and script paths for processing
+Example:
 
-* executes loadDataGDS.r ${DATADIR}
-* executes calcQCMetrics.r ${DATADIR} ${REFDIR} [${GENOFILE}]
-* executes clusterCellTypes.r ${DATADIR} ${RCONFIG} 
-* executes Rscript -e "rmarkdown::render('QC.rmd', output_file='QC.html')" --args ${DATADIR} ${RCONFIG} $USER
+```bash
+sbatch 1_runDNAmQC.sh /path/to/configFile
+```
 
+This script executes the following R scripts for you, providing the necessary
+command line arguments using the provided config file:
 
-During execution log files are temporarily located in the folder you submitted the script from with the filenames QCDNAdata_XXX.log and QCDNAdata_XXX.err, where XXX is replaced with the job number provided by your HPC scheduler. Please ensure you have the correct permissions to create files in this folder, otherwise the job will instantly fail. If the job fails before the script is run to completion, this is where you need to look for troubleshooting. Once the QC pipeline is complete these files are moved to your data directory in a folder called `logFiles`. 
-
-
-Approach is as follows:
-
-1. QC across all samples
-2. QC within cell type
-3. Normalisation
-4. Characterise dataset
-5. Analysis
+* `checkConfigRFile.r`
+* `checkColnamesSampleSheet.r`
+* `loadDataGDS.r` 
+* `calcQCMetrics.r` 
+* `clusterCellTypes.r`
+* Rendering of `QC.rmd`
+* `normalisation.r`
+* `CETYGOdeconvolution.r`
