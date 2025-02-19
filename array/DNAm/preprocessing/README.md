@@ -12,9 +12,9 @@ you can run these from the command line directly. You can check this by using
 - [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) (>=v23.10.0)
 
 All additional dependencies are downloaded and installed via conda upon
-completing [setup](#prerequisites).
+completing [setup](#setup).
 
-## Prequisites
+## Setup
 
 1) Copy the provided example config files located in `.../array/DNAm/config` to
 a memorable location (ideally next to your data)
@@ -76,9 +76,13 @@ command line arguments using the provided config file:
 
 ## Outputs
 
+* A [gds file](https://pmc.ncbi.nlm.nih.gov/articles/PMC6419913/) (and a
+normalised gds) file containing summarised information from your input IDAT
+files.
 * A html QC report located in 2_gds/QCmetrics
-* A text file summarising the QC metrics and filtering are located in
-2_gds/QCmetrics
+* Comma separated value (csv) files summarising the QC metrics and filtering
+are located in 2_gds/QCmetrics
+* Rdata files containing information on normalised data and QC metrics
 
 ## Log files
 
