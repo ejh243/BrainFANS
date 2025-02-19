@@ -1,6 +1,6 @@
 # How to use the DNAm preprocessing(QC) pipeline
 
-## Prequisites:
+## Prequisites
 
 1) Copy the provided example config files located in `.../array/DNAm/config` to
 a memorable location (ideally next to your data)
@@ -16,13 +16,13 @@ a memorable location (ideally next to your data)
 	hour and 37 minutes. 
 	* Compilation of some R packages can halt if your RAM is too low (<1GB),
 	consider looking into swapfiles if you think this is happening to you.
-3) Create directory structure as outlined in (#directory-structure) where your
+3) Create the expected [directory structure](#directory-structure) where your
 data is.
 	* Note: This is inline with the defaults provided in the example
 	configuration files. If you change the paths for entries such as
 	`$METADIR`, your directory structure will need to reflect this change.
 
-## Directory Structure:
+## Directory Structure
 
 ```text
 Data_directory/
@@ -37,13 +37,13 @@ Data_directory/
 ```
 
 
-## Outputs:
+## Outputs
 
 * A html QC report located in 2_gds/QCmetrics
 * A text file summarising the QC metrics and filtering are located in
 2_gds/QCmetrics
 
-## Log files:
+## Log files
 
 All log files are saved to `logFiles` in the data directory. These log files
 will have a name of the form `QCDNAdata_%j.err` and `QCDNAdata_%j.log`. Where:
