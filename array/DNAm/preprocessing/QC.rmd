@@ -15,7 +15,7 @@ knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache 
 args<-commandArgs(trailingOnly = TRUE)
 suppressPackageStartupMessages(library(bigmelon, warn.conflicts = FALSE, quietly = TRUE))
 suppressPackageStartupMessages(library(gplots, warn.conflicts = FALSE, quietly = TRUE))
-suppressPackageStartupMessages(library(diptest, warn.conflicts = FALSE, quietly = TRUE)   )
+suppressPackageStartupMessages(library(diptest, warn.conflicts = FALSE, quietly = TRUE))
 suppressPackageStartupMessages(library(corrplot, warn.conflicts = FALSE, quietly = TRUE))
 suppressPackageStartupMessages(library(pander, warn.conflicts = FALSE, quietly = TRUE))
 suppressPackageStartupMessages(library(kableExtra, warn.conflicts = FALSE, quietly = TRUE))
