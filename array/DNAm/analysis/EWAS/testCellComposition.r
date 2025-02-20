@@ -90,8 +90,15 @@ datLong<-gather(predPropBest[,c("Cell.type", "Phenotype",
     "NeuNPos_SOX6Pos","NeuNPos_SOX6Neg","NeuNNeg_SOX10Pos", "CETYGO")], 
     Fraction, Proportion, NeuNNeg_SOX10Neg:CETYGO)
 
+sumStats<-cbind(aggregate(Proportion ~ Cell.type * Fraction, data = datLong, FUN = mean),
+aggregate(Proportion ~ Cell.type * Fraction, data = datLong, FUN = sd)[,3])
+colnames(sumStats)[-c(1:2)]<-c("Mean", "SD")
+write.csv(sumStats, file.path(resPath, "EWAS", "Tables", "CellCompositionSummaryStatisticsByCellType.csv"))
+
+
 sumStats<-cbind(aggregate(Proportion ~ ., data = datLong, FUN = mean),
 aggregate(Proportion ~ ., data = datLong, FUN = sd)[,4])
+colnames(sumStats)[-c(1:3)]<-c("Mean", "SD")
 write.csv(sumStats, file.path(resPath, "EWAS", "Tables", "CellCompositionSummaryStatisticsByCellTypePhenotype.csv"))
 
 testPhenotype<-NULL
@@ -175,5 +182,22 @@ ggplot(datLong, aes(Fraction, Proportion, fill = Phenotype))+
              position = position_dodge(width = 0.9)) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
   scale_y_continuous(breaks = seq(0, max(datLong$Proportion), by = 0.2))
-ggsave(file.path(resPath, "EWAS", "Plots",  "ViolinPlotCellCompositionByCellTypePhenotypeNeuronalSubtypes.pdf"),
+ggsave(file.path(resPath, "EWAS", "Plots",  "ViolinPlotCellCompositionByCellTypePhenotypeNeuronalSOX6Subtypes.pdf"),
+       width = 5, height = 5, dpi = 150, units = "in")
+
+## Within Neurons look at SATB2 Pos vs Neg
+datLong<-gather(predPropBest[,c("Cell.type", "Phenotype", "SATB2Pos","SATB2Neg")], 
+  Fraction, Proportion, SATB2Pos:SATB2Neg) %>% subset(Cell.type == "NeuN+")
+mean_data <- datLong %>%
+  group_by(Fraction, Phenotype) %>%
+  summarize(mean_Proportion = mean(Proportion))
+ggplot(datLong, aes(Fraction, Proportion, fill = Phenotype))+
+          geom_violin(scale = "width", position= position_dodge(width = 0.9))+ 
+		   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+  geom_point(data = mean_data, aes(y = mean_Proportion, group = Phenotype),
+             color = "black", shape = 18, size = 2,
+             position = position_dodge(width = 0.9)) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  scale_y_continuous(breaks = seq(0, max(datLong$Proportion), by = 0.2))
+ggsave(file.path(resPath, "EWAS", "Plots",  "ViolinPlotCellCompositionByCellTypePhenotypeNeuronalSATB2Subtypes.pdf"),
        width = 5, height = 5, dpi = 150, units = "in")
