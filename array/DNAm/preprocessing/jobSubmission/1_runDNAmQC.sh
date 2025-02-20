@@ -58,6 +58,8 @@ conda activate "${DNAM_CONDA_ENVIRONMENT}"
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
+Rscript installPackages.r
+
 Rscript checkRconfigFile.r ${DATADIR}
 config_malformed=$?
 if [[ "${config_malformed}" -ne 0 ]]; then
