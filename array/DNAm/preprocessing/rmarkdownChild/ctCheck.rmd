@@ -311,31 +311,34 @@ pheatmap(rawbetas[order(sigma, decreasing = TRUE)[1:500],index], annotation_col 
 
 ```
 
-
-```{r, echo = FALSE, fig.width = 15, fig.height = 15}
+```{r pair_setup, echo = FALSE}
 # Pairs plot will fail if only one cell type passes QC
-if (ncol(mahDistPCA) > 1) {
-  cat("Here we will look at the correlations between the Mahalanobis distances across samples. This might highlight where common misclassifications could occur.")
+run_pairs <- ncol(mahDistPCA) > 1
+```
 
-  panel.cor <- function(x, y){
-      usr <- par("usr"); on.exit(par(usr))
-      par(usr = c(0, 1, 0, 1))
-      r <- round(cor(x, y), digits=2)
-      txt <- paste0("R = ", r)
-      cex.cor <- 0.8/strwidth(txt)
-      text(0.5, 0.5, txt, cex = cex.cor * r)
-  }
-# Customize upper panel
-  upper.panel<-function(x, y){
-    points(x,y, pch = 16, col = cellCols[as.factor(QCmetrics$Cell_Type)])
-    abline(a = 0, b = 1)
-  }
-  pairs(
-    mahDistPCA, 
-    lower.panel = panel.cor,
-    upper.panel = upper.panel
-  )
+```{r, results = 'asis', echo = FALSE, eval = run_pairs}
+cat("Here we will look at the correlations between the Mahalanobis distances across samples. This might highlight where common misclassifications could occur.")
+```
+
+```{r, echo = FALSE, fig.width = 15, fig.height = 15, eval = run_pairs}
+panel.cor <- function(x, y){
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- round(cor(x, y), digits=2)
+    txt <- paste0("R = ", r)
+    cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
 }
+# Customize upper panel
+upper.panel<-function(x, y){
+  points(x,y, pch = 16, col = cellCols[as.factor(QCmetrics$Cell_Type)])
+  abline(a = 0, b = 1)
+}
+pairs(
+  mahDistPCA, 
+  lower.panel = panel.cor,
+  upper.panel = upper.panel
+)
 ```
 
 
