@@ -36,11 +36,11 @@ tissueType <- toupper(tissueType)
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(CETYGO, warn.conflicts = FALSE, quietly = TRUE)
-library(gridExtra, warn.conflicts = FALSE, quietly = TRUE)
-library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
-library(ggplot2, warn.conflicts = FALSE, quietly = TRUE)
-library(wateRmelon, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(CETYGO, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(gridExtra, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(bigmelon, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(ggplot2, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(wateRmelon, warn.conflicts = FALSE, quietly = TRUE))
 
 
 #----------------------------------------------------------------------#

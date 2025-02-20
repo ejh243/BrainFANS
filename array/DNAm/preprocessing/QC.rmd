@@ -13,15 +13,15 @@ knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, cache 
 
 ```{r setup, include=FALSE}
 args<-commandArgs(trailingOnly = TRUE)
-library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
-library(gplots, warn.conflicts = FALSE, quietly = TRUE)
-library(diptest, warn.conflicts = FALSE, quietly = TRUE)   
-library(corrplot, warn.conflicts = FALSE, quietly = TRUE)
-library(pander, warn.conflicts = FALSE, quietly = TRUE)
-library(kableExtra, warn.conflicts = FALSE, quietly = TRUE)
-library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE)
-library(pheatmap, warn.conflicts = FALSE, quietly = TRUE)
-library(data.table, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(bigmelon, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(gplots, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(diptest, warn.conflicts = FALSE, quietly = TRUE)   )
+suppressPackageStartupMessages(library(corrplot, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(pander, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(kableExtra, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(RColorBrewer, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(pheatmap, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(data.table, warn.conflicts = FALSE, quietly = TRUE))
 
 
 source(args[4]) ### change the content of this file to run QC with different thresholds
@@ -248,7 +248,7 @@ for(i in 2:ncol(plotCols)){
 In order to decide a threshold to filter samples by, we will trying fitting a bimodal distribution to the distribution of intensities. The idea here being that there will be a distribution forthe failed samples and a distribution for the passed samples. 
 
 ```{r, echo = FALSE}
-library(mixtools, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(mixtools, warn.conflicts = FALSE, quietly = TRUE))
 mixmdl.m = normalmixEM(QCmetrics$M.median, mu = c(250, 3000), sigma = c(250, 1000))
 mixmdl.u = normalmixEM(QCmetrics$U.median, mu = c(250, 3000), sigma = c(250, 1000))
 
@@ -264,7 +264,7 @@ lines(density(QCmetrics$U.median), lty=2, lwd=2)
 ## Ratio of M and U Intensities
 
 ```{r, bimodalTest, echo = FALSE}
-library(diptest, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(diptest, warn.conflicts = FALSE, quietly = TRUE))
 bimodP<-dip.test(QCmetrics$intens.ratio)$p.value
 ```
 
