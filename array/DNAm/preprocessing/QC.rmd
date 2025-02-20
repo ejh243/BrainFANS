@@ -121,7 +121,7 @@ define_plot_parameters <- function(QCmetrics, projVar) {
     colours <- rainbow(unique_variables)[column]
 
     legendParams[[column_name]] <- cbind(
-      levels(column),
+      unique(column[!is.na(column)]),
       rainbow(unique_variables)
     )
     plotCols[[column_name]] <- colours
