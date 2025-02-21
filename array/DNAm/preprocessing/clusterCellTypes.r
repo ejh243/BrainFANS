@@ -55,9 +55,8 @@ setwd(dataDir)
 gfile<-openfn.gds(gdsFile, readonly = FALSE)
 
 manifest <- cdegUtilities::readManifest(
-	referenceDirectory = refDir,
-	probeMatchingIndex = fData(gfile)[["Probe_ID"]],
-	arrayType = arrayType 
+	manifestFilePath = manifestFilePath,
+	probeMatchingIndex = fData(gfile)[["Probe_ID"]]
 )
 if (!exists("manifest"))
 	stop("Manifest file could not be loaded correctly")
