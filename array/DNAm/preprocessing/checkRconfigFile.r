@@ -31,7 +31,7 @@ qcRmdParams <- c("projectTitle", "processedBy")
 qcthres <- c("thresBS", "intenThres", "nvThres", "perMiss")
 logicalParams <- c("sexCheck", "snpCheck", "ctCheck")
 
-ungrouped <- c("tissueType", "arrayType", "projVar", "")
+ungrouped <- c("tissueType", "arrayType", "projVar", "manifestFilePath")
 
 ctThres <- c("studentThres", "nSDThres")
 ctCellParams <- c("predDistinctCT", "neunCT")
@@ -83,6 +83,14 @@ if (!toupper(arrayType) %in% c("450K", "V1", "V2")) {
 if (!"Cell_Type" %in% projVar && ctCheck) {
   bad_parameter_exists <- TRUE
   warning("\n'Cell_Type' must be included in projVar if 'ctCheck' is true\n")
+}
+
+if (!file.exists(manifestFilePath)) {
+  bad_parameter_exists <- TRUE
+  warning(
+    "\n'manifestFilePath': ", manifestFilePath, " does not exist. ",
+    "Please check this file path"
+  )
 }
 
 if (bad_parameter_exists) {
