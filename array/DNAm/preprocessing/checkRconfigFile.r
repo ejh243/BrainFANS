@@ -31,8 +31,6 @@ qcRmdParams <- c("projectTitle", "processedBy")
 qcthres <- c("thresBS", "intenThres", "nvThres", "perMiss")
 logicalParams <- c("sexCheck", "snpCheck", "ctCheck")
 
-ungrouped <- c("tissueType", "arrayType", "projVar", "manifestFilePath")
-
 ctThres <- c("studentThres", "nSDThres")
 ctCellParams <- c("predDistinctCT", "neunCT")
 
