@@ -45,7 +45,11 @@ For example to run the **summariseDataset.r** script you might execute
 
 ## Data Availablity
 
+Raw and processed DNA methylation data are available from GEO under accession number GSE279509. 
+
 ## Citation
+
+If you use these scripts please cite the following manuscript: [Hannon, E., Dempster, E.L., Davies, J.P. et al. Quantifying the proportion of different cell types in the human cortex using DNA methylation profiles. BMC Biol 22, 17 (2024). https://doi.org/10.1186/s12915-024-01827-y](https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-024-01827-y). 
 
 ## Contact
 
