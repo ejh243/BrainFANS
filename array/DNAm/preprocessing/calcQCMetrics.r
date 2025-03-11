@@ -312,8 +312,8 @@ if(!"predSex" %in% colnames(QCmetrics)){
 		print("Intensities on X & Y chromosomes are multimodal. Sufficient evidence of more than one sex in data, proceeding to fit two distributions to the data to make predictions")
 
 		library(mixtools, warn.conflicts = FALSE, quietly = TRUE)
-		mixmdl.x = normalmixEM(x.cp, mu = c(0.99, 1.01), sigma = c(0.05, 0.05))
-		mixmdl.y = normalmixEM(y.cp, mu = c(0.3, 1.02), sigma = c(0.2, 0.2))
+		mixmdl.x = normalmixEM(x.cp, mu = xMus, sigma = xSigmas)
+		mixmdl.y = normalmixEM(y.cp, mu = yMus, sigma = ySigmas)
 
 		posteriorProbs<-cbind(mixmdl.x$posterior, mixmdl.y$posterior)
 		colnames(posteriorProbs)<-c("PP.M.X", "PP.F.X", "PP.F.Y", "PP.M.Y")
