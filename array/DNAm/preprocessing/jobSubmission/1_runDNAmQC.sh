@@ -43,14 +43,22 @@ source "${config_file}" || print_error_message \
     "The provided config file was not sourced correctly." \
     "Please check the path you gave ('$config_file') exists, exiting..." 
 
+
+if [[ -z "${DNAM_CONDA_ENVIRONMENT}" ]]; then
+    echo "Conda environment does not exist, please run the setup script first."
+    echo "The setup script can be found at ${SCRIPTSDIR}/array/DNAm/Setup/setup.sh"
+    exit 1
+fi
+    
+
 echo "Processing data located in :" ${DATADIR}
 
-## load modules
-echo "Loading R module :" $RVERS
-module load Pandoc
-module load $RVERS   # load specified R version
+source "${CONDA_SHELL}"
+conda activate "${DNAM_CONDA_ENVIRONMENT}"
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
+
+Rscript installPackages.r
 
 Rscript checkRconfigFile.r ${RCONFIG}
 config_malformed=$?
@@ -58,17 +66,6 @@ if [[ "${config_malformed}" -ne 0 ]]; then
     print_error_message \
         "Malformed config file has been identified." \
         "Please check the error logs for more information, exiting..."
-fi
-
-Rscript installLibraries.r ${DATADIR}
-library_did_not_install=$?
-if [[ "${library_did_not_install}" -ne 0 ]]; then
-    print_error_message \
-        "A required library did not install properly." \
-        "Please check the error logs as to why this happened." \
-        "If the problem is not easily fixed, consider opening an issue." \
-        "https://github.com/ejh243/BrainFANS/issues/new/choose" \
-        "Exiting..."
 fi
 
 Rscript checkColnamesSampleSheet.r ${RCONFIG}
@@ -112,6 +109,8 @@ chmod 755 ${DATADIR}/2_gds/rawNorm.gds
 mkdir -p ${GDSDIR}/QCmetrics/CETYGO
 
 Rscript CETYGOdeconvolution.r ${DATADIR} ${RCONFIG}
+
+conda deactivate
 
 ## print finish date and time
 echo Job finished on:

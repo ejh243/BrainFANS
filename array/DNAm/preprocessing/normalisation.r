@@ -90,9 +90,8 @@ unmeth<-unmethylated(normfile)[,]
 rawbetas<-betas(normfile)[,]
 
 manifest <- cdegUtilities::readManifest(
-	referenceDirectory = refDir,
-	probeMatchingIndex = rownames(rawbetas),
-	arrayType = arrayType 
+	manifestFilePath = manifestFilePath,
+	probeMatchingIndex = rownames(rawbetas)
 )
 if (!exists("manifest"))
 	stop("Manifest file could not be loaded correctly")
