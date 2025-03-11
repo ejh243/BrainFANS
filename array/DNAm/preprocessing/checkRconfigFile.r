@@ -30,6 +30,7 @@ source(configFile)
 qcRmdParams <- c("projectTitle", "processedBy")
 qcthres <- c("thresBS", "intenThres", "nvThres", "perMiss")
 logicalParams <- c("sexCheck", "snpCheck", "ctCheck")
+multimodalParams <- c("xMus", "yMus", "xSigmas", "ySigmas")
 
 ctThres <- c("studentThres", "nSDThres")
 ctCellParams <- c("predDistinctCT", "neunCT")
@@ -57,6 +58,7 @@ check_parameters <- function(parameters, type_check, warning_message) {
 
 check_parameters(qcthres, is.numeric, "must be numeric")
 check_parameters(logicalParams, is.logical, "must be TRUE or FALSE")
+check_parameters(multimodalParams, is.numeric, "must be numeric")
 
 if (!exists("ctCheck")) ctCheck <- FALSE
 if (ctCheck) {

@@ -60,8 +60,6 @@ gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
 # ensure sample sheet is in same order as data
 sampleSheet<-sampleSheet[match(colnames(gfile), sampleSheet$Basename),]
 
-
-
 ## see if any QC data already exists
 if(file.exists(qcData)){
 	load(qcData)
@@ -300,39 +298,46 @@ if(!"predSex" %in% colnames(QCmetrics)){
 	ints.X<-methylated(gfile)[x.probes,]+unmethylated(gfile)[x.probes,]
 	ints.Y<-methylated(gfile)[y.probes,]+unmethylated(gfile)[y.probes,]
 
-
 	x.cp<-colMeans(ints.X, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
 	y.cp<-colMeans(ints.Y, na.rm = TRUE)/colMeans(ints.auto, na.rm = TRUE)
 
+	# test for evidence of two groups (i.e. catch for if dataset only has one sex)
+	# result is identical for both chromosomes
+	# needs at least ~15 samples for this to work
+	library(diptest, warn.conflicts = FALSE, quietly = TRUE)
+	bimodP.y<-dip.test(y.cp)$p.value
 
-	if(arrayType == "V2"){
-		# base prediction on y chromosome
+	if(bimodP.y < 0.05){
+		print("Intensities on X & Y chromosomes are multimodal. Sufficient evidence of more than one sex in data, proceeding to fit two distributions to the data to make predictions")
+
+		library(mixtools, warn.conflicts = FALSE, quietly = TRUE)
+		mixmdl.x = normalmixEM(x.cp, mu = xMus, sigma = xSigmas)
+		mixmdl.y = normalmixEM(y.cp, mu = yMus, sigma = ySigmas)
+
+		posteriorProbs<-cbind(mixmdl.x$posterior, mixmdl.y$posterior)
+		colnames(posteriorProbs)<-c("PP.M.X", "PP.F.X", "PP.F.Y", "PP.M.Y")
+		# base prediction on y chromosome posterior probability
 		predSex.y<-rep(NA, length(y.cp))
-		predSex.y[which(y.cp > 1.0 & intensPASS == TRUE)]<-"M"
-		predSex.y[which(y.cp < 0.5 & intensPASS == TRUE)]<-"F"
+		predSex.y[which(posteriorProbs[,"PP.M.Y"] > 0.5 & intensPASS == TRUE)]<-"M"
+		predSex.y[which(posteriorProbs[,"PP.F.Y"] > 0.5 & intensPASS == TRUE)]<-"F"
 
-		# base prediction on x chromosome
+		# base prediction on x chromosome posterior probability
 		predSex.x<-rep(NA, length(x.cp))
-		predSex.x[which(x.cp < 1 & intensPASS == TRUE)]<-"M"
-		predSex.x[which(x.cp > 1.01 & intensPASS == TRUE)]<-"F"
-	} else {
+		predSex.x[which(posteriorProbs[,"PP.M.X"] > 0.5 & intensPASS == TRUE)]<-"M"
+		predSex.x[which(posteriorProbs[,"PP.F.X"] > 0.5 & intensPASS == TRUE)]<-"F"
 
-		# base prediction on y chromosome
-		predSex.y<-rep(NA, length(y.cp))
-		predSex.y[which(y.cp > 1.1 & intensPASS == TRUE)]<-"M"
-		predSex.y[which(y.cp < 0.9 & intensPASS == TRUE)]<-"F"
-
-		# base prediction on x chromosome
+		# check for consistent prediction
+		predSex<-rep(NA, length(x.cp))
+		predSex[which(predSex.x == predSex.y)]<-predSex.x[which(predSex.x == predSex.y)]
+		QCmetrics<-cbind(QCmetrics,x.cp,y.cp,posteriorProbs,predSex.x, predSex.y, predSex)
+	} else{
+		print("Intensities on X & Y chromosomes are unimodal. This would suggest just one sex in the data, a sample sample size or very few of one sex. Bypassing prediction step")
+		predSex<-rep(NA, length(x.cp))
 		predSex.x<-rep(NA, length(x.cp))
-		predSex.x[which(x.cp < 0.996 & intensPASS == TRUE)]<-"M"
-		predSex.x[which(x.cp > 1.005 & intensPASS == TRUE)]<-"F"
+		predSex.y<-rep(NA, length(x.cp))
+		QCmetrics<-cbind(QCmetrics,x.cp,y.cp,predSex.x, predSex.y, predSex)
 
 	}
-
-	# check for consistent prediction
-	predSex<-rep(NA, length(x.cp))
-	predSex[which(predSex.x == predSex.y)]<-predSex.x[which(predSex.x == predSex.y)]
-	QCmetrics<-cbind(QCmetrics,x.cp,y.cp,predSex.x, predSex.y, predSex)
 }
 
 #----------------------------------------------------------------------#
