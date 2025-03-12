@@ -20,6 +20,10 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
     - `REFERENCES_DIR`: full path to directory with all references used throughout the pipeline.
     - Specify the modules versions to be loaded and the full paths to the softwares used in the pipeline (e.g. picard).
   - An alphabetically ordered array of cell types to which samples belong to: `CELLTYPES`. 
+  - Cutoff values for peak calling should be specified by the user. If not specified, default will be used (0.05). For more information about what values to choose: [MACS documentation](https://macs3-project.github.io/MACS/docs/cutoffanalysis.html)
+    - `MACS_SAMPLE` : Sample-level Peak calling q-value cutoff
+    - `MACS_GROUP` : Cell fraction-level Peak calling q-value cutoff
+    - `MACS_CHR` : Peak calling on sex chromosomes q-value cutoff
 - config.r: This is the configuration file for running R scripts.
   - The `dir` variable should be changed to be the full path to the project's directory. This should match `MAIN_DIR` variable in the config.txt file.
   - Other parameters or threshold should be changed as required.
@@ -53,7 +57,7 @@ Several software are needed to run the pipeline. Some of these can be used from 
 
 Important software that will be installed in this environment are: MACS3 (3.0.2), SAMstats, SAMtools, BEDTools, Bowtie2, MultiQC, R, Python3, Pandoc, GATK, Picard. If you already have a conda environment, please specify its name or path in the *config.txt* file. 
   - Python version in this conda environment should be >= 3.12, as this is required by MACS3. For further details about MACS3 requirements: [MACS3 documentation](https://macs3-project.github.io/MACS/docs/INSTALL.html)
-  - R version should be >= 4.2. Some packages are no longer supported in the regular CRAN repository and need to be installed from source. To do this, download the source file of the package [ptest R package](https://cran.r-project.org/src/contrib/Archive/ptest/), keep this in the *config* folder and this will be installed from source at the *0_setUp.sh* script.
+  - R version should be >= 4.3. Some packages are no longer supported in the regular CRAN repository and need to be installed from source. To do this, download the source file of the package [ptest R package](https://cran.r-project.org/src/contrib/Archive/ptest/), keep this in the *config* folder and this will be installed from source at the *0_setUp.sh* script.
 Other software that needs to be available locally are (and path to these need to be specified in the *config.txt* file):
   - [VerifyBamID](https://github.com/Griffan/VerifyBamID)
   - [Phantompeakqualtools](https://github.com/kundajelab/phantompeakqualtools)
@@ -211,11 +215,11 @@ This script creates bam files for each sample containing only reads aligned to s
   - `PEAKS`: Perform only peak calling on new sex chromosomes reads samples.
   - `CHECK`: Collate peak calling on sex chromosomes results and check assigned sex of each sample.
 
-### 6. Genotype check
+### 6. Genotype check and Stage 2 QC metrics summary
 
   `sbatch --array=<number of batch jobs> ./jobSubmission/6_batchRunGenotypeCheck.sh (project directory) [STEPS]`
 
-This script will detect possible DNA contamination in order to ensure high quality sequence reads. If any contamination is detected, possible swaps will be suggested. 
+This script will detect possible DNA contamination in order to ensure high quality sequence reads. If any contamination is detected, possible swaps will be suggested. It will also collate results from stage 2 of QC.
 
 ##### -scripts executed-
 - ./subScripts/compareBamWithGenotypes.sh  : prepares bam file for comparison of assigned genotype of each sample and runs verifyBamID 
@@ -223,13 +227,15 @@ This script will detect possible DNA contamination in order to ensure high quali
 - ./Rscripts/collateSampleChecks.Rmd : collates results from previous steps (sex and genotype check).
 - ./subScripts/searchBestGenoMatch.sh : Outputs a summary of stats from previous step and finds any sample that might be contaminated.
   * Contaminated samples will go to a created file potentialSwitches.txt. If this file is not empty, searchBestGenoMatch.sh is executed and an alternative Genotype search is done for the sample.
-  
+- ./subScripts/progressReportS2.sh : identifies what samples have been through stage 2 of QC in order to avoid missing processing samples
+
 ##### -parameters-
 - `--array` : number of batch jobs, each number matches a sample. Starting from 2
 - `(project-directory)` project's directory.
 -optional-
 - `[STEPS]` They may be combined, with desired steps included as single string, i.e. GENCHECK,COMPARE. Default if left blank is to run all of them.
   - `COMPARE`: Compare only samples genotype with matched VCF file genotype.
+  - `COLLATE`: Collate results from all samples to show progress of each sample through stage 2 of QC pipeline in order to avoid missing steps or samples.
   - `GENCHECK`: Sex and gencheck results are collated in a report.
   - `SWITCH`: Indentify only mismatched genotype samples and output potential switches and seach for alternative genotype.
 
@@ -250,19 +256,25 @@ This script groups samples per cell type, performs group level peak calling and 
 - `(project-directory)` project's directory.
 -optional-
 - `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
-  -`FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
+  - `FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
   - `PEAKS`: Performs peak calling on samples chosen for peak calling using MACS3 in paired-end mode.
   - `COUNTS`: Gets read counts in peaks called at cell group level.
+- `[GROUP]` Select cell-type of group of samples to perform peak calling on. This is only needed for the `PEAKS` step.
 
+### 8. Stage 3 QC metrics summary
 
-### 8. Advanced analysis
+ `sbatch ./jobSubmission/8_collateStage3QCMatrics.sh (project directory) [STEPS] [peakSet]`
 
-  8.1) `sbatch --array=<number of batch jobs> ./sequencing/ATACSeq/jobSubmission/8_1_idrAnalysis.sh <projectName> [GROUPS] [STEPS]`
-  
-  This script performs IDR analysis.
-  
-  8.2) `sbatch --array=<number of batch jobs> ./sequencing/ATACSeq/jobSubmission/8_2_diffAnalysis.sh <projectName> [GROUPS] [STEPS]`
-  
-  This script performs counts in peaks, various ways of normalisation of peaks and differential accessibility analysis.
-  
+This script normalises counts in peaks and uses results to check cell-type identity of samples, as this might be of poor quality or mislabelled.
 
+##### -scripts executed-
+- ./Rscripts/normCounts.r: outputs results of Variance Partition Analysis (VPA) on raw counts, normalising counts in peaks and results of VPA in these.
+- ./Rscripts/collateCellTypeCheck.Rmd: outputs a summary report of VPA on raw and normalised counts, the normalisation results and identifies samples that fail cell-type check.
+
+##### -parameters-
+- `(project-directory)` project's directory.
+-optional-
+- `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
+  - `NORM`: performs Variance Partition Analysis (VPA) on raw counts, normalises counts in peaks and performs VPA again in these.
+  - `CTCHECK`: Collates results from before in a Rmarkdown report and identifies samples that fail cell-type identity check.
+- `[peakSet]` : as counts in peaks have been produced for only promoters or all peaks, user can choose whether this stage is performed using either of those peak sets.
