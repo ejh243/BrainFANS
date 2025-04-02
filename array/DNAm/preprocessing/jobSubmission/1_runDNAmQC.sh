@@ -58,7 +58,7 @@ conda activate "${DNAM_CONDA_ENVIRONMENT}"
 
 cd ${SCRIPTSDIR}/array/DNAm/preprocessing/
 
-Rscript installPackages.r
+Rscript installPackages.R
 
 Rscript checkRconfigFile.r ${DATADIR}
 config_malformed=$?
