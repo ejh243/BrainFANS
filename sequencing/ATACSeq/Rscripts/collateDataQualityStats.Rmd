@@ -30,7 +30,7 @@ library(scales)
 library(tibble)
 library(ChIPQC)
 library(plotly)
-
+options(scipen=5)
 ## load config variables
 source(params$configFile)
 
@@ -685,8 +685,25 @@ write.csv(QCPASS.df, file = file.path(metaDir, "/passStage1Status.csv"))
 
 write.table(names(keep[keep==TRUE]), file = file.path(metaDir, "/passStage1SampleList.txt"), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(pheno1, file = file.path(metaDir, "/matchedVCFIDs.txt"), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-#QCPASS<-cbind(QCPASS, "QCPASS" = keep)
+
+qcStats <- cbind(pheno, mergeStats$overall_alignment_rate, #alignment rate 
+              fripStats$BAMTotalReads, #total filtered & aligned reads
+              eMetrics$NRF, #encode
+              eMetrics$PBC1, #encode
+              eMetrics$PBC2, #encode,
+              propNucleosomesAll[,1], #fractions nucleosome free 
+              propNucleosomesAll[,2], #fractions mononucleosome 
+              decreasingProps[,1],#periodicity
+              fripStats$BAMPeaks, # number of peaks
+              fripStats$FripMACS3PE, #frip
+              diptestStatsAll[,"p.value"] #multimodality
+              ) 
+
+colnames(qcStats) <- c(colnames(pheno), "AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality")
+write.csv(qcStats, file = file.path(metaDir, "/qc1Stats.csv"),row.names = FALSE)
 ```
 
 Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.

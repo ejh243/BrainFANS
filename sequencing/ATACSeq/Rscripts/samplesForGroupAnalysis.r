@@ -15,19 +15,22 @@
 ## - samplesForGroupAnalysisOrdered_<cell-group>.txt" in 0_metadata folder                                        ||
 ##                                                                                                                ||
 ## REQUIRES:                                                                                                      ||
-## - R/4.2.1-foss-2022a                                                                                           ||
-## - A csv file in the metadata folder with the summary of QC stages 1 and 2: passAllStatus.csv. This is produced ||
+## - R version > 4.3                                                                                              ||
+## - A csv file in the metadata folder with the summary of QC stages 1 and 2: passS1S2Status.csv. This is produced||
 ##   at STEP 6.2 CHECK                                                                                            ||
 ## ===============================================================================================================##
 
-args <- commandArgs()
-configR <-source(args[6])
-cf <- args[7]
+args <- commandArgs(trailingOnly=TRUE)
+configFile <-args[1]
+source(configFile)
+cf <- args[2]
 
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
-passAllQC <- read.csv(file.path(metaDir, "/passAllStatus.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
+passAllQC <- read.csv(file.path(metaDir, "/passS1S2Status.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
 passAllQC <- passAllQC[match(pheno$sampleID,passAllQC$sampleID),]
-passAllQC <- passAllQC[passAllQC$QCS2 == TRUE & passAllQC$QCS1 == TRUE,]
+passAllQC <- passAllQC[passAllQC$PASSALL == TRUE ,]
+loSamples <- read.table(file.path(paste0(metaDir,"/leaveOutSamples.txt")))[,1]
+passAllQC <- passAllQC[!passAllQC$sampleID %in% loSamples,]
 write.csv(passAllQC, file = file.path(metaDir, "/samplesGroupAnalysis.csv"), row.names = FALSE)
 
 samples <- passAllQC[passAllQC$fraction == cf,]$sampleID
