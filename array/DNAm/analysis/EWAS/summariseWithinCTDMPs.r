@@ -24,6 +24,39 @@ plotByStatus <- function(dmpCellType, contrastCellType, dmpRes, plotLim){
 
 }
 
+clumpResults<-function(resTmp, thres1 = 9e-8,thres2 = 1e-6,dist = 500, p_col = "FullModel_SCZ_P", chr_col = "chrm", bp_col = "start"){
+    ## Look at other sites nearby
+    tmpSites<-resTmp[which(resTmp[,p_col] < thres1),]
+    allNeighbours <-NULL
+    clumpCount <- NULL
+    message("Number of index DMPs found: ", nrow(tmpSites))
+    if(nrow(tmpSites) > 0){
+        for(j in 1:nrow(tmpSites)){
+            message("Processing DMP ", j)
+            index <- which(resTmp[,chr_col] == tmpSites[j,chr_col] & 
+                                    resTmp[,bp_col] <= (tmpSites[j,bp_col] + dist) & 
+                                    resTmp[,bp_col] >= (tmpSites[j,bp_col] - dist))
+            ## at a minimum this should find the index site
+            if(length(index) > 1){        
+                neighbourSites<-resTmp[index,]
+                n_support <- sum(neighbourSites[,p_col] < thres2) - 1
+                neighbourSites<-cbind(rownames(tmpSites)[j], neighbourSites)
+                allNeighbours <- rbind(allNeighbours, neighbourSites)
+            } else {
+                n_support <- NA
+                allNeighbours <- rbind(allNeighbours, cbind(rownames(tmpSites)[j], tmpSites[j,]))
+            }
+            clumpCount <- rbind(clumpCount,c(tmpSites[j,],length(index)-1, n_support))
+            
+        }
+        colnames(clumpCount) <- c(colnames(resTmp), "n_neighbouring_signals", "n_supportive")
+        rownames(clumpCount) <- rownames(tmpSites)
+        colnames(allNeighbours)[1] <- "Index_Probe" 
+    }
+    return(list(clumpCount, allNeighbours))
+}
+
+
 #----------------------------------------------------------------------#
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
@@ -94,8 +127,10 @@ probeAnnot$start <- probeAnnot$start+1
 
 for(i in 1:3){
     res[[i]]<- cbind(res[[i]], probeAnnot[, c("chrm", "start", "GeneNames", "GeneClasses", "CGI", "CGIPosition")])
-    res[[i]]<- res[[i]][which(res[[i]][,"chrm"] != "Y"),]
+    res[[i]]<- res[[i]][!res[[i]][,"chrm"] %in% c("Y", "*"),]
 }
+
+
 
 #----------------------------------------------------------------------#
 # SUMMARY PLOTS
@@ -148,15 +183,15 @@ dev.off()
 
 png(file.path(resPath, "Plots", "ManhattanPlotsWithinCTLM.png"), width = 1400, height = 1000, res = 200)
 par(mfrow = c(3,1))
-par(mar = c(4,4,0.5,0.5))
+par(mar = c(4,4,1,0.5))
 par(mgp = c(2,0.75,0))
 for(i in 1:3){
     res[[i]][,"chrm"][which(res[[i]][,"chrm"] == "X")]<-"23"
     res[[i]][,"chrm"]<-as.numeric(as.character(res[[i]][,"chrm"]))
 
-    resMan<-data.frame("SNP" = rownames(res[[i]]), "P" = res[[i]][,"FullModel_SCZ_P"], "CHR" = res[[i]][,"chrm"],"BP" = res[[i]][,"start"])
+    resMan<-data.frame("SNP" = rownames(res[[i]]), "P" = res[[i]][,"NullModel_SCZ_P"], "CHR" = res[[i]][,"chrm"],"BP" = res[[i]][,"start"])
     resMan<-na.omit(resMan)
-    manhattan(resMan, genomewideline = -log10(9e-8), suggestiveline = -log10(1e-5), main = cellTypes[i])
+    manhattan(resMan, genomewideline = -log10(9e-8), suggestiveline = -log10(1e-6), main = cellTypes[i])
 } 
 dev.off()
 
@@ -182,35 +217,77 @@ for(thres in c(9e-8, 1e-7, 1e-6, 1e-5)){
 
 write.csv(nDMPs, file.path(resPath, "Tables", "DMPCountsPerCelltypeAcrossWithinCTModels.csv"))
 
+## look for supporting signals at sites nearby
+dist<-500
 for(each in cellTypes){
-	write.csv(res[[each]][which(res[[each]][,"FullModel_SCZ_P"] < thres),], file.path(resPath, "Tables", paste0("DiscoveryDMPsWithin", each, "LM.csv")))
+    for(p_col in c("FullModel_SCZ_P", "NullModel_SCZ_P", "CCModel_SCZ_P")){
+        if(p_col %in% colnames(res[[each]])){
+            clumpRes <- clumpResults(res[[each]], p_col = p_col, thres1 = 1e-6, thres2 = 1e-6, dist = dist)
+            if(!is.null(clumpRes[[1]])){
+                write.csv(clumpRes[[1]], file.path(resPath, "Tables", paste0("DiscoveryDMPs", p_col, "Within", each, "LM.csv")))
+                write.csv(clumpRes[[2]], file.path(resPath, "Tables", paste0("NeighbouringSignalsDiscoveryDMPs", p_col, "Within", each, "LM.csv")))
+            }
+        }
+    }
 }
 
-## COMPARE DMPS ACROSS CELL TYPES
-thres<-1e-5
+## Look at effect of cell composition on DMPs
+thres<-1e-6
 
+for(each in cellTypes){
+    if("CCModel_SCZ_P" %in% colnames(res[[each]])){
+        dmpRes<-res[[each]][which(res[[each]][,"NullModel_SCZ_P"] < thres),]
+        if(nrow(dmpRes) > 0){
+
+            ## plot effect size before and after adjusting for cell composition
+            p1<- ggplot(dmpRes, aes(x = NullModel_SCZ_coeff, y = CCModel_SCZ_coeff)) + geom_point() +
+            xlab("Mean difference") + ylab("Adj. mean difference") + geom_abline(intercept = 0, slope = 1)
+            ## plot effect against cell composition effect
+            p2<- ggplot(dmpRes, aes(x = CCModel_CellProportion_coeff, y = CCModel_SCZ_coeff)) + geom_point() +
+            xlab("Cell composition effect") + ylab("Adj. mean difference") + geom_hline(yintercept = 0) + geom_vline(xintercept = 0)
+            p3<-ggplot(dmpRes, aes(x = NullModel_SCZ_P, y = CCModel_SCZ_P)) + geom_point() +
+            xlab("P-value") + ylab("Adj. P-value") + 
+            scale_x_log10() + scale_y_log10() + geom_abline(intercept = 0, slope = 1)
+            ## plot schizophrenia p-value against cell composition p value
+            p4<-ggplot(dmpRes, aes(x = CCModel_CellProportion_P, y = CCModel_SCZ_P)) + geom_point() +
+            xlab("Cell composition P-value") + ylab("Schizophrenia P-value") + 
+            scale_x_log10() + scale_y_log10() + geom_abline(intercept = 0, slope = 1)
+            pdf(file.path(resPath, "Plots",paste0("ScatterPlotsCellProportionEffectsOnDiscoveryDMPsLMWithin", each, ".pdf")), width = 8, height = 8)
+            print(ggarrange(p1,p2, p3,p4,
+                           ncol = 2, nrow = 2, labels = c("A", "B", "C", "D")))
+            dev.off()
+        }
+    }
+}
+
+
+## COMPARE DMPS ACROSS CELL TYPES
 dmpList<-NULL
 for(i in 1:3){
-    dmpList<-rbind(dmpList, cbind(rownames(res[[i]])[which(res[[i]][,"FullModel_SCZ_P"] < thres)], cellTypes[i]))
+    if(sum(res[[i]][,"NullModel_SCZ_P"] < thres) > 0){
+        dmpList<-rbind(dmpList, cbind(rownames(res[[i]])[which(res[[i]][,"NullModel_SCZ_P"] < thres)], cellTypes[i]))
+    }
 }
 colnames(dmpList)<-c("ProbeID", "DiscoveryCellType")
 
-
-
-dmpRes<-cbind(dmpList, res[[1]][dmpList[,1], c("FullModel_SCZ_P", "FullModel_SCZ_coeff", "FullModel_SCZ_SE")],
-res[[2]][dmpList[,1], c("FullModel_SCZ_P", "FullModel_SCZ_coeff", "FullModel_SCZ_SE")],
-res[[3]][dmpList[,1], c("FullModel_SCZ_P", "FullModel_SCZ_coeff", "FullModel_SCZ_SE")])
+dmpRes<-cbind(dmpList, res[[1]][dmpList[,1], c("NullModel_SCZ_P", "NullModel_SCZ_coeff", "NullModel_SCZ_SE")],
+res[[2]][dmpList[,1], c("NullModel_SCZ_P", "NullModel_SCZ_coeff", "NullModel_SCZ_SE")],
+res[[3]][dmpList[,1], c("NullModel_SCZ_P", "NullModel_SCZ_coeff", "NullModel_SCZ_SE")])
 colnames(dmpRes)<-c("ProbeID", "DiscoveryCellType", outer(c("P", "Coeff", "SE"), cellTypes, paste, sep = ":"))
 
 
 
-diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ":")))
-diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]], fixed = TRUE)
+diffLong<-pivot_longer(data.frame(dmpRes[,c(2,4,7,10)]), cols = gsub("\\+|-", "\\.", paste("Coeff", cellTypes, sep = ".")))
+diffLong[["name"]] <- gsub("Coeff\\.", "", diffLong[["name"]])
 diffLong$value<-abs(diffLong$value)
-pdf(file.path(resPath, "Plots","ViolinPlotCelltypeEffectsDiscoveryDMPsLMWithinCTs.pdf"), width = 8, height = 4)
+dmp.labs <- paste(cellTypes, "DMPs")
+names(dmp.labs) <- cellTypes
+pdf(file.path(resPath, "Plots","ViolinPlotDiscoveryDMPsCelltypeEffectsLMWithinCTs.pdf"), width = 8, height = 4)
 ggplot(diffLong, aes(x = name, y = value, fill = name)) + geom_violin() +
-xlab("Cell Type") + ylab("Mean difference") + 
-stat_summary(fun=mean, geom="point", size=2, color="black") + facet_wrap (~DiscoveryCellType)
+    xlab("Cell Type") + ylab("Mean difference")  +
+    labs(fill = "Cell Type") + 
+    stat_summary(fun=mean, geom="point", size=2, color="black") + 
+    facet_wrap (~DiscoveryCellType, labeller = labeller(DiscoveryCellType = dmp.labs))
 dev.off()
 
 plotLim<-range(dmpRes[,c(4,7,10)])
@@ -227,6 +304,7 @@ pdf(file.path(resPath, "Plots","ScatterplotsCelltypeEffectsDiscoveryDMPsLMWithin
 ggarrange(p1, p3,p5, p2,p4,   p6, nrow = 2, ncol = 3)
 dev.off()
 
+# load mixed effects results to identify if cell-type specific
 load(file.path(resPath, "MLM.rdata"))
 	
 outtab<-cbind(outtab, outtab[,"SCZ_coeff"],
@@ -238,25 +316,41 @@ colnames(outtab)[(ncol(outtab)-2):ncol(outtab)]<-c("DNeg_Mean_Diff", "NEUN_Mean_
 dmpRes<-cbind(dmpRes, outtab[dmpList[,"ProbeID"],
 c("SCZ_P","CellType_SCZ_P","NeuN_SCZ_P","SOX10_SCZ_P","CellType_P", "DNeg_Mean_Diff", "NEUN_Mean_Diff", "SOX10_Mean_Diff")])
 
-ggplot(dmpRes, aes(x = DiscoveryCellType, y = -log10(CellType_SCZ_P), fill = DiscoveryCellType)) + geom_violin() + 
+write.csv(dmpRes, file.path(resPath, "Tables", "DiscoveryDMPswithMLMResults.csv"))
+
+# violin plot of cell type differences p-values
+p1 <- ggplot(dmpRes, aes(x = DiscoveryCellType, y = -log10(CellType_P), fill = DiscoveryCellType)) + geom_violin() + 
 stat_summary(fun=mean, geom="point", size=2, color="black") +
-xlab("Discovery Cell Type") + ylab("Heterogeneity -log10P") + geom_hline(yintercept = -log10(0.05)) 
+xlab("Discovery Cell Type") + ylab("Cell type effect -log10P") + geom_hline(yintercept = -log10(0.05))  +
+labs(fill = "Discovery Cell Type")
 
+# violin plot of cell type interactiuon  p-values
+p2<- ggplot(dmpRes, aes(x = DiscoveryCellType, y = -log10(CellType_SCZ_P), fill = DiscoveryCellType)) + geom_violin() + 
+stat_summary(fun=mean, geom="point", size=2, color="black") +
+xlab("Discovery Cell Type") + ylab("Heterogeneity -log10P") + geom_hline(yintercept = -log10(0.05))  +
+labs(fill = "Discovery Cell Type")
 
-# To rule out power effects plot coeff against p-value
+pdf(file.path(resPath, "Plots","ViolinPlotsDiscoveryDMPsCelltypeEffectsFromMLM.pdf"), width = 8, height = 4)
+ggarrange(p1, p2, nrow = 1, ncol = 2, common.legend = TRUE)
+dev.off()
 
+# Evidence of bigger effects in any cell type?
 topSites<-NULL
 for(i in 1:3){
-    index<-order(res[[i]][,"FullModel_SCZ_P"])[1:100]
-    topSites<-rbind(topSites, cbind(cellTypes[i], res[[i]][index,c("FullModel_SCZ_P" , "FullModel_SCZ_coeff")]))
+    index<-order(res[[i]][,"NullModel_SCZ_P"])[1:100]
+    topSites<-rbind(topSites, cbind(cellTypes[i], res[[i]][index,c("NullModel_SCZ_P" , "NullModel_SCZ_coeff")]))
 }
 colnames(topSites)[1]<-"cellType"
 
 topSites[,2]<- -log10(topSites[,2])
 topSites[,3] <- abs(topSites[,3])
 
-ggplot(topSites, aes(x = FullModel_SCZ_P, y = FullModel_SCZ_coeff, color = cellType)) + geom_point() +
-xlab("-log10(P)") + ylab("Mean difference")
+pdf(file.path(resPath, "Plots","ViolinPlotCelltypeEffectsTop100DMPsLMWithinCTs.pdf"), width = 4, height = 4)
+ggplot(topSites, aes(x = cellType, y = NullModel_SCZ_coeff, fill = cellType)) + geom_violin() +
+stat_summary(fun=mean, geom="point", size=2, color="black") +
+ylab("Mean difference")  + xlab("Discovery Cell Type") +
+labs(fill = "Discovery Cell Type")
+dev.off()
 
 
 ## Plot DMPs
@@ -281,16 +375,18 @@ dmpRes <- cbind(dmpRes, probeAnnot[match(rownames(dmpRes), probeAnnot$probeID), 
 
 for(each in cellTypes){
 	subRes <- dmpRes[which(dmpRes[,"DiscoveryCellType"] == each),]
-	pdf(file.path(resPath, "Plots", paste0("ViolinPlotDiscoveryDMPsWithin", each, "Models.pdf")), width = 6, height = 5)
+    if(nrow(subRes) > 0){
+        pdf(file.path(resPath, "Plots", paste0("ViolinPlotDiscoveryDMPsWithin", each, "Models.pdf")), width = 6, height = 5)
 
-	for(i in 1:nrow(subRes)){
-		tmpDat<-data.frame("CellType" = QCmetrics$Cell.type, "Phenotype" = QCmetrics$Phenotype, "DNAm" = celltypeNormbeta[rownames(subRes)[i],])
-		p<-ggplot(tmpDat, aes(x=CellType, y=DNAm, fill = Phenotype)) + 
-	  geom_violin(position = pos, scale = 'width') + ggtitle(paste(rownames(subRes)[i], subRes$GeneNames[i])) +
-	  stat_summary(fun = "mean", 
-				   geom = "point", 
-				   position = pos)
-		print(p)
-	}
-	dev.off()
+        for(i in 1:nrow(subRes)){
+            tmpDat<-data.frame("CellType" = QCmetrics$Cell.type, "Phenotype" = QCmetrics$Phenotype, "DNAm" = celltypeNormbeta[rownames(subRes)[i],])
+            p<-ggplot(tmpDat, aes(x=CellType, y=DNAm, fill = Phenotype)) + 
+        geom_violin(position = pos, scale = 'width') + ggtitle(paste(rownames(subRes)[i], subRes$GeneNames[i])) +
+        stat_summary(fun = "mean", 
+                    geom = "point", 
+                    position = pos)
+            print(p)
+        }
+        dev.off()
+    }
 }
