@@ -3,6 +3,7 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 configFile <- args[[1]]
+dataDir <- args[[2]]
 
 # Load libraries
 library(stringdist, warn.conflicts = FALSE, quietly = TRUE) # for amatch()

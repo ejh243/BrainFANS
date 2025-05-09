@@ -68,7 +68,19 @@ if [[ "${config_malformed}" -ne 0 ]]; then
         "Please check the error logs for more information, exiting..."
 fi
 
-Rscript checkColnamesSampleSheet.r ${RCONFIG}
+Rscript installLibraries.r ${DATADIR}
+library_did_not_install=$?
+if [[ "${library_did_not_install}" -ne 0 ]]; then
+    print_error_message \
+        "A required library did not install properly." \
+        "Please check the error logs as to why this happened." \
+        "If the problem is not easily fixed, consider opening an issue." \
+        "https://github.com/ejh243/BrainFANS/issues/new/choose" \
+        "Exiting..."
+fi
+
+Rscript checkColnamesSampleSheet.r ${RCONFIG} ${DATADIR}
+
 sample_sheet_malformed=$?
 if [[ "${sample_sheet_malformed}" -ne 0 ]]; then
     print_error_message \
