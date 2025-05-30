@@ -279,11 +279,18 @@ hist(QCmetrics$intens.ratio, xlab = "Ratio of M:U intensities", breaks = 25, mai
 
 for(i in 2:ncol(plotCols)){
   if(length(unique(plotCols[!is.na(QCmetrics$intens.ratio),i])) > 1){
-  	model<-lm(QCmetrics$intens.ratio ~ plotCols[,i])
-  	anova(model)
-  	legendDat<-legendParams[[i-1]]
-  	boxplot(QCmetrics$intens.ratio ~ plotCols[,i], col = legendDat[,2], names = legendDat[,1], xlab = "", ylab = "Ratio M:U", main = paste("Split by ", colnames(plotCols)[i]))
-  	title(main = paste("ANOVA P =", signif(anova(model)[1,5], 3)), line = 0.5, adj = 1)
+    model<-lm(QCmetrics$intens.ratio ~ plotCols[,i])
+    anova(model)
+    legendDat<-legendParams[[i-1]]
+    boxplot(
+	    QCmetrics$intens.ratio ~ plotCols[,i],
+	    col = legendDat[,2],
+	    names = legendDat[,1],
+	    xlab = "",
+	    ylab = "Ratio M:U",
+	    main = paste("Split by ", colnames(plotCols)[i])
+    )
+    title(main = paste("ANOVA P =", signif(anova(model)[1,5], 3)), line = 0.5, adj = 1)
   }
 }
 
