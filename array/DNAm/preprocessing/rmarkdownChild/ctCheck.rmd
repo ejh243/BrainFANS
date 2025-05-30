@@ -22,7 +22,7 @@ QCSum<-read.csv(paste0(dataDir, "/2_gds/QCmetrics/PassQCStatusAllSamples.csv"), 
 passQC<-QCSum$Basename[QCSum[,"passQCS2"]]
 
 nStart<-nrow(QCSum)
-nExclude<-sum(!QCSum[,"passQCS2"])
+nExclude<-sum(!QCSum[,"passQCS2"], na.rm=TRUE)
 
 nCTStart<-table(QCmetrics$Cell_Type)
 
@@ -265,7 +265,7 @@ for(each in badFACS){
 
 ```
 
-In total we identified, `r length(which(uniqueIDs$FACsEffiency >= 5))` individuals with sub optimal FACs sorting and all `r sum(!QCmetrics$passFACS & QCmetrics$Cell_Type != "Total")` samples for these individuals were excluded.
+In total we identified, `r length(which(uniqueIDs$FACsEffiency >= 5))` individuals with sub optimal FACs sorting and all `r sum(!QCmetrics$passFACS & QCmetrics$Cell_Type != "Total", na.rm=TRUE)` samples for these individuals were excluded.
 
 ```{r}
 
@@ -286,7 +286,7 @@ The exclusion of these individuals should give us more refined average profiles,
 ```{r, echo = FALSE}
 
 tab1<-table(QCmetrics$Cell_Type,QCmetrics$predLabelledCellType)
-percCon1<-sum(QCmetrics$predLabelledCellType)/nrow(QCmetrics)*100
+percCon1<-sum(QCmetrics$predLabelledCellType, na.rm=TRUE)/nrow(QCmetrics)*100
 
 ```
 
@@ -372,7 +372,7 @@ Given the overlap of different cell types, we define a regular polytope in 2 dim
 
 ```{r}
 tab2<-table(QCmetrics$Cell_Type, QCmetrics$withinSDMean)
-percCon2<-sum(QCmetrics$withinSDMean)/sum(QCmetrics$passFACS)*100
+percCon2<-sum(QCmetrics$withinSDMean, na.rm=TRUE)/sum(QCmetrics$passFACS, na.rm=TRUE)*100
 ```
 
 The table below shows how many samples were located within the same geometric space as the others in their sample group. In this sample, `r signif(percCon2, 3)`% of the samples had DNAm profiles which closely resembled the cell type they were labelled. 
