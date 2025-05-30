@@ -15,6 +15,14 @@ if (!exists("manifest"))
 
 ## filter samples
 QCmetrics<-read.csv(paste0(qcOutFolder,"/QCMetricsPostCellTypeClustering.csv"), stringsAsFactors = FALSE)
+is_potential_logical <- vapply(QCmetrics, function(x) {
+  if (!is.character(x)) return(FALSE)
+  cleaned <- na.omit(toupper(x))
+  all(cleaned %in% c("TRUE", "FALSE", "T", "F"))
+}, logical(1))
+
+QCmetrics[is_potential_logical] <- lapply(QCmetrics[is_potential_logical], 
+                                  function(x) as.logical(toupper(x)))
 load(paste0(dataDir,"/2_gds/QCmetrics/PCAAcrossAllCellTypes.rdata"))
 
 
