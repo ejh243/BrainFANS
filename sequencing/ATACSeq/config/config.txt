@@ -87,9 +87,8 @@ export LDREFPATH="${REFERENCES_DIR}/LDScore_resources/"
 ## =========== ##
 
 ## Adapter sequences to trim ##
-## Specify adapter sequences to be trimmed ##
-export ADAP_R1="Read 1 adapter sequence"
-export ADAP_R2="Read 2 adapter sequence"
+## Fasta file with adapters to be trimmed at STEP 1.2 ##
+export ADAPTERS_FILE="/path/to/fasta/file"
 
 ## parameters
 export multimap=4
