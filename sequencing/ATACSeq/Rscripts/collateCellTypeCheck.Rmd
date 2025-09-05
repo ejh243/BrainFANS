@@ -7,8 +7,7 @@ output:
     toc_float: true
     code_folding: hide
 params:
-  configFile: !r commandArgs(trailingOnly=TRUE)[3]
-  setPeaks: !r commandArgs(trailingOnly=TRUE)[4]
+  configFile: !r commandArgs(trailingOnly=TRUE)[1]
 ---
 
 
@@ -21,55 +20,42 @@ library(plotly)
 library(Rsubread)
 library(scater)
 library(GenomicRanges)
-library(variancePartition)
 library(Matrix)
-library(lme4)
-library(limma)
 library(edgeR)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 library(gridExtra)
 library(ggpubr)
 library(DESeq2)
-library(ruvIIInb)
-library(SummarizedExperiment)
 library(ggplot2)
 library(pheatmap)
 library(RColorBrewer)
 library(dplyr)
 library(cluster)
-library("BSgenome.Hsapiens.UCSC.hg38")
+library(BSgenome.Hsapiens.UCSC.hg38)
 library(ggExtra)
 library(corrplot)
 library(kableExtra)
 library(DT)
+library(EDASeq)
 
 source(params$configFile)
-setPeaks <- params$setPeaks
+
 ```
 
 ```{r}
-setPeaks <- if (setPeaks == "PROM") "prom" else "all"
 
 ## Load data and samples metadata
 metadata<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+samplesPassed <- read.csv(file.path(qc12stats), sep = ",",stringsAsFactors = FALSE)
+samples <- read.csv(file.path(groupAnalysisSamples), sep = ",",stringsAsFactors = FALSE)
+samplesPassed <- samplesPassed[samplesPassed$PASSALL == TRUE,]
+qcStats <- read.table(qc1stats, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+metadata$sequencingBatch <- as.factor(metadata$sequencingBatch)
+metadata<- droplevels(metadata)
+qcStats <- qcStats[qcStats$sampleID %in% metadata$sampleID,]
 
-samplesPassed <- read.csv(file.path(paste0(metaDir,"/passAllStatus.csv")), sep = ",",stringsAsFactors = FALSE)
-samplesPassed <- samplesPassed[samplesPassed$QCS1 == TRUE & samplesPassed$QCS2 == TRUE,]
-qcStats <- read.csv(file.path(paste0(metaDir,"/samplesGroupAnalysisQC1.csv")), sep = ",",stringsAsFactors = FALSE)
-
-if(file.exists(paste0(metaDir,"/leaveOutSamples.txt"))){
-  loSamples <- read.table(file.path(paste0(metaDir,"/leaveOutSamples.txt")))[,1]
-  samplesStatus <- samplesPassed[!samplesPassed$sampleID %in% loSamples,]
-  pheno <- metadata[metadata$sampleID %in% samplesStatus$sampleID,]
-  samplesStatus <- samplesStatus[samplesStatus$sampleID %in% pheno$sampleID,]
-  qcStats <- qcStats[qcStats$Sample %in% samplesStatus$sampleID,]
-}else{
-  pheno <- metadata[metadata$sampleID %in% samplesPassed$sampleID,]
-  qcStats <- qcStats[qcStats$Sample %in% samplesPassed$sampleID,]
-
-}
-
-df_ordered <- pheno[order(pheno$fraction), ]
+genome <- getBSgenome("hg38")
+df_ordered <- metadata[order(metadata$fraction), ]
 groups <- as.factor(df_ordered$fraction)
 colors <- brewer.pal(3, "Set2")
 ```
@@ -81,8 +67,6 @@ colors <- brewer.pal(3, "Set2")
 ## Load counts in peaks files and match to pheno samples data
 loadCounts <- function(counts){
   colnames(counts) <- lapply(colnames(counts),function(x) gsub("*.filt.nodup.bam", "",x))
-  counts <- counts[, colnames(counts) %in% pheno$sampleID]
-  counts <- counts[,match(pheno$sampleID,colnames(counts))]
   counts <- counts[, colSums(is.na(counts)) == 0]
   return(counts)
 }
@@ -144,55 +128,59 @@ pca <- function(data){
   tpm.pca<-pca$sdev^2/sum(pca$sdev^2)
   tpm.scores<-tpm.scores[,which(tpm.pca > 0.01)]
   percentVar = round(100 * (tpm.pca) )
-  results <- list(tpm.scores[,c(1:5)], percentVar)
+  results <- list(tpm.scores[,c(1:4)], percentVar)
   return(results)
 }
 
-## Plot PCA and density curves in the same plots
-Scatter_Density <- function(data, batch, celltype, expl.var,
-                            batch.legend.title, celltype.legend.title, title) {
+## Calculate mean silhouette coefficient
+calc.sil <- function(data, y1, name.y1 = "Group1") {
   
-  # Convert data to a data frame if it isn't already
-  if (!is.data.frame(data)) data <- as.data.frame(data)
+  # Check if data is a matrix or data frame and convert if necessary
+  if (!is.matrix(data)) data <- as.matrix(data)
   
-  # Add batch and treatment columns to the data
-  data$batch <- as.factor(batch)
-  data$celltype <- as.factor(celltype)
+  # Calculate silhouette scores for y1 (e.g., batch)
+  sil_y1 <- silhouette(as.numeric(as.factor(y1)), dist(data))
+  mean_sil_y1 <- mean(sil_y1[, 3])  # Mean silhouette width for y1
   
-  # Define x and y axis labels based on explained variance
-  x_label <- paste0("PC1 (", round(expl.var[1],2), "%)")
-  y_label <- paste0("PC2 (", round(expl.var[2],2), "%)")
+  # Create a list to return results
+  result <-list(name = name.y1, silhouette_scores = sil_y1, mean_silhouette = mean_sil_y1)
   
-  # Create scatter plot
-  p <- ggplot(data, aes(x = data[, 1], y = data[, 2], color = celltype, shape = batch)) +
-    geom_point(alpha = 0.7, size = 3) +
-    labs(x = x_label, y = y_label, color = batch.legend.title, shape = celltype.legend.title, title = title) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5),legend.position = "none")  # Center the title
-  
-  # Add marginal density plots
-  p_with_density <- ggMarginal(p, type = "density", margins = "both", groupColour = TRUE, groupFill = TRUE)
-  
-  # Define x and y axis labels based on explained variance
-  x_label2 <- paste0("PC3 (", round(expl.var[3],2), "%)")
-  y_label2 <- paste0("PC4 (", round(expl.var[4],2), "%)")
-  
-  # Create scatter plot
-  p2 <- ggplot(data, aes(x = data[, 3], y = data[, 4], color = celltype, shape = batch)) +
-    geom_point(alpha = 0.7, size = 3) +
-    labs(x = x_label2, y = y_label2, color = batch.legend.title, shape = celltype.legend.title) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5), legend.position = "bottom")  # Center the title
-  
-  # Add marginal density plots
-  p_with_density2 <- ggMarginal(p2, type = "density", margins = "both", groupColour = TRUE, groupFill = TRUE)
-  
-  figure <- ggarrange(p_with_density,p_with_density2,
-                     labels = c("A", "B"),
-                     ncol = 1, nrow=2)           
-  return(figure)
- 
+  return(result)
 }
+
+mean_sil.1 <- function(silhouttte_coef,coldata){
+  sil.df <- as.data.frame(silhouttte_coef$silhouette_scores)
+  mean_values <- sil.df %>%
+    group_by(cluster) %>%
+    summarize(mean_value = mean(sil_width))
+  mean.df <- as.data.frame(mean_values)
+  batch <- as.factor(coldata$fraction)
+  mean.df$cluster <- levels(batch)
+  return(mean.df)
+}
+
+sil.1 <- function(silhouttte_coef,coldata){
+  sil.df <- as.data.frame(silhouttte_coef$silhouette_scores)[,c(1,3)]
+  batch <- as.factor(coldata$fraction)
+  sil.df$cluster <- batch
+  return(sil.df)
+}
+
+pca_silscore <- function(counts,pheno_sub){
+  pca <- prcomp(t(counts))
+  tpm.scores = pca$x
+  tpm.pca<-pca$sdev^2/sum(pca$sdev^2)
+  tpm.scores<-tpm.scores[,which(tpm.pca > 0.01)]
+  percentVar = round(100 * (tpm.pca) )
+  pheno_1 = pheno_sub[match(rownames(tpm.scores),pheno_sub$sampleCode),] 
+  tpm.scores.df <- data.frame(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2],fraction = as.factor(pheno_1$fraction), cohort = as.factor(pheno_1$cohort),sampleCode =as.factor(pheno_1$sampleCode), gender =as.factor(pheno_1$"gender"), passed = pheno_1$QCS3)
+
+  plot1 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc2, color = fraction, shape = passed, label= sampleCode))+geom_point(size=2)+ theme_bw()+scale_shape_manual(values = c("FALSE" = 4, "TRUE" = 16)) +
+    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC2: ", percentVar[2], "% variance")) +theme(legend.position="bottom")
+  
+  return(plot1)
+}
+
 ```
 
 ## Overview
@@ -203,7 +191,7 @@ In total, `r nrow(metadata)` were profiled and `r nrow(samplesPassed)` samples p
 
 ```{r}
 nCTStart<-table(metadata$fraction)
-nCTMid<-table(pheno$fraction)
+nCTMid<-table(samplesPassed$fraction)
 ctCounts<-cbind(nCTStart, nCTMid)
 colnames(ctCounts)<-c("Profiled", "CT Peak Calling")
 kbl(ctCounts) %>%
@@ -213,194 +201,181 @@ kbl(ctCounts) %>%
 
 ## 1.Raw counts
 
-First, we will explore the raw read counts in peaks. No normalisation has been applied to the counts.
+First, we will explore the raw read counts in peaks. 
 
 ```{r}
-load(paste0(countsDir,"/Counts/peakCounts_",setPeaks,".rdata"))
+load(paste0(groupsCounts, "/peakCounts_all_filtbam_",macs_thres_group,"_", filtering, ".filt.narrowPeak.rdata"))
+
 counts <- loadCounts(fc_ctPeaks$count)
-pheno <- pheno[pheno$sampleID %in% colnames(counts),]
+pheno <- metadata[metadata$sampleID %in% colnames(counts),]
+counts <- counts[,match(pheno$sampleID,colnames(counts))]
 colnames(counts) <- pheno$sampleCode
-qcStats <- qcStats[qcStats$Sample %in% pheno$sampleID,]
+qcStats <- qcStats[qcStats$sampleID %in% pheno$sampleID,]
+
+## Prepare peak ranges table
+cnt_table <- fc_ctPeaks$annotation
+colnames(cnt_table)=c("Geneid","Chr","Start","End","Strand","Length")
+cnt_table$Start <- as.numeric(cnt_table$Start)
+cnt_table$End <- as.numeric(cnt_table$End)
+cnt_table <- cnt_table[complete.cases(cnt_table[c("Start", "End")]), ]
+
 ```
 
-### 1.1 PCA 
+The total number of counts in peaks is `r nrow(counts)` and `r ncol(counts)` samples, `r dim(counts)` is dimension of counts and `r dim(pheno)` the sample sheet. In order to reduce noise, peaks with low counts are filtered out. The number of peaks filtered is shown below.
+
+```{r}
+dge <- DGEList(counts=counts,
+           group=pheno$fraction)
+keep <- filterByExpr(dge$counts, group = pheno$fraction)
+dge <- dge[keep, ]
+counts.filt <- dge$counts
+
+print(nrow(counts)-nrow(counts.filt))
+```
+
+### 1.1 Principal Component Analysis
+
+Although filtering has been applied, our count matrix is still too big, so in order to aid visualisation, we select and plot 100,000 random peaks to check the distribution of raw counts. Principal Component Analysis (PCA) is applied on the raw counts.
 
 ```{r fig.height = 6, fig.width = 8} 
+N <- 100000
+sampled_peaks <- sample(rownames(counts.filt), N)
+counts.random <- counts.filt[sampled_peaks,]
 
-ggplotly(pca_single(counts, pheno), tooltip = "label")
+ggplotly(pca_single(counts.random, pheno), tooltip = "label")
 ```
 
-We can explore the first four PCs.
 ```{r fig.height = 8, fig.width = 8} 
-pca_multiple(counts,pheno)
+pca_multiple(counts.random, pheno)
 ```
 
-```{r fig.height = 10, fig.width = 8} 
-counts.pca.raw <- pca(counts)
+## 2.Normalised counts in peaks
 
-scatterPlot <- Scatter_Density(data = counts.pca.raw[[1]], 
-                batch = pheno$cohort, 
-                celltype = pheno$fraction, 
-                expl.var = unlist(counts.pca.raw[2]), 
-                batch.legend.title = 'Batch', 
-                celltype.legend.title = 'Cell type', 
-                title = 'Raw counts')
-scatterPlot
-```
+Normalisation is applied to raw counts in peaks to account for biases or factors that we are not interested in. The expression levels of samples become more comparable between and/or within samples.
 
+### 2.1 Variance Stabilizing Transformation (VST)
 
-### 1.2 Variance partition
-
-In order to check whether the raw counts are driven by technical or biological covariates, we perform variance partition analysis. This method fits a linear mixed model for each peak and partitionsthe total variance into the fraction attributable to each aspect of the study design (variables), plus the residual variation. This analysis is done using the cell fraction, sequencing batch, brain cohort, age, NRF, NFR, Multimodality and number of aligned reads. The ideal results will show the most of variance explained by cell type or other biological covariates, while the variance explained by technical variables should be minimal. If this is not the case, normalisation methods need to be applied.
-
-
-```{r ,fig.height = 8, fig.width = 11}
-
-## Check if VPA has been run on raw counts
-if(!file.exists(paste0(countsDir,"/variance/varPart_raw",setPeaks,".rdata"))){
-  print("Variance Partition Analysis of raw counts can't be found.")
-} else {
-  load(paste0(countsDir,"/variance/varPart_raw",setPeaks,".rdata"))
-  vp.raw <- sortCols(varPart.raw)
-  plotVarPart(vp.raw)
-}
-```
-
-
-### 1.3 Relative Log Expression
-
-```{r fig.height = 6, fig.width = 10} 
-
-rle_values <- rowMeans(counts, na.rm = TRUE) - counts
-rle_values <- as.matrix(rle_values[,match(df_ordered$sampleCode, colnames(rle_values))])
-# Create a boxplot for the RLE values
-boxplot(rle_values, main = "RLE raw counts", ylab = "RLE",col = colors[groups],cex = 0.2,xaxt = "n")
-legend("bottomright", legend = levels(groups), fill = colors, title = "Cell fraction")
-```
-
-### 1.4 Filter low counts peaks
+VST is first used to transform the counts data. This selects 1000 peaks that are 'representative' of the dataset's dispersion trend, and uses the information from these to perform the transformation. The two first PCAs of the transformed data is shown below. The filtered set of counts in peaks is used here.
 
 ```{r}
-braak <-c()
-for(i in 1:nrow(pheno)){
-  if(as.numeric(pheno$clinical[i] < 5)){
-    braak<- c(braak,"low-braak")
-  }else{
-    braak<- c(braak,"high-braak")
-  }
-}
-pheno$braak <- braak
-colData <- data.frame(Fraction=as.factor(pheno$fraction), ID=pheno$sampleCode, Cohort=as.factor(pheno$cohort), 
-                       Age=pheno$age, Batch = as.factor(pheno$sequencingBatch), 
-                       Braak =as.factor(pheno$braak),Gender =as.factor(pheno$gender),
-                       NRF=qcStats$NRF, NFr = qcStats$NF, MNC = qcStats$Mono, MULTIMOD = qcStats$p.value, ALIGNED_READS=qcStats$overall_alignment_rate/100)
-rownames(colData) <- colData$ID
-se0 <- SummarizedExperiment(assays=list(counts=counts),
-                            colData=colData)
-se0 <-addPerFeatureQCMetrics(x = se0)
-se0<-subset(se0, rowData(se0)$mean>0 )
-# detect low abundant peaks
-lowcount_drop <-log(rowData(se0)$mean)< -5
+vsd <- vst(counts.filt, blind = FALSE, nsub = 1000)
 
-#mean count of peaks across all samples
-plot_df2 <- data.frame(mean_genecount=log(rowData(se0)$mean), lowcount_drop=factor(lowcount_drop))
-p <- plot_df2 %>%
-  arrange(desc(lowcount_drop)) %>%
-  ggplot( aes(x=mean_genecount, fill=lowcount_drop)) +
-  geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins=50) +
-  scale_fill_manual(values=c("#404080", "#69b3a2")) +
-  theme_bw() +
-  labs(fill="") +xlab("Log mean count across all samples")+ylab("Frequency")
-p+ggtitle('The distribution of log mean count across\n all samples, flagging those with a low mean count')
-
+ggplotly(pca_single(vsd, pheno))
 ```
 
-## 2.Normalisation of counts in peaks
+```{r fig.height = 8, fig.width = 8} 
 
-The RUV-III-NB method has been tested to remove unwanted variation from counts in peaks data.This method has been originally developed for single-cell RNA-seq data to remove unwanted variation from both the cell embedding and gene-level counts. It returns adjusted counts that can be used for downstream analysis. This method builds up on older RUV models. This new method simultaneously adjusts for gene (peaks) counts for library size and within study batch differences. It uses replicates and negative control genes. This method uses a negative binomial generalised linear model GLM directly on counts data. The data is returned in form of log percentile adjusted counts (logPAC). 
+counts_to_plot <- vsd
+metadata.p <- data.frame(row.names = colnames(counts_to_plot))
+metadata.p$fraction <- pheno$fraction
+rownames(metadata.p) <- pheno$sampleID
+pca_multiple(counts_to_plot, pheno)
+```
 
-There are two requisites for this method: set of pseudo-replicates and set of negative control genes.
-- *Pseudo-replicates*: these are artificially constructed groups of samples that are assumed to share the same underlying factors of unwanted variation. It is assumed that there are m groups among the N samples with the same underlying biology (cell types in this case) within and different underlying biology across groups. These groups are referred as pseudo-replicates and they are out cell types groups.
-- *Control genes*: Negative control genes are genes that are assumed to not be differentially expressed across the conditions or samples being studied. Here, we use peaks as genes, as we are working with counts in peaks. Therefore, *control peaks* would be those that are assumed not to be differentially expressed between cell types.
 
-First, samples with low counts are first filtered out if found.
+### 2.2 FQ-FQ normalisation
+
+An alternative normalisation is double Full-quantile normalisation (from EDASeq package). This double normalisation accounts for two main types of effects on peak-level counts:
+- within-lane gene-specific (and possibly lane-specific) effects, e.g., related to gene length or GC-content.
+- effects related to between-lane distributional differences, e.g., sequencing depth.
+
+The randomly selected subset of counts in peaks is used here for speed and visualisation purposed. Transformed counts are log + 1 in order to perform PCA and plot them.
 
 ```{r}
 
-if(!file.exists(paste0(countsDir,"/normCounts/ruv3_norm_",setPeaks,".rdata"))){
-  print("Counts have not been normalised yet.")
-} else {
-  load(paste0(countsDir,"/normCounts/ruv3_norm_",setPeaks,".rdata"))
-  logPAC<- assay(ruviii.norm, "logPAC")
-  logPAC <- logPAC[,colnames(logPAC) %in% pheno$sampleCode]
-  logPAC <- logPAC[,match(pheno$sampleCode,colnames(logPAC))]
-  #colnames(logPAC) <- pheno$sampleCode
-}
+gr = GRanges(seqnames=cnt_table$Chr, ranges=IRanges(cnt_table$Start, cnt_table$End), strand="*", mcols=data.frame(peakID=cnt_table$Geneid))
+gr <- gr[gr$mcols.peakID %in% rownames(counts.random),]
+peakSeqs = getSeq(x=genome, gr)
 
+gcContentPeaks = letterFrequency(peakSeqs, "GC",as.prob=TRUE)[,1]
+cnt_table <- cnt_table[cnt_table$Geneid %in% rownames(counts.random),]
+counts.norm <- counts.random
+counts.norm <- counts.norm[rownames(counts.norm) %in% cnt_table$Geneid,]
+dataWithin <- withinLaneNormalization(counts.norm,gcContentPeaks, which="full")
+dataNorm <- betweenLaneNormalization(dataWithin, which="full")
+
+log_counts <- log(dataNorm+1)
+ggplotly(pca_single(log_counts, pheno))
 ```
 
-### 2.1 Relative Log Expression
-
-```{r fig.height = 6, fig.width = 10} 
-rle_values <- rowMeans(logPAC, na.rm = TRUE) - logPAC
-rle_values <- as.matrix(rle_values[,match(df_ordered$sampleCode, colnames(rle_values))])
-boxplot(rle_values, main = "RLE Plot (normalised counts)", ylab = "RLE", ylim=c(-4, 4),col = colors[groups],cex = 0.2,xaxt = "n")
-legend("topright", legend = levels(groups), fill = colors, title = "Group")
+```{r fig.height = 8, fig.width = 8} 
+pca_multiple(log_counts, pheno)
 ```
 
-### 2.2 PCA
+## 3. Cell-type check
 
-```{r fig.height = 6, fig.width = 8} 
+The main goal of this third part of the pipeline is to check the cell-type assigned to each sample. The counts in cell-type peaks can be used for this, as we will check the clustering of samples based on this. For this, we have perform differential analysis between the cell-groups of samples to obtain the peaks that differentiates the cell-types. The top ` r diffN` differential peaks are used for the clustering of samples and the identification of potential mislabelled samples.
 
-ggplotly(pca_single(logPAC, pheno), tooltip = "label")
+```{r}
+load(paste0(groupsCounts, "/cellType_diffPeaks_edgeR_",macs_thres_group,"_", filtering, ".filt.narrowPeak.rdata"))
+res_sorted <- results[order(results$FDR, decreasing = FALSE),]
+most_significant_peaks <- rownames(head(res_sorted, 5000))
+counts.dif <- counts[most_significant_peaks,]
+dds.dif <- DESeqDataSetFromMatrix(countData = counts.dif,
+                              colData = pheno,
+                              design = ~ fraction)
 ```
 
-```{r fig.height = 10, fig.width = 8} 
-counts.pca.ruv5 <- pca(logPAC)
+### 3.1 VST transformation (normalisation)
 
-scatterPlot <- Scatter_Density(data = counts.pca.ruv5[[1]], 
-                batch = pheno$cohort, 
-                celltype = pheno$fraction, 
-                expl.var = unlist(counts.pca.ruv5[2]), 
-                batch.legend.title = 'Batch', 
-                celltype.legend.title = 'Cell type', 
-                title = 'RUV-III-NB normalisation')
-scatterPlot
+We apply VST on these top differential peaks, as well as PCA to investigate the clustering of samples based on cell-types.
+
+```{r}
+
+vsd <- varianceStabilizingTransformation(dds.dif,blind = FALSE)
+
+ggplotly(pca_single(assay(vsd), pheno))
 ```
 
+We can also explore multiple PCs.
+```{r fig.height = 8, fig.width = 8} 
 
-```{r fig.height = 10, fig.width = 10} 
-
-sce_ruv3nb <- runPCA(ruviii.norm, exprs_values = "logPAC")
-colData(sce_ruv3nb)$Fraction <- metadata[metadata$sampleCode %in% colnames(sce_ruv3nb), ]$fraction
-
-p1 <- scater::plotPCA(sce_ruv3nb, ncomponents=2,dimred = "PCA",
-              colour_by = "Fraction",point_alpha=0.75, point_size=2) +  ggtitle('PCA log PAC')
-
-ggplotly(p1)
+counts_to_plot <- assay(vsd)
+pca_multiple(counts_to_plot, pheno)
 ```
 
-```{r fig.height = 10, fig.width = 10} 
-p1 <- scater::plotPCA(sce_ruv3nb, ncomponents=4,
-              colour_by = "Fraction",point_alpha=0.5, point_size=2) +  ggtitle('PCA log PAC')
+### 3.2 Clustering of samples
 
-p1
+We use hierarchical clustering to cluster samples based on counts in peaks (top `r diffN`) and identify groups of samples based on cell-types, sequencing batch or cohort.
+
+```{r ,fig.height = 20, fig.width = 18}
+
+cm = data.frame(as.matrix(counts_to_plot))
+pheno$sequencingBatch <- as.factor(pheno$sequencingBatch)
+anno = as.data.frame(pheno[,c("fraction", "sequencingBatch", "cohort", "gender")])
+rownames(anno) <- pheno$sampleCode
+colnames(cm) = rownames(anno)
+colnames(anno)<-c("Cell Fraction", "sequencingBatch", "cohort","gender")
+rownames(cm) = NULL
+my_palette <- colorRampPalette(c("blue", "white", "red"))(50)
+breaks <- seq(-2, 2, length.out = 51)
+pheatmap(cm, annotation_col = anno,cluster_cols=TRUE,color = my_palette, cluster_rows=FALSE,scale="row",show_rownames=FALSE,show_colnames = FALSE,fontsize_col = 2, clustering_method = "ward.D2",cutree_cols = 4,breaks = breaks)
 ```
 
-### 2.3 Variance Partition Analysis
+### 3.3 Sample-to-Sample distance
 
-```{r fig.height = 6, fig.width = 8} 
-## Check if VPA has been run on normalised counts
-if(!file.exists(paste0(countsDir,"/variance/varPart_ruv3_norm_",setPeaks,".rdata"))){
-  print("Variance Partition Analysis of normalised counts can't be found.")
-} else {
-  load(paste0(countsDir,"/variance/varPart_ruv3_norm_",setPeaks,".rdata"))
-  vp.ruv <- sortCols(varPart.ruv)
-  plotVarPart(vp.ruv)
-}
+The distance between samples is an additional method to evaluate the similarity between samples within and between cell-fraction groups.
+
+```{r ,fig.height = 20, fig.width = 18}
+cm = data.frame(as.matrix(counts_to_plot))
+anno = as.data.frame(pheno[,c("fraction","gender", "sequencingBatch", "cohort")])
+rownames(anno) <- pheno$sampleCode
+colnames(cm) = rownames(anno)
+colnames(anno)<-c(" Cell Fraction","gender", "sequencingBatch", "cohort")
+my_palette <- colorRampPalette(c("blue", "white", "red"))(50)
+sampleDists <- dist(t(cm))
+sampleDistMatrix <- as.matrix(sampleDists)
+p <-pheatmap(sampleDistMatrix,
+         clustering_distance_rows = sampleDists,
+         clustering_distance_cols = sampleDists,
+         col = my_palette ,annotation_col=anno,fontsize_col = 2, fontsize_row = 2)
+p
+pdf(file.path(paste0(countsDir, "/sampleToSampleDist.pdf")), width = 20, height = 20)
+print(p)
+dev.off()
 ```
 
-## 3. Silhouette score
+## 4. Silhouette score
 
 The silhouette coefficient (or silhouette score) is a metric used to evaluate the quality of clustering in a dataset. It provides a measure of how similar each point in one cluster is to points in the same cluster compared to points in other clusters. 
 
@@ -408,112 +383,18 @@ The silhouette coefficient (or silhouette score) is a metric used to evaluate th
 - *Low score* (close to 0): The sample is on or very close to the boundary between clusters.
 - *Negative score* (close to −1): The sample is assigned to the wrong cluster.
 
+We use the VST transform counts in peaks to calculate the silhouette coefficient and identify samples that are not in the right cell-type group or that do not cluster with their group.
 
 ```{r}
-
-## Calculate mean silhouette coefficient
-calc.sil <- function(data, y1, y2, name.y1 = "Group1", name.y2 = "Group2") {
-  
-  # Check if data is a matrix or data frame and convert if necessary
-  if (!is.matrix(data)) data <- as.matrix(data)
-  
-  # Calculate silhouette scores for y1 (e.g., batch)
-  sil_y1 <- silhouette(as.numeric(as.factor(y1)), dist(data))
-  mean_sil_y1 <- mean(sil_y1[, 3])  # Mean silhouette width for y1
-  
-  # Calculate silhouette scores for y2 (e.g., tissue)
-  sil_y2 <- silhouette(as.numeric(as.factor(y2)), dist(data))
-  mean_sil_y2 <- mean(sil_y2[, 3])  # Mean silhouette width for y2
-  
-  # Create a list to return results
-  result <- list(
-    sil_y1 = list(name = name.y1, silhouette_scores = sil_y1, mean_silhouette = mean_sil_y1),
-    sil_y2 = list(name = name.y2, silhouette_scores = sil_y2, mean_silhouette = mean_sil_y2)
-  )
-  
-  return(result)
-}
-
-mean_sil.1 <- function(silhouttte_coef){
-  sil.df <- as.data.frame(silhouttte_coef$sil_y1$silhouette_scores)
-  mean_values <- sil.df %>%
-    group_by(cluster) %>%
-    summarize(mean_value = mean(sil_width))
- # mean_values <- mean_values %>%mutate(mean_value = (mean_value - min(mean_value)) /  (max(mean_value) - min(mean_value)))
-  mean.df <- as.data.frame(mean_values)
-  batch <- as.factor(colData(se0)$Batch)
-  mean.df$cluster <- levels(batch)
-  return(mean.df)
-}
-
-sil.1 <- function(silhouttte_coef){
-  sil.df <- as.data.frame(silhouttte_coef$sil_y1$silhouette_scores)[,c(1,3)]
-  batch <- as.factor(colData(se0)$Batch)
-  sil.df$cluster <- batch
-  return(sil.df)
-}
-
-mean_sil.2 <- function(silhouttte_coef){
-  sil.df <- as.data.frame(silhouttte_coef$sil_y2$silhouette_scores)
-  mean_values <- sil.df %>%
-    group_by(cluster) %>%
-    summarize(mean_value = mean(sil_width))
-  #mean_values <- mean_values %>%mutate(mean_value = (mean_value - min(mean_value)) /  (max(mean_value) - min(mean_value)))
-  mean.df <- as.data.frame(mean_values)
-  fraction <- as.factor(colData(se0)$Fraction)
-  mean.df$cluster <- levels(fraction)
-  return(mean.df)
-}
-sil.2 <- function(silhouttte_coef){
-  sil.df <- as.data.frame(silhouttte_coef$sil_y2$silhouette_scores)[,c(1,3)]
-  batch <- as.factor(colData(se0)$Fraction)
-  sil.df$cluster <- batch
-  return(sil.df)
-}
-
-counts.silh.raw <- calc.sil(counts.pca.raw[[1]],colData(se0)$Batch, colData(se0)$Fraction, name.y1 = 'Batch', name.y2 = 'Cell Fraction')
-counts.silh.norm<- calc.sil(counts.pca.ruv5[[1]],colData(se0)$Batch, colData(se0)$Fraction, name.y1 = 'Batch', name.y2 = 'Cell Fraction')
-norm.sil.batch <- mean_sil.1(counts.silh.norm)
-norm.sil.fraction <- mean_sil.2(counts.silh.norm)
-
-raw.sil.batch <- mean_sil.1(counts.silh.raw)
-raw.sil.fraction <- mean_sil.2(counts.silh.raw)
-
-silh.mean <- as.data.frame(rbind(raw.sil.batch, raw.sil.fraction,norm.sil.batch, norm.sil.fraction))
-silh.mean$method <- c(rep("Before",10), rep("RUV-III-NB (k=5)",10))
-silh.mean$type <- c(rep("Batch",6),rep("Fraction",4),rep("Batch",6),rep("Fraction",4))
-
+counts.pca.ruv5 <- pca(counts_to_plot)
+counts.silh.norm<- calc.sil(counts.pca.ruv5[[1]],colData(vsd)$fraction, name.y1 = 'Cell Fraction')
+norm.sil.fraction <- mean_sil.1(counts.silh.norm, colData(vsd))
+after.sil.ruv5.fraction <- sil.1(counts.silh.norm,colData(vsd))
 ```
 
-```{r fig.height = 5, fig.width = 8} 
-ggplot(silh.mean, aes(x = method, y = mean_value, color = method, shape = type)) + 
-  geom_point(size=3)+theme_bw()+facet_grid(cols = vars(cluster))+ 
-  labs(x = 'Method', y = ' Mean silhouette Coefficient', name = 'Method') +theme(legend.title = element_blank(),
-        legend.position = 'bottom',axis.text.x = element_text(angle =90, size=9))
+### 4.1 Identify failed samples
 
-```
-
-```{r fig.height = 5, fig.width = 8} 
-before.sil.batch <- sil.1(counts.silh.raw)
-before.sil.fraction <- sil.2(counts.silh.raw)
-after.sil.ruv5.batch <- sil.1(counts.silh.norm)
-after.sil.ruv5.fraction <- sil.2(counts.silh.norm)
-
-silh.plots.samples <- as.data.frame(rbind(before.sil.batch, before.sil.fraction, after.sil.ruv5.batch, after.sil.ruv5.fraction))
-silh.plots.samples$data <- rep(c("Before","RUV-III-NB (k=5)"), each=nrow(silh.plots.samples)/2)
-
-silh.plots.samples$Type <- rep(rep(c("Batch", "Fraction"), each=ncol(counts)),2)
-
-ggplot(silh.plots.samples, aes(x = data, y = sil_width, fill = data)) + 
-  geom_boxplot()+theme_bw()+facet_grid(cols = vars(cluster))+ 
-  labs(x = 'Method', y = ' Silhouette Coefficient', name = 'Method') +theme(legend.title = element_blank(),
-        legend.position = 'none',axis.text.x = element_text(angle =90))
-
-```
-
-### 3.1 Identify failed samples
-
-Samples whose silhouette coefficient is lower than 0 are marked as potential samples with wrong cell fraction assigned or low quality samples.
+Samples whose silhouette coefficient is lower than `r silScore` are marked as potential samples with wrong cell fraction assigned or low quality samples.
 
 ```{r}
 after.sil.ruv5.fraction$sample <- pheno$sampleCode
@@ -521,9 +402,9 @@ after.sil.ruv5.fraction$cohort <- pheno$cohort
 
 after.sil.ruv5.list <- split(after.sil.ruv5.fraction,after.sil.ruv5.fraction$cluster)
 p<- NULL
-for(i in 1:4){
+for(i in 1:length(cellTypes)){
   p[[i]] <- ggplot(after.sil.ruv5.list[[i]], aes(x = sample, y = sil_width, color = cohort)) + 
-  geom_point(size=3)+theme_bw()+geom_hline(yintercept =0,color = "black", linetype = "dashed", linewidth = 1)+
+  geom_point(size=3)+theme_bw()+geom_hline(yintercept =silScore,color = "red", linewidth = 1)+geom_hline(yintercept =0.25,color = "black", linetype = "dashed", linewidth = 1)+geom_hline(yintercept =-0.25,color = "black", linetype = "dashed", linewidth = 1)+
   labs(x = 'Sample', y = 'Silhouette Coefficient', name = 'Batch', title=names(after.sil.ruv5.list)[i]) +theme(legend.title = element_blank(),
         legend.position = 'bottom',axis.text.x = element_text(angle =90, size=7))
 
@@ -546,44 +427,39 @@ ggplotly(p[[3]])
 ggplotly(p[[4]])
 ```
 
-### 3.2 Mark failed samples
+### 4.2 Mark failed samples
+
+We use the first two PCAs to cluster samples based on their assigned cell-types and those that have failed based on the silhouette score threshold are marked with a X.
 
 ```{r fig.height = 6, fig.width = 8} 
 
-pca_qcs3 <- function(counts,pheno_sub){
-  pca <- prcomp(t(counts))
-  tpm.scores = pca$x
-  tpm.pca<-pca$sdev^2/sum(pca$sdev^2)
-  tpm.scores<-tpm.scores[,which(tpm.pca > 0.01)]
-  percentVar = round(100 * (tpm.pca) )
-  pheno_1 = pheno_sub[match(rownames(tpm.scores),pheno_sub$sampleCode),] 
-  tpm.scores.df <- data.frame(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2],fraction = as.factor(pheno_1$fraction), cohort = as.factor(pheno_1$cohort),sampleCode =as.factor(pheno_1$sampleCode), gender =as.factor(pheno_1$"gender"), passed = pheno_1$QCS3)
+pheno$QCS3 <- ifelse(after.sil.ruv5.fraction$sil_width < silScore, "FALSE", "TRUE")
 
-  plot1 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc2, color = fraction, shape = passed, label= sampleCode))+geom_point(size=2)+ theme_bw()+scale_shape_manual(values = c("FALSE" = 4, "TRUE" = 16)) +
-    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC2: ", percentVar[2], "% variance")) +theme(legend.position="bottom")
-  
-  return(plot1)
-}
-
-pheno$QCS3 <- ifelse(after.sil.ruv5.fraction$sil_width < 0, "FALSE", "TRUE")
-
-ggplotly(pca_qcs3(logPAC,pheno),tooltip="label")
+ggplotly(pca_silscore(counts_to_plot,pheno),tooltip="label")
 ```
 
-
-### Summary
-
-```{r}
-samplesPassed <- samplesPassed[samplesPassed$sampleID %in% pheno$sampleID,]
-QCPASSALL<-cbind(samplesPassed, "QCS3" = pheno$QCS3)
-QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == TRUE & QCPASSALL$QCS3 == "FALSE"]<- FALSE
-QCPASSALL <- QCPASSALL[,c(1:18,20,19)]
-write.csv(QCPASSALL, file = file.path(metaDir, "/passStage3Status.csv"),row.names = FALSE)
-```
+## Summary
 
 Below, samples that fail at this third QC stage are shown.
+
 ```{r, echo = FALSE}
-wrongCT <- QCPASSALL[QCPASSALL$QCS3==FALSE,]
+wrongCT <- pheno[pheno$QCS3==FALSE,]
 
 DT::datatable(wrongCT)
 ```
+
+```{r}
+## Collate results from previous Stage 1 and 2 in a single table
+samplesPassed <- samplesPassed[samplesPassed$sampleID %in% pheno$sampleID,]
+QCPASSALL<-cbind(samplesPassed, "QCS3" = pheno$QCS3)
+QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == TRUE & QCPASSALL$QCS3 == "FALSE"]<- FALSE
+QCPASSALL <- QCPASSALL[,c(1:16,18,17)]
+
+write.csv(QCPASSALL, file = file.path(qc3pass),row.names = FALSE)
+
+
+# generate a txt file of passed samples
+write.table(QCPASSALL$sampleID, file = file.path(qc3passList), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
+```
+

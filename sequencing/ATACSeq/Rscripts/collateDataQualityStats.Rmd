@@ -8,7 +8,7 @@ output:
     toc_float: true
     code_folding: hide
 params:
-  configFile: !r commandArgs(trailingOnly=TRUE)[3]
+  configFile: !r commandArgs(trailingOnly=TRUE)[1]
 ---
 
 ```{r setup, include=FALSE}
@@ -16,20 +16,24 @@ params:
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center', echo = FALSE)
 
 # load packages
-library(dplyr)
-library(plyr)
-library(knitr)
-library(vioplot)
-library(corrplot)
-library(ggplot2)
-library(reshape2)
-library(gridExtra)
-library(cowplot)
-library(kableExtra)
-library(scales)
-library(tibble)
-library(ChIPQC)
-library(plotly)
+suppressWarnings(suppressPackageStartupMessages({
+  library(dplyr)
+  library(plyr)
+  library(knitr)
+  library(vioplot)
+  library(corrplot)
+  library(ggplot2)
+  library(reshape2)
+  library(gridExtra)
+  library(cowplot)
+  library(kableExtra)
+  library(scales)
+  library(tibble)
+  library(ChIPQC)
+  library(plotly)
+  library(tidyr)
+  library(pheatmap)
+}))
 options(scipen=5)
 ## load config variables
 source(params$configFile)
@@ -293,7 +297,7 @@ for (i in 1:3){ #select pheno columns
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw() +
-      theme(axis.text.y = element_text(angle = 90), 
+      theme(axis.text.y = element_text(angle = 90),axis.text.x = element_text(angle = 45),
             axis.text = element_text(size = 7),
             axis.title = element_text(size=10),
             legend.position="none")
@@ -341,7 +345,7 @@ for (i in 1:3){
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
-      theme(axis.text.y = element_text(angle = 90), 
+      theme(axis.text.y = element_text(angle = 90), axis.text.x = element_text(angle = 45),
             axis.text = element_text(size = 7),
             axis.title = element_text(size=10), legend.position = "none")
     
@@ -380,7 +384,7 @@ data.frame(mergeStats$PercentMTReads, pheno$sequencingBatch) %>%
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
-  theme(legend.position = "none")
+  theme(legend.position = "none",axis.text.x = element_text(angle = 45))
 
 
 ```
@@ -531,7 +535,7 @@ p[[1]]<-data.frame(fripStats$BAMPeaks, pheno$cohort) %>%
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
-      theme(axis.text.y = element_text(angle = 90), 
+      theme(axis.text.y = element_text(angle = 90), axis.text.x = element_text(angle = 45),
             axis.text = element_text(size = 7),
             axis.title = element_text(size=10), legend.position = "none")+
 	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
@@ -544,7 +548,7 @@ p[[2]]<-data.frame(fripStats$BAMPeaks, pheno$fraction) %>%
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
-      theme(axis.text.y = element_text(angle = 90), 
+      theme(axis.text.y = element_text(angle = 90),axis.text.x = element_text(angle = 45), 
             axis.text = element_text(size = 7),
             axis.title = element_text(size=10), legend.position = "none")+
 	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
@@ -557,7 +561,7 @@ p[[3]]<-data.frame(fripStats$BAMPeaks, pheno$sequencingBatch) %>%
       stat_summary(fun="median", 
                  geom="point", color="white")+
       theme_bw()+
-      theme(axis.text.y = element_text(angle = 90), 
+      theme(axis.text.y = element_text(angle = 90), axis.text.x = element_text(angle = 45),
             axis.text = element_text(size = 7),
             axis.title = element_text(size=10), legend.position = "none")+
 	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
@@ -673,7 +677,7 @@ QCPASS<-cbind(mergeStats$overall_alignment_rate > alignThres, #alignment rate
               decreasingProps[,1],#periodicity
               fripStats$BAMPeaks > peakThres, # number of peaks
               fripStats$FripMACS3PE > fripThres, #frip
-              diptestStatsAll[,"p.value"] < dipPThres #multimodality
+              diptestStatsAll[,"p.value"] >= dipPThres #multimodality
               ) 
 QCPASS[is.na(QCPASS)] <- FALSE
 colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality")
@@ -681,11 +685,9 @@ rownames(QCPASS)<-processSum$sampleID
 keep<-rowSums(QCPASS, na.rm=TRUE) == rowSums(!is.na(QCPASS))
 QCPASS<-cbind(QCPASS, "QCPASS" = keep)
 QCPASS.df<- cbind(pheno, QCPASS)
-write.csv(QCPASS.df, file = file.path(metaDir, "/passStage1Status.csv"))
+write.csv(QCPASS.df, file = file.path(qc1pass))
 
-write.table(names(keep[keep==TRUE]), file = file.path(metaDir, "/passStage1SampleList.txt"), 
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
-write.table(pheno1, file = file.path(metaDir, "/matchedVCFIDs.txt"), 
+write.table(names(keep[keep==TRUE]), file = file.path(qc1passList), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 
@@ -703,14 +705,18 @@ qcStats <- cbind(pheno, mergeStats$overall_alignment_rate, #alignment rate
               ) 
 
 colnames(qcStats) <- c(colnames(pheno), "AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality")
-write.csv(qcStats, file = file.path(metaDir, "/qc1Stats.csv"),row.names = FALSE)
+write.csv(qcStats, file = file.path(qc1stats),row.names = FALSE)
 ```
 
-Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.
+Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that pass each QC step.
 
-```{r, echo = FALSE}
-
+```{r}
 kbl(colSums(QCPASS, na.rm = TRUE))
+```
+
+The table below, summarises the number of samples that fail each QC step.
+```{r, echo = FALSE}
+QCPASS <- QCPASS[,c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality", "QCPASS")]
 
 # create cross tab table
 xTab<-matrix(data = NA, ncol = ncol(QCPASS), nrow = ncol(QCPASS))
@@ -727,7 +733,16 @@ kbl(xTab) %>%
 
 ```
 
+```{r}
+pheatmap(xTab,
+         color = colorRampPalette(c("white", "red"))(50),
+         fontsize = 15,
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         display_numbers = matrix(sprintf("%d", round(xTab)), nrow = nrow(xTab)),
+         main = "Co-failing Samples Heatmap")
 
+```
 
 ## Correlations between QC metrics
 

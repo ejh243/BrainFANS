@@ -103,15 +103,12 @@ Output dir for Trimming multiqc is ${TRIM_DIR}/fastqc/multiqc
 
 EOF
   
-	cd ${FASTQCDIR}/
-	multiqc . -f -o ${FASTQCDIR}/multiqc
+	multiqc ${FASTQCDIR}/*_fastqc.zip -f -o ${FASTQCDIR}/multiqc
 	rm -f *.html
 	
-  cd ${ALIGNED_DIR}
-	multiqc . -f -o ${ALIGNED_DIR}/multiqc
+  multiqc ${ALIGNED_DIR}/*.bowtie.log -f -o ${ALIGNED_DIR}/multiqc
  
-  cd ${TRIM_DIR}/qc
-	multiqc . -f -o ${TRIM_DIR}/multiqc 
+	multiqc ${TRIM_DIR}/qc/*_trimmed_fastqc.zip -f -o ${TRIM_DIR}/multiqc 
   rm -f ${TRIM_DIR}/qc/*.html
   
 fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH --time=48:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
@@ -9,7 +9,7 @@
 #SBATCH --output=ATACSexChrS5-%A_%a.log
 #SBATCH --error=ATACSexChrS5-%A_%a.err
 #SBATCH --job-name=ATACSexChrS5
-
+#SBATCH --mem=230G
 
 ## ===================================================================================================================##
 ##                                 ATAC-seq pipeline STEP 5: Sex chromosomes                                          ##
@@ -126,15 +126,14 @@ cat <<EOF
 
 || Running STEP 5.2 of ATAC-seq pipeline: PEAKS. Peaks will be called in sex chromosomes using MACS3 Single-end mode.||
 
-Output directory will be: ${PEAK_DIR}/ShiftedTagAlign/sexChr for peaks
-Output directory will be: ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/ for counts in peaks
+Output directory will be: ${PEAK_DIR_SEXCHR} for peaks in sex chromosomes
+Output directory will be: ${PEAKCOUNTS_DIR_SEXCHR} for counts in peaks
 
 EOF
-   
-  mkdir -p ${PEAK_DIR}/ShiftedTagAlign/sexChr
-  mkdir -p ${PEAKCOUNTS}/ShiftedTagAlign/sexChr/
-  
-  
+
+  mkdir -p ${PEAK_DIR_SEXCHR}
+  mkdir -p ${PEAKCOUNTS_DIR_SEXCHR}
+
   sh "${SUB_SCRIPTS_DIR}/sexChrPeaks.sh"
 
 fi
@@ -147,7 +146,7 @@ cat <<EOF
 
 || Running STEP 5.3 of ATAC-seq pipeline: CHECK. Sex of samples will be compared to be predicted sex.||
 
-Output directory will be: ${ALIGNED_DIR}/sexChr
+Output directory will be: ${ALIGNED_DIR}/QCOutput
 
 EOF
   

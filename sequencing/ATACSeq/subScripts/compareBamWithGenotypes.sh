@@ -33,9 +33,6 @@
 
 cd ${ALIGNED_DIR}/
 
-## If directory does not exist, create
-mkdir -p ${ALIGNED_DIR}/baseRecalibrate
-
 sampleName=$1
 vcfid=$2
 
@@ -59,7 +56,10 @@ then
     samtools addreplacerg -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o ${ALIGNED_DIR}/${sampleName}_sorted_name.bam ${ALIGNED_DIR}/${sampleName}_sorted.bam
     
     ## mark duplicates only
-    picard MarkDuplicates --INPUT ${ALIGNED_DIR}/${sampleName}_sorted_name.bam --OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam --METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt --TMP_DIR ${TMPDIR}
+    picard MarkDuplicates --INPUT ${ALIGNED_DIR}/${sampleName}_sorted_name.bam \
+      --OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam \
+      --METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt \
+      --TMP_DIR ${TMPDIR}
 
     ## add read group
     picard AddOrReplaceReadGroups --INPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam \
@@ -73,7 +73,7 @@ then
 
     # recalibrate bases in bam files
     gatk BaseRecalibrator \
-        -R ${GENOMEFASTA}/genome.fa \
+       -R ${GENOMEFASTA}/genome.fa \
         -I ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
         --known-sites ${KGREF}/1000G_omni2.5.hg38.vcf.gz \
         -O ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table
@@ -86,10 +86,10 @@ then
        
     rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam*
 	  rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table
-
-    mkdir -p ${ALIGNED_DIR}/genotypeConcordance
     
-    ${VERIFYBAMID} --vcf ${SNP} --bam ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam --out ${ALIGNED_DIR}/genotypeConcordance/${sampleName} --ignoreRG --smID ${vcfid} --self
+    ${VERIFYBAMID} --vcf ${SNP} --bam ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam \
+      --out ${ALIGNED_DIR}/genotypeConcordance/${sampleName} \
+      --ignoreRG --smID ${vcfid} --self
 else
     echo "No genotype data available"
     echo $sampleName >> ${META_DIR}/noVCFfound.txt

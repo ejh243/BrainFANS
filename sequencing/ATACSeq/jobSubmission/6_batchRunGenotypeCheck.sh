@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
 #SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=24:00:00 # Maximum wall time for the job.
+#SBATCH --time=72:00:00 # Maximum wall time for the job.
 #SBATCH -A Research_Project-MRC190311 # research project to submit under. 
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
@@ -31,7 +31,7 @@
 ## - File with samples IDs and their matching VCF IDs: ${META_DIR}/matchedVCFIDs.txt                                           ||
 ## - Config.txt file in <project directory>.                                                                                   ||
 ## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, ALIGNED_DIR, SCRIPTS_DIR, PROJECT,PEAK_DIR ||
-##   CONDA, CONDA_ENV
+##   CONDA, CONDA_ENV                                                                                                          ||
 ## - Directory of the following software should be specified in config file: verifyBAMID (VERIFYBAMID)                         ||
 ## - Softwares: Picard, GATK, R, Pandoc, samtools in conda environment                                                         ||
 ## - For modules or references required, please refer to each subscript run in this script.                                    ||
@@ -111,9 +111,14 @@ Output directory will be: ${ALIGNED_DIR}/genotypeConcordance
 Output directory will be: ${ALIGNED_DIR}/baseRecalibrate
 
 EOF
+  ## If directories does not exist, create
+  mkdir -p ${ALIGNED_DIR}/baseRecalibrate
+  mkdir -p ${ALIGNED_DIR}/genotypeConcordance
   
+  echo "SLURM_ARRAY_TASK_ID: ${SLURM_ARRAY_TASK_ID}"
   # process a line from IDMap file
   IDS=($(head -n ${SLURM_ARRAY_TASK_ID} ${META_DIR}/matchedVCFIDs.txt | tail -1))
+  
   echo "Samples to verify with their corresponding VCF IDs are: ${IDS[@]}"
   
   sh "${SUB_SCRIPTS_DIR}/compareBamWithGenotypes.sh" ${IDS[@]}

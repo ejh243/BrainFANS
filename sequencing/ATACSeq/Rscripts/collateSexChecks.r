@@ -34,9 +34,9 @@ suppressWarnings(suppressPackageStartupMessages({
 }))
 
 ## reads in peaks annotated to XIST and FIRRE
-sampleSheet<-read.csv(file.path(dir, "/0_metadata", "sampleSheet.csv"), stringsAsFactors = FALSE,colClasses="character")
-xPeakFile<-file.path(dir, "/5_countPeaks", "ShiftedTagAlign", "sexChr", "chrX.peakcounts.txt")
-yPeakFile<-file.path(dir, "/5_countPeaks", "ShiftedTagAlign","sexChr", "chrY.peakcounts.txt")
+sampleSheet<-read.csv(file.path(sampleSheet), stringsAsFactors = FALSE,colClasses="character")
+xPeakFile<-file.path(sexChrCountsDir, "/chrX.peakcounts.txt")
+yPeakFile<-file.path(sexChrCountsDir, "/chrY.peakcounts.txt")
 
 xPeaks<-read.table(xPeakFile, stringsAsFactors = FALSE)
 yPeaks<-read.table(yPeakFile, stringsAsFactors = FALSE,fill = TRUE)
@@ -92,12 +92,12 @@ a2 <- ggplot(xPeaksWide, aes(x=XIST, y=YTot, color=sex)) +
 plots<-ggarrange(a1, a2,  
           ncol = 2, nrow = 1)
 
-pdf(file.path(dir, "3_aligned", "QCOutput", "sexPredictions.pdf"), width = 10, height = 5)
+pdf(file.path(qcDir, "/sexPredictions.pdf"), width = 10, height = 5)
 print(plots)
 dev.off()
 		  
 ## predict sex
-sexPredict<-data.frame("sampleID" = xPeaksWide$sampleID,"LabelledSex" = xPeaksWide$sex, "FIRREratio" = ratioF > thresF,"XISTratio" = ratioX > thresX)
+sexPredict<-data.frame("sampleID" = xPeaksWide$sampleID,"sampleCode" = sampleSheet$sampleCode,"LabelledSex" = xPeaksWide$sex, "FIRREratio" = ratioF > thresF,"XISTratio" = ratioX > thresX)
 
 ## TRUE means male
 sexPredict[sexPredict == TRUE]<-"M"
@@ -106,4 +106,4 @@ sexPredict$concordantPredictions<-sexPredict$FIRREratio == sexPredict$XISTratio
 sexPredict$concordantLabel<-xPeaksWide$sex == sexPredict$FIRREratio
 sexPredict$concordantLabel[sexPredict$concordantPredictions != TRUE]<-FALSE
 
-write.csv(sexPredict, file.path(dir, "/3_aligned", "QCOutput", "sexPredictions.csv"))
+write.csv(sexPredict, file.path(qcDir, "/sexPredictions.csv"))

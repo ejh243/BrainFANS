@@ -16,7 +16,7 @@
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - BEDTools, SAMtools (in a conda environment)                                                                      ||
-## - Variables in config file: ALIGNED_DIR, PEAK_DIR                                                                  ||
+## - Variables in config file: ALIGNED_DIR, PEAK_DIR,PEAK_DIR_SAMPLES}                                                ||
 ## - Peak files for samples: <sampleName>.broadPeak.filt                                                              ||
 ## - Bam files for samples: <sampleName>.filt.nodup.bam                                                               ||
 ##                                                                                                                    ||
@@ -25,8 +25,8 @@
 echo Job started on:
 date -u
   
-SAMPLES=$@
-mkdir -p ${PEAK_DIR}/QCOutput
+#SAMPLES=$@
+mapfile -t SAMPLES < ${META_DIR}/samples.txt
 
 ## Output will be a table in a csv file
 echo "SampleName,BAMTotalReads,BAMPeaks,ReadsinBAMPeaks" > ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
@@ -48,10 +48,10 @@ do
   fi  
   
   ## MACS3 peaks called from bam files with paired end and number of reads in those peaks
-  if [ -s ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt ]
+  if [ -s ${PEAK_DIR_SAMPLES}/${sampleName}.narrowPeak.filt ]
   then
-  	echo -n $(wc -l ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt | cut -f1 -d' '), >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  	echo $(bedtools sort -i ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNED_DIR}/${bamFile} -b stdin -ubam | samtools view -c) >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
+  	echo -n $(wc -l ${PEAK_DIR_SAMPLES}/${sampleName}.narrowPeak.filt | cut -f1 -d' '), >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
+  	echo $(bedtools sort -i ${PEAK_DIR_SAMPLES}/${sampleName}.narrowPeak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNED_DIR}/${bamFile} -b stdin -ubam | samtools view -c) >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
   else
   	echo -n NA, >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
     echo NA >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
@@ -66,4 +66,3 @@ else
   echo Job finished on:
   date -u
 fi
-

@@ -13,7 +13,8 @@
 ## - Read 1 and Read 2 of the same sample in the same directory (RAWDATADIR)                                          ||
 ## - A fasta file (.fa) with all adapters or sequences to be trimmed. Path to file should be specified in config file ||
 ##   as "ADAPTERS_FILE"                                                                                               ||
-## - The length of sequences should be specified in the config.txt file as "max_len1_thres" and "max_len2_thres"      ||
+## - The length of sequences should be specified in the config.txt file as "MAX_LEN_R1" and "MAX_LEN_R2" for the max  ||
+##   length of reads and "MIN_LEN" for the minimum.                                                                   ||
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <sampleName> Name of sample specified in command line.                                                       ||
@@ -48,18 +49,19 @@ mkdir -p ${TRIM_DIR}/qc/
 ##    TRIM      ##
 ## ============ ##
 
-echo "TRIM on ${sampleName} is done with maximum length of ${max_len1_thres} (R1) and ${max_len2_thres} (R2)."
-echo "File with adapters to trim: ${adapters_file}"
+echo "TRIM on ${sampleName} is done with maximum length of ${MAX_LEN_R1} (R1) and ${MAX_LEN_R2} (R2)."
+echo "File with adapters to trim: ${ADAPTERS_FILE}"
 
 fastp --detect_adapter_for_pe \
-    --length_required=27 --thread=$(( (${SLURM_ARRAY_TASK_ID} % 16) + 1 )) \
+    --length_required=${MIN_LEN} --thread=$(( (${SLURM_ARRAY_TASK_ID} % 16) + 1 )) \
     --in1=${f1} --in2=${f2} \
     --out1=${TRIM_DIR}/${outf1} --out2=${TRIM_DIR}/${outf2} \
     --html=${TRIM_DIR}/qc/${sampleName}_fastp.html \
     --json=${TRIM_DIR}/qc/${sampleName}_fastp.json \
-    --max_len1 ${max_len1_thres} --max_len2 ${max_len2_thres} \
     --adapter_fasta ${ADAPTERS_FILE} \
+    --max_len1 ${MAX_LEN_R1} --max_len2 ${MAX_LEN_R2} \
     -g -c -x
+    
 
 if [[ ! -f ${TRIM_DIR}/${outf1} ]] && [[ ! -f ${TRIM_DIR}/${outf2} ]]
 then 

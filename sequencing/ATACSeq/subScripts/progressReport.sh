@@ -57,10 +57,14 @@ echo "Number of ENCODE QC metric output files found " $(ls ${ALIGNED_DIR}/ENCODE
 
 echo "Number of MACS3 peak files (paired end) found " $(ls ${PEAK_DIR}/MACS/BAMPE/*.broadPeak.filt | wc -l)
 
+## check for shift aligned reads
+
+echo "Number of Shifted aligned read files found " $(ls ${ALIGNED_DIR}/*.tn5.tagAlign.gz | wc -l)
+
 
 ## check for individual samples
 ## save output in csv file
-echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS3PeaksPE" > ${META_DIR}/summariseSampleProcessingProgress.csv
+echo "sampleID,dataFolder,R1Filename,R2Filename,FASTQCR1,FASTQCR2,FASTP,BOWTIE,filteredAligned,ENCODEMetrics,MACS3PeaksPE,SHIFT" > ${META_DIR}/summariseSampleProcessingProgress.csv
 
 for sampleName in ${SAMPLEIDS[@]}
 do 
@@ -119,6 +123,13 @@ do
     fi
     
     if [ ! -s ${PEAK_DIR}/MACS/BAMPE/${sampleName}.broadPeak.filt ]
+    then
+        echo -n "N," >> ${META_DIR}/summariseSampleProcessingProgress.csv
+    else
+        echo -n "Y," >> ${META_DIR}/summariseSampleProcessingProgress.csv
+    fi
+    
+    if [ ! -s ${ALIGNED_DIR}/${sampleName}*.tn5.tagAlign.gz ]
     then
         echo "N" >> ${META_DIR}/summariseSampleProcessingProgress.csv
     else

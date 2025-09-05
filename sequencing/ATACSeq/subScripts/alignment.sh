@@ -34,6 +34,7 @@ echo "Processing" ${sampleName}
 ## Check if trimmed files for alignment exist
 cd ${TRIM_DIR}
 f=($(ls ${sampleName}*trimmed*.f*))
+echo ${f[@]}
 
 if [[ ! -f ${TRIM_DIR}/${f[0]} ]] && [[ ! -f ${TRIM_DIR}/${f[1]} ]]
 then 
@@ -88,8 +89,11 @@ rm ${ALIGNED_DIR}/${sampleName}_noMT.bam
 # Mark duplicates
 samtools addreplacerg -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o ${ALIGNED_DIR}/${sampleName}_filt.name.bam ${ALIGNED_DIR}/${sampleName}.filt.bam
 
-picard MarkDuplicates --INPUT ${ALIGNED_DIR}/${sampleName}_filt.name.bam --OUTPUT ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam --METRICS_FILE ${ALIGNED_DIR}/${sampleName}_dupMetrics.txt \
---VALIDATION_STRINGENCY LENIENT --ASSUME_SORTED true --REMOVE_DUPLICATES false --TMP_DIR ${TMPDIR}
+picard MarkDuplicates -I ${ALIGNED_DIR}/${sampleName}_filt.name.bam \
+  -O ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam \
+  --METRICS_FILE ${ALIGNED_DIR}/${sampleName}_dupMetrics.txt \
+  --VALIDATION_STRINGENCY LENIENT --ASSUME_SORTED true \
+  --REMOVE_DUPLICATES false --TMP_DIR ${TMPDIR}
 
 rm ${ALIGNED_DIR}/${sampleName}.filt.bam
 
@@ -101,6 +105,17 @@ samtools index ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam
 
 ## get sum stats post to filtering
 samtools stats ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam	> ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.stats
+
+## Outputs fragment size distribution histogram two ways
+picard CollectInsertSizeMetrics -I ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam \
+  -O ${ALIGNED_DIR}/QCOutput/${sampleName}.txt \
+  -H ${ALIGNED_DIR}/QCOutput/${sampleName}.insert_hist.pdf -M 0.5
+
+bamPEFragmentSize -b ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.bam \
+  -h ${ALIGNED_DIR}/QCOutput/${sampleName}.fragment_size.png   \
+  --maxFragmentLength 1000   \
+  --samplesLabel ${sampleName} |
+  -T ${sampleName}
 
 if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]] || [[ ! -f ${ALIGNED_DIR}/QCOutput/${sampleName}.filt.nodup.stats ]]
 then 

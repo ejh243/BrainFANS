@@ -39,13 +39,16 @@ export ANALYSIS_DIR="${MAIN_DIR}/6_analysis"
 ## Specify full path to SNP imputation data ##
 export GENODIR="/path/to/SNParray/ImputationData"
 
+## Peak calling output directories
+export PEAK_DIR_SAMPLES="${PEAK_DIR}/path/to/samples/peaks/output/dir"
+export PEAK_DIR_GROUPS="${PEAK_DIR}/path/to/groups/peaks/output/dir"
 
 ## =========================================== ##
 || Scripts and software filepaths and versions ||
 ## =========================================== ##
 
 ## Specify full path to pipeline's scripts directory ##
-export SCRIPTS_DIR="/path/to/this/scripts/folder"
+export SCRIPTS_DIR="/path/to/these/scripts/folder"
 
 export SUB_SCRIPTS_DIR="${SCRIPTS_DIR}/subscripts"
 export RSCRIPTS_DIR="${SCRIPTS_DIR}/Rscripts"
@@ -62,7 +65,7 @@ export CONDA="/path/tp/.conda/envs/folder"
 export CONDA_ENVDIR="/path/to/conda/etc/folder"
 
 ## ========================= ##
-|| Sequencing data filepaths ||
+|| Reference data filepaths  ||
 ## ========================= ##
 
 ## Specify full path to references folder ##
@@ -82,19 +85,28 @@ export SEGREFGENOME="${REFERENCES_DIR}/genome.char.fa"
 export GWASTRAITS="${REFERENCES_DIR}/gwas_traits/"
 export LDREFPATH="${REFERENCES_DIR}/LDScore_resources/"
 
-## =========== ##
-||    Other    ||
-## =========== ##
+## ======================= ##
+||    TRIMMING SETTINGS    ||
+## ======================= ##
 
 ## Adapter sequences to trim ##
 ## Fasta file with adapters to be trimmed at STEP 1.2 ##
 export ADAPTERS_FILE="/path/to/fasta/file"
+## Trimming optional parameters##
+export MAX_LEN_R1=50
+export MAX_LEN_R2=50
+export MIN_LEN=27
 
 ## parameters
 export multimap=4
 
 ## cell types (ordered alphabetically)
 export CELLTYPES=("IRF8" "NEUN" "SOX" "TN" )
+
+## =========================== ##
+||    PEAK CALLING SETTINGS    ||
+## =========================== ##
+
 export MACS_SAMPLE="Sample-level Peak calling q-value cutoff"
 export MACS_GROUP="Cell fraction-level Peak calling q-value cutoff"
 export MACS_CHR="Peak calling on sex chromosomes q-value cutoff"

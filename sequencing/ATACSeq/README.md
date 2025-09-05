@@ -160,7 +160,7 @@ This script performs the core part of the ATACseq pipeline: calling peaks. In th
 - ./subScripts/shiftAlignedReads.sh : takes a filtered bam file converts to a tagalign file, calculate CC scores and shifts reads ready for peak calling
     * This step is not needed if peak calling is performed using PE mode or with HMMRATAC
 - ./subScripts/samplePeaks.sh : runs MAC version 3 peak calling with BAM files paired end reads
-    * it then filters the peaks to exclude those that overlap with blacklisted regions, sex chromosomes 
+    * it then filters the peaks to exclude those that overlap with blacklisted regions
     * peaks are sorted by chromosome
 - ./subScripts/collateCalcFrip.sh : calculates fraction of reads in peaks, number of reads and peaks for peak calling at sample level
     * a single --array job number should be specified.
@@ -248,33 +248,20 @@ This script groups samples per cell type, performs group level peak calling and 
 
 ##### -scripts executed-
 - ./Rscripts/samplesForGroupAnalysis.r: creates a file with samples of cell group input.
-- ./Rscripts/fragDistributionForPeaks.r: outputs the fragment distribution of samples that are used for group peak calling, in order to check their ATAC-seq quality.
 - ./subScripts/groupPeaks.sh : performs peak calling on samples that belong to the cell group chosen by the user.
-- ./Rscripts/countsInPeaks.r: : gets read counts in peaks called on each cell group.
+- ./Rscripts/filtGroupPeaks.r: : filter peaks called on cell-groups.
+- ./Rscripts/countsInPeaksGroup.r : gets read counts in peaks called on each cell group.
+- ./Rscripts/diffPeakGroupsCounts.r : performs differential accessible regions analysis between cell-types based on read counts.
+- ./Rscripts/collateCellTypeCheck.Rmd : collates cell-groups peak calling and counts in peaks results to perform cell-type check.
+
 
 ##### -parameters-
 - `(project-directory)` project's directory.
 -optional-
 - `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
-  - `FRAGSIZE`: Get fragment size distribution of samples chosen for peak calling.
   - `PEAKS`: Performs peak calling on samples chosen for peak calling using MACS3 in paired-end mode.
+  - `FILT`: Filter peaks called on cell-groups based on their overlap with peaks called at sample level (STEP 3.2)
   - `COUNTS`: Gets read counts in peaks called at cell group level.
-- `[GROUP]` Select cell-type of group of samples to perform peak calling on. This is only needed for the `PEAKS` step.
-
-### 8. Stage 3 QC metrics summary
-
- `sbatch ./jobSubmission/8_collateStage3QCMatrics.sh (project directory) [STEPS] [peakSet]`
-
-This script normalises counts in peaks and uses results to check cell-type identity of samples, as this might be of poor quality or mislabelled.
-
-##### -scripts executed-
-- ./Rscripts/normCounts.r: outputs results of Variance Partition Analysis (VPA) on raw counts, normalising counts in peaks and results of VPA in these.
-- ./Rscripts/collateCellTypeCheck.Rmd: outputs a summary report of VPA on raw and normalised counts, the normalisation results and identifies samples that fail cell-type check.
-
-##### -parameters-
-- `(project-directory)` project's directory.
--optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
-  - `NORM`: performs Variance Partition Analysis (VPA) on raw counts, normalises counts in peaks and performs VPA again in these.
-  - `CTCHECK`: Collates results from before in a Rmarkdown report and identifies samples that fail cell-type identity check.
-- `[peakSet]` : as counts in peaks have been produced for only promoters or all peaks, user can choose whether this stage is performed using either of those peak sets.
+  - `DIFFCOUNTS`: Differential accessible regions analysis between cell groups based on read counts.
+  - `CTCHECK` : Collates results from before in a Rmarkdown report and identifies samples that fail cell-type identity check.
+- `[GROUP]` Select cell-type of group of samples to perform peak calling on. This is needed for the `PEAKS` and `FILT` steps.

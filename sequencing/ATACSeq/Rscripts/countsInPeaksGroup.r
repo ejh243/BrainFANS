@@ -8,25 +8,27 @@
 ## that passed both QC stages are used, as done to call peaks.                                     ||
 ##                                                                                                 ||
 ## INPUTS:                                                                                         ||
-## - <project> : project on which analysis is being run                                            ||
+## - <configFile> : config file of project on which analysis is being run                          ||
 ##                                                                                                 ||
 ## OUTPUTS:                                                                                        ||
 ## -  counts in peaks (all peaks) file: peakCounts.rdata in 5_countPeaks folder                    ||
 ## -  counts in peaks (only promoters) file: peakCounts_prom.rdata in 5_countPeaks folder          ||
 ##                                                                                                 ||
 ## REQUIRES:                                                                                       ||
-## - R/4.2.1-foss-2022a, R libraries: Rsubread, GenomicRanges, ChIPpeakAnno,ChIPseeker             ||
+## - R version > 4.3, R libraries: Rsubread, GenomicRanges, ChIPpeakAnno,ChIPseeker                ||
 ##   TxDb.Hsapiens.UCSC.hg38.knownGene,org.Hs.eg.db                                                ||
 ## - A csv file in the metadata folder with samples used for group peak calling:                   || 
 ##   samplesGroupAnalysis.csv. This is produced in STEP 7.0                                        ||
+## - Parameters in config.r file: groupAnalysisSamples, sampleSheet, macs_thres_group, groupsPeaks //
+##   groupsCounts                                                                                  ||
 ## ================================================================================================##
 
 ## ==========##
 ##   SET-UP  ##
 ## ==========##
 
-args <- commandArgs()
-configFile<-args[6]
+args <- commandArgs(trailingOnly=TRUE)
+configFile<-args[1]
 source(configFile)
 
 suppressWarnings(suppressPackageStartupMessages({
@@ -42,22 +44,24 @@ suppressWarnings(suppressPackageStartupMessages({
 ##   GATHER DATA  ##
 ## ===============##
 
-peakDir<- paste0(dir, "/4_calledPeaks/MACS/BAMPE/group/")
-samples <- read.csv(file.path(paste0(metaDir,"/samplesGroupAnalysis.csv")), sep = ",",stringsAsFactors = FALSE)
-pheno<-read.csv(file.path(metaDir, "sampleSheet.csv"))
-pheno <- pheno[pheno$sampleID %in% samples$sampleID,]
-
-peakFiles<-list.files(peakDir, pattern="*.sorted.broadPeak.filt")
+samples <- read.csv(file.path(groupAnalysisSamples), sep = ",",stringsAsFactors = FALSE)
+pheno<-read.csv(file.path(sampleSheet))
+print(table(samples$fraction))
+pheno <- pheno[pheno$sampleCode %in% samples$sampleCode,]
+print(table(pheno$fraction))
+peakFiles<-list.files(groupsPeaks, pattern=paste0("*_",macs_thres_group,".filt.narrowPeak.bed"))
 print("Peaks files: ")
 print(peakFiles)
+
 peaks<-list()
 for(each in peakFiles){
   fraction<-head(unlist(strsplit(each, "\\.")), n = 1)
-  peaks[[fraction]]<-makeGRangesFromDataFrame(read.table(file.path(peakDir, each)), keep.extra.columns=TRUE, seqnames.field="V1",
+  peaks[[fraction]]<-makeGRangesFromDataFrame(read.table(file.path(groupsPeaks, each)), keep.extra.columns=TRUE, seqnames.field="V1",
                                               start.field="V2",
                                               end.field="V3",
                                               ignore.strand=TRUE)
 }
+
 names(peaks) <- cellTypes
 
 ## Annotate peaks
@@ -82,7 +86,7 @@ ctPeaks<-data.frame("GeneID"=ctPromotorPeaks$V4, "Chr"=seqnames(ctPromotorPeaks)
 
 ## Get counts in peaks annotated as promoters
 fc_ctPeaks <- featureCounts(file.path(paste0(alignedDir,"/", bamFiles)),annot.ext=ctPeaks, allowMultiOverlap = TRUE, isPairedEnd = TRUE, nthreads = 10, fracOverlap=0.2)
-save(fc_ctPeaks, file = paste0(dir,"/5_countPeaks/Counts/peakCounts_prom_2.rdata"))
+save(fc_ctPeaks, file = paste0(groupsCounts, "peakCounts_prom_filtbam_",macs_thres_group,".filt.narrowPeak.rdata"))
 
 
 ## ================##
@@ -90,8 +94,8 @@ save(fc_ctPeaks, file = paste0(dir,"/5_countPeaks/Counts/peakCounts_prom_2.rdata
 ## ================##
 
 allPeaks <- list()
-for(i in 1:length(cellTypes)){
-  ct <- cellTypes[i]
+for(i in 1:length(names(peaks))){
+  ct <- names(peaks)[i]
   allPeaks[[i]] <- peaksAnno[[ct]]@anno
 }
 allPeaks <- do.call(c, allPeaks)
@@ -99,4 +103,5 @@ ctPeaks<-data.frame("GeneID"=allPeaks$V4, "Chr"=seqnames(allPeaks), "Start"=star
 
 ## Get counts in all peaks
 fc_ctPeaks <- featureCounts(file.path(paste0(alignedDir,"/", bamFiles)),annot.ext=ctPeaks, allowMultiOverlap = TRUE, isPairedEnd = TRUE, nthreads = 10, fracOverlap=0.2)
-save(fc_ctPeaks, file = paste0(dir,"/5_countPeaks/Counts/peakCounts_all_2.rdata"))
+save(fc_ctPeaks, file = paste0(groupsCounts, "peakCounts_all_filtbam_",macs_thres_group,".filt.narrowPeak.rdata"))
+

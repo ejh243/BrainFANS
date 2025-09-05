@@ -7,7 +7,7 @@ output:
     toc_float: true
     code_folding: hide
 params:
-  configFile: !r commandArgs(trailingOnly=TRUE)[3]
+  configFile: !r commandArgs(trailingOnly=TRUE)[1]
 ---
 
 ```{r setup, include=FALSE}
@@ -26,7 +26,7 @@ source(params$configFile)
 
 pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 
-s1Pass <- read.csv(file.path(metaDir, "/passStage1Status.csv"),header = TRUE)
+s1Pass <- read.csv(file.path(qc1pass),header = TRUE)
 s1Pass <- s1Pass[match(pheno$sampleID, s1Pass$sampleID),]
 
 ```
@@ -43,10 +43,10 @@ nSBStart<-table(pheno$sequencingBatch)
 nBBStart<-table(pheno$cohort)
 
 pheno<-pheno[match(s1Pass$sampleID, pheno$sampleID),]
-
-nCTMid<-table(pheno$fraction)
-nSBMid<-table(pheno$sequencingBatch)
-nBBMid<-table(pheno$cohort)
+samplesPassed <- s1Pass[s1Pass$QCPASS==TRUE,]
+nCTMid<-table(samplesPassed$fraction)
+nSBMid<-table(samplesPassed$sequencingBatch)
+nBBMid<-table(samplesPassed$cohort)
 
 nSBMid<-nSBMid[names(nSBStart)]
 nSBMid[is.na(nSBMid)]<-0
@@ -296,10 +296,10 @@ passStage2$QCPASS[is.na(passStage2$sexCheck)& passStage2$genoCheck == TRUE]<- TR
 passStage2$QCPASS[is.na(passStage2$sexCheck)& is.na(passStage2$genoCheck)]<- FALSE
 
 # generate a csv file of passed samples in the second stage of QC
-write.csv(passStage2, file = file.path(metaDir, "/passStage2Status.csv"))
+write.csv(passStage2, file = file.path(qc2pass))
 
 # generate a txt file of passed samples
-write.table(passStage2[passStage2$QCPASS==TRUE,]$sampleID, file = file.path(metaDir, "/passStage2SampleList.txt"), 
+write.table(passStage2[passStage2$QCPASS==TRUE,]$sampleID, file = file.path(qc2passList), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # generate a csv file of passed samples after stage 1 and 2 QC
@@ -309,7 +309,7 @@ QCPASSALL$PASSALL[QCPASSALL$QCS2==FALSE & QCPASSALL$QCS1 == TRUE]<- FALSE
 QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == FALSE]<- FALSE
 QCPASSALL$PASSALL[QCPASSALL$QCS2==FALSE & QCPASSALL$QCS1 == FALSE]<- FALSE
 QCPASSALL$PASSALL[is.na(QCPASSALL$QCS2) & QCPASSALL$QCS1 == FALSE]<- FALSE
-write.csv(QCPASSALL, file = file.path(metaDir, "/passS1S2Status.csv"), row.names = FALSE)
+write.csv(QCPASSALL, file = file.path(qc12stats), row.names = FALSE)
 ```
 
 Samples will now be filtered based on thresholds defined in the config file. The table below, summarises the number of samples that fail each QC step.

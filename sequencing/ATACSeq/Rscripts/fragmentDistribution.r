@@ -46,7 +46,7 @@ fdsPlots <- function(listSamples){
   list_plots <-list()
   samples <- names(listSamples)
   for(i in 1:length(listSamples)) {
-    df <-data.frame(listSamples[i])
+    df <-data.frame(listSamples[[i]])
     colnames(df)<- c("Var1", "Freq")
     df$sample <-samples[i]
     list_plots[[i]] <- df
@@ -75,10 +75,11 @@ suppressWarnings(suppressPackageStartupMessages({
   library(ggplot2)
   library(ggpubr)
   library(gridExtra)
+  library(dplyr)
 }))
 
 ## get filepaths of aligned indexed QC'd bam file
-samples<-read.table(file.path(metaDir, "/samples.txt"))[,1]
+samples<-read.table(file.path(samplesList))[,1]
 aQCFiles<-list.files(alignedDir, pattern = ".filt.nodup.bam.bai$", recursive = TRUE, full.names = TRUE)
 aQCFiles<-gsub(".bai", "", aQCFiles)
 aQCFiles <- aQCFiles[match(samples,gsub(paste0(alignedDir,"/"),"",gsub(".filt.nodup.bam", "", aQCFiles)))]
@@ -119,7 +120,7 @@ if(nSamples > 0){
 	colnames(periodTestStats)<-c("obsStat", "p.value", "freq")
 	
   ## Results are saved in a rdata file 
-	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(alignedDir, "/QCOutput/FragmentDistribution_Batch_", batchNum, ".rdata"))
+	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(qcDir, "/FragmentDistribution_Batch_", batchNum, ".rdata"))
  
   ## output Fragment size distribution plots for the corresponding batch of samples
   
@@ -132,12 +133,13 @@ if(nSamples > 0){
     fdValues <- BatchSamples.split[[i]]
     axis1 <- seq(from=0, to=max(fdValues[,1]), by=100)
     p[[i]] <- ggplot(fdValues, aes(x=Var1, y=Freq)) + geom_line()+theme_bw()+
-  labs(x="Fragment size (bp)",y="Frequency", title=names(BatchSamples.split)[i]) +scale_x_continuous(breaks=axis1)
+  labs(x="Fragment size (bp)",y="Frequency", title=names(BatchSamples.split)[i]) +scale_x_continuous(breaks=axis1, limits = c(0, 800))
   }
 
-  pdf(file.path(paste0(alignedDir, "/QCOutput/FSD_batch_", batchNum, ".pdf")), width = 10, height = 5)
+  pdf(file.path(paste0(qcDir, "/FSD_batch_", batchNum, ".pdf")), width = 10, height = 5)
   print(p)
   dev.off()
+  
   
 }
 
