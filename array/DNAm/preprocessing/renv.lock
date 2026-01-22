@@ -2761,7 +2761,7 @@
     },
     "cdegUtilities": {
       "Package": "cdegUtilities",
-      "Version": "0.0.2",
+      "Version": "0.0.3",
       "Source": "GitHub",
       "Title": "Suite of functions for processing 'omics data",
       "Authors@R": "c(person(\"Eilis\", \"Hannon\", , \"e.j.hannon@exeter.ac.uk\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0001-6840-072X\")), person(\"Jessica\", \"Shields\", , \"j.m.shields@exeter.ac.uk\", role = c(\"aut\"), comment = c(ORCID = \"0000-0001-6840-072X\"))  )",
@@ -2777,7 +2777,7 @@
       "RemoteUsername": "EpigeneticsExeter",
       "RemoteRepo": "cdegUtilities",
       "RemoteRef": "main",
-      "RemoteSha": "5f8fa27ab11db56cefca09337e1c5ce94405c259"
+      "RemoteSha": "96920f31858a38ad0ca0c167ede92dd048e03a67"
     },
     "class": {
       "Package": "class",
