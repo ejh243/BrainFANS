@@ -961,6 +961,14 @@ corrplot(cor(QCmetrics[,colsToKeep], use = "p"))
 
 ```
 
+The correlation plot above contains four normalisation violence metrics 
+(assessing the degree of difference between normalised and raw betas):
+
+* rmsd: root mean squared (of) differences
+* sdd: standard deviation (of) differences
+* sadd: standard absolute deviation (of) differences (|differences|)
+* srms: standardised root mean squared (rmsd/sdd)
+
 
 ## Reconfirm genetic relationships are correct
 
