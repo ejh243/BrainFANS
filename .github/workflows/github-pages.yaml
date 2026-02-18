@@ -18,9 +18,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version-file: documentation/package.json
           cache: npm
           cache-dependency-path: documentation/package-lock.json
 
