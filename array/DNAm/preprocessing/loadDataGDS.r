@@ -30,21 +30,21 @@ arrayType <- toupper(arrayType)
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
-library(cdegUtilities, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(bigmelon, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(cdegUtilities, warn.conflicts = FALSE, quietly = TRUE))
 
 
 if(arrayType=='450K'){
-  library("IlluminaHumanMethylation450kanno.ilmn12.hg19", warn.conflicts = FALSE, quietly = TRUE)
-  library("IlluminaHumanMethylation450kmanifest", warn.conflicts = FALSE, quietly = TRUE)
+  suppressPackageStartupMessages(library("IlluminaHumanMethylation450kanno.ilmn12.hg19", warn.conflicts = FALSE, quietly = TRUE))
+  suppressPackageStartupMessages(library("IlluminaHumanMethylation450kmanifest", warn.conflicts = FALSE, quietly = TRUE))
 }
 if(arrayType=='V1'){
-  library("IlluminaHumanMethylationEPICanno.ilm10b4.hg19", warn.conflicts = FALSE, quietly = TRUE)
-  library("IlluminaHumanMethylationEPICmanifest", warn.conflicts = FALSE, quietly = TRUE)
+  suppressPackageStartupMessages(library("IlluminaHumanMethylationEPICanno.ilm10b4.hg19", warn.conflicts = FALSE, quietly = TRUE))
+  suppressPackageStartupMessages(library("IlluminaHumanMethylationEPICmanifest", warn.conflicts = FALSE, quietly = TRUE))
 }
 if(arrayType=='V2'){
-library(IlluminaHumanMethylationEPICv2anno.20a1.hg38, warn.conflicts = FALSE, quietly = TRUE)
-library(IlluminaHumanMethylationEPICv2manifest, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(IlluminaHumanMethylationEPICv2anno.20a1.hg38, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(IlluminaHumanMethylationEPICv2manifest, warn.conflicts = FALSE, quietly = TRUE))
 
 }
 

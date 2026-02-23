@@ -7,8 +7,6 @@ args <- commandArgs(trailingOnly = TRUE)
 dataDir <- args[1]
 configFile <- paste0(dataDir, "/config.r")
 
-# Load libraries
-library(stringdist, warn.conflicts = FALSE, quietly = TRUE) # for amatch()
 '%ni%' <- Negate('%in%') # define '%ni%' (not in)
 
 # Load sample sheet
