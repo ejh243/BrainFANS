@@ -109,7 +109,10 @@ remove_unwanted_columns <- function(columns, QCmetrics) {
 }
 
 define_plot_parameters <- function(QCmetrics, projVar) {
-  plot_columns <- c(remove_unwanted_columns(projVar, QCmetrics), "Sentrix_ID", "Sentrix_Position")
+  plot_columns <- c(
+    remove_unwanted_columns(projVar, QCmetrics),
+    remove_unwanted_columns(c("Sentrix_ID","Sentrix_Position"), QCmetrics)
+  )
 
   plotCols <- data.frame("Basename" = QCmetrics[["Basename"]])
                      
@@ -163,7 +166,7 @@ These are only included if they are categorical. For this study the following pr
 
 ```{r, echo=FALSE,include = FALSE}
 # You need this code to conduct the magic dependences attaching so that we
-# can create DT::datatables() in a loop.
+# can create DT::datatables() in a loop. I hate pandoc.
 DT::datatable(matrix())
 ```
 
@@ -192,6 +195,8 @@ send_removal_message <- function(column_name, QCmetrics) {
 }
 
 for (column_name in projVar) send_removal_message(column_name, QCmetrics)
+send_removal_message("Sentrix_ID", QCmetrics)
+send_removal_message("Sentrix_Position", QCmetrics)
 
 projVar <- remove_unwanted_columns(projVar, QCmetrics)
 for(item in projVar){
