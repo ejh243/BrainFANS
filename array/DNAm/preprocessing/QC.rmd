@@ -1085,7 +1085,13 @@ if(length(errorIndexes) > 0){
 ageExists <- "Age" %in% colnames(QCmetrics) 
 ageValid <- FALSE
 CCDNAmAgeExists <- FALSE
+
 if (ageExists) {
+  # Check if Age is numeric, and convert if not
+  if (!is.numeric(QCmetrics$Age)) {
+    warning("Age column is not numeric. Attempting to convert.")
+    QCmetrics$Age <- suppressWarnings(as.numeric(as.character(QCmetrics$Age)))
+  }
   ageValid <- (sum(!is.na(QCmetrics$Age)) > 1)
   CCDNAmAgeExists <- "CCDNAmAge" %in% colnames(QCmetrics) && ageValid
 }
