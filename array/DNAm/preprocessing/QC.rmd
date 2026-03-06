@@ -848,8 +848,14 @@ dev.off()
 
 Using the intensity values from probes located on the X and Y chromosomes, we calculate a fold change relative to intensity values from the autosomes. In females you would expect the fold change on the X chromosome to be greater than 1 and the Y chromosome less than 1, while males we would expect the fold change on the X chromosome to be less than 1 and the fold change on the Y chromosome to be greater than 1. 
 
-Let's look at the distribution of these fold change statistics. If you have > 1 sex you should see two peaks. You sometimes also see a third peak around 0, these are poor quality samples. Evidence of multiple sexes in the dataset is needed to enable sex predictions to be performed. This is checked intially with a dip test for multimodality in the distribution of standardized y chromosome intensities. In the density plots below we are looking for evidence of multiple distributions or a non-unimodal distribution. Hartigans dip test for unimodality / multimodality, indicates we can `r if(bimodP.y < 0.05){I(print("accept"))} else {I(print("reject"))} ` the alternative hypothesis of multiple modes (P = `r signif(bimodP.y,3)`).
-
+```{r, echo=FALSE, results='asis'}
+if(exists("bimodP.y")){
+  cat(paste0("Hartigans dip test for unimodality / multimodality, indicates we can ",
+             if(bimodP.y < 0.05){"accept"} else {"reject"},
+             " the alternative hypothesis of multiple modes (P = ",
+             signif(bimodP.y,3), ")."))
+}
+```
 
 ```{r plotSexCheck, echo = FALSE, eval = sexCheck}
 
@@ -875,7 +881,7 @@ Let's look at the distribution of these fold change statistics. If you have > 1 
 
 If predictions were made, we will compare the sex predictions between the X and Y chromosomes.
 
-```{r tabSexpredictions, echo = FALSE}
+```{r tabSexpredictions, echo = FALSE, eval = sexCheck}
 if(bimodP.y < 0.05){
   DT::datatable(
     table(QCmetrics$predSex.x, QCmetrics$predSex.y),
