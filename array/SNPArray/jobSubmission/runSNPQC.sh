@@ -34,10 +34,10 @@ sh SNPArray/preprocessing/2_CheckEthnicity.sh
 
 ## create sample sheets of samples classed as different populations
 ## run relatedness check within ethnicites
-populations=($(cut -f3 --delim="," ${PROCESSDIR}/PredictedPopulations.csv | tail -n +2 | sort | uniq))
+populations=($(cut -f3 --delim="," ${PROCESSDIR}/merge1KG/PredictedPopulations.csv | tail -n +2 | sort | uniq))
 for each in ${populations[@]}
 do
-   grep ${each} ${PROCESSDIR}/PredictedPopulations.csv | cut -f1-2 --delim="," --output-delimiter=" " > ${PROCESSDIR}/${each}Samples.txt
+   grep ${each} ${PROCESSDIR}/merge1KG/PredictedPopulations.csv | cut -f1-2 --delim="," --output-delimiter=" " > ${PROCESSDIR}/${each}Samples.txt
    
    ## 
    if [[ $(wc -l <${PROCESSDIR}/${each}Samples.txt) -ge 1 ]]
