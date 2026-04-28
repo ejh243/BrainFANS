@@ -62,7 +62,11 @@ sort pos.tmp | uniq -d > dupLocs.txt
 #awk --delimiter=":" '{print $1,$2}' dupLocs.txt
 awk -F ":" '{print $1,$2-1,$2,"set1", "set2"}' dupLocs.txt > positionsExclude.txt
 
-${PLINK}/plink --bfile ${FILEPREFIX}_update_2 --exclude range positionsExclude.txt --make-bed --out ${FILEPREFIX}_update_3;
+# remove dodgy first line in positionsExclude.txt
+grep -v "^1 -1" positionsExclude.txt > positionsExclude_fixed.txt
+
+
+${PLINK}/plink --bfile ${FILEPREFIX}_update_2 --exclude range positionsExclude_fixed.txt --make-bed --out ${FILEPREFIX}_update_3;
 rm pos.tmp
 rm dupLocs.txt
 
@@ -94,8 +98,8 @@ awk '{if ($1 == 0) print $2}' ${FILEPREFIX}_update_6.bim > noLocPos.tmp
 ${PLINK}/plink --bfile ${FILEPREFIX}_update_6 --exclude noLocPos.tmp --maf 0.001 --hwe 0.00001 --mind 0.02 --geno 0.05 --make-bed --out ${FILEPREFIX}_QCd
 
 
-## write list of samples that passed QC for CNV calling
-cut -f 1,2 --delimiter=" " ${FILEPREFIX}.fam > ${CNVDIR}/ID_Map.txt
+## write list of samples that passed QC for CNV calling 
+cut -f 1,2 --delimiter=" " ${RAWDATADIR}/${FILEPREFIX}.fam > ${CNVDIR}/ID_Map.txt
 cut -f 2 --delimiter=" " ${FILEPREFIX}_QCd.fam > ${CNVDIR}/Samples.txt
 
 ## clean up intermediate files but keep log files
@@ -117,4 +121,6 @@ rm ${FILEPREFIX}_QCd.ld.prune*
 
 ## extract SNP probes for comparison with DNAm data
 ${PLINK}/plink --bfile ${FILEPREFIX}_QCd --extract ${EPICREF}/RSprobes.txt --recodeA --out ${FILEPREFIX}_59DNAmSNPs
+${PLINK}/plink --bfile ${FILEPREFIX}_QCd --extract ${EPICREF}/RSprobesEpicV2.txt --recodeA --out ${FILEPREFIX}_65DNAmSNPs
+
 
