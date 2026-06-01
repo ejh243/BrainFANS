@@ -6,8 +6,8 @@
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=SNPArray/logFiles/LiftOverImputation-%A_%a.o
-#SBATCH --error=SNPArray/logFiles/LiftOverImputation-%A_%a.e
+#SBATCH --output=LiftOverImputation-%A_%a.o
+#SBATCH --error=LiftOverImputation-%A_%a.e
 #SBATCH --job-name=LiftOverImputation
 #SBATCH --array=1-22
 
