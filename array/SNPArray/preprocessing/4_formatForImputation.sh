@@ -19,6 +19,8 @@
 ## OUTPUT
 # vcf files split by chr for upload to michegan imputation server
 
+module load HTSlib
+
 population=$1
 refFile=$2
 
@@ -67,3 +69,5 @@ for file in *.vcf; do vcf-sort ${file} | bgzip -c > ${file}.gz;done
 rm *.vcf
 rm ${FILEPREFIX}_QCd*.*[^gz]
 
+#reformat chr 23 as X 
+zcat ${FILEPREFIX}_QCd_hg19-updated-chr23.vcf.gz | sed 's/^23/X/' | bgzip -c > ${FILEPREFIX}_QCd_hg19-updated-chrX.vcf.gz
