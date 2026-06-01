@@ -1,6 +1,8 @@
 ## Written by Eilis
 ## takes .info files (1 per chromosome) and creates plots to summarise imputation
 
+options(bitmapType='cairo')
+
 
 args<-commandArgs(trailingOnly = TRUE)
 
@@ -22,8 +24,14 @@ for(chr in 1:22){
 	png(paste(dirName,"/ImputationQualityPlots_chr", chr, ".png", sep = ""), width = 12, height = 8, units = "in", res = 200)
 	par(mfrow = c(2,2))
 	
-	imputScores<-read.table(gzfile(paste(dirName,"/chr", chr, ".info.gz", sep = "")), header = TRUE, na.strings = "-")
-	index<-match(imputScores$SNP,refPanel$id)
+	imputScores<-read.table(gzfile(paste(dirName,"/chr", chr, ".info.gz", sep = "")), header = FALSE, na.strings = "-", sep = "\t")
+	colnames(imputScores) <- c("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO")
+	imputScores$Rsq <- as.numeric(gsub(".*R2=([0-9.]+).*", "\\1", imputScores$INFO))
+	imputScores$SNP <- paste(imputScores$CHROM, imputScores$POS, imputScores$REF, imputScores$ALT, sep=":")
+	imputScores$ALT_Frq <- as.numeric(gsub(".*AF=([0-9.]+).*", "\\1", imputScores$INFO))
+	imputScores$MAF <- as.numeric(gsub(".*MAF=([0-9.]+).*", "\\1", imputScores$INFO))
+	
+	index <- match(imputScores$SNP, refPanel$id)
 
 	plot(density(imputScores$Rsq, na.rm = TRUE), main = paste("chr", chr, sep = ""), xlab = "Rsq")
 
