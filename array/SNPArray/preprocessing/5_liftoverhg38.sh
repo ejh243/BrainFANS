@@ -51,7 +51,7 @@ echo lifting over chr${i} from hg19 to hg38...
 java -Xmx230G -jar $EBROOTPICARD/picard.jar LiftoverVcf \
   I=chr${i}.dose_withChr.vcf \
   O=chr${i}.dose.hg38.vcf \
-  CHAIN=${UCSCUTILS}/hg19ToHg18.over.chain.gz \
+  CHAIN=${UCSCREF}/hg19ToHg38.over.chain \
   REJECT=chr${i}.rejected_variants.vcf \
   R=$REFGENOME \
   MAX_RECORDS_IN_RAM=100000 \
