@@ -874,7 +874,7 @@ if(exists("bimodP.y")){
     } else {
         par(mfrow = c(1,2))
         plot(density(QCmetrics$x.cp), lty=2, lwd=2, main = "X chr", xlab = "Standardized Mean Intensity")
-        plot(density(QCmetrics$y.cp), lty=2, lwd=2, main = "X chr", xlab = "Standardized Mean Intensity")
+        plot(density(QCmetrics$y.cp), lty=2, lwd=2, main = "Y chr", xlab = "Standardized Mean Intensity")
 
     }
 ```
