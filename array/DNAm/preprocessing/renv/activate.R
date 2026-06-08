@@ -1,5 +1,6 @@
 
 local({
+
   # the requested version of renv
   version <- "1.2.3"
   attr(version, "md5") <- "1bd9f58e1cfe27ce035933937c6f03de"
@@ -1435,4 +1436,3 @@ local({
   invisible()
 
 })
-
