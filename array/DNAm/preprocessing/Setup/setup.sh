@@ -87,13 +87,6 @@ setup_conda_environment() {
 }
 
 install_r_libraries() {
-    # We need to ensure that renv sees the packages installed in the conda
-    # environment to avoid certain compilation errors with system based 
-    # libraries (e.g. systemfonts).
-cat > "${SCRIPTSDIR}/array/DNAm/preprocessing/.Rprofile" << EOF
-source("renv/activate.R")
-.libPaths(c("${conda_path}/envs/${environment_name}/lib/R/library", .libPaths()))
-EOF
     echo "Installing R libraries using renv..."
     cd "${SCRIPTSDIR}/array/DNAm/preprocessing/" || exit 1
     Rscript "installPackages.R"
