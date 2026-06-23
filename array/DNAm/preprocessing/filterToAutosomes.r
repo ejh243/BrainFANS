@@ -39,8 +39,8 @@ arrayType <- toupper(arrayType)
 #----------------------------------------------------------------------#
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
-library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
-library(data.table, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(bigmelon, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(data.table, warn.conflicts = FALSE, quietly = TRUE))
 
 
 #----------------------------------------------------------------------#

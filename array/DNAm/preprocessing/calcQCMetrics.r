@@ -37,10 +37,10 @@ arrayType <- toupper(arrayType)
 # LOAD PACKAGES
 #----------------------------------------------------------------------#
 
-library(e1071, warn.conflicts = FALSE, quietly = TRUE)
-library(data.table, warn.conflicts = FALSE, quietly = TRUE)
-library(bigmelon, warn.conflicts = FALSE, quietly = TRUE)
-library(wateRmelon, warn.conflicts = FALSE, quietly = TRUE)
+suppressPackageStartupMessages(library(e1071, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(data.table, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(bigmelon, warn.conflicts = FALSE, quietly = TRUE))
+suppressPackageStartupMessages(library(wateRmelon, warn.conflicts = FALSE, quietly = TRUE))
 
 
 #----------------------------------------------------------------------#
