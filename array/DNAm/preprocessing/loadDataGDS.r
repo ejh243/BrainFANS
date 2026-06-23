@@ -17,11 +17,11 @@
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
 args <- commandArgs(trailingOnly = TRUE)
-dataDir <- args[1]
+dataDir <- args[[1]]
+configFile <- args[[2]]
 
 gdsFile <- file.path(dataDir, "2_gds/raw.gds")
 
-configFile <- paste0(dataDir, "/config.r")
 source(configFile)
 
 arrayType <- toupper(arrayType)

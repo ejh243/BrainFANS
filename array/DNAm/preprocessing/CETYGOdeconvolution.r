@@ -21,10 +21,10 @@
 #----------------------------------------------------------------------#
 
 args<-commandArgs(trailingOnly = TRUE)
-dataDir <- args[1]
+dataDir <- args[[1]]
+configFile <- args[[2]]
 
 gdsFile <-paste0(dataDir, "/2_gds/raw.gds")
-configFile <- paste0(dataDir, "/config.r")
 
 source(configFile)
 

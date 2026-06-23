@@ -19,13 +19,14 @@
 # DEFINE PARAMETERS
 #----------------------------------------------------------------------#
 args<-commandArgs(trailingOnly = TRUE)
-dataDir <- args[1]
-refDir <- args[2]
+dataDir <- args[[1]]
+refDir <- args[[2]]
+configFile <- args[[3]]
+
 gdsFile <-file.path(dataDir, "/2_gds/raw.gds")
 normgdsFile<-sub("\\.gds", "Norm.gds", gdsFile)
 qcOutFolder<-file.path(dataDir, "/2_gds/QCmetrics")
 normData<-file.path(dataDir, "/3_normalised/normalised.rdata")
-configFile <- paste0(dataDir, "/config.r")
 
 source(configFile)
 
