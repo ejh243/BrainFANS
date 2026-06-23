@@ -264,6 +264,10 @@ closestLabelledCellType[satb2NegIndex[!closestCellTypePCA[satb2NegIndex] %in% ne
 QCmetrics<-cbind(QCmetrics, closestCellTypePCA, closestLabelledCellType)
 write.csv(QCmetrics[which(closestLabelledCellType == "FALSE"),], paste0(qcOutFolder, "/SamplesPredictedDiffCellTypePCAMahDist.csv"))
 
+if (ncol(mahDistPCA) > 1) {
+  message("WARNING: Only one cell type passed QC for this dataset.")
+}
+
 #----------------------------------------------------------------------#
 # COMPARE TO CELL TYPE POLYTOPE
 #----------------------------------------------------------------------#
