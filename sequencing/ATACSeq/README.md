@@ -236,7 +236,7 @@ This script checks the genotype of the samples as part of their identity check b
   - `COMPARE`: Compare only samples genotype with matched VCF file genotype. Run only compareBamWithGenotypes.sh on sample.
   - `SWITCH`: Indentify only mismatched genotype samples and output potential switches and seach for alternative genotype. Run only searchBestGenoMatch.sh.
 
-### 7. Genotype check (stage 2 QC)
+### 7. Summary stage 2 QC
 
    `sbatch ./jobSubmission/7_collateStage2QCMetrics.sh (project directory) [STEPS]`
 
