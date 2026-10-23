@@ -24,7 +24,7 @@ In order to use the ATAC-seq pipeline, two main configuration files need to be s
     - `macs_group_thres` : Cell fraction-level peak calling q-value cutoff
     - `macs_chr_thres` : Peak calling on sex chromosomes q-value cutoff
 - config.r: This is the configuration file for running R scripts.
-  - The `dir` variable should be changed to be the full path to the project's directory. This should match `MAIN_DIR` variable in the config.txt file.
+  - The `mainDir` variable should be changed to be the full path to the project's directory. This should match `MAIN_DIR` variable in the config.txt file.
   - Other parameters or threshold should be changed as required.
   - An alphabetically ordered list of cell types to which samples belong to needs to be specified as *cellTypes*.
 - Additional source files of R packages that are installed manually will also be located in this folder.
@@ -80,7 +80,7 @@ Samples must be in the same order as in the samples.txt file. An example of info
 
 ## NOTES
 
-These pipeline has been originally designed to be executed with cell type sorted ATAC-seq datasets. However, with the right modifications, it can also be used on bulk tissue ATAC-seq datasets. Instead of a list of cell types in the `CELLTYPES` variable, use "BULK" for example. This has not been tested yet.
+This pipeline has been originally designed to be executed with cell type sorted ATAC-seq datasets. However, with the right modifications, it can also be used on bulk tissue ATAC-seq datasets. Instead of a list of cell types in the `CELLTYPES` variable, use "BULK" for example. This has not been tested yet.
 
 ## STEPS
 
