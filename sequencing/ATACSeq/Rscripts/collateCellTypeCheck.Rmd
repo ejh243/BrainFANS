@@ -16,48 +16,48 @@ params:
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center', echo = TRUE)
 options(scipen=5)
 
-library(plotly)
-library(Rsubread)
-library(scater)
-library(GenomicRanges)
-library(Matrix)
-library(edgeR)
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-library(gridExtra)
-library(ggpubr)
-library(DESeq2)
-library(ggplot2)
-library(pheatmap)
-library(RColorBrewer)
-library(dplyr)
-library(cluster)
-library(BSgenome.Hsapiens.UCSC.hg38)
-library(ggExtra)
-library(corrplot)
-library(kableExtra)
-library(DT)
-library(EDASeq)
+suppressWarnings(suppressPackageStartupMessages({
+  library(plotly)
+  library(Rsubread)
+  library(scater)
+  library(GenomicRanges)
+  library(Matrix)
+  library(edgeR)
+  library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+  library(gridExtra)
+  library(ggpubr)
+  library(DESeq2)
+  library(ggplot2)
+  library(pheatmap)
+  library(RColorBrewer)
+  library(dplyr)
+  library(cluster)
+  library(BSgenome.Hsapiens.UCSC.hg38)
+  library(ggExtra)
+  library(kableExtra)
+  library(PCAtools)
+}))
 
 source(params$configFile)
-
 ```
 
 ```{r}
 
 ## Load data and samples metadata
-metadata<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
-samplesPassed <- read.csv(file.path(qc12stats), sep = ",",stringsAsFactors = FALSE)
-samples <- read.csv(file.path(groupAnalysisSamples), sep = ",",stringsAsFactors = FALSE)
-samplesPassed <- samplesPassed[samplesPassed$PASSALL == TRUE,]
-qcStats <- read.table(qc1stats, header = TRUE, sep = ',', stringsAsFactors = FALSE)
-metadata$sequencingBatch <- as.factor(metadata$sequencingBatch)
-metadata<- droplevels(metadata)
-qcStats <- qcStats[qcStats$sampleID %in% metadata$sampleID,]
+metadata <- read.csv(file.path(sampleSheet), sep = ",",stringsAsFactors = FALSE)
+passSamples <- read.csv(file.path(groupAnalysisSamples), sep = ",",stringsAsFactors = FALSE)
+pheno <- metadata[metadata$sampleID %in% passSamples$sampleID,]
 
-genome <- getBSgenome("hg38")
-df_ordered <- metadata[order(metadata$fraction), ]
+pheno$sequencingBatch <- as.factor(pheno$sequencingBatch)
+pheno<- droplevels(pheno)
+
+pheno$fraction[pheno$fraction == "SOX"] <- "SOX10+"
+pheno$fraction[pheno$fraction == "NEUN"] <- "NeuN+"
+pheno$fraction[pheno$fraction == "IRF8"] <- "IRF8+"
+
+df_ordered <- pheno[order(pheno$fraction), ]
 groups <- as.factor(df_ordered$fraction)
-colors <- brewer.pal(3, "Set2")
+
 ```
 
 ```{r}
@@ -71,15 +71,6 @@ loadCounts <- function(counts){
   return(counts)
 }
 
-## Create Deseq object
-DDSqobj <- function(counts, pheno){
-  group <- factor(pheno$fraction)
-  metaData <- data.frame(group, row.names = colnames(counts))
-  dds <- DESeqDataSetFromMatrix(countData = counts, colData = metaData, design = ~ group)
-  atacDDS<- DESeq(dds)
-  return(atacDDS)
-}
-
 ## Plot PCA with first two principal components
 pca_single <- function(counts,pheno_sub){
   pca <- prcomp(t(counts))
@@ -87,11 +78,21 @@ pca_single <- function(counts,pheno_sub){
   tpm.pca<-pca$sdev^2/sum(pca$sdev^2)
   tpm.scores<-tpm.scores[,which(tpm.pca > 0.01)]
   percentVar = round(100 * (tpm.pca) )
-  pheno_1 = pheno_sub[match(rownames(tpm.scores),pheno_sub$sampleCode),] 
-  tpm.scores.df <- data.frame(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2],fraction = as.factor(pheno_1$fraction), cohort = as.factor(pheno_1$cohort),sampleCode =as.factor(pheno_1$sampleCode), gender =as.factor(pheno_1$"gender") )
-
-  plot1 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc2, color = fraction, label= sampleCode))+geom_point(size=2)+ theme_bw()+
-    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC2: ", percentVar[2], "% variance")) +theme(legend.position="bottom")
+  tpm.scores.df = cbind(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2],
+                        pc3 = tpm.scores[,3],pc4 = tpm.scores[,4]
+                        ,pheno_sub)
+  plot1 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc2, color = fraction,label= sampleCode))+
+    geom_point(size=2, alpha = 0.7)+
+    labs(x=paste0("PC1 (", percentVar[1], "%)"),y=paste0("PC2 (", percentVar[2], "%)"),  
+         title = "", color = "Cell type") +
+    scale_color_manual(values = col_vals_plots) +
+    theme_bw() +
+    theme(
+      legend.position = "bottom",legend.key.size = unit(1.3, 'cm'),
+      legend.text = element_text(size =12),legend.title = element_text(size = 12),
+      axis.title = element_text(margin = margin(r = 15), size = 12),
+      axis.text = element_text(size =12), 
+    )+ guides(shape = guide_legend(nrow = 2))
   
   return(plot1)
 }
@@ -103,97 +104,101 @@ pca_multiple <- function(counts,pheno_sub){
   tpm.pca<-pca$sdev^2/sum(pca$sdev^2)
   tpm.scores<-tpm.scores[,which(tpm.pca > 0.01)]
   percentVar = round(100 * (tpm.pca) )
-  pheno_1 = pheno_sub[match(rownames(tpm.scores),pheno_sub$sampleCode),] 
-  tpm.scores.df <- data.frame(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2], pc3 = tpm.scores[,3],pc4 = tpm.scores[,4],fraction = as.factor(pheno_1$fraction), cohort = as.factor(pheno_1$cohort),sampleCode =as.factor(pheno_1$sampleCode), gender =as.factor(pheno_1$"gender") )
+  tpm.scores.df <- data.frame(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2], pc3 = tpm.scores[,3],pc4 = tpm.scores[,4],fraction = as.factor(pheno_sub$fraction), cohort = as.factor(pheno_sub$cohort),sampleCode =as.factor(pheno_sub$sampleCode), gender =as.factor(pheno_sub$"gender") )
 
   plot1 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc2, color = fraction))+geom_point(size=2)+ theme_bw()+
-    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC2: ", percentVar[2], "% variance")) +theme(legend.position="none")
+    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC2: ", percentVar[2], "% variance")) +theme(legend.position="none")+ scale_color_manual(values = col_vals_plots)
   
   plot2 <- ggplot(tpm.scores.df, aes(x=pc3, y=pc4, color = fraction)) + geom_point(size=2)+theme_bw() +
-    labs(x=paste0("PC3: ", percentVar[3], "% variance"),y=paste0("PC4: ", percentVar[4], "% variance")) +theme(legend.position="right")
+    labs(x=paste0("PC3: ", percentVar[3], "% variance"),y=paste0("PC4: ", percentVar[4], "% variance")) +theme(legend.position="right")+ scale_color_manual(values = col_vals_plots)
   
   plot3 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc4, color = fraction)) + geom_point(size=2)+theme_bw() +
-    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC4: ", percentVar[4], "% variance")) +theme(legend.position="none")
+    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC4: ", percentVar[4], "% variance")) +theme(legend.position="none")+ scale_color_manual(values = col_vals_plots)
   plot4 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc3, color = fraction)) + geom_point(size=2)+theme_bw() +
-    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC3: ", percentVar[3], "% variance")) +theme(legend.position="none")
+    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC3: ", percentVar[3], "% variance")) +theme(legend.position="none")+ scale_color_manual(values = col_vals_plots)
   
   figure <- ggarrange(plot1,plot2,plot3,plot4,labels = c("A", "B", "C","D"),ncol = 2, nrow=2)   
   return(figure)
 }
 
-## Calculate PCA scores
-pca <- function(data){
-  pca <- prcomp(t(data))
-  tpm.scores = pca$x
-  tpm.pca<-pca$sdev^2/sum(pca$sdev^2)
-  tpm.scores<-tpm.scores[,which(tpm.pca > 0.01)]
-  percentVar = round(100 * (tpm.pca) )
-  results <- list(tpm.scores[,c(1:4)], percentVar)
-  return(results)
+## Calculate PCA scores for silhouette score
+pca_transform <- function(data){
+  pca <- prcomp(t(data), center = TRUE, scale. = FALSE)
+  
+  var_explained <- pca$sdev^2 / sum(pca$sdev^2)
+  cum_var <- cumsum(var_explained)
+  pc_scores <- pca$x[, c(1:5)]
+  return(pc_scores)
 }
 
 ## Calculate mean silhouette coefficient
-calc.sil <- function(data, y1, name.y1 = "Group1") {
+calc.sil <- function(data, group_labels) {
   
   # Check if data is a matrix or data frame and convert if necessary
   if (!is.matrix(data)) data <- as.matrix(data)
+  d <- dist(data)  # Euclidean distance in PC space
+  sil <- silhouette(as.integer(as.factor(group_labels)), d)
   
-  # Calculate silhouette scores for y1 (e.g., batch)
-  sil_y1 <- silhouette(as.numeric(as.factor(y1)), dist(data))
-  mean_sil_y1 <- mean(sil_y1[, 3])  # Mean silhouette width for y1
+  results <- data.frame(
+    sample = rownames(data),
+    assigned_cluster = group_labels,
+    cluster_number = sil[, "cluster"],
+    neighbor_cluster = sil[, "neighbor"],
+    sil_width = sil[, "sil_width"]
+  )
   
-  # Create a list to return results
-  result <-list(name = name.y1, silhouette_scores = sil_y1, mean_silhouette = mean_sil_y1)
-  
-  return(result)
+  return(results)
 }
 
-mean_sil.1 <- function(silhouttte_coef,coldata){
-  sil.df <- as.data.frame(silhouttte_coef$silhouette_scores)
-  mean_values <- sil.df %>%
-    group_by(cluster) %>%
-    summarize(mean_value = mean(sil_width))
-  mean.df <- as.data.frame(mean_values)
-  batch <- as.factor(coldata$fraction)
-  mean.df$cluster <- levels(batch)
-  return(mean.df)
-}
-
-sil.1 <- function(silhouttte_coef,coldata){
-  sil.df <- as.data.frame(silhouttte_coef$silhouette_scores)[,c(1,3)]
-  batch <- as.factor(coldata$fraction)
-  sil.df$cluster <- batch
-  return(sil.df)
-}
-
-pca_silscore <- function(counts,pheno_sub){
+## PCA plot with failed samples marked
+pca_qcs3 <- function(counts,pheno_sub){
   pca <- prcomp(t(counts))
   tpm.scores = pca$x
   tpm.pca<-pca$sdev^2/sum(pca$sdev^2)
   tpm.scores<-tpm.scores[,which(tpm.pca > 0.01)]
   percentVar = round(100 * (tpm.pca) )
-  pheno_1 = pheno_sub[match(rownames(tpm.scores),pheno_sub$sampleCode),] 
-  tpm.scores.df <- data.frame(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2],fraction = as.factor(pheno_1$fraction), cohort = as.factor(pheno_1$cohort),sampleCode =as.factor(pheno_1$sampleCode), gender =as.factor(pheno_1$"gender"), passed = pheno_1$QCS3)
-
-  plot1 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc2, color = fraction, shape = passed, label= sampleCode))+geom_point(size=2)+ theme_bw()+scale_shape_manual(values = c("FALSE" = 4, "TRUE" = 16)) +
-    labs(x=paste0("PC1: ", percentVar[1], "% variance"),y=paste0("PC2: ", percentVar[2], "% variance")) +theme(legend.position="bottom")
+  tpm.scores.df <- data.frame(pc1 = tpm.scores[,1],pc2 = tpm.scores[,2],
+                              fraction = as.factor(pheno_sub$fraction),
+                              cohort = as.factor(pheno_sub$cohort),
+                              sampleCode =as.factor(pheno_sub$sampleCode), 
+                              sampleID =as.factor(pheno_sub$sampleID), 
+                              gender =as.factor(pheno_sub$gender), passed = pheno_sub$QCS3)
+  
+  plot1 <- ggplot(tpm.scores.df, aes(x=pc1, y=pc2, color =  fraction,
+                                     shape = passed, label = sampleCode))+
+    geom_point(size=2, alpha = 0.7)+
+  scale_shape_manual(values = c("FALSE" = 3, "TRUE" = 16)) + 
+    scale_color_manual(values = col_vals_plots) +
+    labs(x=paste0("PC1: ", percentVar[1], "% variance"),
+         y=paste0("PC2: ", percentVar[2], "% variance"), 
+         color = "Cell-type", 
+         title    = paste0("Cell-type check: PCA of top ",diffN, " cell differential ATAC peaks"),
+         subtitle = "Outliers defined by negative silhouette coefficient", 
+         shape = "Pass QC Stage 3") +
+    theme_bw(base_size = 11) +
+    theme(
+      legend.position = "bottom",legend.key.size = unit(1.3, 'cm'),
+      legend.text = element_text(size =12),legend.title = element_text(size = 12),
+      axis.title = element_text(margin = margin(r = 15), size = 12),
+      axis.text = element_text(size =12), 
+    )+ guides(shape = guide_legend(override.aes = list(size=6),ncol = 1),
+              colour = guide_legend(override.aes = list(size=6),ncol = 2))
   
   return(plot1)
 }
-
 ```
 
 ## Overview
 
-This is the third stage of the ATAC-seq QC pipeline. After having check the quality and identity of samples, this third stage checks for the assigned cell type of the samples, as well as to identify samples where sorting might have not fully worked. To do this, we will perform a cell type check using the read counts in peaks called at cell type level.
+This is the third stage of PIPPA. After having check the quality and identity of samples, this third stage checks for the assigned cell type of the samples, as well as to identify samples where sorting might have not fully worked. To do this, we will perform a cell type check using the read counts in peaks called at cell type level.
 
-In total, `r nrow(metadata)` were profiled and `r nrow(samplesPassed)` samples passed stage 1 (data quality) and 2 (identity) check of the QC. Below, the number of samples used to perform peak calling at cell type level is shown. Peak calling was performed using MACS3 in paired-end mode and with 1e-3 cutoff for broad peak calling.
+In total, `r nrow(metadata)` were profiled and `r nrow(passSamples)` samples passed stage 1 (data quality) and 2 (identity) check of the QC. Below, the number of samples used to perform peak calling at cell type level is shown. Peak calling was performed using MACS3 in paired-end mode.
 
 ```{r}
 nCTStart<-table(metadata$fraction)
-nCTMid<-table(samplesPassed$fraction)
+nCTMid<-table(passSamples$fraction)
 ctCounts<-cbind(nCTStart, nCTMid)
-colnames(ctCounts)<-c("Profiled", "CT Peak Calling")
+colnames(ctCounts)<-c("Profiled", "Samples for Peak Calling")
 kbl(ctCounts) %>%
   kable_styling(bootstrap_options = c("striped", "hover"),font_size = 10)
 
@@ -204,49 +209,25 @@ kbl(ctCounts) %>%
 First, we will explore the raw read counts in peaks. 
 
 ```{r}
-load(paste0(groupsCounts, "/peakCounts_all_filtbam_",macs_thres_group,"_", filtering, ".filt.narrowPeak.rdata"))
-
-counts <- loadCounts(fc_ctPeaks$count)
-pheno <- metadata[metadata$sampleID %in% colnames(counts),]
-counts <- counts[,match(pheno$sampleID,colnames(counts))]
-colnames(counts) <- pheno$sampleCode
-qcStats <- qcStats[qcStats$sampleID %in% pheno$sampleID,]
-
-## Prepare peak ranges table
+load(groupCountsAll)
+counts.raw <- loadCounts(fc_ctPeaks$counts)
 cnt_table <- fc_ctPeaks$annotation
-colnames(cnt_table)=c("Geneid","Chr","Start","End","Strand","Length")
-cnt_table$Start <- as.numeric(cnt_table$Start)
-cnt_table$End <- as.numeric(cnt_table$End)
-cnt_table <- cnt_table[complete.cases(cnt_table[c("Start", "End")]), ]
+
+#filter and align metadata
+pheno.filt <- pheno[pheno$sampleID %in% colnames(counts.raw),]
+pheno.filt <- pheno.filt[match(colnames(counts.raw),pheno.filt$sampleID),]
+stopifnot(all(colnames(counts.raw) == pheno.filt$sampleID))
 
 ```
 
-The total number of counts in peaks is `r nrow(counts)` and `r ncol(counts)` samples, `r dim(counts)` is dimension of counts and `r dim(pheno)` the sample sheet. In order to reduce noise, peaks with low counts are filtered out. The number of peaks filtered is shown below.
+The total number of counts in peaks is `r nrow(counts)` and `r ncol(counts)` samples, `r dim(counts)` is dimension of counts and `r dim(pheno.filt)` the sample sheet. In order to reduce noise, peaks with low counts are filtered out. The number of peaks filtered is shown below.
 
 ```{r}
-dge <- DGEList(counts=counts,
-           group=pheno$fraction)
-keep <- filterByExpr(dge$counts, group = pheno$fraction)
-dge <- dge[keep, ]
-counts.filt <- dge$counts
+counts.dge <- DGEList(counts=counts.raw, samples=pheno.filt)
+keep <- filterByExpr(counts.dge, group = pheno.filt$fraction)
+counts.dge.filt <- counts.dge[keep,]
 
-print(nrow(counts)-nrow(counts.filt))
-```
-
-### 1.1 Principal Component Analysis
-
-Although filtering has been applied, our count matrix is still too big, so in order to aid visualisation, we select and plot 100,000 random peaks to check the distribution of raw counts. Principal Component Analysis (PCA) is applied on the raw counts.
-
-```{r fig.height = 6, fig.width = 8} 
-N <- 100000
-sampled_peaks <- sample(rownames(counts.filt), N)
-counts.random <- counts.filt[sampled_peaks,]
-
-ggplotly(pca_single(counts.random, pheno), tooltip = "label")
-```
-
-```{r fig.height = 8, fig.width = 8} 
-pca_multiple(counts.random, pheno)
+print(nrow(counts.raw)-nrow(counts.dge.filt))
 ```
 
 ## 2.Normalised counts in peaks
@@ -255,122 +236,100 @@ Normalisation is applied to raw counts in peaks to account for biases or factors
 
 ### 2.1 Variance Stabilizing Transformation (VST)
 
-VST is first used to transform the counts data. This selects 1000 peaks that are 'representative' of the dataset's dispersion trend, and uses the information from these to perform the transformation. The two first PCAs of the transformed data is shown below. The filtered set of counts in peaks is used here.
+VST is first used to transform the counts data. This selects `r diffN` peaks that are 'representative' of the dataset's dispersion trend, and uses the information from these to perform the transformation. The two first PCAs of the transformed data is shown below. The filtered set of counts in peaks is used here.
 
 ```{r}
-vsd <- vst(counts.filt, blind = FALSE, nsub = 1000)
+dds.filt <- DESeqDataSetFromMatrix(countData = counts.dge.filt,
+                                   colData = pheno.filt,
+                                   design = ~ fraction)
 
-ggplotly(pca_single(vsd, pheno))
-```
+## normalise counts in peaks with VST transform
+vst <- vst(dds.filt)
+counts.norm <- assay(vst)
 
-```{r fig.height = 8, fig.width = 8} 
-
-counts_to_plot <- vsd
-metadata.p <- data.frame(row.names = colnames(counts_to_plot))
-metadata.p$fraction <- pheno$fraction
-rownames(metadata.p) <- pheno$sampleID
-pca_multiple(counts_to_plot, pheno)
-```
-
-
-### 2.2 FQ-FQ normalisation
-
-An alternative normalisation is double Full-quantile normalisation (from EDASeq package). This double normalisation accounts for two main types of effects on peak-level counts:
-- within-lane gene-specific (and possibly lane-specific) effects, e.g., related to gene length or GC-content.
-- effects related to between-lane distributional differences, e.g., sequencing depth.
-
-The randomly selected subset of counts in peaks is used here for speed and visualisation purposed. Transformed counts are log + 1 in order to perform PCA and plot them.
-
-```{r}
-
-gr = GRanges(seqnames=cnt_table$Chr, ranges=IRanges(cnt_table$Start, cnt_table$End), strand="*", mcols=data.frame(peakID=cnt_table$Geneid))
-gr <- gr[gr$mcols.peakID %in% rownames(counts.random),]
-peakSeqs = getSeq(x=genome, gr)
-
-gcContentPeaks = letterFrequency(peakSeqs, "GC",as.prob=TRUE)[,1]
-cnt_table <- cnt_table[cnt_table$Geneid %in% rownames(counts.random),]
-counts.norm <- counts.random
-counts.norm <- counts.norm[rownames(counts.norm) %in% cnt_table$Geneid,]
-dataWithin <- withinLaneNormalization(counts.norm,gcContentPeaks, which="full")
-dataNorm <- betweenLaneNormalization(dataWithin, which="full")
-
-log_counts <- log(dataNorm+1)
-ggplotly(pca_single(log_counts, pheno))
-```
-
-```{r fig.height = 8, fig.width = 8} 
-pca_multiple(log_counts, pheno)
+ggplotly(pca_single(counts.norm, pheno.filt))
 ```
 
 ## 3. Cell-type check
 
-The main goal of this third part of the pipeline is to check the cell-type assigned to each sample. The counts in cell-type peaks can be used for this, as we will check the clustering of samples based on this. For this, we have perform differential analysis between the cell-groups of samples to obtain the peaks that differentiates the cell-types. The top ` r diffN` differential peaks are used for the clustering of samples and the identification of potential mislabelled samples.
+The main goal of this third part of the pipeline is to check the cell-type assigned to each sample. The counts in cell-type peaks can be used for this, as we will check the clustering of samples based on this. For this, we have perform differential analysis between the cell-groups of samples to obtain the peaks that differentiates the cell-types. The top `r diffN` differential peaks are used for the clustering of samples and the identification of potential mislabeled samples.
 
 ```{r}
-load(paste0(groupsCounts, "/cellType_diffPeaks_edgeR_",macs_thres_group,"_", filtering, ".filt.narrowPeak.rdata"))
+load(diffPeaksCountsAll)
 res_sorted <- results[order(results$FDR, decreasing = FALSE),]
-most_significant_peaks <- rownames(head(res_sorted, 5000))
-counts.dif <- counts[most_significant_peaks,]
-dds.dif <- DESeqDataSetFromMatrix(countData = counts.dif,
-                              colData = pheno,
-                              design = ~ fraction)
+most_significant_peaks <- rownames(head(res_sorted, diffN))
+counts.dif <- counts.norm[most_significant_peaks,]
+counts_to_plot <- counts.dif
 ```
 
-### 3.1 VST transformation (normalisation)
+### 3.1 Clustering of samples
 
-We apply VST on these top differential peaks, as well as PCA to investigate the clustering of samples based on cell-types.
+#### Principal component analysis
+
+We perform PCA to investigate the clustering of samples based on cell-types for the top `r diffN` differential peaks.
 
 ```{r}
-
-vsd <- varianceStabilizingTransformation(dds.dif,blind = FALSE)
-
-ggplotly(pca_single(assay(vsd), pheno))
+ggplotly(pca_single(counts_to_plot, pheno.filt))
 ```
 
 We can also explore multiple PCs.
 ```{r fig.height = 8, fig.width = 8} 
 
-counts_to_plot <- assay(vsd)
-pca_multiple(counts_to_plot, pheno)
+pca_multiple(counts_to_plot, pheno.filt)
 ```
 
-### 3.2 Clustering of samples
+```{r fig.height = 8, fig.width = 8} 
+rownames(pheno.filt) <- pheno.filt$sampleID
+p <- PCAtools::pca(counts_to_plot, metadata = pheno.filt)
+pca_plot <- PCAtools::pairsplot(p, colby = "fraction",components = c(1:10),
+                         colkey= col_vals_plots,pointSize = 1)
+
+pdf(file.path(paste0(peakDir, "/QCOutput/10PCs.pdf")), width = 20, height = 20)
+pca_plot
+dev.off()
+```
+
+#### Hierarchical clustering
 
 We use hierarchical clustering to cluster samples based on counts in peaks (top `r diffN`) and identify groups of samples based on cell-types, sequencing batch or cohort.
 
-```{r ,fig.height = 20, fig.width = 18}
+```{r ,fig.height = 20, fig.width = 20}
 
 cm = data.frame(as.matrix(counts_to_plot))
-pheno$sequencingBatch <- as.factor(pheno$sequencingBatch)
-anno = as.data.frame(pheno[,c("fraction", "sequencingBatch", "cohort", "gender")])
-rownames(anno) <- pheno$sampleCode
+pheno.filt$sequencingBatch <- as.factor(pheno.filt$sequencingBatch)
+anno = as.data.frame(pheno.filt[,c("fraction", "sequencingBatch", "cohort", "gender")])
+rownames(anno) <- pheno.filt$sampleCode
 colnames(cm) = rownames(anno)
 colnames(anno)<-c("Cell Fraction", "sequencingBatch", "cohort","gender")
 rownames(cm) = NULL
 my_palette <- colorRampPalette(c("blue", "white", "red"))(50)
 breaks <- seq(-2, 2, length.out = 51)
-pheatmap(cm, annotation_col = anno,cluster_cols=TRUE,color = my_palette, cluster_rows=FALSE,scale="row",show_rownames=FALSE,show_colnames = FALSE,fontsize_col = 2, clustering_method = "ward.D2",cutree_cols = 4,breaks = breaks)
+annotation_colors <- list("Cell Fraction" = col_vals_plots)
+
+pheatmap(cm, annotation_col = anno,cluster_cols=TRUE,color = my_palette, annotation_colors  = annotation_colors,cluster_rows=FALSE,scale="row",show_rownames=FALSE,show_colnames = FALSE,fontsize_col = 2,cutree_cols = 4,breaks = breaks)
 ```
 
-### 3.3 Sample-to-Sample distance
+#### Sample-to-Sample distance
 
 The distance between samples is an additional method to evaluate the similarity between samples within and between cell-fraction groups.
 
-```{r ,fig.height = 20, fig.width = 18}
+```{r ,fig.height = 20, fig.width = 20}
 cm = data.frame(as.matrix(counts_to_plot))
-anno = as.data.frame(pheno[,c("fraction","gender", "sequencingBatch", "cohort")])
-rownames(anno) <- pheno$sampleCode
+anno = as.data.frame(pheno.filt[,c("fraction","gender", "sequencingBatch", "cohort")])
+rownames(anno) <- pheno.filt$sampleCode
 colnames(cm) = rownames(anno)
-colnames(anno)<-c(" Cell Fraction","gender", "sequencingBatch", "cohort")
+colnames(anno)<-c("Cell Fraction","gender", "sequencingBatch", "cohort")
 my_palette <- colorRampPalette(c("blue", "white", "red"))(50)
+annotation_colors <- list("Cell Fraction" = col_vals_plots)
+
 sampleDists <- dist(t(cm))
 sampleDistMatrix <- as.matrix(sampleDists)
 p <-pheatmap(sampleDistMatrix,
-         clustering_distance_rows = sampleDists,
-         clustering_distance_cols = sampleDists,
-         col = my_palette ,annotation_col=anno,fontsize_col = 2, fontsize_row = 2)
+        clustering_distance_rows = sampleDists,
+       clustering_distance_cols = sampleDists,
+         col = my_palette ,annotation_colors  = annotation_colors,annotation_col=anno,fontsize_col = 2, fontsize_row = 2)
 p
-pdf(file.path(paste0(countsDir, "/sampleToSampleDist.pdf")), width = 20, height = 20)
+pdf(file.path(paste0(peakDir, "/QCOutput/sampleToSampleDist.pdf")), width = 15, height = 15)
 print(p)
 dev.off()
 ```
@@ -383,83 +342,115 @@ The silhouette coefficient (or silhouette score) is a metric used to evaluate th
 - *Low score* (close to 0): The sample is on or very close to the boundary between clusters.
 - *Negative score* (close to −1): The sample is assigned to the wrong cluster.
 
-We use the VST transform counts in peaks to calculate the silhouette coefficient and identify samples that are not in the right cell-type group or that do not cluster with their group.
+We use the VST transform counts in peaks to calculate the silhouette coefficient and identify samples that are not in the right cell-type group or that do not cluster with their group. Samples that have a silhouette score below `r silScore` will be failed.
 
 ```{r}
-counts.pca.ruv5 <- pca(counts_to_plot)
-counts.silh.norm<- calc.sil(counts.pca.ruv5[[1]],colData(vsd)$fraction, name.y1 = 'Cell Fraction')
-norm.sil.fraction <- mean_sil.1(counts.silh.norm, colData(vsd))
-after.sil.ruv5.fraction <- sil.1(counts.silh.norm,colData(vsd))
+counts_to_plot.s <- pca_transform(counts_to_plot)
+counts.silh.norm<- calc.sil(counts_to_plot.s,pheno.filt$fraction)
 ```
 
-### 4.1 Identify failed samples
-
-Samples whose silhouette coefficient is lower than `r silScore` are marked as potential samples with wrong cell fraction assigned or low quality samples.
-
-```{r}
-after.sil.ruv5.fraction$sample <- pheno$sampleCode
-after.sil.ruv5.fraction$cohort <- pheno$cohort
-
-after.sil.ruv5.list <- split(after.sil.ruv5.fraction,after.sil.ruv5.fraction$cluster)
-p<- NULL
-for(i in 1:length(cellTypes)){
-  p[[i]] <- ggplot(after.sil.ruv5.list[[i]], aes(x = sample, y = sil_width, color = cohort)) + 
-  geom_point(size=3)+theme_bw()+geom_hline(yintercept =silScore,color = "red", linewidth = 1)+geom_hline(yintercept =0.25,color = "black", linetype = "dashed", linewidth = 1)+geom_hline(yintercept =-0.25,color = "black", linetype = "dashed", linewidth = 1)+
-  labs(x = 'Sample', y = 'Silhouette Coefficient', name = 'Batch', title=names(after.sil.ruv5.list)[i]) +theme(legend.title = element_blank(),
-        legend.position = 'bottom',axis.text.x = element_text(angle =90, size=7))
-
-}
-```
-
-```{r fig.height = 5, fig.width = 9} 
-ggplotly(p[[1]])
-```
-
-```{r fig.height = 5, fig.width = 9} 
-ggplotly(p[[2]])
-```
-
-```{r fig.height = 5, fig.width = 9} 
-ggplotly(p[[3]])
-```
-
-```{r fig.height = 5, fig.width = 9} 
-ggplotly(p[[4]])
-```
-
-### 4.2 Mark failed samples
+### 4.1 Mark failed samples
 
 We use the first two PCAs to cluster samples based on their assigned cell-types and those that have failed based on the silhouette score threshold are marked with a X.
 
+Below there is a table of number of samples that failed stage 3 of QC, so that their labelled cell-type might be wrong.
+
 ```{r fig.height = 6, fig.width = 8} 
+counts.silh.norm <- counts.silh.norm[match(pheno.filt$sampleID,counts.silh.norm$sample),]
+pheno.filt$QCS3 <- ifelse(counts.silh.norm$sil_width > silScore, "TRUE", "FALSE")
 
-pheno$QCS3 <- ifelse(after.sil.ruv5.fraction$sil_width < silScore, "FALSE", "TRUE")
+counts <- as.data.frame(table(pheno.filt$QCS3))
+names(counts) <- c("Pass Cell-type check", "Count")
 
-ggplotly(pca_silscore(counts_to_plot,pheno),tooltip="label")
+knitr::kable(counts)
+```
+
+#### Principal component analysis
+
+```{r fig.height = 8, fig.width = 8} 
+ggplotly(pca_qcs3(counts_to_plot,pheno.filt),tooltip="label")
+```
+
+```{r fig.height = 10, fig.width = 8} 
+pheno.filt$QCS3 <- as.factor(pheno.filt$QCS3)
+rownames(pheno.filt) <- pheno.filt$sampleID
+p <- PCAtools::pca(counts_to_plot, metadata = pheno.filt)
+pca_plot <- PCAtools::pairsplot(p, colby = "fraction",components = c(1:5),
+                         colkey= col_vals_plots,pointSize = 1, shape ="QCS3",
+                         shapekey = c("FALSE" = 3, "TRUE" = 16))
+
+pca_plot
 ```
 
 ## Summary
 
 Below, samples that fail at this third QC stage are shown.
 
-```{r, echo = FALSE}
-wrongCT <- pheno[pheno$QCS3==FALSE,]
+```{r}
 
+wrongCT <- pheno.filt[pheno.filt$QCS3==FALSE,]
+counts <- as.data.frame(table(wrongCT$fraction))
+names(counts) <- c("Failed cell-type check", "Count")
+
+knitr::kable(counts)
+```
+
+```{r, echo = FALSE}
 DT::datatable(wrongCT)
 ```
 
 ```{r}
-## Collate results from previous Stage 1 and 2 in a single table
-samplesPassed <- samplesPassed[samplesPassed$sampleID %in% pheno$sampleID,]
-QCPASSALL<-cbind(samplesPassed, "QCS3" = pheno$QCS3)
-QCPASSALL$PASSALL[QCPASSALL$QCS2==TRUE & QCPASSALL$QCS1 == TRUE & QCPASSALL$QCS3 == "FALSE"]<- FALSE
-QCPASSALL <- QCPASSALL[,c(1:16,18,17)]
+## collate results Stage 3 QC
+passSamples$QCS3 <- pheno.filt[match(pheno.filt$sampleCode,passSamples$sampleCode),]$QCS3
+write.csv(passSamples, file = qc3pass, row.names = FALSE)
 
-write.csv(QCPASSALL, file = file.path(qc3pass),row.names = FALSE)
+##list of samples
+samplesPassAll <- passSamples[passSamples$QCS3 == TRUE,]$sampleID
 
-
-# generate a txt file of passed samples
-write.table(QCPASSALL$sampleID, file = file.path(qc3passList), 
-            row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(samplesPassAll,file = qc3passList, row.names = FALSE, col.names = FALSE)
 ```
 
+```{r}
+## Collate results from previous Stage 1 and 2, and new Stage 3 results in a single table
+
+allQC <- metadata
+qc1 <- read.csv(file.path(qc1pass), sep = ",",stringsAsFactors = FALSE)
+qc1$QCPASS <- as.factor(qc1$QCPASS)
+allQC$QCS1 <- qc1[match(allQC$sampleID,qc1$sampleID),]$QCPASS
+
+qc2 <- read.csv(file.path(qc2pass), sep = ",",stringsAsFactors = FALSE)
+qc2$QCPASS <- as.factor(qc2$QCPASS)
+allQC$QCS2 <- qc2[match(allQC$sampleID,qc2$sampleID),]$QCPASS
+
+allQC$QCS3 <- pheno.filt[match(allQC$sampleID,pheno.filt$sampleID),]$QCS3
+allQC$QCS3[is.na(allQC$QCS3)] <- FALSE
+
+allQC$PASSALL <- ifelse(allQC$QCS1 == TRUE & allQC$QCS2 == TRUE & allQC$QCS3 == TRUE, TRUE, FALSE)
+write.csv(allQC, file = allQCresults, row.names = FALSE)
+
+```
+
+
+```{r}
+## Collate results from previous Stage 1 and 2, and new Stage 3 results in a single table
+
+allQC <- metadata
+qc1 <- read.csv(file.path(qc1pass), sep = ",",stringsAsFactors = FALSE)
+qc1$QCPASS <- as.factor(qc1$QCPASS)
+qc1 <- qc1[match(allQC$sampleID,qc1$sampleID),]
+allQC <- cbind(allQC, qc1[,c("AlignmentRate","TotalNumReads", "NRF", "PBC1", "PBC2", "NFR", "MNC")])
+allQC$QCS1 <- qc1[match(allQC$sampleID,qc1$sampleID),]$QCPASS
+
+qc2 <- read.csv(file.path(qc2pass), sep = ",",stringsAsFactors = FALSE)
+qc2$QCPASS <- as.factor(qc2$QCPASS)
+qc2 <- qc2[match(allQC$sampleID,qc2$sampleID),]
+allQC <- cbind(allQC, qc2[,c("sexCheck","genoCheck")])
+allQC$QCS2 <- qc2[match(allQC$sampleID,qc2$sampleID),]$QCPASS
+
+allQC$QCS3 <- pheno.filt[match(allQC$sampleID,pheno.filt$sampleID),]$QCS3
+allQC$QCS3[is.na(allQC$QCS3)] <- FALSE
+
+allQC$PASSALL <- ifelse(allQC$QCS1 == TRUE & allQC$QCS2 == TRUE & allQC$QCS3 == TRUE, TRUE, FALSE)
+#write.csv(allQC, file = allQCstats, row.names = FALSE)
+
+```

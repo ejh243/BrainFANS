@@ -1,34 +1,39 @@
 #!/bin/bash
-## ===================================================================================================================##
-##                    ATAC-seq pipeline STEP 1.4: Pre-analysis -- ENCODEQC metrics calculation                        ##
-## ===================================================================================================================##
-## EXECUTION: sbatch ./subScripts/calcENCODEQCMetrics.sh <sampleName>                                                 ||
-## - execute from pipeline's subScripts directory                                                                     ||
-##                                                                                                                    ||
-## DESCRIPTION: This script calculates ENCODE library complexity metrics according to                                 ||
-## https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit#                              ||
-##                                                                                                                    ||
-## REQUIRES:                                                                                                          ||
-## - Variables in config file: ALIGNED_DIR                                                                            ||
-## - Software: samtools, samstats, bedtools  (in a conda environment)                                                 ||
-## - Aligned <sampleName>.filt.nodup.bam file in ALIGNED_DIR directory                                                ||
-##                                                                                                                    ||
-## INPUTS:                                                                                                            || 
-## $1 -> <sampleName> Name of sample specified in command line. Reads should be previously aligned                    ||
-##                                                                                                                    ||
-## OUTPUTS:                                                                                                           || 
-## ${ALIGNED_DIR}/ENCODEMetrics/<sampleName>.flagstat.qc, ${ALIGNED_DIR}/ENCODEMetrics/<sampleName>.pbc.qc            ||
-## ===================================================================================================================##
+## =======================================================================================================##
+##                    PIPPA STEP 1.4: Pre-analysis -- ENCODEQC metrics calculation                        ##
+## =======================================================================================================##
+## EXECUTION: sbatch ./subScripts/calcENCODEQCMetrics.sh <sampleName>                                     ||
+##                                                                                                        ||
+## DESCRIPTION: This script calculates ENCODE library complexity metrics according to                     ||
+## https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit#                  ||
+##                                                                                                        ||
+## REQUIRES:                                                                                              ||
+## - Variables in config file: ALIGNED_DIR                                                                ||
+## - Software: samtools, samstats, bedtools (in a conda environment)                                      ||
+## - Aligned <sampleName>.filt.nodup.bam file in ALIGNED_DIR directory                                    ||
+## - Aligned (duplicates retained) <sampleName>.filt.dupmark.bam in ALIGNED_DIR directory                 ||
+##                                                                                                        ||
+## INPUTS:                                                                                                || 
+## $1 -> <sampleName> Name of sample specified in command line. Reads should be already aligned           ||
+##                                                                                                        ||
+## OUTPUTS:                                                                                               || 
+## ${ALIGNED_DIR}/ENCODEMetrics/<sampleName>.flagstat.qc, ${ALIGNED_DIR}/ENCODEMetrics/<sampleName>.pbc.qc||
+## =======================================================================================================##
 
 ## ============ ##
 ##    SET UP    ##
 ## ============ ##
 
 sampleName=$1
-echo "Calculating ENCODE QC metrics for" $sampleName
 
-## If not found, create directory for ENCODEMetrics results
-mkdir -p ${ALIGNED_DIR}/ENCODEMetrics
+if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]] && [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam ]]
+then 
+  { echo "Aligned reads for ${sampleName} not found. Please run STEP 1.3 ALIGN first." ; exit 1; }
+else
+  echo "Found aligned files:" ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam
+fi
+
+echo "Calculating ENCODE QC metrics for" $sampleName
 
 cd ${ALIGNED_DIR}
 

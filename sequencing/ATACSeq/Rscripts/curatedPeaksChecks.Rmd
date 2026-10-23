@@ -1,0 +1,252 @@
+---
+title: "Properties of curated peak sets"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+params:
+  configFile: !r commandArgs(trailingOnly=TRUE)[1]
+---
+
+```{r}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center', echo = TRUE)
+options(scipen=5)
+
+suppressWarnings(suppressPackageStartupMessages({
+  library(GenomicRanges)
+  library(ggplot2)
+  library(rtracklayer)
+  library(segmented)
+  library(tidyr)
+  library(dplyr)
+  library(ChIPpeakAnno)
+  library(ChIPseeker)
+  library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+  library(org.Hs.eg.db)
+
+}))
+
+source(params$configFile)
+```
+
+```{r}
+## Collate peak sets called with stringent thresholds
+
+peakFiles <- list.files(
+  path = peaksCurated,
+  pattern = "narrowPeak\\.filt$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+
+peakFiles <- peakFiles[!grepl("\\.sorted\\.noSC\\.narrowPeak\\.filt$", peakFiles)]
+
+peaks<-list()
+for(each in peakFiles){
+  fraction<-head(unlist(strsplit(each, "\\.")), n = 1)
+  peaks[[fraction]]<-makeGRangesFromDataFrame(read.table(each), keep.extra.columns=TRUE, seqnames.field="V1",
+                                              start.field="V2",
+                                              end.field="V3",
+                                              ignore.strand=TRUE)
+}
+
+names(peaks) <- gsub(peaksCurated, "",names(peaks))
+peaks.df <- data.frame(name = names(peaks)) %>%
+  separate(
+    name,
+    into = c("empty", "cell_type", "peak_set_name"),
+    sep = "/",
+    remove = FALSE
+  ) %>%
+  dplyr::select(-empty)
+
+peaks.df$n_peaks <- sapply(peaks, length)
+
+```
+
+## Overview
+
+Peak calling was performed using only samples that passed all the PIPPA QC stages: sequencing quality, sample identity and correct cell type. These samples were used for peak calling with a relaxed threshold and then the user picked a stringent threshold through the segmented analysis (STEPs 9.3-5). Here, we explore the properties of the peak sets generated with stringent thresholds using MACS3 for each cell type. All peak sets generated will be shown here.
+
+### 1. Number of peaks
+
+First, we will look at the number of peaks called for each curated peak set generated.
+
+```{r}
+  
+p1 <- ggplot(peaks.df, aes(x = peak_set_name,y = n_peaks,fill = cell_type,)) +
+  geom_col(linewidth = 0.7,width = 0.8,color = "black") +
+  scale_fill_manual(values = col_vals_plots) +
+  theme_bw() +
+  labs(
+    x = "Peak Set",
+    y = "Number of Peaks", fill = "Cell type"
+  ) + theme(
+    panel.grid = element_blank(),
+    plot.title =  element_text(
+      face = "bold",size = 15,
+      hjust = 0.5
+    ),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      size = 10
+    ),
+    legend.position = "none")
+p1
+```
+
+### 2. Width of peaks
+
+```{r}
+extract_widths <- function(gr_list) {
+  
+  bind_rows(
+    
+    lapply(names(gr_list), function(nm) {
+      
+      gr <- gr_list[[nm]]
+      
+      widths <- width(gr)
+      widths[widths > 10000] <- 10000
+      
+      data.frame(
+        PeakSet = nm,
+        cell_type = sub("^/([^/]+)/.*$", "\\1", nm),
+        peak_set_name = sub("^/[^/]+/(.*)$", "\\1", nm),
+        Width = widths
+      )
+      
+    })
+  )
+}
+
+widths_peaks <- extract_widths(
+  peaks
+)
+
+p2 <- ggplot(widths_peaks,aes(x = Width,y = peak_set_name,fill = cell_type))+
+  geom_boxplot(width = 0.65,outlier.shape = NA,linewidth = 0.8,color = "black") +
+  stat_summary( fun = median,geom = "point", size = 2.5,color = "black") +
+  scale_fill_manual(values = col_vals_plots) +
+  guides(fill = "none") +
+  coord_cartesian(xlim = c(0,quantile(widths_peaks$Width, 0.99) ))+
+  labs(x = "Peak width (bp)",y = NULL,fill = "Cell type") +
+  theme_bw(base_size = 12) +
+  theme(
+     plot.title = element_text(face = "bold",size = 15, hjust = 0.5),
+     axis.text.y = element_text(size = 10),
+     legend.position = "none"
+    )
+p2
+```
+
+### 3. Gaps between peaks
+
+```{r}
+extract_peak_gaps <- function(gr_list) {
+  
+  bind_rows(
+    
+    lapply(names(gr_list), function(nm) {
+      
+      gr <- gr_list[[nm]]
+      gr <- sort(gr)
+      gap_gr <- gaps(gr)
+      gap_widths <- width(gap_gr)
+      gap_widths <- gap_widths[
+        is.finite(gap_widths) &
+          gap_widths > 0
+      ]
+      
+      data.frame(
+        
+        PeakSet = nm,
+        GapWidth = gap_widths,
+        
+        cell_type = sub("^/([^/]+)/.*$", "\\1", nm),
+        peak_set_name = sub("^/[^/]+/(.*)$", "\\1", nm)
+        )
+    })
+  )
+}
+
+gaps_peaks <- extract_peak_gaps(
+  peaks
+)
+
+p3 <- ggplot(gaps_peaks,aes(x = GapWidth,y = peak_set_name,fill = cell_type))+
+  geom_boxplot(width = 0.65,outlier.shape = NA,linewidth = 0.8,color = "black") +
+  stat_summary( fun = median,geom = "point", size = 2.5,color = "black") +
+  scale_fill_manual(values = col_vals_plots) +
+  guides(fill = "none") +
+  coord_cartesian(xlim = c(0,quantile(gaps_peaks$GapWidth, 0.90) ))+
+  labs(x = "between peaks (bp)",y = NULL,fill = "Cell type") +
+  theme_bw(base_size = 12) +
+  theme(
+     plot.title = element_text(face = "bold",size = 15, hjust = 0.5),
+     axis.text.y = element_text(size = 10),
+     legend.position = "none"
+    )
+p3
+```
+
+### 4.Genomic annotation of peaks
+
+```{r}
+peaksAnno.all<-lapply(peaks,annotatePeak,
+                      TxDb=TxDb.Hsapiens.UCSC.hg38.knownGene, 
+                      annoDb="org.Hs.eg.db", verbose = FALSE)
+names(peaksAnno.all) <- names(peaks)
+
+changeAnnotation <- function(df_sub){
+  annotation_df <- df_sub %>%
+    dplyr::mutate(
+      annotation_group = dplyr::case_when(
+        grepl("Promoter", annotation) ~ "Promoter",
+        grepl("Exon", annotation) ~ "Exon",
+        grepl("Intron", annotation) ~ "Intron",
+        TRUE ~ "Intergenic"
+      )
+    ) %>%
+    dplyr::group_by(annotation_group) %>%
+    dplyr::summarise(
+      annotation_n = dplyr::n(),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      percent = annotation_n / sum(annotation_n) * 100
+    )
+}
+
+peaksAnno.df <- lapply(peaksAnno.all, function(x) as.data.frame(x@anno))
+peaksAnno.df.anno <- lapply(peaksAnno.df, changeAnnotation)
+
+combined <- bind_rows(
+  peaksAnno.df.anno,
+  .id = "peak_set_name"
+)
+
+combined$cell_type = sub("^/([^/]+)/.*$", "\\1", combined$peak_set_name)
+combined$peak_set_name = sub("^/[^/]+/(.*)$", "\\1", combined$peak_set_name)
+
+p4 <- ggplot(combined, aes(x = peak_set_name, y = percent, fill = annotation_group)) +
+  geom_bar(stat = "identity",width = 0.8) +
+  labs(
+    x = "",
+    y = "% Peaks",
+    fill = "Annotation"
+  ) +
+  facet_wrap(~cell_type,scales = "free")+
+  coord_flip()+ 
+  theme_bw(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold",size = 15,hjust = 0.5),
+    axis.text.y = element_text(size = 10),
+    legend.position = "bottom"
+  )
+p4
+```
+

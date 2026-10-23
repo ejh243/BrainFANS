@@ -1,20 +1,17 @@
 #!/bin/bash
 #SBATCH --export=ALL # export all environment variables to the batch job.
-#SBATCH -p mrcq # submit to the serial queue
-#SBATCH --time=48:00:00 # Maximum wall time for the job.
-#SBATCH -A Research_Project-MRC190311 # research project to submit under. 
+#SBATCH --time=72:00:00 # Maximum wall time for the job.
 #SBATCH --nodes=1 # specify number of nodes.
 #SBATCH --ntasks-per-node=16 # specify number of processors per node
 #SBATCH --mail-type=END # send email at job completion 
-#SBATCH --output=ATACSetUpS0-%A.log
-#SBATCH --error=ATACSetUpS0-%A.err
-#SBATCH --job-name=ATACSetUpS0
+#SBATCH --output=PIPPASetUpS0-%A.log
+#SBATCH --error=PIPPASetUpS0-%A.err
+#SBATCH --job-name=PIPPASetUpS0
 
 ## ==========================================================================================================##
-##                               ATAC-seq pipeline STEP 0: Set up                                            ##
+##                                          PIPPA STEP 0: Set up                                             ##
 ## ==========================================================================================================##
-## EXECUTION: sbatch ./sequencing/ATACSeq/jobSubmission/0_setUp.sh <project directory>                       ||
-## - execute from scripts directory                                                                          ||
+## EXECUTION: sbatch ./jobSubmission/0_setUp.sh <project directory>                                          ||
 ##                                                                                                           ||
 ## INPUTS:                                                                                                   || 
 ## $1 -> <project directory> path to project's directory                                                     || 
@@ -24,7 +21,13 @@
 ## the analysis.                                                                                             ||
 ##                                                                                                           ||
 ## REQUIRES:                                                                                                 ||
-## - File in ${METADIR}/samples.txt that lists sample names.                                                 ||
+## - File ${METADIR}/samples.txt that lists sample names.                                                    ||
+## - File with requirements to set up conda environment specified in ${CONDA_FILE}                           ||
+## - File in ${METADIR} with phenotype information specified in ${SAMPLE_SHEET}                              ||
+## - Config.txt, config.r files in <project directory>.                                                      ||
+## - The following variables specified in config file: META_DIR, MAIN_DIR, LOG_DIR, RAWDATADIR, ALIGNED_DIR, ||
+## SAMPLE_SHEET, TRIM_DIR, PEAK_DIR, CONDA_ENV, CONDA, RSCRIPTS_DIR, RLIB, PROJECT, SCRIPTS_DIR, CONDA_FILE  ||
+## - intallLibraries.r file in ${RSCRIPTS_DIR} = ./Rscripts directory                                        || 
 ## ==========================================================================================================##
 
 
@@ -36,15 +39,14 @@
 echo Job started on:
 date -u
 
-LOG_DIR=./ATACSeq/logFiles/${USER}/${SLURM_JOB_ID}
-echo "Log files will be moved to dir: " $LOG_DIR
+LOG_DIR=${SLURM_JOB_ID}
+echo "Log files will be in working directory in folder: " $LOG_DIR
 mkdir -p $LOG_DIR
-mv ATACSetUpS0-${SLURM_JOB_ID}* $LOG_DIR
+mv PIPPASetUpS0-${SLURM_JOB_ID}* $LOG_DIR
 
 cat <<EOF
 
 Running scripts from: $PWD
-Log files will be in current directory: $LOG_DIR
 
 EOF
 
@@ -59,7 +61,7 @@ EOF
 if [[ -s "$1/config.txt" ]]
 then
   source "$1/config.txt"
-  echo "Config file for project $PROJECT  found."
+  echo "Config file for project $PROJECT found."
 else 
   { echo "Config file for chosen project does not exist or is in the wrong directory. Please create this first." ; exit 1; }  
 fi
@@ -68,30 +70,30 @@ fi
 
 if [[ -s "$1/config.r" ]]
 then
-  echo "R config file for project $PROJECT found."
+  echo "R config file for project $PROJECT found. Should be specified in config.txt file as CONFIGR"
 else 
   { echo "R config file for chosen project does not exist or is in the wrong directory. Please create this first." ; exit 1; }  
 fi
 
 ## DIRECTORIES ##
 
-echo ${META_DIR}
+echo "${META_DIR}"
 ## Check that the metadata directory exists and contains sample list.
-if [[ ! -d ${META_DIR} ]]
+if [[ ! -d "${META_DIR}" ]]
 then
 	echo 'METADATA directory does not exist'
 	exit 1
-elif  test -f ${META_DIR}/samples.txt; then
-	mapfile -t SAMPLEIDS < ${META_DIR}/samples.txt 
+elif  test -f "${SAMPLES_LIST}"; then
+	mapfile -t SAMPLEIDS < "${SAMPLES_LIST}"
 	echo "Sample list found. Number of sample IDs found:" """${#SAMPLEIDS[@]}"""
 else
 	echo 'samples.txt file does not exist in METADIR'
 fi
 
 ## Check that the sampleSheet exist
-if [[ -d ${META_DIR} ]] && [[ -s "${META_DIR}/sampleSheet.csv" ]]
+if [[ -d "${META_DIR}" ]] && [[ -s "${SAMPLE_SHEET}" ]]
 then
-  SAMPLEIDS=( $(tail -n +2 ${META_DIR}/sampleSheet.csv  | cut -d ',' -f2) )
+  SAMPLEIDS=( $(tail -n +2 "${SAMPLE_SHEET}"  | cut -d ',' -f2) )
   echo "Sample sheet found. Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 else
   echo "sampleSheet.csv file does not exist in METADIR."
@@ -99,14 +101,14 @@ fi
 
 ## Check if remaining main directories exist and create if not
 dirs=(${RAWDATADIR} ${FASTQCDIR} ${TRIM_DIR} ${ALIGNED_DIR} ${PEAK_DIR})
-type=("DATA" "FASTQC" "TRIMMED" "ALIGNED" "PEAK CALLED")
+type=("DATA" "FASTQC" "TRIMMED" "ALIGNED" "PEAKS CALLED")
 
 for (( x=0; x<${#dirs[@]}; x++ ))
 do
 	if [ -d ${dirs[x]} ] 
 	then 
 		echo ${type[x]} "directory:" ${dirs[x]}
-	elif [ ${dirs[x]} = ${RAWDATA_DIR} ]; then 
+	elif [ ${dirs[x]} = "${RAWDATA_DIR}" ]; then 
 		echo ${dirs[x]} "directory does not exist"
 		exit 1
 	else
@@ -120,54 +122,48 @@ source ${CONDA}
 
 ## Check that a conda environment exists and create it if not
 
-if [[ -d ${CONDA_ENV} ]]
+if [[ -d "${CONDA_ENV}" ]]
 then 
-	echo "${PROJECT} conda environment exists"
+	echo "${PROJECT} Conda environment exists"
 else
 	echo "${PROJECT} environment does not exist"
 	echo "Creating environment"
   conda activate base
-  if [[ -f ${CONDA_FILE} ]]
-  then
-	  conda env create --name ${PROJECT} --file ${CONDA_FILE}
-    conda deactivate
-  else
-    echo "File with packages to install in conda environment not found."
+  if [[ ! -f "${CONDA_FILE}" ]]; then
+    echo "File with packages to install in Conda environment not found: ${CONDA_FILE}"
+    exit 1
   fi
-  if [[ -f ${PIP_FILE} ]]
-  then
-    conda activate ${CONDA_ENV}
-    pip install -r ${PIP_FILE}
-    conda deactivate
+
+  if conda env create --name "${PROJECT}" --file "${CONDA_FILE}"; then
+    echo "${PROJECT} Conda environment created successfully"
   else
-    echo "File with packages to install in conda environment through pip not found."
+    echo "${PROJECT} Conda environment creation failed. Please check the error messages."
+    exit 1
   fi
-  
-  if [[ -f ${RSCRIPTS_DIR}/intallLibraries.r ]]
-  then 
-    conda activate ${CONDA_ENV}
-  
-cat <<EOF
 
-R packages will be checked and installed if not found.
-R libraries will be installed in ${RLIB}
+  if [[ ! -d "${CONDA_ENV}" ]]; then
+    echo "${PROJECT} Conda environment was not found at ${CONDA_ENV} after creation."
+    exit 1
+  fi
 
-EOF  
+fi
+
+if [[ -f "${RSCRIPTS_DIR}/installLibraries.r" ]]
+then 
+  if conda activate "${CONDA_ENV}" ; then
+
+    echo "R packages will be checked and installed if not found."
+    echo "R libraries will be installed in ${RLIB}"
+  
     ## Check that required R libraries are installed
-    Rscript ${RSCRIPTS_DIR}/intallLibraries.r ${RLIB}
+    Rscript "${RSCRIPTS_DIR}/installLibraries.r" "${RLIB}" "${CONFIGR}"
+    conda deactivate
   else
-    echo "Setup R libraries script not found. Please make sure this is in the ${RSCRIPTS_DIR} directory"
-  fi
-
-  if [[ -d ${CONDA_ENV} ]]
-  then 
-	  echo "${PROJECT} conda environment has been created"
-  else
-    echo "${PROJECT} conda environment has not been successfully created. Please check log error file and try again."
+    echo "Could not activate Conda environment: ${CONDA_ENV}"
+    exit 1
   fi
 fi
 
-echo "Set up for ATAC-seq pipeline to be run on ${PROJECT} complete."
+echo "Set up for  to be run on ${PROJECT} complete."
 
 conda deactivate
-

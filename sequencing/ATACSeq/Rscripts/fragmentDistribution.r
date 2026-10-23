@@ -1,22 +1,44 @@
 ## =========================================================================================================================##
-##                             ATAC-seq pipeline STEP 2.1: fragment distribution and post-alignment metrics                 ##
+##                                  PIPPA STEP 2.1: fragment distribution and post-alignment metrics                        ##
 ## =========================================================================================================================##
-## EXECUTION: Rscript ./sequencing/ATACSeq/Rscripts/fragmentDistribution.r <project> <batch number>                         ||
-## - execute from scripts directory                                                                                         ||
+## EXECUTION: Rscript ./Rscripts/fragmentDistribution.r <configFile> <gsNumber>                                             ||
 ##                                                                                                                          ||
 ## DESCRIPTION: This script uses the ATACseqQC R package to generate the fragment distribution and calculate some           ||
 ## summary statistics to assess the periodicity                                                                             ||
 ##                                                                                                                          ||
 ## INPUTS:                                                                                                                  ||
-## - <project> : project on which analysis is being run                                                                     ||
-## - <batch number>: number of samples to process at a time, should be <10                                                  ||
+## - <configFile> : path to config.r file                                                                                   ||
+## - <gsNumber>: number of samples to process at a time                                                                     ||
 ##                                                                                                                          ||
 ## OUTPUTS:                                                                                                                 ||
-## - FragmentDistribution_Batch.rdata, FSD_batch<batchNumber>.pdf                                                           ||
+## - FragmentDistribution_<gsNumber>.rdata, FSD_<gsNumber>.pdf                                                              ||
 ##                                                                                                                          ||
 ## REQUIRES:                                                                                                                ||
-## - R/4.2.1-foss-2022a, libraries: ATACseqQC, diptest, ptest, plyr ,ggplot2                                                ||
+## - R > 4.3, libraries: ATACseqQC, diptest, ptest, plyr ,ggplot2                                                           ||
+## - specified in config.r file: samplesList, alignedDir, qcDir                                                             ||
 ## =========================================================================================================================##
+
+## ==========##
+##   SET-UP  ##
+## ==========##
+
+args <- commandArgs(trailingOnly=TRUE)
+configFile<-args[1]
+gsNumber<-as.numeric(args[2]) 
+source(configFile)
+options(scipen=5)
+
+suppressWarnings(suppressPackageStartupMessages({
+  library(ATACseqQC)
+  library(diptest)
+  library(ptest)
+  library(plyr)
+  library(ggplot2)
+  library(ggpubr)
+  library(gridExtra)
+  library(dplyr)
+}))
+
 
 ## ==========##
 ## FUNCTIONS ##
@@ -57,26 +79,10 @@ fdsPlots <- function(listSamples){
   return(bigdf)
 }
 
-## ==========##
-##   SET-UP  ##
-## ==========##
 
-args <- commandArgs(trailingOnly=TRUE)
-configFile<-args[1]
-source(configFile)
-batchNum<-as.numeric(args[2]) ## nb starts from 0
-
-options(scipen=5)
-suppressWarnings(suppressPackageStartupMessages({
-  library(ATACseqQC)
-  library(diptest)
-  library(ptest)
-  library(plyr)
-  library(ggplot2)
-  library(ggpubr)
-  library(gridExtra)
-  library(dplyr)
-}))
+## ========##
+##   DATA  ##
+## ========##
 
 ## get filepaths of aligned indexed QC'd bam file
 samples<-read.table(file.path(samplesList))[,1]
@@ -87,7 +93,7 @@ aQCSampleNames<-gsub(".filt.nodup.bam", "", basename(aQCFiles))
 aQCSampleNames <- na.omit(aQCSampleNames)
 aQCFiles <- na.omit(aQCFiles)
 ## filter to subset of samples specified by array number
-index<-c(1:10)+(batchNum*10)
+index<-c(1:10)+(gsNumber*10)
 ## if number of samples is not a function of ten adjust index
 index<-index[index %in% 1:length(aQCFiles)]
 nSamples <- length(index)
@@ -120,7 +126,7 @@ if(nSamples > 0){
 	colnames(periodTestStats)<-c("obsStat", "p.value", "freq")
 	
   ## Results are saved in a rdata file 
-	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(qcDir, "/FragmentDistribution_Batch_", batchNum, ".rdata"))
+	save(fragSizeHist, propNucleosomes, diptestStats, periodTestStats, file = paste0(qcDir, "/FragmentDistribution_", gsNumber, ".rdata"))
  
   ## output Fragment size distribution plots for the corresponding batch of samples
   
@@ -136,11 +142,7 @@ if(nSamples > 0){
   labs(x="Fragment size (bp)",y="Frequency", title=names(BatchSamples.split)[i]) +scale_x_continuous(breaks=axis1, limits = c(0, 800))
   }
 
-  pdf(file.path(paste0(qcDir, "/FSD_batch_", batchNum, ".pdf")), width = 10, height = 5)
+  pdf(file.path(paste0(qcDir, "/FSD_", gsNumber, ".pdf")), width = 10, height = 5)
   print(p)
-  dev.off()
-  
-  
+  dev.off() 
 }
-
-

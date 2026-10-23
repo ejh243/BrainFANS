@@ -1,64 +1,80 @@
 #!/bin/bash
 ## ===================================================================================================================##
-##                                ATAC-seq pipeline STEP 3.3: FRiP results                                            ##
+##                                           PIPPA STEP 3.3: FRiP results                                             ##
 ## ===================================================================================================================##
-## EXECUTION: sh ./subScripts/collateCalcFrip.sh <array-samples>                                                      ||
-## - execute from scripts directory                                                                                   ||
+## EXECUTION: sbatch ./subScripts/collateCalcFrip.sh                                                                  ||
 ##                                                                                                                    ||
 ## DESCRIPTION: This script collates the results of peak calling (STEP 3.2 PEAKS) using MACS3 PE at sample level in a ||
 ## single csv file.                                                                                                   || 
-##                                                                                                                    ||
-## INPUTS:                                                                                                            || 
-## $1 -> <array-samples> array of samples to collate results for                                                      ||
 ##                                                                                                                    ||
 ## OUTPUTS:                                                                                                           ||
 ## - PEAK_DIR/QCOUTPUT/FRIP_all_samples.csv                                                                           ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - BEDTools, SAMtools (in a conda environment)                                                                      ||
-## - Variables in config file: ALIGNED_DIR, PEAK_DIR,PEAK_DIR_SAMPLES}                                                ||
-## - Peak files for samples: <sampleName>.broadPeak.filt                                                              ||
+## - Variables in config file: ALIGNED_DIR, PEAK_DIR,PEAK_DIR_SAMPLES                                                 ||
+## - Peak files for samples: <sampleName>.narrowPeak.filt                                                             ||
 ## - Bam files for samples: <sampleName>.filt.nodup.bam                                                               ||
 ##                                                                                                                    ||
 ## ===================================================================================================================##
 
-echo Job started on:
-date -u
-  
-#SAMPLES=$@
-mapfile -t SAMPLES < ${META_DIR}/samples.txt
 
-## Output will be a table in a csv file
-echo "SampleName,BAMTotalReads,BAMPeaks,ReadsinBAMPeaks" > ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
+## ============ ##
+##    SET UP    ##
+## ============ ##
 
-for sampleName in ${SAMPLES[@]}
-do
+mapfile -t SAMPLES < "${SAMPLES_LIST}"
+echo "Total number of samples: "" ""${#SAMPLES[@]}"""
 
-  ## BAM file used for MACS3 PE peak calling
-  bamFile=${sampleName}.filt.nodup.bam 
-  
-  ## Output sample name
-  echo -n ${sampleName}, >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  
-  if [ -s ${ALIGNED_DIR}/${bamFile} ]
-  then 
-  	echo -n $(samtools view -c ${ALIGNED_DIR}/${bamFile}), >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  else
-  	echo -n NA, >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  fi  
-  
-  ## MACS3 peaks called from bam files with paired end and number of reads in those peaks
-  if [ -s ${PEAK_DIR_SAMPLES}/${sampleName}.narrowPeak.filt ]
-  then
-  	echo -n $(wc -l ${PEAK_DIR_SAMPLES}/${sampleName}.narrowPeak.filt | cut -f1 -d' '), >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  	echo $(bedtools sort -i ${PEAK_DIR_SAMPLES}/${sampleName}.narrowPeak.filt | bedtools merge -i stdin | bedtools intersect -u -a ${ALIGNED_DIR}/${bamFile} -b stdin -ubam | samtools view -c) >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  else
-  	echo -n NA, >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-    echo NA >> ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv
-  fi
-done
+FRIP_FILE="${PEAK_DIR}/QCOutput/FRIP_all_samples.csv"
 
-if [[ ! -f ${PEAK_DIR}/QCOutput/FRIP_all_samples.csv ]]
+header="SampleName,BAMTotalReads,BAMPeaks,ReadsinBAMPeaks"
+
+## ============ ##
+##   COLLATE    ##
+## ============ ##
+
+if [[ ! -s "${FRIP_FILE}" ]]; then
+    printf "%b\n" "${header}" > "${FRIP_FILE}"
+fi
+
+{ 
+  for sampleName in "${SAMPLES[@]}"
+  do
+    if grep -q "^${sampleName}," "${FRIP_FILE}"; then
+      continue
+    fi
+  
+    ## BAM file used for MACS3 PE peak calling
+    INPUT_BAM="${ALIGNED_DIR}/${sampleName}.filt.nodup.bam"
+    
+    ## Output sample name
+    echo -n ${sampleName},
+    
+    if [ -s "${INPUT_BAM}" ]
+    then 
+    	echo -n $(samtools view -c "${INPUT_BAM}"), 
+    else
+    	echo -n NA, 
+    fi  
+    
+    ## MACS3 peaks called from bam files with paired end and number of reads in those peaks
+    INPUT_PEAKS="${PEAK_DIR_SAMPLES}/${sampleName}.narrowPeak.filt"
+    
+    if [ -s "${INPUT_PEAKS}" ]
+    then
+    	echo -n $(wc -l "${INPUT_PEAKS}" | cut -f1 -d' '), 
+    	echo $(bedtools sort -i "${INPUT_PEAKS}" | bedtools merge -i stdin | bedtools intersect -u -a "${INPUT_BAM}" -b stdin -ubam | samtools view -c) 
+    else
+    	echo -n NA, 
+      echo NA 
+    fi
+  done
+
+} >> "${FRIP_FILE}"
+
+
+if [[ ! -f "${FRIP_FILE}" ]]
 then
   { echo "Peak results could not be collated. Please check STEP 3.2 PEAKS." ; exit 1;}
 else

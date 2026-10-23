@@ -1,55 +1,51 @@
 #!/bin/bash
-## ===================================================================================================================##
-##                          ATAC-seq pipeline STEP 5.1: Subset sex chromosomes                                        ##
-## ===================================================================================================================##
-## EXECUTION: sh ./subScripts/subsetSexChrs.sh <sampleName>                                                           ||
-## - execute from pipeline's main directory                                                                           ||
-##                                                                                                                    ||
-## DESCRIPTION: This script isolates reads from sex chromosomes to prepare for peak calling.                          ||
-##                                                                                                                    ||
-## INPUTS:                                                                                                            || 
-## $1 -> <sampleName> sample name to subset                                                                           ||
-##                                                                                                                    ||
-## OUTPUTS:                                                                                                           ||
-## ALIGNED_DIR/sexChr/<sampleName>.chrX.tn5.tagAlign.gz, ALIGNED_DIR/sexChr/<sampleName>.chrY.tn5.tagAlign.gz         ||
-##                                                                                                                    ||
-## REQUIRES:                                                                                                          ||
-## - aligned filtered, no duplicated tagAlign reads: <sampleName>.tn5.tagAlign.gz                                     ||
-## - Software: bedtools in conda environment                                                                          ||
-## - Variables in config file: ALIGNED_DIR                                                                            ||
-##                                                                                                                    ||
-## ===================================================================================================================##
+## ===========================================================================================================##
+##                                PIPPA STEP 5.1: Subset sex chromosomes                                      ##
+## ===========================================================================================================##
+## EXECUTION: sbatch ./subScripts/subsetSexChrs.sh <sampleName>                                               ||
+##                                                                                                            ||
+## DESCRIPTION: This script isolates reads from sex chromosomes to prepare for peak calling.                  ||
+##                                                                                                            ||
+## INPUTS:                                                                                                    || 
+## $1 -> <sampleName> sample name to subset                                                                   ||
+##                                                                                                            ||
+## OUTPUTS:                                                                                                   ||
+## ALIGNED_DIR/sexChr/<sampleName>.chrX.bam, ALIGNED_DIR/sexChr/<sampleName>.chrY.bam                         ||
+##                                                                                                            ||
+## REQUIRES:                                                                                                  ||
+## - aligned filtered, no duplicated tagAlign reads: <sampleName>.filt.nodup.bam                              ||
+## - Samtools in conda environment                                                                            ||
+## - Variables in config file: ALIGNED_DIR                                                                    ||
+##                                                                                                            ||
+## ===========================================================================================================##
 
+## ============ ##
+##    SET UP    ##
+## ============ ##
 
 sampleName=$1
 echo "Split reads for sex chromosomes for sample: " ${sampleName}
 cd ${ALIGNED_DIR}/
 
-tagalign=${sampleName}.tn5.tagAlign.gz
-
-if [[ ! -f ${ALIGNED_DIR}/${tagalign} ]]
-then
-   { echo "Sample in tagAlign format not found. Please refer to STEP 3.1 to obtain this." ; exit 1 ;}
-else
-  echo "Sample in tagAlign format found: $tagalign. Reads in sex chromosomes will be subset."
-fi
-
 ## ===================== ##
-## TagAlign sample split ##
+##  BAMPE sample split   ##
 ## ===================== ##
 
-## extract X chr from tag align file
-zcat $tagalign | grep "chrX"  | gzip -c > sexChr/${tagalign/tn5/chrX.tn5}
+bamfile=${sampleName}.filt.nodup.bam
 
-## extract Y chr from tag align file
-zcat $tagalign | grep "chrY"  | gzip -c > sexChr/${tagalign/tn5/chrY.tn5}
+## extract X chr reads
+samtools view -b $bamfile chrX > "${ALIGNED_DIR}/sexChr/${sampleName}.chrX.bam"
 
+## extract Y chr reads
+samtools view -b $bamfile chrY > "${ALIGNED_DIR}/sexChr/${sampleName}.chrY.bam"
 
-if [[ ! -f ${ALIGNED_DIR}/sexChr/${sampleName}.chrY.tn5.tagAlign.gz ]] && [[ ! -f ${ALIGNED_DIR}/sexChr/${sampleName}.chrX.tn5.tagAlign.gz ]]
-then
-   { echo "Sample could not be subset. Please refer to STEP 3.1 to check tagAlign file of ${sampleName} exists." ; exit 1 ;}
+echo "Split reads for sex chromosomes for sample: ${sampleName} done"
+
+if [[ ! -f "${ALIGNED_DIR}/sexChr/${sampleName}.chrX.bam" ]] || [[ ! -f "${ALIGNED_DIR}/sexChr/${sampleName}.chrY.bam" ]]
+then 
+  { echo "Bam files with reads in sex chr created not created for sample ${sampleName}." ; exit 1; }
 else
-  echo "Split reads for sex chromosomes for sample: ${sampleName} done"
-fi
-
-
+  echo "Bam files with reads in sex chr created for sample ${sampleName}."
+  echo Job finished on:
+  date -u 
+fi 

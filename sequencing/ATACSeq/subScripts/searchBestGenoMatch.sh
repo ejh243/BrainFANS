@@ -1,9 +1,8 @@
 #!/bin/bash
 ## =============================================================================================##
-##                    ATAC-seq pipeline STEP 6.3: Best Genotype                                 ##
+##                              PIPPA STEP 6.2: Best Genotype                                   ##
 ## =============================================================================================##
-## EXECUTION: sh ./subScripts/searchBestGenotype.sh <sampleName>  <vcf id>                      ||
-## - execute from pipeline's main scripts directory                                             ||
+## EXECUTION: sbatch ./subScripts/searchBestGenotype.sh <sampleName>  <vcf id>                  ||
 ##                                                                                              ||
 ## DESCRIPTION: This script takes potential contaminated genotype samples and aims to find the  ||
 ## best matching genotype                                                                       ||
@@ -32,16 +31,17 @@ sampleName=${sampleName%.selfSM}
 vcfid=$2
 vcfid="${vcfid%"${vcfid##*[![:space:]]}"}" 
 
-cd ${ALIGNED_DIR}/
-echo "processing" ${sampleName} "with" ${vcfid}
+echo "processing ${sampleName} with ${vcfid}"
 
 ## ======================== ##
 ##    FIND BEST GENOTYPE    ##
 ## ======================== ##
 
-${VERIFYBAMID} --vcf ${SNP} --bam ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam --out ${ALIGNED_DIR}/genotypeConcordance/${sampleName} --ignoreRG --smID ${vcfid} --best
+verifybamid2 --vcf ${SNP} --bam "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam" \
+--out "${ALIGNED_DIR}/genotypeConcordance/${sampleName}" \
+--ignoreRG --smID ${vcfid} --best
 
-if [[ ! -f ${ALIGNED_DIR}/genotypeConcordance/${sampleName}.bestSM ]]
+if [[ ! -f "${ALIGNED_DIR}/genotypeConcordance/${sampleName}.bestSM" ]]
 then
   { echo "The best Genotype could not be found for ${sampleName}. Check whether a matching VCF IDs exists for this sample." ; exit 1 ;}
 else

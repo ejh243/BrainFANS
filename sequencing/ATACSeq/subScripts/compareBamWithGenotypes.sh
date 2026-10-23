@@ -1,10 +1,9 @@
 #!/bin/bash
 
 ## =====================================================================================================##
-##               ATAC-seq pipeline STEP 6.1: Verify Genotype                                            ##
+##                           PIPPA STEP 6.1: Verify Genotype                                            ##
 ## =====================================================================================================##
-## EXECUTION: sh ./subScripts/compareBamWithGenotype.sh <sampleName>  <vcf id>                          ||
-## - execute from pipeline's main scripts directory                                                     ||
+## EXECUTION: sbatch ./subScripts/compareBamWithGenotype.sh <sampleName>  <vcf id>                      ||
 ##                                                                                                      ||
 ## DESCRIPTION: This script compares genotype information of sample with existing genotype SNPs info to ||
 ## verify there is no contamination.                                                                    ||
@@ -21,7 +20,7 @@
 ##                                                                                                      ||
 ## REQUIRES:                                                                                            ||
 ## - sorted bam file, VCF file with SNP chip data                                                       ||
-## - Softwares: gatk, samtools and picard (in a conda environment), verifyBamID                         ||
+## - Softwares in conda environment: samtools, picard, verifyBamID                                      ||
 ## - Variables in config file: ALIGNED_DIR, GENOMEFASTA, KGREF,GENODIR,VERIFYBAMID                      ||
 ## - Reference genome: GENOMEFASTA: genome.fa                                                           ||
 ##                                                                                                      ||
@@ -43,8 +42,6 @@ vcfid=$2
 if [[ "${vcfid}" != "" ]]
 then 
     echo "processing" ${sampleName} "with" ${vcfid}
-    bamfile=${sampleName}_sorted.bam
-
     re='^[0-9]{5}'
     if [[ $sampleName =~ $re ]] ;
     then
@@ -53,49 +50,50 @@ then
        projectID="NA"
     fi
     
-    samtools addreplacerg -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o ${ALIGNED_DIR}/${sampleName}_sorted_name.bam ${ALIGNED_DIR}/${sampleName}_sorted.bam
+    samtools addreplacerg -w -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" \
+    -o "${ALIGNED_DIR}/${sampleName}_sorted_name.bam" "${ALIGNED_DIR}/${sampleName}_sorted.bam"
     
     ## mark duplicates only
-    picard MarkDuplicates --INPUT ${ALIGNED_DIR}/${sampleName}_sorted_name.bam \
-      --OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam \
-      --METRICS_FILE ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt \
+    picard MarkDuplicates --INPUT "${ALIGNED_DIR}/${sampleName}_sorted_name.bam" \
+      --OUTPUT "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam" \
+      --METRICS_FILE "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_metrics.txt" \
       --TMP_DIR ${TMPDIR}
 
     ## add read group
-    picard AddOrReplaceReadGroups --INPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam \
-           --OUTPUT ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
-           --RGID ${projectID} --RGLB lib1 --RGPL ILLUMINA --RGPU unit1 --RGSM ${sampleName}
-
-    rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam
-
-    ##index
-    samtools index ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam
+    picard AddOrReplaceReadGroups --INPUT "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam" \
+      --OUTPUT "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam" \
+      --RGID ${projectID} --RGLB lib1 --RGPL ILLUMINA --RGPU unit1 --RGSM ${sampleName}
+    
+    samtools index "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam"
 
     # recalibrate bases in bam files
     gatk BaseRecalibrator \
-       -R ${GENOMEFASTA}/genome.fa \
-        -I ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
-        --known-sites ${KGREF}/1000G_omni2.5.hg38.vcf.gz \
-        -O ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table
+       -R "${GENOMEFASTA}/genome.fa" \
+       -I "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam" \
+       --known-sites "${KGREF}/1000G_omni2.5.hg38.vcf.gz" \
+       -O "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table"
 
     gatk ApplyBQSR \
-      -R ${GENOMEFASTA}/genome.fa \
-       -I ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam \
-       --bqsr-recal-file ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table \
-       -O ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam
-       
-    rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam*
-	  rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table
-    
-    ${VERIFYBAMID} --vcf ${SNP} --bam ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam \
-      --out ${ALIGNED_DIR}/genotypeConcordance/${sampleName} \
+      -R "${GENOMEFASTA}/genome.fa" \
+       -I "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam" \
+       --bqsr-recal-file "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table" \
+       -O "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam"
+
+    ${VERIFYBAMID} --vcf ${SNP} --bam "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam" \
+      --out "${ALIGNED_DIR}/genotypeConcordance/${sampleName}" \
       --ignoreRG --smID ${vcfid} --self
+      
+    ## remove intermediate files
+    rm "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup.bam"
+    rm "${ALIGNED_DIR}/${sampleName}_sorted_name.bam"
+    rm ${ALIGNED_DIR}/baseRecalibrate/${sampleName}_dedup_rglabelled.bam*
+	rm "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table"
 else
     echo "No genotype data available"
-    echo $sampleName >> ${META_DIR}/noVCFfound.txt
+    echo $sampleName >> "${META_DIR}/noVCFfound.txt"
 fi
 
-if [[ ! -f ${ALIGNED_DIR}/genotypeConcordance/${sampleName}.selfSM ]]
+if [[ ! -f "${ALIGNED_DIR}/genotypeConcordance/${sampleName}.selfSM" ]]
 then
   { echo "Genotype could not verified for ${sampleName}. Check whether a matching VCF IDs exists for this sample." ; exit 1 ; }
 else
@@ -103,8 +101,3 @@ else
   echo Job finished at: 
   date -u
 fi
-
-
-
-
- 

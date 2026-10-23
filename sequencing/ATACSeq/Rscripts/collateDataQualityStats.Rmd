@@ -18,42 +18,50 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.align='center', echo
 # load packages
 suppressWarnings(suppressPackageStartupMessages({
   library(dplyr)
-  library(plyr)
   library(knitr)
+  library(reshape2)
+  library(ggplot2)
+  library(gridExtra)
+  library(scales)
+  library(tidyr)
+  library(forcats)
+  library(ComplexUpset)
+  library(plyr)
   library(vioplot)
   library(corrplot)
-  library(ggplot2)
-  library(reshape2)
-  library(gridExtra)
   library(cowplot)
   library(kableExtra)
-  library(scales)
   library(tibble)
   library(ChIPQC)
   library(plotly)
-  library(tidyr)
   library(pheatmap)
 }))
+
 options(scipen=5)
+
 ## load config variables
 source(params$configFile)
 
+col_vals_pass  <- c(
+  "FALSE" = "#D55E00",  # vermillion (fail)
+  "TRUE"  = "#009E73"   # bluish green (pass)
+)
+
 ```
 
-This report provides a summary of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment and filtering (and peak calling steps). The bioinformatic pipeline parallels that of the [ENCODE ATAC-seq guidelines](https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS3 for each individual sample. The pipeline is still under development.
+This report provides a summary of the first stage of PIPPA QC pipeline. It confirms the success of an ATAC-seq experiment from the resulting sequencing data. It looks at metrics from the raw sequencing data, alignment, filtering, peak calling and ATAC-seq-specific quality metrics. The bioinformatics pipeline parallels that of the [ENCODE ATAC-seq guidelines](https://www.encodeproject.org/atac-seq/). Raw fastq files have been have been aligned with Bowtie2 to the human genome (hg38) and peaks called with MACS3 for each individual sample. Thresholds applied for pass/failed samples should be specified in the config.r file.
 
 ```{r loadDat, message = FALSE, results='hide'}
 ## import data
-pheno<-read.table(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
-processSum <- read.csv(file.path(metaDir, "/summariseSampleProcessingProgress.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
-fastqc<-read.table(file.path(fastQCDir, "/multiqc/multiqc_data/multiqc_fastqc.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-readCounts<-read.table(file.path(alignedDir, "/countMTReads.txt"), fill = TRUE, skip = 1)
-alignQC<-read.table(file.path(alignedDir, "/multiqc/multiqc_data/multiqc_bowtie2.txt"), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-flagstat<-read.csv(file.path(alignedDir, "/ENCODEMetrics/collateFlagStatMetrics.txt"), header = FALSE)
-flagstat<- flagstat[,c(1:ncol(flagstat)-1)]
+pheno<-read.csv(sampleSheet, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+pheno$sequencingBatch <- as.factor(pheno$sequencingBatch)
+processSum <- read.csv(processSumFile, stringsAsFactors = FALSE, strip.white = TRUE)
+fastqc<-read.table(fastqcFile, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+readCounts<-read.table(readCountsFile, fill = TRUE, skip = 1)
+alignQC<-read.table(alignmentFile, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
 # wrangle data
-missingCol<-setdiff(c("sequencingBatch", "sampleID",  "cohort", "fraction", "experiment", "individualID"), colnames(pheno))
+missingCol<-setdiff(c("sequencingBatch", "sampleID", "sampleCode", "cohort", "fraction", "experiment", "individualID"), colnames(pheno))
 if (length(missingCol) != 0 ) {
   if ("sequencingBatch" %in% missingCol){
     pheno$sequencingBatch<-pheno$cohort
@@ -65,102 +73,125 @@ if (length(missingCol) != 0 ) {
 }
 ## exclude duplicates from metadata
 dups<-names(which(table(paste(pheno$individualID, pheno$fraction, pheno$tissue, sep = "_")) > 1))
-pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","cohort","fraction","individualID", "tissue"), colnames(pheno))])
-processSum <- processSum[match(pheno$sampleID, processSum$sampleID),]
+pheno<-unique(pheno[,intersect(c("sequencingBatch", "sampleID","sampleCode", "cohort","fraction","individualID", "tissue"), colnames(pheno))])
+
+```
+
+Metadata includes information about `r nrow(pheno)` samples from `r length(unique(pheno$individualID))` individuals. Results for `r nrow(processSum)` samples that have been processed in the Stage 1 of QC are shown in this report.
+
+```{r}
+idx <- match(pheno$sampleID, processSum$sampleID)
+processSum <- processSum[idx[!is.na(idx)], ]
+processSum$sampleCode <- pheno[match(processSum$sampleID, pheno$sampleID),]$sampleCode
+colsKeep<-c("sampleID","sampleCode", "R1Filename","R2Filename")
+mergeStats <- processSum[,colsKeep]
 
 ## wrangle multiqc stats to retain important columns
 colsKeep<-c("Total.Sequences","total_deduplicated_percentage", "Sequences.flagged.as.poor.quality")
-mergeStats<-cbind(fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep], fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep])
+R1stats <- fastqc[match(processSum$R1Filename, fastqc$Filename),colsKeep]
+colnames(R1stats) <- paste0(colnames(R1stats) , "_R1")
+R2stats <- fastqc[match(processSum$R2Filename, fastqc$Filename),colsKeep]
+colnames(R2stats) <- paste0(colnames(R2stats) , "_R2")
+mergeStats<-cbind(mergeStats,R1stats,R2stats )
 
 ## calculate percentage of mitochondrial reads
-readCounts<-readCounts[match(pheno$sampleID, readCounts$V1),]
-mergeStats<-cbind(mergeStats, readCounts$V2/readCounts$V3*100)
-colnames(mergeStats)[ncol(mergeStats)]<-"PercentMTReads"
+readCounts<-readCounts[match(mergeStats$sampleID, readCounts$V1),]
+MTpercentReads <- readCounts$V2/readCounts$V3*100
+mergeStats$"PercentMTReads" <- MTpercentReads
 
 ## select alignment columns and match to sampleIDs
-aIndex<-match(processSum$sampleID, gsub("\\.bowtie", "", alignQC$Sample))
+aIndex<-match(mergeStats$sampleID, gsub("\\.bowtie", "", alignQC$Sample))
 alignQC$aligned_total<-rowSums(alignQC[,c("paired_aligned_one", "paired_aligned_multi")])
 mergeStats<-cbind(mergeStats,alignQC[aIndex,c("overall_alignment_rate", "aligned_total")])
-mergeStats<-cbind(sample=processSum$sampleID, mergeStats)
 
 ## load flagstat metrics calculated as part of encode qc pipeline
-flagstat<-flagstat[match(processSum$sampleID, flagstat$V1),]
-files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = ".pbc.qc")
-eMetrics<-NULL
-for(each in files){
-  tmp<-read.table(paste0(alignedDir, "/ENCODEMetrics/", each))
-  if(ncol(tmp) == 7){
-    eMetrics<-rbind(eMetrics, tmp)
-  } else {
-    eMetrics<-rbind(eMetrics, rep(NA, 7))
+files<-list.files(paste0(alignedDir, "/ENCODEMetrics"), pattern = "\\.pbc\\.qc$")
+eMetrics <- do.call(rbind, lapply(files, function(each) {
+  tmp <- read.table(
+    file.path(alignedDir, "ENCODEMetrics", each)
+  )
+  if (ncol(tmp) != 7) {
+    tmp <- as.data.frame(matrix(NA, nrow = 1, ncol = 7))
   }
-}
-colnames(eMetrics)<-c("TotalReadPairs","DistinctReadPairs","OneReadPair","TwoReadPairs","NRF","PBC1","PBC2")
-eMetrics$Sample <- files
-eMetrics$Sample <- gsub(".pbc.qc", "", eMetrics$Sample)
-eIndex<-match(processSum$sampleID, gsub(".pbc.qc", "", files))
+  tmp$sampleID <- sub("\\.pbc\\.qc$", "", each)
+  tmp
+}))
+
+colnames(eMetrics)<-c("TotalReadPairs_afterAlignment","DistinctReadPairs","OneReadPair","TwoReadPairs","NRF","PBC1","PBC2", "Sample")
+eIndex<-match(mergeStats$sampleID, eMetrics$Sample)
 eMetrics<-eMetrics[eIndex,]
 mergeStats<-cbind(mergeStats,eMetrics)
+mergeStats <- subset(mergeStats, select = -Sample)
 
-## Option to use a single csv file with all results
-fripStats <- read.csv(file.path(peakDir, "/QCOutput/FRIP_all_samples.csv"), stringsAsFactors = FALSE, strip.white = TRUE)
+## Merge Peak calling and FRIP results
+fripStats <- read.csv(file.path(fripFile), stringsAsFactors = FALSE, strip.white = TRUE)
 fripStats$FripMACS3PE <- fripStats$ReadsinBAMPeaks/fripStats$BAMTotalReads
-fripStats[is.na(fripStats)] <- 0
-fripStats <- fripStats[match(pheno$sampleID, fripStats$SampleName),]
-
-#ccFiles<-list.files(alignedDir, pattern = '.subsample.cc.qc')
-#crossCor<-read.csv(paste(alignedDir, ccFiles[1], sep='/'))
-#for(each in ccFiles[-1]){
-#  crossCor<-rbind(crossCor, read.csv(paste0(alignedDir, each,  sep='/')))
-#}
-#crossCor<-crossCor[match(processSum$sampleID, crossCor$SampleName),]
+eIndex<-match(mergeStats$sampleID, fripStats$SampleName)
+fripStats<-fripStats[eIndex,]
+mergeStats <- cbind(mergeStats, fripStats[, c("ReadsinBAMPeaks","BAMTotalReads","BAMPeaks","FripMACS3PE")] )
 
 ## load periodicity metrics 
-propNucleosomesAll<-NULL
-diptestStatsAll<-NULL
-filePaths <- list.files(file.path(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_Batch|FragmentDistribution_Batch_")
-for(each in filePaths){
-  load(paste0(alignedDir,"/QCOutput/", each))
-  propNucleosomesAll<-rbind(propNucleosomesAll, propNucleosomes)
-  diptestStatsAll<-rbind(diptestStatsAll, diptestStats)
-}
+filePaths <- list.files(file.path(alignedDir,"/QCOutput/"), pattern = "FragmentDistribution_*")
+propNucleosomesAll <- do.call(rbind, lapply(filePaths, function(each) {
 
-#diptestStatsAll<-as.data.frame(diptestStatsAll)
-propNucleosomesAll<-propNucleosomesAll[match(processSum$sampleID, rownames(propNucleosomesAll)),]
-#diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, sub("X", "", gsub("\\.D$", "", rownames(diptestStatsAll)))),]
-diptestStatsAll<-diptestStatsAll[match(processSum$sampleID, gsub("\\.D$", "", rownames(diptestStatsAll))),]
-rownames(diptestStatsAll)<-processSum$sampleID
+  load(file.path(alignedDir, "QCOutput", each))
+
+  propNucleosomes
+}))
+colnames(propNucleosomesAll) <- c("NFR", "Mono", "Di", "Tri", "Quad")
+eIndex<-match(mergeStats$sampleID, rownames(propNucleosomesAll))
+propNucleosomesAll<-propNucleosomesAll[eIndex,]
+mergeStats <- cbind(mergeStats,propNucleosomesAll)
+                    
+diptestStatsAll <- do.call(rbind, lapply(filePaths, function(each) {
+
+  load(file.path(alignedDir, "QCOutput", each))
+
+  diptestStats
+}))
+eIndex<-match(mergeStats$sampleID, gsub("\\.D$", "", rownames(diptestStatsAll)))
+diptestStatsAll<-diptestStatsAll[eIndex,]
+mergeStats <- cbind(mergeStats,diptestStatsAll)
+
+## add more metadata info
+mergeStats <- mergeStats %>%
+  left_join(pheno %>% select("sampleID","sequencingBatch","cohort", "fraction"), by = "sampleID")
 
 ## count number of samples with X million reads
-readThres<-seq(0,max(mergeStats[,2], na.rm = TRUE)+10^6, 10^6)
-nSamples<-matrix(data = NA, nrow = length(readThres), ncol = length(unique(pheno$sequencingBatch))+1)
+readThres<-seq(0,max(mergeStats$Total.Sequences_R1, na.rm = TRUE)+10^6, 10^6)
+nSamples<-matrix(data = NA, nrow = length(readThres), ncol = length(unique(mergeStats$sequencingBatch))+1)
 for(i in readThres){
-  nSamples[1+(i/10^6),1] <- sum(mergeStats[,2] > i, na.rm = TRUE)
+  nSamples[1+(i/10^6),1] <- sum(mergeStats$Total.Sequences_R1 > i, na.rm = TRUE)
   colNum<-2
-  for(each in unique(pheno$sequencingBatch)){
-    nSamples[1+(i/10^6),colNum] <- sum(mergeStats[which(pheno$sequencingBatch == each),2] > i, na.rm = TRUE)
+  for(each in unique(mergeStats$sequencingBatch)){
+    nSamples[1+(i/10^6),colNum] <- sum(mergeStats[which(mergeStats$sequencingBatch == each),3] > i, na.rm = TRUE)
     colNum<-colNum+1
   }
 }
 
-#propNucleosomesAll <- na.omit(propNucleosomesAll)
 ## a successful ATAC experiment should have decreasing proportions in the nucleosome, mono, di,tri- nucleosomes
 ## define a tolerance for these comparisons
 tol <- 0
-decreasingProps<-cbind(propNucleosomesAll[,1]+tol > propNucleosomesAll[,2], 
-                       propNucleosomesAll[,2]+tol > propNucleosomesAll[,3], 
-                       propNucleosomesAll[,3]+tol > propNucleosomesAll[,4]
+decreasingProps<-cbind(mergeStats$NFR+tol > mergeStats$Mono, 
+                       mergeStats$Mono+tol > mergeStats$Di, 
+                       mergeStats$Di+tol > mergeStats$Tri
 )
 colnames(decreasingProps)<-c("NFR>Mono", "Mono>Di", "Di>Tri")
-decreasingProps <- as.data.frame(decreasingProps)
+mergeStats <- cbind(mergeStats,decreasingProps)
+
+## Load TSS enrichment scores
+tssSamples <- read.table(tssEnrich,header= TRUE)
+eIndex<-match(mergeStats$sampleID, tssSamples$sample)
+tssSamples<-tssSamples[eIndex,]
+mergeStats <- cbind(mergeStats,TSSScore = tssSamples$"TSS_enrichment")
+
+mergeStats$Ratio <- mergeStats$NFR/mergeStats$Mono
+mergeStats$overall_alignment_rate[is.na(mergeStats$overall_alignment_rate)] <- 0
 ```
 
 
-Data was loaded for `r nrow(pheno)` samples from `r length(unique(pheno$individualID))` individuals. The number by sample type is shown below.
-
-
 ```{r, echo = FALSE}
-nCTStart<-table(pheno$fraction)
+nCTStart<-table(mergeStats$fraction)
 
 kbl(nCTStart) %>%
   kable_styling(bootstrap_options = c("striped", "hover"),font_size = 10)
@@ -170,7 +201,7 @@ kbl(nCTStart) %>%
 
 ## Overview
 
-To provide an overall summary here is a plot of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
+Here is a summary of the number of raw reads, aligned reads (post filtering) and peaks called for each sample.
 
 <style>
   .scrollingimage{
@@ -183,18 +214,18 @@ To provide an overall summary here is a plot of the number of raw reads, aligned
   }
 
 </style>
+
 ```{r setup2}
-if (nrow(pheno) > 70) {
+if (nrow(mergeStats) > 70) {
   ## include scrolling bar if number of samples exceeds 70
-  knitr::opts_chunk$set(fig.width=(nrow(pheno)/5))
+  knitr::opts_chunk$set(fig.width=(nrow(mergeStats)/5))
 }
 ```
 
 <div class="scrollingimage">
 ```{r overview, echo=FALSE}
-# plot barchart of 
-mergeStats <- mergeStats[,-c(1,17)]
-data.frame(pheno$sampleID, mergeStats[,c(1,9)],fripStats$ReadsinBAMPeaks) %>%
+# plot barchart of raw reads, aligned reads and reads in peaks 
+data.frame(mergeStats$sampleID, mergeStats$Total.Sequences_R1*2, mergeStats$BAMTotalReads,mergeStats$ReadsinBAMPeaks) %>%
   setNames(c('Samples', 'Raw reads', 'Aligned reads', 'Reads in peaks')) %>%
   melt(id='Samples') %>%
   ggplot(., aes(fill= variable, x=Samples, y=value))+
@@ -215,93 +246,92 @@ knitr::opts_chunk$set(fig.width=7)
 
 ### 1.1 Data summary
 
-In total there were `r signif(sum(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million reads generated across all samples, with a mean of 
-`r signif(mean(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million). 
+In total there were `r signif(sum(c(mergeStats$Total.Sequences_R1, mergeStats$Total.Sequences_R2), na.rm = TRUE)/1000000,3)` million reads generated across all samples, with a mean of 
+`r signif(mean(c(mergeStats$Total.Sequences_R1, mergeStats$Total.Sequences_R2), na.rm = TRUE)/1000000,3)` million per sample (SD = `r signif(sd(c(mergeStats$Total.Sequences_R1, mergeStats$Total.Sequences_R2), na.rm = TRUE)/1000000,3)` million). 
 
-The median number of reads was  `r signif(median(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million per sample (IQR = `r signif(sd(c(mergeStats[,1], mergeStats[,4]), na.rm = TRUE)/1000000,3)` million).
+The median number of reads was  `r signif(median(c(mergeStats$Total.Sequences_R1, mergeStats$Total.Sequences_R2), na.rm = TRUE)/1000000,3)` million per sample (IQR = `r signif(sd(c(mergeStats$Total.Sequences_R1, mergeStats$Total.Sequences_R2), na.rm = TRUE)/1000000,3)` million).
 
-The plots below summarise the distributions of the raw sequencing data for `r sum(!is.na(mergeStats[,1])) ` samples. For mammalian studies, authors of the ATAC-seq protocol recommend a minimum of 50 million non-duplicated, non-mitochondrial mapped reads for open chromatin detection. The ENCODE pipeline recommends a minimum of 25 million for single end and 50 million for paired. In the plots below, the median of the data is indicated by the orange line and 50 and 25 million thresholds by the black lines.
+The plots below summarise the distributions of the raw sequencing data for `r sum(!is.na(mergeStats$Total.Sequences_R1)) ` samples. For mammalian studies, authors of the ATAC-seq protocol recommend a minimum of 50 million non-duplicated, non-mitochondrial mapped reads for open chromatin detection. The ENCODE pipeline recommends a minimum of 25 million for single end and 50 million for paired. In the plots below, the median of the data is indicated by the orange line and 50 and 25 million thresholds by the black lines. The red lines indicates the threshold that has been applied by the user (specified in the config.r file).
 
-```{r pressure, fig.width = 10, fig.height = 12}
+```{r pressure, fig.width = 10, fig.height = 10}
 # plot histograms of read numbers and % unique reads
-xlab <- c('Number of Reads', '% unique reads' ,'' , 'Number of Reads', '% unique reads')
-read<-c('R1','R1','','R2', 'R2')
+xlab <- c('Number of Reads', '% unique reads' , 'Number of Reads', '% unique reads')
+cols2Plot <- c("Total.Sequences_R1", "total_deduplicated_percentage_R1", "Total.Sequences_R2","total_deduplicated_percentage_R2")
+read<-c('R1','R1','R2', 'R2')
 p=NULL
-for (x in 1:5){
-  p[[x]]<-mergeStats %>% dplyr::select(all_of(x))%>%
+for (x in 1:4){
+  p[[x]]<-mergeStats %>% dplyr::select(all_of(cols2Plot))%>%
           ggplot(aes(x = .[,1]))+ # select x values based on column index rather than name
-          geom_histogram(bins=100, fill ='white', colour = 'black')+
+          geom_histogram(bins = 100,fill ='gray')+
           labs(title = read[x], x = xlab[x], y = 'Number of Samples')+
-          theme_bw() 
+          theme_bw() #+
+#	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))
 }
-p<-p[- 3] # remove the empty list item
+
 ## add thresholds
-p[[1]]<-p[[1]]+ geom_vline(xintercept = median(mergeStats[,1], na.rm = TRUE), color = "orange") +
+p[[1]]<-p[[1]]+ geom_vline(xintercept = median(mergeStats$Total.Sequences_R1, na.rm = TRUE), color = "orange") +
   geom_vline(xintercept = c(25000000,50000000), color = "black") +
+  geom_vline(xintercept = numReads*10^6, color = "red")+
 	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))
-p[[3]]<-p[[3]]+ geom_vline(xintercept = median(mergeStats[,1], na.rm = TRUE), color = "orange") +
+p[[3]]<-p[[3]]+ geom_vline(xintercept = median(mergeStats$Total.Sequences_R2, na.rm = TRUE), color = "orange") +
   geom_vline(xintercept = c(25000000,50000000), color = "black")+
+  geom_vline(xintercept = numReads*10^6, color = "red")+
 	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))
 
 grid.arrange(grobs = p,ncol=2)
 ```
 
-The plot below presents the same data in a slightly different way, counting the number of samples that have that quantity of data. Each line represents a different sequencing batch.
-
-``` {r minReads}
-# plot minimum number of reads
-coeff=nSamples[1,1]/100
-data.frame(readThres/10^6, nSamples[,-1]) %>% 
-  melt(., id='readThres.10.6') %>%
-  ggplot(aes(x = .[,1], y = .[,3], colour = .[,2]))+
-  geom_line() +
-  labs(x = 'Minimum number of reads (millions)', y = 'Number of Samples')+
-  theme_bw()+
-  geom_vline(xintercept=c((25)/0.8, 50, median(mergeStats[,1], na.rm = TRUE)/10^6), 
-             color = c('black', 'black', colorBlindGrey8[2]),
-             alpha=0.9, linetype="dashed", show.legend =FALSE)+
-  scale_y_continuous(sec.axis = sec_axis(transform = ~./coeff, name = '% of samples'))+
-  theme(legend.position = "none")+
-  scale_color_manual(values = rep('black', ncol(nSamples)))
-```
-
-
 A good ATAC-seq experiment will capture enrichment at a broad range of genomic locations. The number of distinct or unique reads is an indicator of the diversity or complexity of the data. If the sample does not contain sufficient DNA and/or has been over-sequenced, you will simply be repeatedly sequencing PCR duplicates of a restricted pool of distinct DNA fragments. This is known a low-complexity library and is not desirable.  
-
 
 ``` {r uniqueReads}
 ## plot %unique reads against read number
-p <- ggplot(mergeStats[,c(1,2)], aes(x = Total.Sequences, y = total_deduplicated_percentage, colour = pheno$fraction, label= mergeStats$Sample))+
+p <- list()
+p[[1]] <- ggplot(mergeStats, aes(x = Total.Sequences_R1, y = total_deduplicated_percentage_R1, colour = fraction, label= sampleCode))+
   geom_point() +
-  labs(x = 'Number of Reads', y = '% unique reads')+
+  labs(x = 'Number of Reads (R1)', y = '% unique reads (R1)', label = "Sample ID", colour = "Cell-fraction")+
+  scale_color_manual(values = colorBlindGrey8[1:length(unique(mergeStats$fraction))])+
   theme_bw() +
-  scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
-  theme(legend.title = element_blank(),
-        legend.position = 'bottom')
-ggplotly(p, tooltip = "label")
+  theme(legend.position = 'bottom')
+
+p[[2]] <- ggplot(mergeStats, aes(x =  Total.Sequences_R2, y = total_deduplicated_percentage_R2, colour = fraction, label= sampleCode))+
+  geom_point() +
+  labs(x = 'Number of Reads (R2)', y = '% unique reads (R2)', label = "Sample ID", colour = "Cell-fraction")+
+  scale_color_manual(values = colorBlindGrey8[1:length(unique(mergeStats$fraction))])+
+  theme_bw() +
+  theme(legend.position = 'right')
+
+ggplotly(p[[1]],tooltip = "label")
 ```
 
-``` {r violinUniqueReads, fig.width = 10, fig.height = 15}
-## plot no reads and %unique by sequencing batch
-p<-NULL
-x=1
-cols<-c("sequencingBatch", "fraction", "cohort", "Sequencing batch", "Cell fraction", "Brain bank")
-lab <- c('Number of reads', '% unique reads', "Alignment rate", "Number of aligned reads")
-for (i in 1:3){ #select pheno columns
-  for (j in 1:2){ #select mergeStats columns
-    p[[x]]<-data.frame(mergeStats[,j], pheno[,cols[i]]) %>%
-      ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
-      geom_violin(scale = 'width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = cols[i+3], y = lab[j])+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
+``` {r violinUniqueReads, fig.width = 10, fig.height = 12}
+p <- list()
+x <- 1
+
+colsY <- c("Total.Sequences_R1", "total_deduplicated_percentage_R1")
+labsY <-c('Number of reads (R1)', '% unique reads (R1)')
+colsX <- c("sequencingBatch", "fraction", "cohort")
+
+labsX <- c("Sequencing batch", "Cell-fraction", "Brain bank")
+
+for (j in 1:length(colsX)){
+  for (i in 1:length(colsY)) {
+    df <- data.frame(x = mergeStats[[colsX[j]]],y = mergeStats[[colsY[i]]])
+    p[[x]] <- ggplot(df, aes(x = factor(x), y = y, fill = factor(x))) +
+      geom_violin(scale = "width") +
+      geom_boxplot(width = 0.05, fill = "black", alpha = 0.3) +
+      stat_summary(fun = median, geom = "point", color = "white") +
+      labs(x = labsX[j], y = labsY[i])+
+      scale_fill_manual(values = rep(colorBlindGrey8,
+               ceiling(length(unique(df$x)) / length(colorBlindGrey8)))[1:length(unique(df$x))])+
       theme_bw() +
-      theme(axis.text.y = element_text(angle = 90),axis.text.x = element_text(angle = 45),
-            axis.text = element_text(size = 7),
-            axis.title = element_text(size=10),
-            legend.position="none")
-    x<-x+1
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text = element_text(size = 7),
+        axis.title = element_text(size = 10),
+        legend.position = "none"
+      )
+
+    x <- x + 1
   }
 }
 grid.arrange(grobs = p,ncol=2)
@@ -313,19 +343,18 @@ grid.arrange(grobs = p,ncol=2)
 
 ### 2.1 Summary of alignment (pre-filtering)
 
-The plot below shows the alignment rate and number of mapped reads per sample. While general convention is a unique mapping rate over 80% is typical for a successful ATAC-seq experiment, ENCODE would require that the percentage of mapped reads should be greater than 95%, though values >80% may be acceptable. In the plot below the pink line indicates the 80% threshold, the black indicates the 95%. The plot below contains data for `r sum(!is.na(mergeStats$aligned_total))` samples. 
+The plot below shows the alignment rate and number of mapped reads per sample. While general convention is a unique mapping rate over 80% is typical for a successful ATAC-seq experiment, ENCODE would require that the percentage of mapped reads should be greater than 95%, though values >80% may be acceptable. In the plot below the pink line indicates the 80% threshold, the black indicates the 95%. The plot below contains data for `r sum(!is.na(mergeStats$aligned_total))` samples. Threshold chosen by user is indicated as a red line.
 
 ```{r alignment rate}
 ## plot alignment rate against number of reads
-p <-ggplot(mergeStats[,c('aligned_total','overall_alignment_rate',"Sample")], aes(x = aligned_total, y = overall_alignment_rate, colour = pheno$fraction, label = Sample))+
+p <-ggplot(mergeStats, aes(x = aligned_total, y = overall_alignment_rate, colour = fraction, label = sampleCode))+
   geom_point() +
-  geom_hline(yintercept=c(95, 80), #acceptable
-             color = c('black', colorBlindGrey8[2]))+
-  labs(x = 'Number of Reads', y = 'Alignment rate (%)')+
+  geom_hline(yintercept=c(95, 80, alignThres), #acceptable
+             color = c('black', colorBlindGrey8[2], "red"))+
+  labs(x = 'Number of Reads Pairs', y = 'Alignment rate (%)',colour = "Cell-fraction")+
   theme_bw() +
-  scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
-  theme(legend.title = element_blank(),
-        legend.position = 'bottom')+
+  scale_color_manual(values = colorBlindGrey8[1:length(unique(mergeStats$fraction))])+
+  theme(legend.position = 'bottom')+
 	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))
 ggplotly(p, tooltip = "label")
 ```
@@ -333,29 +362,45 @@ ggplotly(p, tooltip = "label")
 
 ``` {r alignBoxplot, fig.width = 10, fig.height = 12}
 ## plot alignment rate and no aligned reads by sequencing batch, cell fraction and brain bank
-p<-NULL
-x=1
-for (i in 1:3){
-  for (j in 8:9){
-    p[[x]]<-data.frame(mergeStats[,j], pheno[,cols[i]]) %>%
-      ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
-      geom_violin(scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = cols[i+3], y = lab[j-5])+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      theme_bw()+
-      theme(axis.text.y = element_text(angle = 90), axis.text.x = element_text(angle = 45),
-            axis.text = element_text(size = 7),
-            axis.title = element_text(size=10), legend.position = "none")
-    
-    if (j==8){
-      p[[x]]<-p[[x]]+geom_hline(yintercept = 80, alpha=0.7, linetype="dashed", show.legend =FALSE)
+p <- list()
+x <- 1
+
+colsY <- c("overall_alignment_rate", "TotalReadPairs_afterAlignment", "BAMTotalReads")
+labsY <-c('% Alignment rate', 'Num proper read pairs/fragments (after QC)', 'Num reads (after QC)')
+colsX <- c("sequencingBatch", "fraction", "cohort")
+
+labsX <- c("Sequencing batch", "Cell-fraction", "Brain bank")
+
+for (j in 1:length(colsX)){
+  for (i in 1:length(colsY)) {
+    df <- data.frame(x = mergeStats[[colsX[j]]],y = mergeStats[[colsY[i]]])
+    p[[x]] <- ggplot(df, aes(x = factor(x), y = y, fill = factor(x))) +
+      geom_violin(scale = "width") +
+      geom_boxplot(width = 0.05, fill = "black", alpha = 0.3) +
+      stat_summary(fun = median, geom = "point", color = "white") +
+      scale_fill_manual(values = rep(colorBlindGrey8,
+               ceiling(length(unique(df$x)) / length(colorBlindGrey8)))[1:length(unique(df$x))])+
+      labs(x = labsX[j], y = labsY[i])+
+      theme_bw() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text = element_text(size = 7),
+        axis.title = element_text(size = 10),
+        legend.position = "none"
+      )
+    if (colsY[i] == "overall_alignment_rate"){
+          p[[x]]<-p[[x]]+geom_hline(yintercept = 80, alpha=0.7, linetype="dashed", show.legend =FALSE)
+    } else if(colsY[i] == "BAMTotalReads") {
+      p[[x]]<-p[[x]]+geom_hline(yintercept = numReads*10^6, alpha=0.7, linetype="dashed", show.legend =FALSE) +
+       scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+    } else {
+       p[[x]]<-p[[x]]+
+       scale_y_continuous(labels = label_number(suffix = "M", scale = 1e-6))
     }
-    x<-x+1
+    x <- x + 1
   }
 }
-grid.arrange(grobs = p,ncol=2)
+grid.arrange(grobs = p,ncol=3)
 
 ```
 
@@ -364,43 +409,48 @@ grid.arrange(grobs = p,ncol=2)
 
 It can be a useful QC to assess the number of mitochondrial reads; some ATAC-Seq samples have been reported to be 80% mitochondrial reads. 
 
-``` {r mitochondria}
+``` {r mitochondria, fig.width = 8, fig.height = 10}
 # plot percentage of mitochondrial reads
-data.frame(mergeStats$PercentMTReads, pheno$cohort) %>%
-  ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
-      geom_violin(scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = "Brain bank", y = "Percentage of MT reads")+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      theme_bw()+
-  theme(legend.position = "none")
 
-data.frame(mergeStats$PercentMTReads, pheno$sequencingBatch) %>%
-  ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
-      geom_violin(scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = "Sequencing batch", y = "Percentage of MT reads")+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      theme_bw()+
-  theme(legend.position = "none",axis.text.x = element_text(angle = 45))
+p <- list()
+colsCol <- c("fraction", "sequencingBatch","cohort")
+labsCol <- c("Cell-fraction", "Sequencing batch", "Brain bank")
+for (i in 1:length(colsCol)) {
+    df <- data.frame(x = mergeStats[[colsCol[i]]],y = mergeStats$PercentMTReads)
+    p[[i]] <- ggplot(df,aes(x=x, y=y, fill = x))+
+      geom_violin(scale = "width",
+            position = position_dodge(width = 0.9),
+            trim = FALSE) +
+    geom_boxplot(width = 0.15,
+               position = position_dodge(width = 0.9),
+               outlier.shape = NA)+
+      labs(y = "Percentage of MT reads", x = labsCol[i], fill = labsCol[i])+
+      stat_summary(fun="median", geom="point", color="white")+
+       scale_fill_manual(values = rep(colorBlindGrey8,
+               ceiling(length(unique(df$x)) / length(colorBlindGrey8)))[1:length(unique(df$x))])+
+     theme_bw() +
+    theme(
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 11),
+      legend.position = "none",
+      plot.title = element_text(size = 11)
+    )
+}
 
-
+grid.arrange(grobs = p, nrow = 3)
 ```
 
 ### 2.3 Library Complexity
 
-In this section we will assess the number of unique aligned reads as the number of total reads increases, across all samples. 
+In this section we will assess the number of unique aligned read pairs as the number of total reads pairs increases, across all samples. 
 
 ``` {r dedupreads}
 # plot unique reads against total reads
-libcomp <- data.frame(x = mergeStats[,1], y = mergeStats$DistinctReadPairs, fraction = pheno$fraction, name =pheno$sampleID) 
-p <- ggplot(libcomp,aes(x=x, y = y, colour = fraction,label = name))+
+p <- ggplot(mergeStats,aes(x=TotalReadPairs_afterAlignment, y = DistinctReadPairs, colour = factor(fraction),label = sampleCode))+
       geom_point()+
       theme_bw()+
-      labs(x = "Number of reads", y = "Number of distinct aligned reads")+
-      scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
+      labs(x = "Number of read pairs", y = "Number of distinct read pairs",colour = "Cell-fraction")+
+      scale_color_manual(values = colorBlindGrey8[1:length(unique(mergeStats$fraction))])+
       theme(legend.title = element_blank(), 
             legend.position = 'bottom') +
 	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))+
@@ -410,13 +460,13 @@ ggplotly(p, tooltip = "label")
 
 We will also calculate additional statistics recommended by the ENCODE ATAC-seq pipeline: PCR Bottlenecking Coefficients 1 & 2 (PBC1 & PBC2) and Non-Redundant Fraction (NRF) and compare these to their reference values. The plots below contain data from `r sum(!is.na(eMetrics[,1]))` samples.
 
-``` {r encode, fig.height = 12}
+``` {r encode, fig.height = 10}
 ## plot encode statistics
-p=NULL
+p <- list()
 ## to ensure the threshold labels are in correct place according to threshold lines, calculate midpoints between lines:
 # matrix of encode thresholds
-thres<-matrix(c(0.7, 0.9,
-               0.7, 0.9, 
+thres<-matrix(c(nrfThres, 0.9,
+               nrfThres, 0.9, 
                1, 3), nrow = 2)
 # matrix of label orientation (mean)
 labs<-matrix(data=NA, ncol = 3, nrow = 3)
@@ -446,11 +496,44 @@ for (x in 1:3){
     theme(axis.text.y = element_text(angle = 90))
   
 }
-p<-compact(p)
 grid.arrange(grobs = p, nrow = 3)
 
 ```
 
+``` {r encode2, fig.width = 10, fig.height = 12}
+
+p <- list()
+x <- 1
+
+colsY <- c('NRF', 'PBC1', "PBC2")
+labsY <-c('NRF', 'PBC1', "PBC2")
+colsX <- c("sequencingBatch", "fraction", "cohort")
+
+labsX <- c("Sequencing batch", "Cell-fraction", "Brain bank")
+
+for (j in 1:length(colsX)){
+  for (i in 1:length(colsY)) {
+    df <- data.frame(x = mergeStats[[colsX[j]]],y = mergeStats[[colsY[i]]])
+    p[[x]] <- ggplot(df, aes(x = factor(x), y = y, fill = factor(x))) +
+      geom_violin(scale = "width") +
+      geom_boxplot(width = 0.05, fill = "black", alpha = 0.3) +
+      stat_summary(fun = median, geom = "point", color = "white") +
+      labs(x = labsX[j], y = labsY[i])+
+      scale_fill_manual(values = colorBlindGrey8[1:length(unique(df$x))])+
+      theme_bw() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text = element_text(size = 7),
+        axis.title = element_text(size = 10),
+        legend.position = "none"
+      )
+    x <- x + 1
+  }
+}
+grid.arrange(grobs = p,ncol=3)
+
+
+```
 
 ### 2.4 Fragment Size Distribution
 
@@ -468,6 +551,46 @@ melt(na.omit(propNucleosomesAll)) %>%
       theme_bw()
 ```
 
+``` {r  fig.width = 10, fig.height = 12}
+## plot nucleosome periodicity
+propNucleosomesAll.1 <- mergeStats[, c("fraction", "sequencingBatch","cohort","NFR", "Mono", "Di", "Tri", "Quad")]
+melt.df  <- propNucleosomesAll.1 %>%
+pivot_longer(
+    cols = 4:8,                     # first 4 columns
+    names_to = "FragSize",     # new column for fragment names
+    values_to = "percentage"        # new column for values
+  )
+melt.df <- as.data.frame(melt.df)
+melt.df <- melt.df %>%
+  mutate(FragSize = fct_reorder(FragSize, percentage)) %>%
+  mutate(FragSize = factor(FragSize, levels=c("NFR", "Mono", "Di", "Tri", "Quad")))
+
+p <- list()
+colsCol <- c("fraction", "sequencingBatch","cohort")
+labsCol <- c("Cell-fraction", "Sequencing batch", "Brain bank")
+for (i in 1:length(colsCol)) {
+    p[[i]] <- ggplot(melt.df,aes(x=as.factor(FragSize), y=percentage, fill = .data[[colsCol[i]]]))+
+      geom_violin(scale = "width",
+            position = position_dodge(width = 0.9),
+            trim = FALSE) +
+    geom_boxplot(width = 0.15,
+               position = position_dodge(width = 0.9),
+               outlier.shape = NA)+
+      labs(y = "Proportion of reads", x = "Fragment size classification", fill = labsCol[i])+
+       scale_fill_manual(values = colorBlindGrey8[1:length(unique(melt.df[[colsCol[i]]]))])+
+     theme_bw() +
+    theme(
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 15),
+      legend.position = "bottom",
+      plot.title = element_text(size = 16)
+    )
+}
+
+
+grid.arrange(grobs = p,ncol=1)
+```    
+      
 We need to apply thresholds to satisfy the following criteria
 
 * large proportion of nucleosome-free fragments
@@ -477,17 +600,26 @@ We need to apply thresholds to satisfy the following criteria
 ```{r periodicity2}
 
 # plot proportion of nucleosome free against mono
-prop <- data.frame(propNucleosomesAll)
-p <-ggplot(prop, aes(x=propNucleosomesAll[,2], y=propNucleosomesAll[,1]))+
+p <-ggplot(mergeStats, aes(x=Mono, y=NFR, color = factor(fraction)))+
     geom_point()+
     theme_bw()+
-    labs(x= "Proportion fragments classed as mono", y = "Proportion fragments class as nucleosome free")+
+    labs(x= "Proportion fragments classed as mono", y = "Proportion fragments class as nucleosome free", 
+         color = "Cell-fraction")+
     geom_abline(intercept = 0, slope = 1)+
+  scale_color_manual(values = rep(colorBlindGrey8,
+               ceiling(length(unique(mergeStats$fraction)) / length(colorBlindGrey8)))[1:length(unique(mergeStats$fraction))])+
     ylim(c(0,1))+
     xlim(c(0,max(propNucleosomesAll[,2])))+
     geom_hline(yintercept = c(nucfThres))+
-    geom_vline(xintercept = c(monoThres)) +
-    geom_polygon(data = data.frame("x" = c(monoThres, nucfThres, 1,monoThres), "y" = c(nucfThres, nucfThres, 1, 1)), aes(x = x, y = y), fill = "grey", alpha = 0.2, size = 2)
+  
+    geom_vline(xintercept = c(monoThres)) + 
+  theme(
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 13),
+    legend.position = "bottom",
+    plot.title = element_text(size = 16)
+  )
+
 
 p
 ```
@@ -498,139 +630,69 @@ Alternatively we can test for periodicity (i.e. multimodality) using Hartigan's 
 ```{r periodicity3}
 
 # plot distribution of hartigan's dip test p values
-hist(diptestStatsAll[,"p.value"], breaks = 50, col = "grey", xlab = "Hartigans Test P-value", ylab = "Number of samples", main = "")
+hist(mergeStats[,"p.value"], breaks = 50, col = "grey", xlab = "Hartigans Test P-value", ylab = "Number of samples", main = "")
 abline(v = dipPThres)
 
+
+p<- ggplot(mergeStats, aes(x = p.value, fill = fraction))+
+  geom_histogram(bins = 100)+    facet_wrap(~fraction, scales = "free")+  
+  geom_vline(aes(xintercept = dipPThres), colour = "black",
+             linetype = "dashed") + 
+  theme_bw()+
+  labs(x =  "Hartigans Test P-value", y = "Number of samples", 
+       fill = "cell-fraction",title = "")+
+  theme(legend.position = "bottom")+
+  scale_fill_manual(values = colorBlindGrey8[1:length(unique(melt.df[[colsCol[i]]]))])
+
+p
 ```
+
 
 ## 3. Peak calling
 
 ### 3.1 Number of peaks
 
-Peak calling was performed in three ways using MACS3 in the paired end mode. ENCODE recommends that number of peaks in each sample be greater than 150,000, though values greater than 100,000 are acceptable. Data from `r sum(!is.na(fripStats$BAMPeaks))` samples is plotted below. The mean number of peaks for MACS3 PE Peaks is `r signif(mean(fripStats$BAMPeaks, na.rm = TRUE ),3)` (SD = `r signif(sd(fripStats$BAMPeaks, na.rm = TRUE ),3)`). The plots below contain data from `r sum(!is.na(fripStats$BAMPeaks))` samples. 
+Peak calling was performed using MACS3 in the paired end and narrow peak mode. ENCODE recommends that number of peaks in each sample be greater than 150,000, though values greater than 100,000 are acceptable. Data from `r sum(!is.na(mergeStats$BAMPeaks))` samples is plotted below. The mean number of peaks for MACS3 PE Peaks is `r signif(mean(mergeStats$BAMPeaks, na.rm = TRUE ),3)` (SD = `r signif(sd(mergeStats$BAMPeaks, na.rm = TRUE ),3)`). The plots below contain data from `r sum(!is.na(mergeStats$BAMPeaks))` samples. 
 
 ```{r numpeaks, results=FALSE}
-data.frame(fripStats$BAMPeaks)%>%
-  melt() %>%
-  ggplot(aes(y = value, x=variable))+
-      geom_violin(fill = "grey80", scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = "Sequencing batch", y = "Number of peaks (100000s)")+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      geom_hline(yintercept = c(150000, 100000), color = c('black', colorBlindGrey8[3]))+
-      scale_x_discrete(labels = "MACS3 Paired-end")+
-	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))+
-      theme_bw()
+p <-ggplot(mergeStats, aes(x = BAMTotalReads, y =  BAMPeaks, colour = fraction, label = sampleCode))+
+  geom_point() +
+  labs(x = 'Number of Reads (after alignment QC)', y = 'Number of peaks ',colour = "Cell-fraction")+
+  theme_bw() +
+  geom_hline(yintercept = c(150000, 100000), color = c('black', colorBlindGrey8[3]))+
+  scale_color_manual(values = colorBlindGrey8[1:length(unique(mergeStats$fraction))])+
+  theme(legend.position = 'bottom')+
+	scale_x_continuous(labels = label_number(suffix = "M", scale = 1e-6))
+ggplotly(p, tooltip = "label")
 
 ```
 
-```{r rviolinPlotPeaks,fig.height = 8, fig.width = 8}
-p <- NULL
-p[[1]]<-data.frame(fripStats$BAMPeaks, pheno$cohort) %>%
-      ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
-      geom_violin(scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = "Brain bank", y = "Number of peaks PE (100000s)")+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      theme_bw()+
-      theme(axis.text.y = element_text(angle = 90), axis.text.x = element_text(angle = 45),
-            axis.text = element_text(size = 7),
-            axis.title = element_text(size=10), legend.position = "none")+
-	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
+```{r rviolinPlotPeaks,fig.height = 12, fig.width = 10}
 
-p[[2]]<-data.frame(fripStats$BAMPeaks, pheno$fraction) %>%
-      ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
-      geom_violin(scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = "Cell fraction", y = "Number of peaks PE (100000s)")+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      theme_bw()+
-      theme(axis.text.y = element_text(angle = 90),axis.text.x = element_text(angle = 45), 
-            axis.text = element_text(size = 7),
-            axis.title = element_text(size=10), legend.position = "none")+
-	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
+p <- list()
+colsCol <- c("fraction", "sequencingBatch","cohort")
+labsCol <- c("Cell-fraction", "Sequencing batch", "Brain bank")
+for (i in 1:length(colsCol)) {
+    p[[i]] <- ggplot(mergeStats,aes(x=.data[[colsCol[i]]], y=BAMPeaks, fill = .data[[colsCol[i]]]))+
+      geom_violin(scale = "width",
+            position = position_dodge(width = 0.9),
+            trim = FALSE) +
+    geom_boxplot(width = 0.15,
+               position = position_dodge(width = 0.9),
+               outlier.shape = NA)+
+      labs(y = "Number of peaks", x = labsCol[i], fill = labsCol[i])+
+      stat_summary(fun="median", geom="point", color="white")+
+        scale_fill_manual(values = colorBlindGrey8[1:length(unique(melt.df[[colsCol[i]]]))])+
+     theme_bw() +
+    theme(
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 15),
+      legend.position = "bottom",
+      plot.title = element_text(size = 16)
+    )
+}
 
-p[[3]]<-data.frame(fripStats$BAMPeaks, pheno$sequencingBatch) %>%
-      ggplot(aes(y = .[,1], x=as.factor(.[,2]), fill = as.factor(.[,2])))+
-      geom_violin(scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = "Sequencing Batch", y = "Number of peaks PE (100000s)")+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      theme_bw()+
-      theme(axis.text.y = element_text(angle = 90), axis.text.x = element_text(angle = 45),
-            axis.text = element_text(size = 7),
-            axis.title = element_text(size=10), legend.position = "none")+
-	scale_y_continuous(labels = label_number(suffix = "", scale = 1e-5))
-
-grid.arrange(grobs = p,ncol=2)
-```
-
-Peak calling will be affected by the background noise of a sample, and the success of the ATAC enrichment. Let's compare some of our periodicity statistics against the number of peaks. 
-
-Below, results from calling peaks using MACS3 PE mode are shown. 
-```{r, fig.height = 16 , fig.width = 8}
-p<-NULL
-p[[1]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$BAMPeaks, y=propNucleosomesAll[,1]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "Number of Peaks (x10000)", y = "Proportion nucleosome free")+
-	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
-
-p[[2]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$BAMPeaks, y=propNucleosomesAll[,2]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "Number of Peaks (x10000)", y = "Proportion mono-nucleosome") +
-	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
-
-p[[3]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$BAMPeaks, y=diptestStatsAll[,"D"]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test Statistic") +
-	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
-
-p[[4]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$BAMPeaks, y=diptestStatsAll[,"p.value"]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "Number of Peaks (x10000)", y = "Hartigans Test P") +
-	scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))
-
-
-p[[5]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$FripMACS3PE, y=propNucleosomesAll[,1]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "FRIP", y = "Proportion nucleosome free")
-
-p[[6]]<-data.frame(propNucleosomesAll)%>%
-  ggplot(aes(x=fripStats$FripMACS3PE, y=propNucleosomesAll[,2]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "FRIP", y = "Proportion mono-nucleosome")
-
-
-p[[7]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$FripMACS3PE, y=diptestStatsAll[,"D"]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "FRIP", y = "Hartigans Test Statistic")
-
-p[[8]]<-data.frame(diptestStatsAll)%>% 
-    ggplot(aes(x=fripStats$FripMACS3PE, y=diptestStatsAll[,"p.value"]))+
-    geom_point()+
-    theme_bw()+
-    labs(x= "FRIP", y = "Hartigans Test P")
-
-
-grid.arrange(grobs = p, ncol=2, nrow = 4)
-
+grid.arrange(grobs = p,ncol=1)
 ```
 
 ### 3.2 Specificity of reads in peaks
@@ -638,29 +700,45 @@ grid.arrange(grobs = p, ncol=2, nrow = 4)
 Plot of the fraction of reads in peaks called for that sample. These plots give a good indication of how "enriched" the sample is and can be considered a "signal-to-noise" measure of what proportion of the library consists of fragments from binding sites vs. background reads. According to the ENCODE standard processing pipeline for ATAC-seq the FRiP score should be > 0.3, though values greater than 0.2 are acceptable. We will not filter on this metric yet, but return to it once we have called peaks at the group level. 
 
 ```{r readsinpeaks}
-# plot 
-data.frame(fripStats$FripMACS3PE)%>%
-  melt() %>%
-  ggplot(aes(y = value, x=variable))+
-      geom_violin(fill = "grey80", scale='width')+
-      geom_boxplot(width=0.05, fill='black')+
-      labs(x = "Sequencing batch", y = "Fraction reads in peaks")+
-      stat_summary(fun="median", 
-                 geom="point", color="white")+
-      geom_hline(yintercept = c(0.3, 0.2), color = c('black', colorBlindGrey8[3]))+
-      scale_x_discrete(labels = "MACS3 Paired-end")+
-      theme_bw()
-
-
-p<- ggplot(fripStats, aes(x=BAMPeaks, y = FripMACS3PE, colour = pheno$fraction, label = SampleName))+
+p<- ggplot(mergeStats, aes(x=BAMPeaks, y = FripMACS3PE, colour = fraction, label = sampleCode))+
     geom_point()+
     theme_bw()+
-    labs(title = 'MACS3: PE', x = "Number of peaks (100000s)", y = "Fraction reads in peaks")+
-    scale_color_manual(values = colorBlindGrey8[1:length(unique(pheno$fraction))])+
+    labs( x = "Number of peaks (100000s)", y = "Fraction reads in peaks", label = "sampleCode", color = "Cell-fraction")+
+    scale_color_manual(values = colorBlindGrey8[1:length(unique(mergeStats$fraction))])+
     scale_x_continuous(labels = label_number(suffix = "", scale = 1e-5))+
     theme(legend.title = element_blank(), 
           legend.position = 'bottom')
 ggplotly(p, tooltip ="label")
+```
+
+## 4.TSS enrichment
+
+```{r enrich ,fig.height = 12, fig.width = 10}
+
+p <- list()
+colsCol <- c("fraction", "sequencingBatch","cohort")
+labsCol <- c("Cell-fraction", "Sequencing batch", "Brain bank")
+for (i in 1:length(colsCol)) {
+    p[[i]] <- ggplot(mergeStats,aes(x=.data[[colsCol[i]]], y=TSSScore, fill = .data[[colsCol[i]]]))+
+      geom_violin(scale = "width",
+            position = position_dodge(width = 0.9),
+            trim = FALSE) +
+    geom_boxplot(width = 0.15,
+               position = position_dodge(width = 0.9),
+               outlier.shape = NA)+
+      labs(y = "TSS enrichment", x = labsCol[i], fill = labsCol[i])+
+      stat_summary(fun="median", geom="point", color="white")+
+       scale_fill_manual(values = colorBlindGrey8[1:length(unique(mergeStats[[colsCol[i]]]))])+
+     theme_bw() +
+    theme(
+      axis.text = element_text(size = 12),
+      axis.title = element_text(size = 15),
+      legend.position = "bottom",
+      plot.title = element_text(size = 16)
+    )
+}
+
+grid.arrange(grobs = p, ncol=1)
 ```
 
 # QC Summary: Sample Filtering
@@ -668,43 +746,38 @@ ggplotly(p, tooltip ="label")
 ```{r samplePASS}
 # generate a txt file of passed samples
 QCPASS<-cbind(mergeStats$overall_alignment_rate > alignThres, #alignment rate 
-              fripStats$BAMTotalReads > uniqReads*10^6, #total filtered & aligned reads
-              eMetrics$NRF > nrfThres, #encode
-              eMetrics$PBC1 > pbc1Thres, #encode
-              eMetrics$PBC2 > pbc2Thres, #encode,
-              propNucleosomesAll[,1] > nucfThres, #fractions nucleosome free 
-              propNucleosomesAll[,2] > monoThres, #fractions mononucleosome 
-              decreasingProps[,1],#periodicity
-              fripStats$BAMPeaks > peakThres, # number of peaks
-              fripStats$FripMACS3PE > fripThres, #frip
-              diptestStatsAll[,"p.value"] >= dipPThres #multimodality
+              mergeStats$BAMTotalReads > numReads*10^6,#total filtered & aligned reads
+              mergeStats$NRF > nrfThres, #encode
+              mergeStats$PBC1 > pbc1Thres, #encode
+              mergeStats$PBC2 > pbc2Thres, #encode,
+              mergeStats$NFR > nucfThres, #fractions nucleosome free 
+              mergeStats$Mono > monoThres
               ) 
 QCPASS[is.na(QCPASS)] <- FALSE
-colnames(QCPASS)<-c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality")
-rownames(QCPASS)<-processSum$sampleID
-keep<-rowSums(QCPASS, na.rm=TRUE) == rowSums(!is.na(QCPASS))
-QCPASS<-cbind(QCPASS, "QCPASS" = keep)
-QCPASS.df<- cbind(pheno, QCPASS)
+colnames(QCPASS)<-c("AlignmentRate", "TotalNumReads", "NRF", "PBC1", "PBC2","NFR", "MNC")
+keep<-rowSums(QCPASS) == ncol(QCPASS)
+QCPASS.df<-cbind(QCPASS, "QCPASS" = keep)
+QCPASS.df <- cbind(mergeStats[,c("sampleID","sampleCode","fraction","cohort","sequencingBatch")],QCPASS.df)
 write.csv(QCPASS.df, file = file.path(qc1pass))
 
-write.table(names(keep[keep==TRUE]), file = file.path(qc1passList), 
+write.table(mergeStats$sampleID[keep], file = file.path(qc1passList), 
             row.names = FALSE, col.names = FALSE, quote = FALSE)
 
-
-qcStats <- cbind(pheno, mergeStats$overall_alignment_rate, #alignment rate 
-              fripStats$BAMTotalReads, #total filtered & aligned reads
-              eMetrics$NRF, #encode
-              eMetrics$PBC1, #encode
-              eMetrics$PBC2, #encode,
-              propNucleosomesAll[,1], #fractions nucleosome free 
-              propNucleosomesAll[,2], #fractions mononucleosome 
-              decreasingProps[,1],#periodicity
-              fripStats$BAMPeaks, # number of peaks
-              fripStats$FripMACS3PE, #frip
-              diptestStatsAll[,"p.value"] #multimodality
+qcStats <- cbind(mergeStats[,c("sampleID","sampleCode","cohort","fraction","sequencingBatch")],mergeStats$overall_alignment_rate, #alignment rate 
+              mergeStats$BAMTotalReads, #total filtered & aligned reads
+              mergeStats$NRF, #encode
+              mergeStats$PBC1, #encode
+              mergeStats$PBC2, #encode,
+              mergeStats$NFR, #fractions nucleosome free 
+              mergeStats$Mono, #fractions mononucleosome 
+              mergeStats[["NFR>Mono"]],#periodicity
+              mergeStats$BAMPeaks, # number of peaks
+              mergeStats$FripMACS3PE, #frip
+              mergeStats[["p.value"]],mergeStats$TSSScore
+                     #multimodality
               ) 
 
-colnames(qcStats) <- c(colnames(pheno), "AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality")
+colnames(qcStats) <- c("sampleID","sampleCode","cohort","fraction","sequencingBatch", "AlignmentRate", "TotalNumReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality", "TSS_score")
 write.csv(qcStats, file = file.path(qc1stats),row.names = FALSE)
 ```
 
@@ -716,31 +789,20 @@ kbl(colSums(QCPASS, na.rm = TRUE))
 
 The table below, summarises the number of samples that fail each QC step.
 ```{r, echo = FALSE}
-QCPASS <- QCPASS[,c("AlignmentRate", "UniqueReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "Periodicity","Peaks", "FRIP", "Multimodality", "QCPASS")]
+QCPASS.df2 <- QCPASS.df[,c("AlignmentRate", "TotalNumReads", "NRF", "PBC1", "PBC2","NFR", "MNC", "QCPASS")]
 
 # create cross tab table
-xTab<-matrix(data = NA, ncol = ncol(QCPASS), nrow = ncol(QCPASS))
-for(i in 1:ncol(QCPASS)){
-  for(j in 1:ncol(QCPASS)){
-    xTab[i,j]<-sum(rowSums(QCPASS[,c(i,j)]) == 0, na.rm = TRUE)
+xTab<-matrix(data = NA, ncol = ncol(QCPASS.df2), nrow = ncol(QCPASS.df2))
+for(i in 1:ncol(QCPASS.df2)){
+  for(j in 1:ncol(QCPASS.df2)){
+    xTab[i,j]<-sum(rowSums(QCPASS.df2[,c(i,j)]) == 0, na.rm = TRUE)
   }
 }
-colnames(xTab)<-colnames(QCPASS)
-rownames(xTab)<-colnames(QCPASS)
+colnames(xTab)<-colnames(QCPASS.df2)
+rownames(xTab)<-colnames(QCPASS.df2)
 
 kbl(xTab) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
-
-```
-
-```{r}
-pheatmap(xTab,
-         color = colorRampPalette(c("white", "red"))(50),
-         fontsize = 15,
-         cluster_rows = FALSE, 
-         cluster_cols = FALSE,
-         display_numbers = matrix(sprintf("%d", round(xTab)), nrow = nrow(xTab)),
-         main = "Co-failing Samples Heatmap")
 
 ```
 
@@ -750,19 +812,99 @@ This is a correlation matrix of the QC metrics considered so far which enables u
 
 ``` {r correlation, fig.width = 10, fig.height= 10}
 ## create correlation plot 
-corMergeStats<-cbind(mergeStats$Total.Sequences,mergeStats$total_deduplicated_percentage, mergeStats$Sequences.flagged.as.poor.quality,
-                     mergeStats$PercentMTReads,
-                     mergeStats$overall_alignment_rate,
-                     mergeStats$DistinctReadPairs,
-                     mergeStats$NRF,
-                     mergeStats$PBC1,
-                     propNucleosomesAll[,c(1,2)],
-                     diptestStatsAll[,2],
-                     decreasingProps[,1],
-                     fripStats$BAMPeaks,
-                     fripStats$FripMACS3PE)
-colnames(corMergeStats)<- c('total\nreads', 'dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
-                            'NFR','PBC1',  "PropNFR", "PropMono", "DipP","Periodicity","NPeaks_PE", "FRIP_PE")
+cols2Keep <- c("TSSScore","BAMTotalReads", "TotalReadPairs_afterAlignment","total_deduplicated_percentage_R1","Sequences.flagged.as.poor.quality_R1",
+               "PercentMTReads","overall_alignment_rate", "DistinctReadPairs","NRF","PBC1","PBC2", "NFR", "MNC","p.value",
+               "BAMPeaks","FripMACS3PE")
+corMergeStats<-mergeStats[,cols2Keep]
+colnames(corMergeStats)<- c("tss",'total\nreads', 'total\npairs','dedup', 'poor\nqual', 'mt\nreads', 'alignt\nrate', 'distinct\nreads', 
+                            'NFR','PBC1',  "PBC2","PropNFR", "PropMNC", "DipP","NPeaks_PE", "FRIP_PE")
 corMergeStats<- corMergeStats[, colSums(corMergeStats, na.rm = TRUE) != 0]
-corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.9, tl.col = 'black')
+corrplot.mixed(cor(corMergeStats, use = "p"), order = 'AOE', tl.cex=0.7, tl.col = 'black')
+```
+
+Below there is a summary of the QC metrics that samples failed the most and the most common combinations of failed QC metrics.
+
+```{r fig.width = 12, fig.height= 10}
+
+qc_cols <- names(QCPASS.df2)
+qc_cols <- qc_cols[!qc_cols == "QCPASS"]
+
+fail_long <- QCPASS.df2 %>%
+  mutate(sample_id = row_number()) %>%
+  pivot_longer(all_of(qc_cols),
+               names_to = "metric",
+               values_to = "pass") %>%
+  filter(!pass) %>%
+  group_by(sample_id) %>%
+  summarise(fail_combo = paste(metric, collapse = ";"), .groups = "drop")
+
+combo_rank <- fail_long %>%
+  dplyr::count(fail_combo, sort = TRUE)%>%
+  slice_max(n, n = 20)
+
+p <- list()
+p[[1]] <-  ggplot(combo_rank,aes(x = reorder(fail_combo, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    x = "Failed QC combination",
+    y = "Number of samples"
+  ) +
+  theme_bw()
+
+fail_counts <- QCPASS.df2 %>%
+  dplyr::mutate(n_fail = rowSums(!across(all_of(qc_cols)))) %>%
+  dplyr::filter(n_fail > 0) %>%
+  dplyr::count(n_fail)
+
+p[[2]]  <- ggplot(fail_counts, aes(n_fail, n)) +
+  geom_col(width = 0.8) +
+  geom_text(aes(label = n), vjust = -0.3) +
+  scale_x_continuous(breaks = sort(unique(fail_counts$n_fail))) +
+  labs(
+    x = "QC metrics failed",
+    y = "Samples"
+  ) +
+  theme_classic()
+
+grid.arrange(grobs = p, ncol=2)
+```
+
+```{r}
+qc_cols_use <- qc_cols[
+  colSums(QCPASS.df2[qc_cols]) > 0 &      # not all FALSE
+  colSums(!QCPASS.df2[qc_cols]) > 0       # not all TRUE
+]
+
+qc_fail <- QCPASS.df2[qc_cols_use] == FALSE
+qc_fail <- qc_fail[rowSums(qc_fail) > 0, ]
+
+ComplexUpset::upset(
+  as.data.frame(qc_fail),
+  intersect = colnames(qc_fail),
+  name = "QC failures"
+)
+```
+
+
+## Stage 1 QC results
+
+Below there is a summary of the samples that passed/failed the first stage of the ATAC-seq QC pipeline. Those samples that fail don't have enough data quality to be used for downstream analyses.
+
+```{r}
+  
+QCPASS.counts<-QCPASS.df %>% dplyr::count(QCPASS,fraction)
+
+ggplot(QCPASS.counts, aes(x = fraction, y = n, fill = QCPASS))+
+    geom_col(position = position_dodge(width = 0.9), alpha = 0.9) +
+  geom_text(aes(label = n),
+            position = position_dodge(width = 0.9),
+            vjust = -0.5,
+            size = 4,
+            color = "black") +
+  scale_fill_manual(values = col_vals_pass) +
+  labs(x = "Cell-fraction",
+       y = "Number of samples",
+       fill = "PASS") +
+  theme_bw()
 ```

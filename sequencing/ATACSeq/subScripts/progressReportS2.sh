@@ -1,11 +1,10 @@
 #!/bin/bash
 ## =============================================================================================##
-##                             ATAC-seq pipeline STEP 8.1: Collate QMetrics                     ##
+##                           PIPPA STEP 7.1: Progress Report Stage 2 QC                         ##
 ## =============================================================================================##
 ## EXECUTION: sbatch ./subScripts/progressReportS2.sh                                           ||
-## - execute from pipeline's main directory                                                     ||
 ##                                                                                              ||
-## DESCRIPTION: This script  checks whether all samples have undergone all steps.               ||
+## DESCRIPTION: This script checks whether all samples have undergone all steps in Stage 2 QC.  ||
 ##                                                                                              ||
 ## OUTPUT:                                                                                      ||
 ## - ${META_DIR}/summariseSampleProgressS2.csv                                                  ||
@@ -16,27 +15,34 @@
 ##                                                                                              ||
 ## =============================================================================================##
 
+## ============ ##
+##    SET UP    ##
+## ============ ##
+
 echo "Running progress report"
 
 ## create array of all fastq files
 cd ${RAWDATADIR}
 
-if test -f ${META_DIR}/samples.txt;
+if test -f "${SAMPLES_LIST}";
 then 
     ## create an array from the file
-    mapfile -t SAMPLEIDS < ${META_DIR}/samples.txt 
+    mapfile -t SAMPLEIDS < "${SAMPLES_LIST}"
 else
     exit 1
 fi
-
 
 ### First count number of output files for each part of the pipeline
 
 echo "Number of sample IDs found:"" ""${#SAMPLEIDS[@]}"""
 
+## ============ ##
+##    COLLATE   ##
+## ============ ##
+
 ## check for individual samples
 ## save output in csv file
-echo "sampleID,sexChrSampleX,sexChrSampleY,GenotypeCheck" > ${META_DIR}/summariseSampleProgressS2.csv
+echo "sampleID,sexChrSampleX,sexChrSampleY,GenotypeCheck" > "${META_DIR}/summariseSampleProgressS2.csv"
 
 for sampleName in ${SAMPLEIDS[@]}
 do 
@@ -50,29 +56,36 @@ do
     echo "Processing" ${sampleName}
     f1=$(basename ${toProcess[0]}) 
     f2=$(basename ${toProcess[1]})
-    echo -n ${sampleName}, >> ${META_DIR}/summariseSampleProgressS2.csv
+    echo -n ${sampleName}, >> "${META_DIR}/summariseSampleProgressS2.csv"
 
-    if [ ! -s ${ALIGNED_DIR}/sexChr/${sampleName}.chrX.tn5.tagAlign.gz ]
+    if [ ! -s "${ALIGNED_DIR}/sexChr/${sampleName}.chrX.bam" ]
     then
-        echo -n "N," >> ${META_DIR}/summariseSampleProgressS2.csv
+        echo -n "N," >> "${META_DIR}/summariseSampleProgressS2.csv"
     else
-        echo -n "Y," >> ${META_DIR}/summariseSampleProgressS2.csv
+        echo -n "Y," >> "${META_DIR}/summariseSampleProgressS2.csv"
     fi
     
-    if [ ! -s ${ALIGNED_DIR}/sexChr/${sampleName}.chrY.tn5.tagAlign.gz ]
+    if [ ! -s "${ALIGNED_DIR}/sexChr/${sampleName}.chrY.bam" ]
     then
-        echo -n "N," >> ${META_DIR}/summariseSampleProgressS2.csv
+        echo -n "N," >> "${META_DIR}/summariseSampleProgressS2.csv"
     else
-        echo -n "Y," >> ${META_DIR}/summariseSampleProgressS2.csv
+        echo -n "Y," >> "${META_DIR}/summariseSampleProgressS2.csv"
     fi
     
     if [ ! -s ${ALIGNED_DIR}/genotypeConcordance/${sampleName}*.log ]
     then
-        echo "N" >> ${META_DIR}/summariseSampleProgressS2.csv
+        echo "N" >> "${META_DIR}/summariseSampleProgressS2.csv"
     else
-        echo "Y" >> ${META_DIR}/summariseSampleProgressS2.csv
+        echo "Y" >> "${META_DIR}/summariseSampleProgressS2.csv"
     fi
-    
 
 done
 
+if [[ ! -f "${META_DIR}/summariseSampleProgressS2.csv" ]]
+then
+  { echo "Stage 2 progress report has been not been created." ; exit 1; }
+else
+  echo "Stage 2 progress report has been been created."
+  echo Job ended on:
+  date -u
+fi

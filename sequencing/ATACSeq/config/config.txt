@@ -1,12 +1,13 @@
 ## ===========================================================================##
-##                      ATAC-seq pipeline: Example config file                ##
+##                          PIPPA: Example config file                        ##
 ## ===========================================================================##
 ##                                                                            ||
-## This is an example config file for the ATAC-sequencing pipeline.           ||
+## This is an example config file for the ATAC-sequencing PIPPA pipeline.     ||
 ## This file and the R config file are expected to be located in the project's||
 ## directory.                                                                 ||
 ## The full path to this file should be specified as the first command line   ||
 ## argument when running the pipeline's scripts.                              ||
+## Please check all the paths as they should be customised by the user.       ||
 ##                                                                            ||
 ## ===========================================================================##
 
@@ -18,30 +19,13 @@
 export PROJECT="project name"
 ## Specify the full project's directory ##
 export MAIN_DIR="/path/to/project/folder/${PROJECT}"
-
 export CONFIGR="${MAIN_DIR}/config.r"
-export CONDAFILE="${MAIN_DIR}/environment.yml"
-export PIPFILE="${MAIN_DIR}/packagesPip.txt"
 
-## ========================= ##
-|| Sequencing data filepaths ||
-## ========================= ##
-
-export META_DIR="${MAIN_DIR}/0_metadata"
-export RAWDATA_DIR="${MAIN_DIR}/1_raw/"
-export FASTQC_DIR="${MAIN_DIR}/1_raw/fastqc"
-export TRIM_DIR="${MAIN_DIR}/2_trimmed"
-export ALIGNED_DIR="${MAIN_DIR}/3_aligned"
-export PEAK_DIR="${MAIN_DIR}/4_calledPeaks"
-export PEAKCOUNTS="${MAIN_DIR}/5_countPeaks"
-export ANALYSIS_DIR="${MAIN_DIR}/6_analysis"
-
-## Specify full path to SNP imputation data ##
-export GENODIR="/path/to/SNParray/ImputationData"
-
-## Peak calling output directories
-export PEAK_DIR_SAMPLES="${PEAK_DIR}/path/to/samples/peaks/output/dir"
-export PEAK_DIR_GROUPS="${PEAK_DIR}/path/to/groups/peaks/output/dir"
+## =============== ##
+|| Metadata files  ||
+## =============== ##
+export SAMPLE_SHEET="${MAIN_DIR}/0_metadata/sampleSheet.csv"
+export SAMPLES_LIST="${MAIN_DIR}/0_metadata/samples.txt"
 
 ## =========================================== ##
 || Scripts and software filepaths and versions ||
@@ -49,20 +33,56 @@ export PEAK_DIR_GROUPS="${PEAK_DIR}/path/to/groups/peaks/output/dir"
 
 ## Specify full path to pipeline's scripts directory ##
 export SCRIPTS_DIR="/path/to/these/scripts/folder"
-
 export SUB_SCRIPTS_DIR="${SCRIPTS_DIR}/subscripts"
 export RSCRIPTS_DIR="${SCRIPTS_DIR}/Rscripts"
+export CONFIG_DIR="${SCRIPTS_DIR}/config/"
+
+## Specify full path to log files ##
 export LOG_DIR="${SCRIPTS_DIR}/logFiles"
 
 ## Specify full path to the required softwares ##
 export RLIB="/path/to/users/R/libraries"
-export VERIFYBAMID="/path/to/verifyBamID/bin/verifyBamID,  version should be > verifyBamID_1.1.3"
-export LDPATH="/path/to/ldsc"
-export PHANTOMPEAK="/path/to/phantompeakqualtools"
 
 ## Specify full path to conda environment ##
 export CONDA="/path/tp/.conda/envs/folder"
-export CONDA_ENVDIR="/path/to/conda/etc/folder"
+export CONDA_ENV="/path/to/conda/etc/folder"
+export CONDA_FILE="${CONFIG_DIR}/condaEnv.yml"
+
+## =================== ##
+|| Main data filepaths ||
+## =================== ##
+
+## Project's main data and results directories ##
+export META_DIR="${MAIN_DIR}/0_metadata"
+export RAWDATADIR="${MAIN_DIR}/1_raw/"
+export FASTQCDIR="${MAIN_DIR}/1_raw/fastqc"
+export TRIM_DIR="${MAIN_DIR}/2_trimmed"
+export ALIGNED_DIR="${MAIN_DIR}/3_aligned"
+export PEAK_DIR="${MAIN_DIR}/4_calledPeaks"
+export PEAKCOUNTS="${MAIN_DIR}/5_countPeaks"
+export ANALYSIS_DIR="${MAIN_DIR}/6_analysis"
+export TSS_DIR="${ALIGNED_DIR}/bigWig/tssEnrich/"
+
+## Specify full path to SNP imputation data ##
+export GENODIR="/path/to/SNParray/ImputationData"
+
+## ===================== ##
+|| Output data filepaths ||
+## ===================== ##
+
+## Peak calling output directories ##
+export PEAK_DIR_SAMPLES="${PEAK_DIR}/samplePeaks/"
+export PEAK_DIR_GROUPS="${PEAK_DIR}/groupCheck/"
+export PEAK_DIR_SEXCHR="${PEAK_DIR}/sexChr/"
+export PEAK_DIR_C="${PEAK_DIR}/peaksCuration/peaksAnalysis/"
+export CURATED_PEAKS="${PEAK_DIR}/peaksCuration/curatedPeaks/"
+export PEAK_DIR_CUTOFF="${PEAK_DIR}/peaksCuration/cutoff/"
+
+## Counts in peaks output directories ##
+
+export COUNTS_DIR_SEXCHR="${PEAKCOUNTS}/sexChr/"
+export COUNTS_DIR_GROUPS="${PEAKCOUNTS}/checkCTCounts/"
+export COUNTS_DIR_DOWN="${PEAKCOUNTS}/caseControl/"
 
 ## ========================= ##
 || Reference data filepaths  ||
@@ -73,7 +93,7 @@ export REFERENCES_DIR="/path/to/references/folder"
 
 ## Specify the path to each of the reference datasets, files or folders ##
 export REFGENOME="${REFERENCES_DIR}/reference_genome"
-export BLACKLIST="${REFERENCES_DIR}/blacklisted_peak_regions"
+export BLACKLIST="${REFERENCES_DIR}/blacklisted_peak_regions.bed"
 export XCHRBED="${REFERENCES_DIR}/X_chr_genes"
 export PAR="${REFERENCES_DIR}/pseudoautosomal_regions"
 export GENOMEFASTA="${REFERENCES_DIR}/Whole_genome_fasta/"
@@ -82,8 +102,7 @@ export SNP="${REFERENCES_DIR}/SNP_file"
 export UCSCRef="${REFERENCES_DIR}/UCSC/"
 export GENOMESIZE="${REFERENCES_DIR}/genome.info"
 export SEGREFGENOME="${REFERENCES_DIR}/genome.char.fa"
-export GWASTRAITS="${REFERENCES_DIR}/gwas_traits/"
-export LDREFPATH="${REFERENCES_DIR}/LDScore_resources/"
+export REFTSS="${REFERENCES_DIR}/hg38_refseq_TSS.bed"
 
 ## ======================= ##
 ||    TRIMMING SETTINGS    ||
@@ -91,22 +110,32 @@ export LDREFPATH="${REFERENCES_DIR}/LDScore_resources/"
 
 ## Adapter sequences to trim ##
 ## Fasta file with adapters to be trimmed at STEP 1.2 ##
-export ADAPTERS_FILE="/path/to/fasta/file"
-## Trimming optional parameters##
-export MAX_LEN_R1=50
-export MAX_LEN_R2=50
-export MIN_LEN=27
+export ADAPTERS_FILE="${CONFIG_DIR}/adapters.fa"
 
-## parameters
+## Trimming optional parameters (to be specified by user as desired) ## 
+export max_len_R1=50
+export max_len_R2=50
+export min_len=27
+
+## ======================= ##
+||   ALIGNMENT SETTINGS    ||
+## ======================= ##
+
+## parameters ## 
 export multimap=4
+export p_threads=10
+export max_frag_len=2000
+export mapq_thres=30
 
 ## cell types (ordered alphabetically)
 export CELLTYPES=("IRF8" "NEUN" "SOX" "TN" )
+export CLINICAL_GROUPS=("case" "control")
 
 ## =========================== ##
 ||    PEAK CALLING SETTINGS    ||
 ## =========================== ##
 
-export MACS_SAMPLE="Sample-level Peak calling q-value cutoff"
-export MACS_GROUP="Cell fraction-level Peak calling q-value cutoff"
-export MACS_CHR="Peak calling on sex chromosomes q-value cutoff"
+## to be changed by user ##
+export macs_sample_thres=5e-2
+export macs_group_thres=5e-2
+export macs_sexchr_thres=1e-4
