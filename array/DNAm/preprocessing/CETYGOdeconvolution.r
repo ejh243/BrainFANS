@@ -55,7 +55,15 @@ sampleSheet<-read.csv("0_metadata/sampleSheet.csv", na.strings = c("", "NA"), st
 if(!"Basename" %in% colnames(sampleSheet)){
 	sampleSheet$Basename<-paste(sampleSheet$Chip.ID, sampleSheet$Chip.Location, sep = "_")
 }
+
+# if no column Cell_Type, creates and fills with tissueType
+if(!"Cell_Type" %in% colnames(sampleSheet)){
+  sampleSheet$Cell_Type <- tissueType
+  } else {
 sampleSheet$Cell_Type <- as.factor(sampleSheet$Cell_Type)
+}
+
+
 
 
 gfile<-openfn.gds(gdsFile, readonly = FALSE, allow.fork = TRUE)
