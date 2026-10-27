@@ -1,6 +1,7 @@
 # PIPPA
 Pipeline for Integrative Peak calling in Population-scale ATAC-seq (**PIPPA**) provides end-to-end quality control and processing of ATAC-seq datasets and curated of reproducible peak sets. The pipeline has been developed to work from raw FASTQ files all the way to curated peak sets that can be used for downstream analyses.
 
+For more information about PIPPA and how to use it for your data, please visit the [wiki](https://marinafloresp.github.io/PIPPA-documentation/).
 ## Pipeline's structure
 
 This scripts necessary for running this pipeline should be found in 3 different subfolders:
