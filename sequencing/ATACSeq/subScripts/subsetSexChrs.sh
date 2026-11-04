@@ -41,7 +41,7 @@ samtools view -b $bamfile chrY > "${ALIGNED_DIR}/sexChr/${sampleName}.chrY.bam"
 
 echo "Split reads for sex chromosomes for sample: ${sampleName} done"
 
-if [[ ! -f "${ALIGNED_DIR}/sexChr/${sampleName}.chrX.bam" ]] || [[ ! -f "${ALIGNED_DIR}/sexChr/${sampleName}.chrY.bam" ]]
+if [[ ! -s "${ALIGNED_DIR}/sexChr/${sampleName}.chrX.bam" ]] || [[ ! -s "${ALIGNED_DIR}/sexChr/${sampleName}.chrY.bam" ]]
 then 
   { echo "Bam files with reads in sex chr created not created for sample ${sampleName}." ; exit 1; }
 else
