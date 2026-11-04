@@ -109,7 +109,7 @@ if [[ ! ${GROUP} == '' ]]
 then
   echo "Chosen cell fraction is ${GROUP}"
   ## Samples for group peak calling are gathered for input cell fraction
-  #Rscript ${RSCRIPTS_DIR}/samplesForDownAnalysis.r ${CONFIGR} ${GROUP}
+  Rscript ${RSCRIPTS_DIR}/samplesForDownAnalysis.r ${CONFIGR} ${GROUP}
 
   ## Retrieve samples from the same cell fraction that passed QC
   mapfile -t SAMPLES < "${META_DIR}/downAnalysisSamples_${GROUP}.txt"
