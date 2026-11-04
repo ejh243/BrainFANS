@@ -20,8 +20,7 @@
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input. Only for PEAKS. Set  ||
 ## to any number for FRIP.                                                                                            ||
 ## $1 -> <project directory> directory to config file for the corresponding project                                   ||
-## $2 -> <STEP> Specify step to run: PEAKS, FRIP. Can be combined. Default is to run all. FRIP step should be run at  ||
-## the end                                                                                                            ||
+## $2 -> <STEP> Specify step to run: PEAKS, FRIP. Default is to run all. FRIP step should be run at the end           ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - File in ${META_DIR}/samples.txt that lists sample names.                                                         ||
@@ -83,7 +82,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 == "PEAKS" ]] && [[ ! $2 == "FRIP" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use PEAKS, FRIP or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use PEAKS, FRIP" ; exit 1; }            
 fi
 
 ## Collate all filtered, no duplicated, bam files
