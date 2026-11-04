@@ -20,7 +20,7 @@
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <project directory> directory of project, location of config.txt file                                        ||
-## $2 -> <STEP> Specify step to run. Default is to run all                                                            ||
+## $2 -> <STEP> Specify step to run.                                                                                  ||
 ## $3 -> <GROUP> Specify cell group to run previous step(s).                                                          ||
 ## $4 -> <THRES> Specify peak calling threshold for curated peak set.                                                 ||
 ##                                                                                                                    ||
