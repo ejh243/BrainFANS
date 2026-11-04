@@ -79,7 +79,6 @@ samtools idxstats "${ALIGNED_DIR}/${sampleName}_sorted.bam" > "${ALIGNED_DIR}/${
 ## remove reads from MT and other random chrs
 echo "Removing MT chr"
 samtools view -b "${ALIGNED_DIR}/${sampleName}_sorted.bam" ${CHR[@]} > "${ALIGNED_DIR}/${sampleName}_noMT.bam"	
-samtools idxstats "${ALIGNED_DIR}/${sampleName}_noMT.bam" > "${ALIGNED_DIR}/${sampleName}_statsperchr_noMT.txt"
 
 ## get sum stats prior to filtering
 samtools stats "${ALIGNED_DIR}/${sampleName}_noMT.bam"	> "${ALIGNED_DIR}/QCOutput/${sampleName}_noMT.stats"
