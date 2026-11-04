@@ -19,7 +19,7 @@
 ## INPUTS:                                                                                                                     || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input.                               ||
 ## $1 -> <project directory> Directory of the project, location of the config file                                             ||
-## $2 -> <STEP> Specify step to run: COMPARE, SWITCH. Can be combined. Default is to run all                                   ||
+## $2 -> <STEP> Specify step to run: COMPARE, SWITCH.                                                                          ||
 ##                                                                                                                             ||
 ## OUTPUTS:                                                                                                                    ||
 ## - Potential contaminated samples will be specified in: ${META_DIR}/potentialSwitches.txt                                    ||
@@ -82,7 +82,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 == "COMPARE" ]] && [[ ! $2 == "SWITCH" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use COMPARE, SWITCH or some combination of this as a single string (i.e. SPLIT,CHECK)" ; exit 1; }            
+    { echo "Unknown step specified. Please use COMPARE, SWITCH" ; exit 1; }            
 fi
 
 ## ============ ##
