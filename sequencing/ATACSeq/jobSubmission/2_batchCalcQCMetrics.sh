@@ -194,7 +194,7 @@ Output directory is ${ALIGNED_DIR}/QCOutput
 
 EOF
 
-  sh "${SUB_SCRIPTS_DIR}/collateTSSscores.sh" 
+  sh "${SUB_SCRIPTS_DIR}/collateTssScores.sh" 
 
 fi
 
