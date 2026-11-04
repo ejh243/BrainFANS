@@ -13,6 +13,7 @@
 ## OUTPUTS:                                                                                                           ||
 ## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}_peaks.narrowPeak : all peaks                                     ||
 ## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}.narrowPeak.filt : peaks in blacklisted regions filtered          ||
+## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}.sorted.narrowPeak.filt : peaks sorted                            ||
 ## - output will be peaks called in all samples that belong to the input cell type (that passed stage 1 and 2 of QC). ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
