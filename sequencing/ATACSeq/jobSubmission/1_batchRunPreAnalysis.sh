@@ -20,7 +20,7 @@
 ## INPUTS:                                                                                                            || 
 ## --array -> Number of jobs to run. Will select sample(s) corresponding to the number(s) input                       ||
 ## $1 -> <project directory> directory of project, location of config.txt file                                        ||
-## $2 -> <STEP> Specify step to run: FASTQC, TRIM, ALIGN or ENCODE. Can be combined. Default is to run all            ||
+## $2 -> <STEP> Specify step to run: FASTQC, TRIM, ALIGN or ENCODE. Default is to run all.                            ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - File in ${META_DIR}/samples.txt that lists sample names.                                                         ||
