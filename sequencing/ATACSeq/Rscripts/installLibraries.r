@@ -21,5 +21,5 @@ packagesBase <- c("diptest","segmented")
 
 ## Then we install the rest of packages if not installed already
 install.packages(setdiff(packagesBase, rownames(installed.packages())))  
-install.packages(paste0(configDir,"/config/ptest_1.0-8.tar.gz"))
+install.packages(paste0(configDir,"/ptest_1.0-8.tar.gz"))
 
