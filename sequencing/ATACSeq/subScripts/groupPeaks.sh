@@ -13,11 +13,6 @@
 ## OUTPUTS:                                                                                                           ||
 ## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}_peaks.narrowPeak : all peaks                                     ||
 ## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}.narrowPeak.filt : peaks in blacklisted regions filtered          ||
-## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}.narrowPeak.noSC.filt : peaks in blacklisted regions and sex chrs ||
-##   filtered                                                                                                         ||
-## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}.narrowPeak.noY.filt : peaks in blacklisted regions and Y chr filt||
-## - ${PEAK_DIR_GROUPS}/${GROUP}/${PEAKS_NAME_GROUP}.sorted.noSC.narrowPeak.filt : peaks in blacklisted regions and   ||
-##   sex chromosomes filtered. Sorted by chromosome number                                                            ||
 ## - output will be peaks called in all samples that belong to the input cell type (that passed stage 1 and 2 of QC). ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
