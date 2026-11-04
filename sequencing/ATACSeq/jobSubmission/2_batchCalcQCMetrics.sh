@@ -73,7 +73,7 @@ conda activate ${CONDA_ENV}
 ##    VARIABLES     ##
 ## ================ ##
 
-export $BATCH_NUM=$3
+export BATCH_NUM=$3
 
 if [[ $2 == '' ]] 
 then
