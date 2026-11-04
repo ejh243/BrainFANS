@@ -288,8 +288,9 @@ if(!"nNAsPer" %in% colnames(QCmetrics)){
 if(!"predSex" %in% colnames(QCmetrics)){	
 	print("Performing sex prediction from sex chromosome profiles")	
 	if(arrayType == "V2" | arrayType == "450K"){
-		x.probes<-which(manifest$CHR == "chrX")
-		y.probes<-which(manifest$CHR == "chrY")
+		x.probes<-which(manifest$CHR == "chrX" | manifest$CHR == "X")
+		y.probes<-which(manifest$CHR == "chrY" | manifest$CHR == "Y")
+
 	} else {
 		x.probes<-which(fData(gfile)$chr == "chrX")
 		y.probes<-which(fData(gfile)$chr == "chrY")
