@@ -196,8 +196,9 @@ fi
 ## option PEAKS: peak calling is performed using MACS3 in paired-end at group level in narrow peak mode 
 if [ $# = 1 ] || [[ $2 == 'PEAKS' ]]
 then
-  
-  mkdir -p "${PEAK_DIR_C}/${GROUP}/"
+
+  OUTPUT_DIR="${PEAK_DIR_C}/${GROUP}/"
+  mkdir -p "${OUTPUT_DIR}"
   
 cat <<EOF
 
@@ -235,7 +236,8 @@ fi
 if [ $# = 1 ] || [[ $2 == 'PEAKSTR' ]]
 then
   
-  mkdir -p "${CURATED_PEAKS}"
+ OUTPUT_DIR="${CURATED_PEAKS}/${GROUP}/"
+ mkdir -p "${OUTPUT_DIR}"
   
 cat <<EOF
 
