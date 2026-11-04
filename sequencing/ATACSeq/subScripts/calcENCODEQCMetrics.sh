@@ -26,7 +26,7 @@
 
 sampleName=$1
 
-if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]] && [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam ]]
+if [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.nodup.bam ]] || [[ ! -f ${ALIGNED_DIR}/${sampleName}.filt.dupmark.bam ]]
 then 
   { echo "Aligned reads for ${sampleName} not found. Please run STEP 1.3 ALIGN first." ; exit 1; }
 else
