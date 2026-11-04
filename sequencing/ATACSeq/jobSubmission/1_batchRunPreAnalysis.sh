@@ -83,7 +83,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 == "FASTQC" ]] && [[ ! $2 == "TRIM" ]] && [[ ! $2 == "ALIGN" ]] && [[ ! $2 == "ENCODE" ]] &&[[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use FASTQC, TRIM, ALIGN, ENCODE" ; exit 1; }            
 fi
 
 ## ============ ##
