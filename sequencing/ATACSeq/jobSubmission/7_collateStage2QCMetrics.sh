@@ -19,7 +19,7 @@
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <project dir> directory of project, location of config.txt file                                              ||
-## $2 -> <STEP> Specify step to run: COLLATE, SUMMARY. Can be combined. Default is to run all                         ||
+## $2 -> <STEP> Specify step to run: COLLATE, SUMMARY.   Default is to run all                                        ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
 ## - Config.txt, config.r files in <project directory>.                                                               ||
@@ -76,7 +76,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 == "COLLATE" ]] && [[ ! $2 == "SUMMARY" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use COLLATE, SUMMARY or some combination of this as a single string (i.e. MULTIQC,COLLATE)" ; exit 1; }            
+    { echo "Unknown step specified. Please use COLLATE, SUMMARY" ; exit 1; }            
 fi
 
 
