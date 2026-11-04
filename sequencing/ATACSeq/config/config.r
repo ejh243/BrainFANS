@@ -69,6 +69,7 @@ silScore <- 0
                  
 # Cell types (list of cell types ordered alphabetically (change to user's input)
 cellTypes <- c("IRF8+", "NeuN+", "SOX10+", "TN")
+refCellType <- "NeuN+"
 
 ## clinical groups (optional)
 clinicalGroups <- c("case", "control")
