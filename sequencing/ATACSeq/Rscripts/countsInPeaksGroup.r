@@ -65,7 +65,7 @@ print(peakFiles)
 peaks<-list()
 for(each in peakFiles){
   fraction<-head(unlist(strsplit(each, "\\.")), n = 1)
-  peaks[[fraction]]<-makeGRangesFromDataFrame(read.table(file.path(groupsPeaks, each)), keep.extra.columns=TRUE, seqnames.field="V1",
+  peaks[[fraction]]<-makeGRangesFromDataFrame(read.table(each), keep.extra.columns=TRUE, seqnames.field="V1",
                                               start.field="V2",
                                               end.field="V3",
                                               ignore.strand=TRUE)
@@ -76,7 +76,7 @@ peaks<-reduce(unlist(GRangesList(peaks)),min.gapwidth = 150)
 export(peaks, con = paste0(groupsPeaks,"/consensusPeaks_",macs_thres_group,"_passS1-2.narrowPeak.bed"), format = "bed")
 
 ## gather bam files for read counts in peaks ##
-bamFiles<-list.files(alignedDir, pattern = "*.filt.nodup.bam$", recursive = TRUE, include.dirs = TRUE)
+bamFiles<-list.files(alignedDir, pattern = "\\.filt\\.nodup\\.bam$", recursive = TRUE, include.dirs = TRUE)
 sampleNames<-gsub(".filt.nodup.bam$", "", bamFiles)
 sampleNames <- sampleNames[sampleNames %in% pheno$sampleID]
 
@@ -109,7 +109,7 @@ print("Counts in peaks matrix done")
 ## Differential accessible analysis is done to get topmost differential peaks ##
 ## File name specified in config file
 print("Differential peaks file name is: ")
-print(diffPeaksCountsClean)
+print(diffPeaksCountsAll)
 counts <- fc_ctPeaks$counts
 colnames(counts) <- sub("\\.filt\\.nodup\\.bam$", "", colnames(counts))
 cnt_table <- fc_ctPeaks$annotation
@@ -137,4 +137,4 @@ results <- as.data.frame(results[order(results$PValue),])
 results$Geneid <- rownames(results)
 results$Bon <- p.adjust(results$PValue, method="bonferroni")
 results$FDR <- p.adjust(results$PValue, method="fdr")
-save(results,  file = diffPeaksCountsClean)
+save(results,  file = diffPeaksCountsAll)
