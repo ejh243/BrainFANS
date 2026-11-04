@@ -43,7 +43,7 @@ else
   echo "Found trimmed files:" ${f[0]} ${f[1]}
 fi
 
-if [[ ${#R1[@]} -ne 1 || ${#R2[@]} -ne 1 ]]; then
+if [[ -z "${R1}" || -z "${R2}" ]]; then
     echo "Error: missing or ambiguous FASTQ pairs"
     exit 1
 fi
@@ -79,7 +79,7 @@ samtools idxstats "${ALIGNED_DIR}/${sampleName}_sorted.bam" > "${ALIGNED_DIR}/${
 ## remove reads from MT and other random chrs
 echo "Removing MT chr"
 samtools view -b "${ALIGNED_DIR}/${sampleName}_sorted.bam" ${CHR[@]} > "${ALIGNED_DIR}/${sampleName}_noMT.bam"	
-samtools idxstats "${ALIGNED_DIR}/${sampleName}_noMT.bam" > "${ALIGNED_DIR}/${sampleName}_statsperchr.txt"
+samtools idxstats "${ALIGNED_DIR}/${sampleName}_noMT.bam" > "${ALIGNED_DIR}/${sampleName}_statsperchr_noMT.txt"
 
 ## get sum stats prior to filtering
 samtools stats "${ALIGNED_DIR}/${sampleName}_noMT.bam"	> "${ALIGNED_DIR}/QCOutput/${sampleName}_noMT.stats"
@@ -107,7 +107,7 @@ samtools view -F 1804 -f 2 -u "${ALIGNED_DIR}/${sampleName}_q30.tmp.nmsrt.fixmat
  | samtools sort /dev/stdin -o "${ALIGNED_DIR}/${sampleName}.filt.bam"
 
 # Mark duplicates
-samtools addreplacerg -r "@RG\tID:RG1\tSM:sampleName\tPL:Illumina\tLB:Library.fa" -o "${ALIGNED_DIR}/${sampleName}_filt.name.bam" \
+samtools addreplacerg -r "@RG\tID:RG1\tSM:${sampleName}\tPL:Illumina\tLB:Library.fa" -o "${ALIGNED_DIR}/${sampleName}_filt.name.bam" \
  "${ALIGNED_DIR}/${sampleName}.filt.bam"
 
 picard MarkDuplicates -I "${ALIGNED_DIR}/${sampleName}_filt.name.bam" \
