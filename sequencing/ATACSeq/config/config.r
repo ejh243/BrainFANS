@@ -45,7 +45,7 @@ downstreamCounts <- paste0(countsDir, "/caseControl/")
 colorBlindGrey8   <- c("#009E73", "#CC79A7", "#D55E00", "#999999", 
                        "#F0E442", "#0072B2",  "#E69F00", "#56B4E9")
 ##change as desired
-col_vals_plots <- c("SOX10+" = "#6B8E23","TN" = "#C77CFF","NeuN+" = "hotpink","IRF8+" = "orange")
+col_vals_plots <- c("SOX10" = "#6B8E23","TN" = "#C77CFF","NEUN" = "hotpink","IRF8" = "orange")
                        
 ## Thresholds applied in the first stage of QC (change to user's input)
 nrfThres <- 0.7
@@ -68,8 +68,8 @@ diffN <- 1000
 silScore <- 0
                  
 # Cell types (list of cell types ordered alphabetically (change to user's input)
-cellTypes <- c("IRF8+", "NeuN+", "SOX10+", "TN")
-refCellType <- "NeuN+"
+cellTypes <- c("IRF8", "NEUN", "SOX10", "TN")
+refCellType <- "NEUN"
 
 ## clinical groups (optional)
 clinicalGroups <- c("case", "control")
