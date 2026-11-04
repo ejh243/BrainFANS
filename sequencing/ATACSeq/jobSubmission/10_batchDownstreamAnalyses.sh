@@ -17,7 +17,7 @@
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <project directory> directory of project, location of config.txt file                                        ||
-## $2 -> <STEP> Specify step to run: PEAKS, COUNTS. Can be combined. Default is to run all                            ||
+## $2 -> <STEP> Specify step to run: PEAKS, COUNTS. Default is to run all                                             ||
 ## $3 -> <GROUP> Specify cell group to run previous step(s).                                                          ||
 ## $4 -> <THRES> Specify peak calling threshold used for curated peak set.                                            ||
 ##                                                                                                                    ||
@@ -83,7 +83,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 == "SUMMARY" ]] && [[ ! $2 == "CTCLEAN" ]] && [[ ! $2 == 'COUNTS' ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use CTCLEAN, COUNTS or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use CTCLEAN, COUNTS" ; exit 1; }            
 fi
 
 ## check cell type group has been specified for specific steps
