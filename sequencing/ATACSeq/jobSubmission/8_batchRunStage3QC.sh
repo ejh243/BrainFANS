@@ -20,8 +20,7 @@
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <project directory> directory of project, location of config.txt file                                        ||
-## $2 -> <STEP> Specify step to run: MERGE, PEAKS, COUNTS and CTCHECK. Can be combined.                               ||
-##  Default is to run all                                                                                             ||
+## $2 -> <STEP> Specify step to run: MERGE, PEAKS, COUNTS and CTCHECK. Default is to run all                          ||
 ## $3 -> <GROUP> Specify cell group to run MERGE or PEAKS steps. Not needed for other steps.                          ||
 ##                                                                                                                    ||
 ## REQUIRES:                                                                                                          ||
@@ -86,9 +85,9 @@ then
 fi
 
 ## check step method matches required options and exit if not
-if [[ ! $2 =~ "MERGE" ]] && [[ ! $2 =~ "PEAKS" ]] && [[ ! $2 =~ "COUNTS" ]] && [[ ! $2 == 'CTCHECK' ]] && [[ ! $2 == ' ' ]];
+if [[ ! $2 == "MERGE" ]] && [[ ! $2 == "PEAKS" ]] && [[ ! $2 == "COUNTS" ]] && [[ ! $2 == 'CTCHECK' ]] && [[ ! $2 == ' ' ]];
 then 
-    { echo "Unknown step specified. Please use MERGE, PEAKS, COUNTS or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use MERGE, PEAKS, COUNTS" ; exit 1; }            
 fi
 
 if [[ ! " ${CELLTYPES[*]} " == *" $GROUP "* && ($2 =~ "MERGE" || $2 =~ "PEAKS" )]]; 
