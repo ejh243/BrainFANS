@@ -190,7 +190,7 @@ This scripts collates results of Stage 1 of QC pipeline to confirm data quality.
 - `--array` : no need to be specified.
 - `(project-name)` project's directory.
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. MULIQC,COLLATE. Default if left blank is to run all of them.
+- `[STEPS]` Default if left blank is to run all of them.
   - `MULTIQC`: Collates fastQC, trimming and alignment statistics in a single report. Run multiQC to collate fastQC, trimming and alignment results.
   - `COLLATE`: Collate results from all samples to show progress of each sample through the pipeline in order to avoid missing steps. Run only progressReport.sh and countMTcollateFS.sh.
   - `SUMMARY`: Collates stage 1 QC and peak calling results in a single Rmarkdown report. Run only collateDataQualityStats.Rmd.
@@ -209,7 +209,7 @@ This script checks the sex of samples as part of their identity check by creatin
 - `--array` : number of batch jobs, each number matches a sample. Only for step 5.1 `SPLIT`.
 - `(project-directory)` project's directory.
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. MULIQC,COLLATE. Default if left blank is to run all of them.
+- `[STEPS]` Default if left blank is to run all of them.
   - `SPLIT`: Generate only samples with X and Y chromosomes reads. Run only subsetSexChrs.sh on sample.
   - `PEAKS`: Perform only peak calling on sex chromosomes reads. Run only sexChrPeaks.sh.
 
@@ -233,7 +233,7 @@ This script checks the genotype of the samples as part of their identity check b
 - `--array` : number of batch jobs, each number matches a sample. 
 - `(project-directory)` project's directory.
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. GENCHECK,COMPARE. Default if left blank is to run all of them.
+- `[STEPS]` Default if left blank is to run all of them.
   - `COMPARE`: Compare only samples genotype with matched VCF file genotype. Run only compareBamWithGenotypes.sh on sample.
   - `SWITCH`: Indentify only mismatched genotype samples and output potential switches and seach for alternative genotype. Run only searchBestGenoMatch.sh.
 
@@ -252,7 +252,7 @@ This scripts collates results of Stage 2 of QC pipeline to confirm samples ident
 - `--array` : no need to be specified.
 - `(project-name)` project's directory.
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. MULIQC,COLLATE. Default if left blank is to run all of them.
+- `[STEPS]` Default if left blank is to run all of them.
   - `COLLATE`: Collate results from all samples to show progress of each sample through stage 2 of QC pipeline in order to avoid missing steps or samples.
   - `SUMMARY`: Collates stage 2 QC results in a single Rmarkdown report. Run only collateSampleChecks.Rmd.
 
@@ -272,7 +272,7 @@ This script performs stage 3 of QC to check cell type of samples by grouping sam
 - `(project-directory)` project's directory.
 - `(GROUP)` Select cell type of group of samples to perform peak calling on. This is needed for the `PEAKS` and `MERGE` steps.
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
+- `[STEPS]` Default if left blank is to run all of them.
   - `MERGE`: Collates samples bam files and creates a sorted, merged bam file for cell type group.
   - `PEAKS`: Performs peak calling on bam file or samples for chosen cell type using MACS3 in paired-end mode. Run only groupPeaks.sh.
   - `COUNTS`: Gets read counts in peaks called at cell group level and analysis for topmost differential peaks. Run only countsInPeaksGroup.r.
@@ -296,7 +296,7 @@ This script performs the analysis and curation of peak sets using high-quality s
 - `(GROUP)` Select cell type of group of samples to perform peak calling on. This is needed for the `PEAKS`, `PEAKSTR`, and `MERGE` steps.
 - `(THRES)` Select significance threshold for peak calling in step 9.5 `STRPEAKS` as suggested by results in `CUTOFF` step 9.4.
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
+- `[STEPS]` Default if left blank is to run all of them.
   - `MERGE`: Collates samples bam files and creates a sorted, merged bam file for cell type group.
   - `BW`: Converts merged bam file into bigwig file for genome visualisation.
   - `PEAKS`: Performs peak calling on bam file or samples for chosen cell type using MACS3 in paired-end mode. Run only peaksForCuration.sh.
@@ -319,11 +319,13 @@ This scripts prepares inputs for downstream analyses, especially counts in peaks
 - `(GROUP)` Select cell type of group of samples to perform peak calling on. This is needed for the `COUNTS` step.
 - `(THRES)` Select significance threshold of peaks for counts in peaks step 10.3 `COUNTS`. 
 -optional-
-- `[STEPS]` They may be combined, with desired steps included as single string, i.e. FRAGSIZE,PEAKS. Default if left blank is to run all of them.
+- `[STEPS]` Default if left blank is to run all of them.
   - `SUMMARY`: Collates curated peak sets generated across cell types in a Rmarkdown report with  properties of peaks: number, genomic annotation, width, etc. Run curatedPeaksChecks.Rmd only.
   - `CTCLEAN`: Gets read counts in peaks called at cell group level and analysis for topmost differential peaks. Run only countsInCleanPeaksCT.r.
   - `COUNTS`: Gets read counts in peaks called in curated peak set in chosen cell type. Run only countsInCuratedPeaks.r.
 
 # Citation
 
-If you use PIPPA, please cite: 
+If you use PIPPA, please cite: **Best Practices for Pre-Processing Large-Scale ATAC-Seq Data: Why Epidemiological Studies Demand Greater Stringency
+Philippa M. Wells, Marina Flores-Payan, Barry Chioza, Joe Burrage, Ann C. Babtie, Sarah J. Marzi, Leonard C. Schalkwyk, YouthGEMS Consortium, Emma Dempster, Jonathan Mill, Eilis Hannon
+bioRxiv 2026.10.22.760939; doi: https://doi.org/10.64898/2026.10.22.760939**
