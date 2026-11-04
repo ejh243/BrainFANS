@@ -77,7 +77,7 @@ export BATCH_NUM=$3
 
 if [[ $2 == '' ]] 
 then
-  { echo "No step specified. All steps in the script will be run. "; exit 1; }
+  { echo "No step specified. All steps in the script will be run. " }
 fi
 
 ## check step method matches required options and exit if not
