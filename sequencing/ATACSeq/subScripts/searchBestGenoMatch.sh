@@ -37,7 +37,7 @@ echo "processing ${sampleName} with ${vcfid}"
 ##    FIND BEST GENOTYPE    ##
 ## ======================== ##
 
-verifybamid2 --vcf ${SNP} --bam "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam" \
+verifyBamID --vcf ${SNP} --bam "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam" \
 --out "${ALIGNED_DIR}/genotypeConcordance/${sampleName}" \
 --ignoreRG --smID ${vcfid} --best
 
