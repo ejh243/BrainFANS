@@ -14,11 +14,11 @@
 ## - consensus peak set file: "consensusPeaks_5e-2_passAll.narrowPeak.bed" in 4_calledPeaks folder ||
 ##                                                                                                 ||
 ## REQUIRES:                                                                                       ||
-## - R > 4.3, R libraries: Rsubread, GenomicRanges, rtracklayer                                    ||
+## - R > 4.3, R libraries: Rsubread, GenomicRanges, rtracklayer, edgeR                             ||
 ## - A csv file with samples used for curated peak calling: downAnalysisSamples.csv. This is       ||
 ## produced in STEP 9.0                                                                            ||
-## - Parameters in config.r file: downAnalysisSamples, sampleSheet, peaksAnalysis, groupsCounts    ||
-## macs_thres_group, alignedDir,groupCountsClean                                                   ||
+## - Parameters in config.r file: downAnalysisSamples, sampleSheet, peaksAnalysis,                 ||
+## macs_thres_group, alignedDir,groupCountsClean, diffPeaksCountsClean                             ||
 ## ================================================================================================##
 
 ## ==========##
@@ -33,6 +33,7 @@ suppressWarnings(suppressPackageStartupMessages({
   library(Rsubread)
   library(GenomicRanges)
   library(rtracklayer)
+  library(edgeR)
 }))
 
 ## ===============##
@@ -101,7 +102,7 @@ print("Counts in peaks matrix done")
 ## Differential accessible analysis is done to get topmost differential peaks ##
 ## File name specified in config file
 print("Differential peaks file name is: ")
-print(diffPeaksCountsAll)
+print(diffPeaksCountsClean)
 counts <- fc_ctPeaks$counts
 colnames(counts) <- sub("\\.filt\\.nodup\\.bam$", "", colnames(counts))
 cnt_table <- fc_ctPeaks$annotation
@@ -129,4 +130,4 @@ results <- as.data.frame(results[order(results$PValue),])
 results$Geneid <- rownames(results)
 results$Bon <- p.adjust(results$PValue, method="bonferroni")
 results$FDR <- p.adjust(results$PValue, method="fdr")
-save(results,  file = diffPeaksCountsAll)
+save(results,  file = diffPeaksCountsClean)
