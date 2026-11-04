@@ -43,7 +43,7 @@ out1=$(echo "$f1" | sed -e "s/$ending1//g" -e "s/$ending2//g")
 out2=$(echo "$f2" | sed -e "s/$ending1//g" -e "s/$ending2//g")
 
 
-if [[ ! -f "${FASTQCDIR}/${out1}_fastqc.html" ]] && [[ ! -f "${FASTQCDIR}/${out2}_fastqc.html" ]] && [[ ! -f "${FASTQCDIR}/${out1}_fastqc.zip" ]] && [[ ! -f "${FASTQCDIR}/${out2}_fastqc.zip" ]]
+if [[ ! -f "${FASTQCDIR}/${out1}_fastqc.html" && ! -f "${FASTQCDIR}/${out1}_fastqc.zip" ]] || [[ ! -f "${FASTQCDIR}/${out2}_fastqc.html" && ! -f "${FASTQCDIR}/${out2}_fastqc.zip" ]]
 then 
   { echo "FASTQC on ${sampleID} was not completed. Please check variables and inputs." ; exit 1; }
 fi 
