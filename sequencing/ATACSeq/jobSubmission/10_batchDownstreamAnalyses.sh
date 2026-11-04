@@ -81,7 +81,7 @@ then
 fi
 
 ## check step method matches required options and exit if not
-if [[ ! $2 == "SUMMARY" ]] && [[ ! $2 == "CTCLEAN" ]] && [[ ! $2 == 'COUNTS' ]];
+if [[ ! $2 == "SUMMARY" ]] && [[ ! $2 == "CTCLEAN" ]] && [[ ! $2 == 'COUNTS' ]] && [[ ! $2 == '' ]];
 then 
     { echo "Unknown step specified. Please use CTCLEAN, COUNTS or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
 fi
