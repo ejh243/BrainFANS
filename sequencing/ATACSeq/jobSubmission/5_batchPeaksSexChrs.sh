@@ -80,7 +80,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 == "SPLIT" ]] && [[ ! $2 == "PEAKS" ]] && [[ ! $2 == '' ]];
 then 
-    { echo "Unknown step specified. Please use SPLIT, PEAKS or some combination of this as a single string (i.e. SPLIT, PEAKS)" ; exit 1; }            
+    { echo "Unknown step specified. Please use SPLIT, PEAKS" ; exit 1; }            
 fi
 
 ## ============ ##
