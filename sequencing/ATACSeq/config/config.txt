@@ -33,7 +33,7 @@ export SAMPLES_LIST="${MAIN_DIR}/0_metadata/samples.txt"
 
 ## Specify full path to pipeline's scripts directory ##
 export SCRIPTS_DIR="/path/to/these/scripts/folder"
-export SUB_SCRIPTS_DIR="${SCRIPTS_DIR}/subscripts"
+export SUB_SCRIPTS_DIR="${SCRIPTS_DIR}/subScripts"
 export RSCRIPTS_DIR="${SCRIPTS_DIR}/Rscripts"
 export CONFIG_DIR="${SCRIPTS_DIR}/config/"
 
