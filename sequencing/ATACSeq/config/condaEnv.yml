@@ -712,4 +712,3 @@ dependencies:
   - zlib=1.3.2=h25fd6f3_2
   - zstandard=0.23.0=py39hd399759_3
   - zstd=1.5.7=hb78ec9c_6
-prefix: /lustre/home/mf662/miniconda3/envs/testPipeline
