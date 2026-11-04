@@ -92,35 +92,79 @@ res.rce<-outtab
 load("Analysis/CellType/ANOVABrainCellTypes.rdata")
 
 #----------------------------------------------------------------------#
-# REMOVE CROSS HYB & SNP PROBES
+# REMOVE CROSS HYB & SNP PROBES 
 #----------------------------------------------------------------------#
 
-## filter out cross hyb & SNP probes
-crosshyb<-read.table(file.path(refPath, "CrossHydridisingProbes_McCartney.txt"), stringsAsFactors = FALSE)
-tofilter<-read.csv(file.path(refPath, "EPICArrayProbesToFilter.csv"), stringsAsFactors = FALSE)
-snpProbes<-read.table(file.path(refPath, "SNPProbes_McCartney.txt"), stringsAsFactors = FALSE, header = TRUE)
-crosshyb2<-read.csv(file.path(refPath, "Pidsley_SM1.csv"), stringsAsFactors = FALSE)
-snpProbes2<-read.csv(file.path(refPath, "Pidsley_SM4.csv"), stringsAsFactors = FALSE)
-snpProbes3<-read.csv(file.path(refPath, "Pidsley_SM5.csv"), stringsAsFactors = FALSE)
-snpProbes4<-read.csv(file.path(refPath, "Pidsley_SM6.csv"), stringsAsFactors = FALSE)
+crosshyb <- read.table(file.path(refPath, "CrossHydridisingProbes_McCartney.txt"),
+                       stringsAsFactors = FALSE)
+tofilter <- read.csv(file.path(refPath, "EPICArrayProbesToFilter.csv"),
+                     stringsAsFactors = FALSE)
+snpProbes <- read.table(file.path(refPath, "SNPProbes_McCartney.txt"),
+                        stringsAsFactors = FALSE, header = TRUE)
+crosshyb2 <- read.csv(file.path(refPath, "Pidsley_SM1.csv"),
+                      stringsAsFactors = FALSE)
+snpProbes2 <- read.csv(file.path(refPath, "Pidsley_SM4.csv"),
+                       stringsAsFactors = FALSE)
+snpProbes3 <- read.csv(file.path(refPath, "Pidsley_SM5.csv"),
+                       stringsAsFactors = FALSE)
+snpProbes4 <- read.csv(file.path(refPath, "Pidsley_SM6.csv"),
+                       stringsAsFactors = FALSE)
 
-snpProbes<-snpProbes[which(snpProbes$DIST_FROM_MAPINFO < 10 & snpProbes$AF > 0.01),]
-snpProbes2<-snpProbes2[which(snpProbes2$AF > 0.01),]
-snpProbes3<-snpProbes3[which(snpProbes3$AF > 0.01),]
-snpProbes4<-snpProbes4[which(snpProbes4$AF > 0.01),]
-
-dist<-cbind(abs(snpProbes4$VARIANT_END - snpProbes4$MAPINFO), abs(snpProbes4$VARIANT_START - snpProbes4$MAPINFO))
-dist<-apply(dist, 1, min)
-snpProbes4<-snpProbes4[which(dist <=10),]
-
-remove<-unique(c(tofilter$IlmnID, crosshyb[,1], snpProbes$IlmnID, snpProbes2$PROBE, snpProbes3$PROBE, snpProbes4$PROBE))
-remove<-intersect(remove, rownames(res.lm))
-
-if(length(remove) > 0){
-	res.lm<-res.lm[-match(remove, rownames(res.lm)),]
-	res.mlm<-res.mlm[-match(remove, rownames(res.mlm)),]
-	res.rce<-res.rce[-match(remove, rownames(res.rce)),]
+# Maximum alternative-allele frequency per annotation row.
+# Handles both single values and semicolon-separated values.
+max_af <- function(x) {
+  vapply(seq_along(x), function(i) {
+    s <- trimws(as.character(x[i]))
+    if (is.na(x[i]) || !nzchar(s)) stop("Missing AF at row ", i)
+    parts <- trimws(strsplit(s, ";", fixed = TRUE)[[1L]])
+    vals <- suppressWarnings(as.numeric(parts))
+    if (any(!nzchar(parts)) || anyNA(vals) ||
+        any(!is.finite(vals)) || any(vals < 0 | vals > 1)) {
+      stop("Invalid AF at row ", i, ": ", s)
+    }
+    max(vals)
+  }, numeric(1))
 }
+
+# McCartney selection
+snpProbes <- snpProbes[
+  which(snpProbes$DIST_FROM_MAPINFO < 10 & snpProbes$AF > 0.01),
+  , drop = FALSE
+]
+
+# Pidsley AF filtering: any ALT allele with AF > 0.01.
+snpProbes2 <- snpProbes2[which(max_af(snpProbes2$AF) > 0.01), , drop = FALSE]
+snpProbes3 <- snpProbes3[which(max_af(snpProbes3$AF) > 0.01), , drop = FALSE]
+snpProbes4 <- snpProbes4[which(max_af(snpProbes4$AF) > 0.01), , drop = FALSE]
+
+# Pidsley SM6 distance rule (<= 10 bp).
+dist <- pmin(abs(snpProbes4$VARIANT_END - snpProbes4$MAPINFO),
+             abs(snpProbes4$VARIANT_START - snpProbes4$MAPINFO))
+snpProbes4 <- snpProbes4[which(dist <= 10), , drop = FALSE]
+
+# Pidsley SM1; CpG IDs are in 'X'.
+sm1_ids <- if ("X" %in% names(crosshyb2)) crosshyb2$X else if (
+  "PROBE" %in% names(crosshyb2)) crosshyb2$PROBE else stop(
+    "Could not identify CpG ID column in Pidsley_SM1.csv"
+  )
+
+remove <- unique(c(
+  tofilter$IlmnID,
+  crosshyb[[1L]],
+  snpProbes$IlmnID,
+  sm1_ids,
+  snpProbes2$PROBE,
+  snpProbes3$PROBE,
+  snpProbes4$PROBE
+))
+remove <- intersect(remove, rownames(res.lm))
+
+if (length(remove) > 0L) {
+  res.lm <- res.lm[-match(remove, rownames(res.lm)), , drop = FALSE]
+  res.mlm <- res.mlm[-match(remove, rownames(res.mlm)), , drop = FALSE]
+  res.rce <- res.rce[-match(remove, rownames(res.rce)), , drop = FALSE]
+}
+
 
 #----------------------------------------------------------------------#
 # ANNOTATE RESULTS
