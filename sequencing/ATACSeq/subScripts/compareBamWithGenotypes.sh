@@ -79,7 +79,7 @@ then
        --bqsr-recal-file "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_recal_data.table" \
        -O "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam"
 
-    ${VERIFYBAMID} --vcf ${SNP} --bam "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam" \
+    verifyBamID --vcf ${SNP} --bam "${ALIGNED_DIR}/baseRecalibrate/${sampleName}_baserecal.bam" \
       --out "${ALIGNED_DIR}/genotypeConcordance/${sampleName}" \
       --ignoreRG --smID ${vcfid} --self
       
