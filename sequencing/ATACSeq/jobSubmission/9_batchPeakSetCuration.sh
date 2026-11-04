@@ -20,7 +20,7 @@
 ##                                                                                                                    ||
 ## INPUTS:                                                                                                            || 
 ## $1 -> <project directory> directory of project, location of config.txt file                                        ||
-## $2 -> <STEP> Specify step to run: PEAKS. Can be combined. Default is to run all                                    ||
+## $2 -> <STEP> Specify step to run. Default is to run all                                                            ||
 ## $3 -> <GROUP> Specify cell group to run previous step(s).                                                          ||
 ## $4 -> <THRES> Specify peak calling threshold for curated peak set.                                                 ||
 ##                                                                                                                    ||
@@ -90,7 +90,7 @@ fi
 ## check step method matches required options and exit if not
 if [[ ! $2 == "MERGE" ]] && [[ ! $2 == "BW" ]] && [[ ! $2 == "PEAKS" ]] && [[ ! $2 == 'PEAKSTR' ]] && [[ ! $2 == 'CUTOFF' ]];
 then 
-    { echo "Unknown step specified. Please use PEAKS, BW or some combination of this as a single string (i.e. FASTQC,TRIM)" ; exit 1; }            
+    { echo "Unknown step specified. Please use PEAKS, BW" ; exit 1; }            
 fi
 
 ## check cell type group has been specified for specific steps
